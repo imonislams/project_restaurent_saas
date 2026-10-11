@@ -1,0 +1,14 @@
+# Taste
+- Wants work executed **phase by phase**, one approved phase at a time; do not automatically proceed to the next phase — stop after verification and wait for explicit approval. Confidence: 0.95
+- Documentation-first: wants project docs (PRD, architecture, roadmap, etc.) produced before writing implementation code. Confidence: 0.85
+- Discovery-first: inspect the existing repository (code, DB, routes, auth, frontend, tests, deployment) before making any changes; no broad refactoring during discovery. Confidence: 0.85
+- Approves work with terse, blanket affirmatives (e.g. "YES DO", "do it", "yes") rather than detailed instructions; once a phase is greenlit, expects the agent to carry it out end-to-end (implementation, full test suite, formatter/lint, frontend build, live end-to-end verification, written report) without intermediate check-ins. Confidence: 0.8
+- Wants a written audit/report per phase: scope, changes, test results, and remaining risks, before moving on. Confidence: 0.7
+- Prefers a maintainable **modular monolith** over premature microservices. Confidence: 0.8
+- Prefers a Laravel-first stack: Laravel + Inertia.js + React + TypeScript with Tailwind CSS for desktop-style applications. Confidence: 0.75
+- Prefers not to rewrite a working system merely to match a preferred stack — preserve existing working behavior unless an evidence-backed defect requires change. Confidence: 0.75
+- Prefers business logic in dedicated application/domain services rather than giant controllers. Confidence: 0.7
+- Insists that access control (roles/permissions, tenant/branch isolation) be enforced on the backend, not just by hiding UI elements. Confidence: 0.75
+- Values data-integrity rigor: DB transactions for critical writes, idempotency keys for retried requests, and append-only/auditable movement ledgers. Confidence: 0.7
+- Prefers the main navigation menu in a persistent **sidebar** rather than the top bar. Confidence: 0.8
+- Expects a polished, "advanced" desktop-style UI/UX (dashboard, sidebar shell, visual refinement) — a functionally correct but bare-bones interface is not enough. Confidence: 0.7

@@ -1,0 +1,1463 @@
+# Phase Reports
+
+Tracks the state of each roadmap phase. A phase is only complete when every exit
+requirement in [ROADMAP.md](./ROADMAP.md) is satisfied and the report below is filled in.
+**Do not start the next phase without explicit approval.**
+
+| Phase | Status |
+|-------|--------|
+| 01 — Repository discovery and architecture | Complete |
+| 02 — Tenant security and authentication | Complete |
+| 03 — Onboarding and branch setup | Complete |
+| 04 — Team and permissions | Complete |
+| 05 — Menu and inventory foundation | Complete |
+| 06 — Opening day and POS | Complete |
+| 07 — Kitchen, tables and fulfillment | Complete |
+| 08 — Purchasing, waste and transfers | Complete |
+| 09 — Cash, expenses and accounting | Complete |
+| 10 — Reports and dashboards | Complete |
+| 11 — SaaS subscriptions and platform admin | Complete |
+| 12 — Queues, scheduler and notifications | Complete |
+| 13 — Performance and production readiness | Complete |
+| 14 — Internationalization and advanced features | Complete |
+
+---
+
+## Phase 01 — Repository discovery and architecture
+
+**Finding:** The repository was empty (only `.git`). No existing application, database,
+routes, models or tests to inspect. Greenfield build. Architecture, database, UI/UX,
+security and roadmap documents were produced (see `docs/`).
+
+**Decision:** Scaffold a fresh Laravel 12 + Inertia + React + TypeScript + Tailwind
+application as the base for Phase 2.
+
+---
+
+## Phase 02 — Tenant security and authentication
+
+### Business journey completed
+
+A restaurant owner registers with name, business email, password and restaurant name;
+the system provisions a tenant on a trial, links the owner to it with the Tenant Owner
+role, enforces email verification, and blocks access for suspended or missing tenants.
+Cross-tenant and platform/tenant access boundaries are enforced on the server.
+
+### Features implemented
+
+- **Tenancy foundation** — `tenants` table + `Tenant` model (status, trial, settings,
+  soft deletes); `TenantContext` singleton; `BelongsToTenant` trait (global scope +
+  auto-fill `tenant_id`).
+- **Tenant context resolution** — `ResolveTenant` middleware binds the tenant from the
+  authenticated user (trusted server-side context only).
+- **Tenant status enforcement** — `EnsureTenantIsActive` logs out users whose tenant is
+  suspended, archived or missing.
+- **Authentication** — registration provisions tenant + owner atomically
+  (`RegisterTenant` action); login records `last_login_at`; Breeze email verification and
+  password reset retained.
+- **Roles & permissions** — global system roles (10) and a curated permission catalog;
+  `HasRoles` trait; `role_user` / `permission_role` pivots.
+- **Authorization** — `Gate::before` resolves catalog permissions; `TenantPolicy`
+  enforces tenant ownership; `EnsurePermission` and `EnsurePlatformAdmin` middleware.
+- **Platform/tenant separation** — platform admins resolve `platform.*` permissions only
+  and never inherit tenant permissions.
+- **Inertia shared props** — `auth.user`, `auth.permissions`, `tenant`, `flash`.
+
+### Files and modules changed
+
+```
+app/Domain/Tenancy/{Models,Enums,Concerns,Actions,Policies,Factories}
+app/Domain/Identity/{Models,Enums,Concerns}
+app/Domain/Branches/{Models,Factories}         (minimal Branch — first tenant-owned model)
+app/Http/Middleware/{ResolveTenant,EnsureTenantIsActive,EnsurePermission,EnsurePlatformAdmin}
+app/Http/Controllers/Auth/{RegisteredUserController,AuthenticatedSessionController}
+app/Models/User.php
+app/Providers/AppServiceProvider.php
+bootstrap/app.php
+database/migrations/2026_10_11_0000{01..04}_*
+database/seeders/{RolePermissionSeeder,DatabaseSeeder}
+database/factories/UserFactory.php
+resources/js/Pages/Auth/Register.tsx
+tests/Feature/{Auth/RegistrationTest,Identity/RolePermissionTest,Tenancy/TenantIsolationTest}
+```
+
+### Database and migration changes
+
+- New: `tenants`, `roles`, `permissions`, `permission_role`, `role_user`, `branches`.
+- Altered: `users` (+`tenant_id`, `is_platform_admin`, `status`, `last_login_at`,
+  `deactivated_at`, index on `tenant_id,status`).
+- All migrations verified on MySQL 8.0 (dev) and in-memory SQLite (tests).
+
+### Security and tenant-isolation results
+
+- Cross-tenant read denied (global scope + policy) — verified.
+- Cross-tenant record lookup returns `null` — verified.
+- Suspended / missing-tenant users are logged out — verified.
+- Tenant roles carry no platform permissions; platform admin carries no tenant
+  permissions — verified.
+- `platform` and `permission:` route guards enforce access server-side — verified.
+
+### Tests executed
+
+```
+php artisan test   →  42 passed (113 assertions)
+```
+
+Coverage includes: registration provisioning, requirement/duplicate validation, tenant
+isolation, suspended/missing tenant enforcement, role & permission resolution, platform
+separation, and route guards.
+
+### Performance considerations
+
+- Composite index `users(tenant_id, status)` and `branches(tenant_id, is_active)`.
+- Shared props expose `permissions` as a deferred closure to avoid unnecessary queries on
+  partial reloads.
+- Lazy-loaded `roles.permissions` (`loadMissing`) to avoid repeated queries.
+
+### Known defects and unresolved risks
+
+- **MySQL is local via MAMP** (`127.0.0.1:8889`, root/root) — must be replaced by managed
+  credentials before any shared/deployed environment.
+- Roles are currently **global only** (no per-tenant custom roles) and **not yet
+  branch-scoped** — branch-scoped assignments land in Phase 3/04.
+- `Tenant::getRouteKeyName()` is `slug`; no tenant-facing routes use it yet.
+- Login does not yet record failed-attempt throttling beyond Laravel defaults.
+- No platform UI yet (Phase 11); platform guards are in place and tested.
+
+### Deployment / rollback
+
+- Migrations are additive and reversible (`down()` implemented).
+- No production data exists; `migrate:fresh --seed` is the current setup path.
+
+### Final phase status
+
+**Complete** pending review. Awaiting approval before starting Phase 03
+(onboarding and branch setup).
+
+---
+
+## Phase 03 — Onboarding and branch setup
+
+### Business journey completed
+
+After registering, a restaurant owner is guided through a resumable onboarding wizard:
+company & region → first branch → operating hours → tax → receipt → review & activate.
+Required steps (company, branch) must be complete before activation; optional steps can
+be skipped without blocking progress. The dashboard shows an activation checklist and
+warns about incomplete required configuration. Onboarding completion is recorded.
+
+### Features implemented
+
+- **Company & region** — business name, contact, tax id, address, country, currency and
+  timezone, stored on `tenants.settings`.
+- **First branch** — name, code, address, phone, per-branch timezone/currency,
+  service types (dine-in/takeaway/delivery/counter). First branch marked primary.
+- **Operating hours** — 7-day weekly schedule per branch (`business_hours`).
+- **Tax preferences** — label, rate and tax-inclusive flag.
+- **Receipt setup** — header, footer, show-tax, show-logo.
+- **Resumable wizard** — current step derived from saved data; progress bar and
+  clickable stepper; per-step save.
+- **Skip optional steps** — hours/tax/receipt skippable; required steps cannot be skipped.
+- **Review & activate** — checklist summary with edit links; activation blocked until
+  required steps complete; records `onboarding_completed_at`.
+- **Activation checklist & warnings** — rendered on the dashboard with progress.
+- **Single-restaurant friendly** — no multi-branch requirement to finish onboarding.
+
+### Files and modules changed
+
+```
+app/Domain/Onboarding/{Enums/OnboardingStep,OnboardingService}
+app/Domain/Branches/{Enums/ServiceType,Models/BusinessHour,Policies/BranchPolicy,Factories/BusinessHourFactory}
+app/Http/Controllers/{Onboarding/OnboardingController,DashboardController}
+app/Http/Requests/Onboarding/{Company,Branch,Hours,Tax,Receipt}Request
+app/Domain/{Tenancy/Models/Tenant,Branches/Models/Branch}   (extended)
+config/geo.php
+routes/web.php
+database/migrations/2026_10_11_0000{05,06,07}_*
+resources/js/Layouts/OnboardingLayout.tsx
+resources/js/Components/{SelectInput,Onboarding/*}
+resources/js/Pages/{Dashboard,Onboarding/Show}.tsx
+resources/js/types/*
+tests/Feature/Onboarding/OnboardingFlowTest.php
+```
+
+### Database and migration changes
+
+- Altered: `tenants` (+`onboarding_step`, `first_sale_at`); `branches` (+`address`,
+  `phone`, `timezone`, `currency`, `service_types`, `is_primary`, `settings`).
+- New: `business_hours` (tenant-scoped, unique per branch+day).
+- Verified on MySQL 8.0 (dev) and in-memory SQLite (tests).
+
+### Security and tenant-isolation results
+
+- Onboarding is scoped to the authenticated user's tenant only.
+- A second tenant never sees another tenant's onboarding progress or branches — verified.
+- Platform admins (no tenant) receive 403 on onboarding — verified.
+- `BranchPolicy` registered for tenant-scoped branch authorization.
+
+### Tests executed
+
+```
+php artisan test   →  56 passed (187 assertions)
+```
+
+New coverage: registration → onboarding redirect, step rendering, per-step persistence
+and advancement, required-field validation, optional-step skipping, required-step
+skip rejection, completion gating, activation, dashboard checklist, tenant isolation.
+
+### Performance considerations
+
+- Business hours loaded with a single keyed query per step render.
+- Checklist/progress derived in-memory from a small number of scoped queries.
+
+### Known defects and unresolved risks
+
+- Menu, inventory, staff-invite and payment-method onboarding steps are **not yet**
+  implemented — the checklist shows them as pending and the wizard does not include them.
+  These arrive with Phases 04–06.
+- Sample/demo data import is not implemented yet; `data_mode` separation is deferred to
+  the menu phase.
+- `first_sale_at` (time-to-first-sale) is stored but not yet set — Phase 06.
+- No company logo upload yet (receipt `show_logo` is stored only).
+- Country/currency/timezone are validated by format (ISO size 2/3, valid tz) but the
+  selectors use a curated list in `config/geo.php`.
+
+### Deployment / rollback
+
+- All migrations additive and reversible.
+- Dev setup remains `php artisan migrate:fresh --seed`.
+
+### Final phase status
+
+**Complete** pending review. Awaiting approval before starting Phase 04
+(team and permissions).
+
+---
+
+## Phase 04 — Team and permissions
+
+### Business journey completed
+
+A tenant owner invites staff by email with roles and branch access; the invitee accepts
+via a tokenised link, sets a password and is activated with the assigned roles and branch
+access. Owners manage roles, branch restrictions, deactivation, session revocation and
+password resets — every sensitive action is audited. Approvers can set a manager PIN used
+to authorize sensitive actions.
+
+### Features implemented
+
+- **Invitations** — create (email + roles + branches), resend (new token/expiry), revoke;
+  SHA-256 hashed tokens, 7-day expiry; emailed via `StaffInvitationNotification`.
+- **Invitation acceptance** — tokenised public route; creates the user, verifies email,
+  assigns roles and branch access, marks the invitation accepted.
+- **Role management** — assign multiple tenant roles per user; platform role excluded.
+- **Branch access** — `branch_user` pivot; owners/admins get all branches, others only
+  granted branches (`accessibleBranchIds`, `canAccessBranch`).
+- **Branch-scoped role assignments** — `role_user.branch_id` added (enforcement is via
+  branch access; documented).
+- **Deactivate/reactivate** — soft account state; historical records preserved; self
+  deactivation blocked.
+- **Session revocation & password reset** — revoke DB sessions; send reset link.
+- **Manager PIN** — hashed PIN; `ManagerPinService` verifies the approving manager and
+  audits both success and failure.
+- **Audit log** — append-only `audit_logs`; records invitations, access changes,
+  deactivation, PIN set/verify, password reset.
+- **Policies** — `UserPolicy` (staff), plus existing `TenantPolicy`/`BranchPolicy`.
+- **Permission-aware navigation** — Staff link shown only with `staff.view`.
+
+### Files and modules changed
+
+```
+app/Domain/Auditing/{AuditLogger,Models/AuditLog}
+app/Domain/Identity/{InvitationService,StaffService,ManagerPinService}
+app/Domain/Identity/{Models/Invitation,Factories/InvitationFactory,Policies/UserPolicy}
+app/Domain/Identity/Notifications/StaffInvitationNotification
+app/Http/Controllers/Staff/{StaffController,AcceptInvitationController,ManagerPinController}
+app/Http/Requests/Staff/{StoreInvitation,UpdateStaff,AcceptInvitation,ManagerPin}Request
+app/Models/User.php                         (branch access, PIN, branch relation)
+app/Domain/{Identity/Concerns/HasRoles,Tenancy/Models/Tenant}
+app/Providers/AppServiceProvider.php        (UserPolicy registration)
+routes/web.php
+database/migrations/2026_10_11_0000{08..11}_*
+resources/js/Pages/{Staff/Index,Invitations/Accept}.tsx
+resources/js/Layouts/AuthenticatedLayout.tsx
+tests/Feature/Staff/{StaffManagementTest,ManagerPinTest}
+```
+
+### Database and migration changes
+
+- New: `invitations`, `audit_logs`, `branch_user`.
+- Altered: `role_user` (+`branch_id`), `users` (+`manager_pin`).
+- Verified on MySQL 8.0 (dev) and in-memory SQLite (tests).
+
+### Security and tenant-isolation results
+
+- Staff operations scoped to the actor's tenant; cross-tenant management returns 403 —
+  verified.
+- Platform role cannot be assigned through invitations or access updates — verified.
+- Cashier (no `staff.view`) cannot reach the staff area — verified.
+- Self-deactivation blocked — verified.
+- Every sensitive action writes an audit record — verified.
+- PIN verification ignores users without approval permission — verified.
+
+### Tests executed
+
+```
+php artisan test   →  74 passed (245 assertions)
+```
+
+New coverage (18 tests): invite + notification, platform-role rejection, duplicate email,
+accept (roles + branch access + email verified), expired invite, access update + audit,
+deactivate/reactivate + self-guard, session revocation, cross-tenant 403, branch-access
+restriction, manager PIN set/verify/failure/permission gating.
+
+### Performance considerations
+
+- Staff list eager-loads roles and branches (single query each).
+- PIN verification iterates only active users with a PIN (small set); documented as
+  acceptable at current tenant scale.
+
+### Known defects and unresolved risks
+
+- Invitation emails send **synchronously** (log driver in dev). Queuing arrives in Phase 12.
+- PIN verification iterates candidates and uses `Hash::check` per candidate — fine for
+  typical team sizes but should be indexed/rethought at large scale.
+- No per-tenant custom roles yet (global system roles only).
+- Branch-scoped role rows are stored but permissions are resolved tenant-wide; only
+  *branch access* is enforced per branch. Full per-branch permission scoping is deferred.
+- No self-service "set PIN" UI yet (route exists and is tested); a profile control lands
+  with the POS/approval UI.
+
+### Deployment / rollback
+
+- All migrations additive and reversible.
+
+### Final phase status
+
+**Complete** pending review. Awaiting approval before starting Phase 05
+(menu and inventory foundation).
+
+---
+
+## Phase 05 — Menu and inventory foundation
+
+### Business journey completed
+
+A tenant builds its menu (categories → products with per-service pricing, variants,
+labels, optional stock tracking) and sets up its inventory (units, ingredients, stock
+locations, opening stock). Every quantity change is recorded as an append-only stock
+movement, and the on-hand balance is maintained transactionally. Negative stock is
+prevented unless a tenant explicitly enables it.
+
+### Features implemented
+
+- **Categories** — create/update/soft-delete, parent/child (subcategories), sort order,
+  per-tenant slug uniqueness.
+- **Products** — name, description, SKU (per-tenant unique), barcode, tax category,
+  dine-in/takeaway/delivery prices, cost price, labels, `inventory_mode`
+  (none / own stock / recipe), active & available flags, sort order.
+- **Variants** — named variants with optional price override; first marked default.
+- **Per-branch availability** — `product_availability` overrides with
+  `Product::isAvailableIn($branchId)`.
+- **Units & conversions** — tenant-level units with a default set provisioned per tenant
+  (pc, kg, g, L, mL) and kg↔g / L↔mL conversions.
+- **Ingredients** — definition with unit, cost per unit, inventory tracking flag.
+- **Recipes foundation** — `recipes` + `recipe_items` (BOM) with
+  `Recipe::costPerYield()`; configurable, not required for POS.
+- **Stock locations** — per branch; a default "Main Store" is provisioned for each branch.
+- **Stock ledger** — append-only `stock_movements` (opening, purchase, sale, adjustment,
+  waste, transfer, return) with source references; cached `stock_balances` updated in the
+  same transaction. **All writes go through `StockService`.**
+- **Opening stock & adjustments** — record opening quantities; adjust to a counted value
+  (recording the delta); negative-stock prevention with an opt-in tenant setting.
+- **Search & pagination** — menu product search (name/SKU/barcode) with server-side
+  pagination and category filter.
+
+### Files and modules changed
+
+```
+app/Domain/Menu/{Models/Category,Product,ProductVariant,ProductAvailability,Recipe,RecipeItem}
+app/Domain/Menu/{Enums/InventoryMode,Factories/*}
+app/Domain/Inventory/{Models/Unit,UnitConversion,Ingredient,StockLocation,StockBalance,StockMovement}
+app/Domain/Inventory/{Enums/StockMovementReason,StockService,Actions/ProvisionInventoryDefaults,Factories/*}
+app/Http/Controllers/Menu/MenuController.php
+app/Http/Controllers/Inventory/InventoryController.php
+app/Http/Requests/Menu/{CategoryRequest,ProductRequest}
+app/Http/Requests/Inventory/{UnitRequest,IngredientRequest,StockMovementRequest}
+app/Domain/Tenancy/Concerns/BelongsToTenant.php   (auth fallback — see fixes)
+app/Providers/AppServiceProvider.php              (morph map)
+app/Domain/{Tenancy/Actions/RegisterTenant,Onboarding/OnboardingService}  (default provisioning)
+app/Domain/{Tenancy/Models/Tenant,Branches/Models/Branch}                 (relations)
+config/geo.php already provided region options
+routes/web.php
+database/migrations/2026_10_11_0000{12..16}_*
+resources/js/Pages/{Menu/Index,Inventory/Index}.tsx
+resources/js/Layouts/AuthenticatedLayout.tsx
+tests/Feature/{Menu/MenuManagementTest,Inventory/StockLedgerTest}
+```
+
+### Database and migration changes
+
+- New: `units`, `unit_conversions`, `ingredients`, `categories`, `products`,
+  `product_variants`, `product_availability`, `recipes`, `recipe_items`,
+  `stock_locations`, `stock_balances`, `stock_movements`.
+- Morph map aliases `product` / `ingredient` registered so stored stock records are
+  stable across class moves.
+- Verified on MySQL 8.0 (dev) and in-memory SQLite (tests).
+
+### Security and tenant-isolation results
+
+- All menu/inventory models are tenant-scoped; cross-tenant product management returns
+  404 — verified.
+- Route-model binding is now tenant-safe: a **fixed bug** where binding ran before the
+  tenant context was set is resolved by resolving the tenant from the authenticated user
+  inside the global scope (defense in depth).
+- Stock can only be recorded against items, locations and branches within the tenant —
+  verified.
+- Location must belong to the selected branch — verified.
+
+### Tests executed
+
+```
+php artisan test   →  90 passed (295 assertions)
+```
+
+New coverage (16 tests): default unit provisioning on registration, menu access control,
+category CRUD, product create with variants/labels, per-tenant SKU uniqueness, product
+update, cross-tenant 404, branch availability override, opening stock, adjustment deltas
++ audit, negative-stock prevention and opt-in, append-only ledger, cross-tenant stock
+rejection, branch/location consistency.
+
+### Performance considerations
+
+- Composite indexes on tenant + category/active, tenant + barcode, and tenant + movement
+  date/reason.
+- Menu list uses server-side pagination (25/page).
+- Inventory page caps the movement ledger at the 100 most recent records.
+
+### Known defects and unresolved risks
+
+- **Modifiers / add-ons** and **modifier groups** (Module 5) are not implemented yet.
+- **CSV import/export** and **scheduled price changes** are not implemented.
+- **Product image upload** is not implemented (column exists).
+- **Per-branch availability has no editing UI yet** (model + tests exist).
+- **Recipe management UI** is not implemented; the foundation (models, cost calc) exists.
+- Low-stock thresholds/reorder alerts are not implemented (Phase 8/9).
+- Inventory page returns full balance/movement data without pagination controls.
+
+### Deployment / rollback
+
+- All migrations additive and reversible (with `down()`).
+
+### Final phase status
+
+**Complete** pending review. Awaiting approval before starting Phase 06
+(opening day and POS).
+
+---
+
+## Phase 06 — Opening day and POS
+
+### Business journey completed
+
+A cashier opens a shift with an opening float, rings up a sale on the POS terminal
+(product grid → persistent cart → payment), and the server computes all totals, records
+the payment, deducts stock and posts the cash movement atomically, then prints a receipt.
+The order can be listed, inspected and voided (with manager approval). Shifts are closed
+with counted cash and variance reconciliation.
+
+### Features implemented
+
+- **Shifts & drawer** — open (opening float), close (counted cash, expected cash,
+  overage/shortage), cash in/out; expected cash derived from the signed cash ledger;
+  large variance requires a manager PIN; closed shifts reject new movements.
+- **Registers** — per-branch register table (management UI deferred).
+- **POS terminal** — branch switcher, live shift indicator, category navigation, product
+  grid with variants, keyboard shortcuts (`F2` search, `F4` pay, `Esc` close), persistent
+  cart, order types (dine-in/takeaway/delivery/counter), discounts, service charge, and a
+  payment modal with cash tendering and change.
+- **Order type pricing** — dine-in / takeaway / delivery price columns selected by type.
+- **Server-side pricing engine** — `SaleCalculator` (exclusive/inclusive tax, line and
+  order discounts, service charge, proportional tax allocation), never trusts the browser.
+- **Atomic sale** — `SaleService` writes order + items + payments + attempts + stock
+  movements + cash movements + status history in one transaction; branch-safe order
+  numbers; **idempotency keys** prevent duplicate sales; immutable price snapshots.
+- **Payments** — configurable payment methods (provisioned per tenant), split payments,
+  cash tendering/change, external reference field, payment attempts log; partial payment
+  only when enabled by policy.
+- **Stock on sale** — products with own-stock mode deduct directly; recipe-mode products
+  deduct ingredients via the BOM. Sales do not block on shortage by default (configurable).
+- **Discount approval** — discounts above a tenant threshold require a manager PIN.
+- **Void** — manager-PIN approved; reverses stock, refunds cash (when the shift is open),
+  marks payments refunded, records status history + audit.
+- **Receipts** — printable receipt page with tenant header/footer and reprint auditing.
+- **Orders workspace** — filterable order list (date/status/type) and order detail.
+
+### Files and modules changed
+
+```
+app/Domain/Orders/{Enums/OrderType,OrderStatus,Models/Order,OrderItem,OrderStatusHistory,OrderSequence,OrderService}
+app/Domain/Payments/{Enums/PaymentStatus,PaymentMethodType,Models/Payment,PaymentAttempt,PaymentMethod,Actions/ProvisionPaymentDefaults}
+app/Domain/CashManagement/{Enums/CashMovementType,Models/Register,Shift,CashMovement,CashService,ShiftService}
+app/Domain/POS/{SaleCalculator,SaleService,OrderNumberGenerator}
+app/Domain/Inventory/StockService.php              (per-call negative-stock override)
+app/Domain/Onboarding/OnboardingService.php        (explicit tenant_id on branch)
+app/Http/Controllers/{POS/PosController,CashManagement/ShiftController,Orders/OrderController,Orders/ReceiptController}
+app/Http/Requests/{POS/PlaceOrderRequest,CashManagement/*,Orders/VoidOrderRequest}
+app/Domain/Tenancy/Models/Tenant.php               (paymentMethods relation)
+app/Domain/Tenancy/Actions/RegisterTenant.php      (payment method provisioning)
+routes/web.php
+database/migrations/2026_10_11_0000{17,18,19}_*
+resources/js/Pages/{Pos/Index,Orders/Index,Orders/Show,Orders/Receipt}.tsx
+resources/js/Layouts/AuthenticatedLayout.tsx
+tests/Feature/POS/{SaleCalculatorTest,PosSaleTest,ShiftTest,VoidOrderTest}
+```
+
+### Database and migration changes
+
+- New: `registers`, `shifts`, `cash_movements`, `order_sequences`, `orders`, `order_items`,
+  `order_status_history`, `payment_methods`, `payments`, `payment_attempts`.
+- Verified on MySQL 8.0 (dev) and in-memory SQLite (tests).
+
+### Security and tenant-isolation results
+
+- All POS/shift/order models are tenant-scoped; route-model binding resolves within tenant.
+- Sale requires `pos.use`; void requires `orders.void` plus a manager PIN.
+- Prices and totals are computed server-side; client payload cannot set prices.
+- Idempotency keys (unique per tenant) prevent duplicate sales and double charging.
+- Verified: partial payment rejected by default; unavailable products rejected; duplicate
+  idempotency returns the original order.
+
+### Tests executed
+
+```
+php artisan test   →  119 passed (418 assertions)
+```
+
+New coverage (29 tests): calculator (order-type pricing, exclusive/inclusive tax,
+percentage discount, service charge, empty order), sale (shift required, totals, change,
+cash movement + expected drawer, stock deduction, recipe deduction, idempotency, partial
+payment, split payments, discount approval, unavailable product, permission gate, page
+renders), shifts (open/duplicate/float, cash in-out, close variance, approval, closed-shift
+guard), void (PIN, stock reversal, payment refund, cash refund, double-void guard).
+
+### Live end-to-end verification
+
+Against MySQL via the running app: logged in as a tenant owner, loaded `/pos`, placed a
+cash sale, and confirmed: order `MAIN-20261011-0001`, subtotal 640, tax 32 (5%), total 672,
+change 28, one payment, one cash movement, expected drawer cash 1172 (500 float + 672),
+one `order.completed` audit record, and receipt render. A duplicate POST with the same
+idempotency key returned the **same** order (no duplicate).
+
+### Performance considerations
+
+- Order list paginated (25/page); indexes on tenant+branch+status and tenant+placed_at.
+- Eager loads on order detail (items, payments, history) and POS catalog.
+- Sequence row locked per branch for gap-free numbering.
+
+### Known defects and unresolved risks
+
+- **Secondary work is not yet dispatched post-commit**: kitchen tickets, receipt delivery
+  and notifications arrive in Phase 07/12. The sale itself is complete without them.
+- **External gateway flow is not implemented** — non-cash methods are recorded as
+  succeeded payments; a durable provider state machine + verified webhooks arrive with a
+  real gateway integration. **Do not mark orders paid off a gateway request in production
+  until then.**
+- **Partial refunds** are not implemented; only full void. Held/parked drafts and table
+  assignment arrive in Phase 07.
+- Customer records, loyalty and delivery addresses are not linked yet (order stores a
+  customer name only).
+- Registers have no management UI; shifts are branch-level by default.
+- Hardware printing/barcode scanning are browser-print only for now.
+
+### Deployment / rollback
+
+- All migrations additive and reversible (with `down()`).
+
+### Final phase status
+
+**Complete** pending review. Awaiting approval before starting Phase 07
+(kitchen, tables and fulfillment).
+
+---
+
+## Phase 07 — Kitchen, tables and fulfillment
+
+### Business journey completed
+
+A cashier can open a dine-in table order (held, unpaid) that occupies the table and sends
+a kitchen ticket; the kitchen works the ticket on the KDS (accept → preparing → ready →
+served, per item or whole ticket, with station filters, timers and priority); the table
+order is settled later (payment), which frees the table; and every order moves through
+fulfillment statuses (new → preparing → ready → served / dispatched → delivered).
+
+### Features implemented
+
+- **Kitchen stations** — per-branch stations; products are assigned to a station.
+- **Kitchen tickets** — created **after the sale/held-order transaction commits**, one per
+  order, idempotent per order (a retry never duplicates). Items are routed to their
+  product's station; unrouted items fall into an unassigned bucket.
+- **KDS** — board with New / Preparing / Ready columns, elapsed-time timers (red at 15m),
+  per-item status buttons, ticket status actions, priority (normal/urgent), station filter,
+  branch switcher, and a printable kitchen ticket fallback (`printed_at` recorded).
+- **Tables & floor** — dining areas and tables with statuses (available, occupied,
+  reserved, billing, cleaning); a floor grid with status colours; create/edit/remove
+  (removal blocked while orders are open); manual status changes.
+- **Table orders & settlement** — open a held order tied to a table (occupies it), settle
+  it later with payment (frees it), transfer an order between tables, and auto-free on
+  void. Covers and table are recorded on the order.
+- **Fulfillment tracking** — a validated fulfillment status machine per order exposed on
+  the order detail page with allowed next steps; status history entries and audit records.
+- **Post-commit secondary work** — kitchen ticket creation runs after commit, isolated in
+  `try/catch`, so a failure can never roll back or duplicate the sale.
+
+### Files and modules changed
+
+```
+app/Domain/Tables/{Enums/TableStatus,Models/DiningArea,Table,TableService}
+app/Domain/Kitchen/{Enums/KitchenTicketStatus,KitchenItemStatus,Models/KitchenStation,KitchenTicket,KitchenTicketItem,KitchenService}
+app/Domain/Orders/{Enums/FulfillmentStatus,Models/Order (table/kitchen/fulfillment),OrderService (void + fulfillment),Models/OrderStatusHistory}
+app/Domain/POS/SaleService.php                    (place / openOrder / settle, table + kitchen)
+app/Domain/Menu/Models/Product.php                (kitchen station)
+app/Domain/Branches/Models/Branch.php             (areas/tables/stations)
+app/Http/Controllers/{Kitchen/KitchenDisplayController,Tables/TableController,POS/PosController,Orders/OrderController}
+app/Http/Requests/{Kitchen/*,Tables/*,POS/PlaceOrderRequest,Orders/SettleOrderRequest,Orders/FulfillmentRequest}
+routes/web.php
+database/migrations/2026_10_11_0000{20,21,22}_*
+resources/js/Pages/{Kitchen/Index,Kitchen/Ticket,Tables/Index,Pos/Index,Orders/Show}.tsx
+resources/js/Layouts/AuthenticatedLayout.tsx
+tests/Feature/{Kitchen/KitchenDisplayTest,Tables/TableManagementTest,Orders/FulfillmentTest}
+```
+
+### Database and migration changes
+
+- New: `dining_areas`, `tables`, `kitchen_stations`, `kitchen_tickets`, `kitchen_ticket_items`.
+- Altered: `orders` (+`table_id`, `covers`, `fulfillment_status`); `products` (+`kitchen_station_id`).
+- Verified on MySQL 8.0 (dev) and in-memory SQLite (tests).
+
+### Security and tenant-isolation results
+
+- All new models are tenant-scoped; route-model binding resolves within tenant.
+- KDS requires `kitchen.view` to view and `kitchen.manage` to change tickets; tables use
+  `tables.view`/`tables.manage`; settlement uses `pos.use`.
+- Verified: cashiers can view KDS but not mutate it.
+- Table transfer and settle validate the order/table belong to the tenant and branch.
+
+### Tests executed
+
+```
+php artisan test   →  136 passed (527 assertions)
+```
+
+New coverage (15 tests): ticket creation + station routing, idempotent ticket creation,
+ticket status cascade to items, item-driven ticket advancement, KDS board + station
+filter, KDS view/manage permissions; table CRUD + removal guard, table occupancy on open,
+free on settle, transfer, manual status, tables page; fulfillment default, allowed and
+invalid transitions, order-detail exposure.
+
+### Live end-to-end verification
+
+Against MySQL via the running app: opened a dine-in table order (2 × 320, unpaid) → held
+order, table `T1` occupied, kitchen ticket `new` with 1 item routed to the Grill station,
+no payment. Settled it (672, tendered 700) → order `completed`, 1 payment, 1 cash movement,
+expected drawer 1172 (500 float + 672), **table freed to available**; advanced fulfillment
+`new → preparing`.
+
+### Performance considerations
+
+- KDS query filters to open ticket statuses and eager-loads items/station/order/table.
+- Tables page eager-loads areas and each table's open orders for the floor panel.
+- Elapsed timers computed client-side from `created_at` with a 15s ticker.
+
+### Known defects and unresolved risks
+
+- **Secondary work is still synchronous-after-commit, not queued.** It is isolated and
+  idempotent, but moving it onto the queue lands in Phase 12.
+- **Reservations, table merge/split bills, and item transfer between tables** are not
+  implemented (module 7 scope staged).
+- **Delivery** has fulfillment statuses (dispatched/delivered) but no driver assignment,
+  delivery address, zones or live tracking (Module 13).
+- Kitchen ticket **amendments on order change** are not sent (orders don't change after
+  completion in the current flow).
+- KDS sound alerts and configurable alert thresholds are not implemented.
+- Registers still have no management UI.
+
+### Deployment / rollback
+
+- All migrations additive and reversible (with `down()`).
+
+### Final phase status
+
+**Complete** pending review. Awaiting approval before starting Phase 08
+(purchasing, waste and transfers).
+
+---
+
+## Phase 08 — Purchasing, waste and transfers
+
+### Business journey completed
+
+A manager keeps suppliers, raises a purchase order, submits it, approves it (with a
+manager PIN above the configured limit) and receives goods — which alone updates stock
+via a confirmed goods receipt — then records supplier payments. Waste is recorded
+(instantly deducting stock, or pending approval above a threshold). Stock moves between
+branches through approved transfers (stock leaves on dispatch and arrives on receiving).
+
+### Features implemented
+
+- **Suppliers** — directory with contact details, payment terms, soft delete, and an
+  outstanding balance derived from received orders minus payments.
+- **Purchase orders** — draft → submitted → approved → partially received → received
+  (or cancelled); computed totals; multi-line orders for ingredients/products; approval
+  limit configurable per tenant (manager PIN required above it).
+- **Goods receiving** — partial and full receipts; ordered vs received vs outstanding per
+  line; damaged/rejected quantity captured; **inventory updated only on a confirmed
+  receipt**, via the stock ledger (`purchase` movement) with source reference.
+- **Supplier payments** — recorded per supplier/order; outstanding balance recomputed.
+- **Waste** — reasons (expiry, preparation error, damage, spoilage, other); estimated cost;
+  automatically creates a `waste` stock movement when approved; above a tenant threshold
+  it stays **pending** and requires approval before it affects stock; reject leaves stock
+  untouched; kept separate from sales/refunds.
+- **Inter-branch transfers** — draft → approved → dispatched → received (or cancelled);
+  stock **out** of the source branch on dispatch and **in** to the destination on
+  receiving, each as an auditable ledger movement.
+- **Document numbering** — gap-free per-tenant `PO-…`, `GRN-…`, `TRF-…` sequences.
+
+### Files and modules changed
+
+```
+app/Domain/Documents/{Models/DocumentSequence,DocumentNumberGenerator}
+app/Domain/Purchasing/{Enums/PurchaseOrderStatus,PurchasingService,Models/Supplier,PurchaseOrder,PurchaseOrderItem,GoodsReceipt,GoodsReceiptItem,SupplierPayment}
+app/Domain/Waste/{Enums/WasteReason,WasteService,Models/WasteRecord}
+app/Domain/Inventory/{Enums/TransferStatus,TransferService,StockItemResolver,Models/StockTransfer,StockTransferItem}
+app/Http/Controllers/{Purchasing/SupplierController,Purchasing/PurchaseOrderController,Waste/WasteController,Inventory/TransferController}
+app/Http/Requests/{Purchasing/*,Waste/WasteRequest,Inventory/StockTransferRequest}
+routes/web.php
+database/migrations/2026_10_11_0000{23,24,25,26}_*
+resources/js/Pages/{Purchasing/Index,Purchasing/Show,Waste/Index,Transfers/Index}.tsx
+resources/js/Layouts/AuthenticatedLayout.tsx
+tests/Feature/{Purchasing/PurchasingTest,Waste/WasteTest,Inventory/TransferTest}
+```
+
+### Database and migration changes
+
+- New: `suppliers`, `document_sequences`, `purchase_orders`, `purchase_order_items`,
+  `goods_receipts`, `goods_receipt_items`, `supplier_payments`, `waste_records`,
+  `stock_transfers`, `stock_transfer_items`.
+- Verified on MySQL 8.0 (dev) and in-memory SQLite (tests).
+
+### Security and tenant-isolation results
+
+- All new models are tenant-scoped; route-model binding resolves within tenant.
+- Permissions enforced: `purchasing.view/manage/approve`, `waste.view/create/approve`,
+  `inventory.manage/approve` for transfers.
+- Purchase-order approval above the limit requires a manager PIN — verified.
+- Stock can only be received/transferred against items, branches and locations in the
+  tenant.
+
+### Tests executed
+
+```
+php artisan test   →  153 passed (604 assertions)
+```
+
+New coverage (17 tests): PO creation + totals, submit/approve, approval-limit PIN,
+partial receipt (stock + receipt + audit), full receipt completes the order, receiving
+blocked on draft, supplier payment reduces outstanding, supplier CRUD; waste auto-approve
+(deduct), above-threshold pending (no movement), approve, reject; transfer create/approve,
+same-branch rejection, dispatch→receive stock movement, receive-before-dispatch blocked,
+dispatched transfer cannot be cancelled.
+
+### Live end-to-end verification
+
+Against MySQL via the running app: created a supplier and a purchase order (10 × 80),
+submitted → approved → received (order `received`, received qty 10); recorded waste
+(auto-approved); created a transfer and approved → dispatched → received. Final on-hand:
+branch 1 = 3 (10 received − 2 waste − 5 transferred), branch 2 = 5, with ledger movements
+`purchase`, `waste`, `transfer_out`, `transfer_in`.
+
+### Performance considerations
+
+- Purchase-order list and waste/transfer lists capped (50–100 rows) with eager loading.
+- Stock effects go through the single `StockService` writer, so balances stay consistent.
+
+### Known defects and unresolved risks
+
+- **Supplier-specific product codes/prices** (module 10) are not implemented.
+- **Supplier returns / credit notes** and **purchase requisitions** are not implemented.
+- **Transfer quantity discrepancies on receiving** (short receipts) are not modelled — a
+  transfer receives the full dispatched quantity.
+- **Waste evidence/attachment** upload is not implemented (notes only); approval stores
+  approver + timestamp.
+- Waste/transfer approvals do not require a manager PIN (only PO approval does).
+- Reporting/analytics over purchasing, waste and transfers arrives in Phase 10.
+
+### Deployment / rollback
+
+- All migrations additive and reversible (with `down()`).
+
+### Final phase status
+
+**Complete** pending review. Awaiting approval before starting Phase 09
+(cash, expenses and accounting).
+
+---
+
+## Phase 09 — Cash, expenses and accounting
+
+### Business journey completed
+
+Cashier shifts already reconcile drawer cash (Phase 06). This phase adds the financial
+bookkeeping layer: financial accounts with derived balances (opening balance + an
+append-only ledger), expenses with an approval workflow that posts a signed movement to
+the chosen account when approved, account transfers, and the accounting distinction that
+**sales revenue ≠ cash received**.
+
+### Features implemented
+
+- **Financial accounts** — cash registers, bank, mobile and gateway clearing accounts;
+  per-branch or company-wide; opening balances; **balance derived from the ledger**
+  (`opening_balance + Σ transactions`); default `Bank` account per tenant and a `Cash`
+  account per branch (auto-provisioned).
+- **Account ledger** — append-only `financial_transactions` with signed amounts, category,
+  source polymorphic reference, branch and timestamp; never edited.
+- **Account transfers** — atomic move between two accounts creating a matched pair of
+  ledger entries plus an `account_transfers` record; same-account transfers rejected.
+- **Expenses** — categories (expense/income), amounts, dates, payment method, reference,
+  branch and account; **approval workflow** (`submitted → approved/rejected`);
+  an auto-approve limit per tenant (below it, expenses approve immediately); approving
+  posts a signed movement to the selected account.
+- **Accounting model documented** — accounts hold non-sale movements (expenses,
+  transfers, adjustments, opening balances); sales cash remains in the **shift** ledger so
+  the two are never double-counted. This is the "sales revenue is not cash received"
+  separation the PRD calls for.
+- **Permission** — new `accounts.view` / `accounts.manage` granted to owners/admins,
+  accountant (view) and auditor (view).
+
+### Files and modules changed
+
+```
+app/Domain/Accounting/{Enums/AccountType,ExpenseStatus,TransactionCategory,AccountingService,ExpenseService}
+app/Domain/Accounting/{Models/FinancialAccount,FinancialTransaction,AccountTransfer,ExpenseCategory,Expense}
+app/Domain/Accounting/Actions/ProvisionAccountingDefaults
+app/Http/Controllers/Accounting/{ExpenseController,AccountController}
+app/Http/Requests/Accounting/{AccountRequest,AccountTransferRequest,ExpenseRequest,ExpenseCategoryRequest}
+app/Domain/Identity/Permissions.php               (+accounts group)
+database/seeders/RolePermissionSeeder.php         (accountant/auditor get accounts.view)
+app/Domain/{Tenancy/Models/Tenant,Branches/Models/Branch}   (financialAccounts relations)
+app/Domain/Tenancy/Actions/RegisterTenant.php     (default bank account)
+app/Domain/Onboarding/OnboardingService.php       (default branch cash account)
+routes/web.php
+database/migrations/2026_10_11_0000{27,28}_*
+resources/js/Pages/{Expenses/Index,Accounts/Index}.tsx
+resources/js/Layouts/AuthenticatedLayout.tsx
+tests/Feature/Accounting/{ExpenseTest,AccountTest}
+```
+
+### Database and migration changes
+
+- New: `financial_accounts`, `financial_transactions`, `account_transfers`,
+  `expense_categories`, `expenses`.
+- Verified on MySQL 8.0 (dev) and in-memory SQLite (tests).
+
+### Security and tenant-isolation results
+
+- All new models are tenant-scoped; route-model binding resolves within tenant.
+- Expenses require `expenses.manage` to record and `expenses.approve` to approve/reject;
+  accounts require `accounts.view/manage`.
+- Verified: a user without expense permission cannot record; approvals audited.
+
+### Tests executed
+
+```
+php artisan test   →  165 passed (652 assertions)
+```
+
+New coverage (12 tests): expense created pending (no money moved), approve posts a signed
+movement and reduces the balance, reject leaves money untouched, auto-approve below limit,
+above-limit stays pending, permission gate, expense categories; default account
+provisioning on registration/branch, account creation with opening balance, transfers move
+balances (2 ledger entries + transfer row), same-account rejection, accounts page render.
+
+### Live end-to-end verification
+
+Against MySQL via the running app: recorded a 120 expense on the branch cash account,
+approved it (balance −120), and transferred 50 cash → bank. Final: bank +50, cash −170,
+3 ledger entries, 1 transfer record — internally consistent.
+
+### Performance considerations
+
+- Account list derives balances per account (one aggregate query each); lists capped.
+- Ledger is indexed by tenant + account, category and occurred_at.
+
+### Known defects and unresolved risks
+
+- **Recurring expense templates** and **attachment/receipt upload** are not implemented.
+- **Account balance excludes sales cash** by design (documented); a reconciliation report
+  combining shift cash and account movements lands in Phase 10.
+- **Period closing / reconciliation adjustments** and a full double-entry general ledger
+  are not implemented — this is operational cash management, not a general ledger.
+- Expense approval does not require a manager PIN (permission + limit only).
+- Taxes collected are stored on orders but not yet modelled as a liability account.
+
+### Deployment / rollback
+
+- All migrations additive and reversible (with `down()`).
+
+### Final phase status
+
+**Complete** pending review. Awaiting approval before starting Phase 10
+(reports and dashboards).
+
+---
+
+## Phase 10 — Reports and dashboards
+
+### Business journey completed
+
+An owner opens Reports, picks a report, a date range and a branch, and sees reconciled
+figures — sales, products, categories, payments, cash/shifts, inventory, purchases, waste,
+expenses, profit, tax, staff and branch comparison — computed from the same records the
+operational modules write, with report periods interpreted in the tenant/branch timezone.
+
+### Features implemented
+
+- **13 reports**: sales summary, product performance, category performance, payment,
+  cash & shifts, inventory, purchases, waste, expenses, profit & loss, tax, staff, and
+  branch comparison.
+- **Documented definitions** (on the profit report): gross sales = Σ line totals;
+  discounts; net sales = Σ (total − tax); COGS = Σ item unit cost × qty (immutable
+  snapshots); gross profit = net sales − COGS; net operating = gross profit − approved
+  expenses. The profit report reconciles these explicitly.
+- **Timezone-correct periods** — `ReportPeriod` interprets the from/to dates in the
+  tenant/branch timezone and converts to UTC for queries; day grouping happens in local
+  time so a daily figure never picks up the wrong business day.
+- **Filters** — report type, date range and branch (all branches or one).
+- **Generic report UI** — type tabs, date/branch filters, summary cards, CSS bar charts,
+  and tables with per-column formatting (money/number/percent/datetime).
+- **Permission** — `reports.view`; the Reports nav item is permission-aware.
+
+### Files and modules changed
+
+```
+app/Domain/Reporting/{ReportPeriod,ReportService}
+app/Http/Controllers/Reporting/ReportController.php
+routes/web.php
+app/Domain/Accounting/Models/Expense.php      (date cast fix — see below)
+resources/js/Pages/Reports/Index.tsx
+resources/js/Layouts/AuthenticatedLayout.tsx
+tests/Feature/Reporting/ReportTest.php
+```
+
+No schema changes — every report is derived from existing tables.
+
+### Security and tenant-isolation results
+
+- All report queries run through tenant-scoped models; a user without `reports.view` is
+  forbidden — verified.
+- Unknown report types fall back to `sales` (no arbitrary method dispatch).
+
+### Tests executed
+
+```
+php artisan test   →  175 passed (720 assertions)
+```
+
+New coverage (10 tests): sales gross/net/tax/orders, product revenue/COGS/margin, payment
+grouping by method, cash shift totals, profit reconciliation (net sales − COGS − expenses),
+tax totals, expense report, page render for multiple types, unknown-type fallback, and the
+permission gate.
+
+### Live end-to-end verification
+
+Against MySQL: placed a sale (2 × 100 + 10% tax = 220), then loaded every report type
+(`sales`, `products`, `payments`, `cash`, `profit`, `tax`, `branches` — all 200). Figures:
+gross 200, net (excl. tax) 200, tax 20, gross profit 120, net operating result 120 — all
+internally consistent.
+
+### Performance considerations
+
+- Day-level reports for short ranges are grouped in PHP to avoid dialect-specific date
+  functions (works on MySQL and SQLite).
+- Inventory/payables reports load bounded sets; report rows are capped where unbounded.
+
+### Known defects and unresolved risks
+
+- Reports are computed on request; there is **no caching/materialisation** yet — fine at
+  current scale, revisit for large tenants.
+- The **subscription report** (tenant usage / recurring revenue) is deferred to Phase 11.
+- The dashboard still shows the onboarding checklist; a KPI-heavy owner dashboard can be
+  layered on the same ReportService later.
+- Export (CSV/PDF) is not implemented (`reports.export` permission exists but is unused).
+- Product/category grouping is by name (products renamed later merge historically).
+
+### Deployment / rollback
+
+- No migrations; purely additive code.
+
+### Final phase status
+
+**Complete** pending review. Awaiting approval before starting Phase 11
+(SaaS subscriptions and platform admin).
+
+---
+
+## Phase 11 — SaaS subscriptions and platform admin
+
+### Business journey completed
+
+A platform operator works in a **separate `/platform` workspace** (guarded so tenant
+users cannot reach it): they see platform KPIs and health, manage tenants (search, view,
+activate, suspend), manage plans and a tenant's subscription (change plan/cycle, suspend,
+reactivate, cancel, renew, pay invoices), read the audit log, and — when needed — sign in
+as a tenant owner through **time-limited, reason-required, fully audited impersonation**
+with a visible banner. Plans drive feature entitlements and usage limits, enforced on the
+server.
+
+### Features implemented
+
+- **Plans** — name, slug, monthly/yearly pricing, trial days, feature list, usage limits
+  (branches, users, monthly orders); created/edited by platform admins; seeded with
+  Starter / Growth / Business.
+- **Subscriptions** — one per tenant with status (trialing, active, past due, suspended,
+  cancelled), billing cycle, trial and period dates; started automatically on registration
+  on the default plan.
+- **Lifecycle** — change plan/cycle, activate, mark past due, **suspend (also suspends the
+  tenant** so tenant users are blocked), reactivate, cancel, renew (advances the period and
+  issues + pays an invoice).
+- **Invoices** — issued per period with number/amount/currency/status; payment recording.
+- **Usage metering** — branches, users and monthly orders computed per tenant; snapshots
+  stored in `usage_records`; **backend limits** enforced (e.g. staff invitations blocked at
+  the user limit).
+- **Entitlements** — resolved server-side from the plan (`Tenant::hasFeature`) and enforced
+  by a `feature:` route middleware on the kitchen, purchasing and waste modules; a tenant
+  without a plan is unrestricted (grandfathered).
+- **Platform workspace** — dashboard (tenants, active, trialing, suspended, active users,
+  MRR, plans, queue/failed-job health), tenant list + detail (subscription, usage vs limits,
+  diagnostics, recent activity), plans, audit log.
+- **Impersonation** — reason required, blocked for non-accessible tenants, logs in as the
+  tenant owner, shows a banner, audited at start and stop; stop returns to the platform.
+
+### Files and modules changed
+
+```
+app/Domain/Subscriptions/{Enums/SubscriptionStatus,BillingCycle,InvoiceStatus,SubscriptionService,UsageService}
+app/Domain/Subscriptions/Models/{Plan,Subscription,SubscriptionInvoice,UsageRecord}
+app/Http/Controllers/Platform/{DashboardController,TenantController,PlanController,SubscriptionController,AuditController,ImpersonationController}
+app/Http/Middleware/EnsureFeature.php + bootstrap/app.php (feature alias)
+app/Domain/Tenancy/Models/Tenant.php              (subscription/plan/feature/limit helpers)
+app/Domain/Tenancy/Actions/RegisterTenant.php     (start trial)
+app/Domain/Identity/InvitationService.php         (user-limit guard)
+app/Http/Middleware/HandleInertiaRequests.php     (impersonation prop)
+database/seeders/PlanSeeder.php + DatabaseSeeder
+routes/web.php
+database/migrations/2026_10_11_000029_*
+resources/js/Layouts/PlatformLayout.tsx
+resources/js/Pages/Platform/{Dashboard,Tenants/Index,Tenants/Show,Plans,Audit}.tsx
+resources/js/Layouts/AuthenticatedLayout.tsx      (impersonation banner)
+tests/Feature/Platform/{SubscriptionTest,PlatformAccessTest}
+```
+
+### Database and migration changes
+
+- New: `plans`, `subscriptions`, `subscription_invoices`, `usage_records`.
+- Verified on MySQL 8.0 (dev) and in-memory SQLite (tests).
+
+### Security and tenant-isolation results
+
+- The platform workspace is behind the `platform` (platform-admin) guard; tenant users get
+  403 — verified.
+- **Entitlements and limits are resolved server-side** from the stored subscription — the
+  browser cannot influence them.
+- Suspending a subscription suspends the tenant and blocks tenant users — verified.
+- Impersonation requires a reason, is refused for non-accessible tenants, and is audited —
+  verified. The stop endpoint is auth-only so it works while impersonating.
+
+### Tests executed
+
+```
+php artisan test   →  190 passed (832 assertions)
+```
+
+New coverage (15 tests): registration starts a trial; plan/cycle change; suspend blocks
+access and reactivate restores; renewal issues/paid invoice; entitlements; feature gating
+blocks a disabled module; user-limit enforcement; usage metrics; platform access control;
+tenant suspend/activate; impersonation reason requirement, owner login, banner prop, stop
+restore, and the suspended-tenant guard.
+
+### Live end-to-end verification
+
+Against MySQL: logged in as the platform admin and loaded `/platform`, `/platform/tenants`,
+`/platform/plans`, `/platform/audit` (all 200); suspended then activated the demo tenant;
+impersonated the demo owner (→ `/dashboard` 200) and stopped (→ back to `/platform`,
+200). Audit log recorded both `platform.impersonation_started` and
+`platform.impersonation_stopped`.
+
+### Performance considerations
+
+- Platform lists are paginated; dashboard KPIs use aggregate queries.
+- Subscription/plan relations eager-loaded on tenant lists and detail.
+
+### Known defects and unresolved risks
+
+- **No real payment gateway** — billing is a manual/admin path (issue + mark paid); a
+  provider abstraction and webhook verification are still to come.
+- **No scheduled billing** — trials do not auto-expire, past-due and dunning are manual
+  (Phase 12 scheduler will automate this).
+- **Usage snapshots** are recorded on demand, not yet by a scheduled job; storage usage is
+  not metered.
+- Feature gating is applied to kitchen/purchasing/waste routes only (POS and core modules
+  are ungated); tenant-facing "upgrade" UX is minimal.
+- **Impersonation is not time-boxed** by a timer yet (only reason + audit + banner).
+- Coupons, proration and plan-change rules are not implemented.
+- Tenant deletion/data-export procedures are not implemented.
+
+### Deployment / rollback
+
+- All migrations additive and reversible (with `down()`).
+
+### Final phase status
+
+**Complete** pending review. Awaiting approval before starting Phase 12
+(queues, scheduler and notifications).
+
+---
+
+## Phase 12 — Queues, scheduler and notifications
+
+### Business journey completed
+
+Secondary work that follows a sale now runs on the queue instead of in the request: the
+kitchen ticket is opened by a retry-safe, idempotent job dispatched after commit. Recurring
+scheduled tasks handle subscription lifecycle, usage metering and operational alerts, and
+tenants receive in-app (and email) notifications for low stock, cash discrepancies,
+daily sales and subscription expiry — with an inbox and unread badge in the app.
+
+### Features implemented
+
+- **Queued jobs** — `OpenKitchenTicket` (dispatched after commit from the sale, `tries=3`
+  with backoff, idempotent per order so a retry cannot duplicate the sale) and
+  `RecordUsageSnapshot` (per-tenant usage metering).
+- **Scheduler** (`bootstrap/app.php` `withSchedule`): `subscriptions:process` (expire
+  trials → past due; suspend after 7-day grace), `billing:warn-expiring`,
+  `usage:record`, `alerts:low-stock` (hourly), `notifications:daily-sales`, and
+  `queue:prune-failed`.
+- **Notifications** (database + mail channels): low stock, subscription/trial expiring,
+  daily sales summary, and shift cash variance. Best-effort delivery wrapped so a failure
+  never affects a committed sale or a shift close.
+- **In-app inbox** — `/notifications` with unread badge in the tenant nav, mark-read and
+  mark-all-read; unread count shared to the frontend.
+- **Recipients** — tenant owners/admins resolved per tenant (status active + role).
+- **Failure visibility** — the platform dashboard already surfaces failed/queued job
+  counts; failed jobs are pruned on a schedule.
+- **The queue guarantee holds** — the sale commits atomically; the ticket is created by a
+  separate job, so an unavailable worker or mail provider cannot block or duplicate a sale.
+
+### Files and modules changed
+
+```
+app/Domain/Notifications/{NotificationService,Notifications/*}
+app/Jobs/{OpenKitchenTicket,RecordUsageSnapshot}
+app/Console/Commands/{ProcessSubscriptions,RecordUsage,SendLowStockAlerts,SendDailySales,SendSubscriptionWarnings}
+app/Http/Controllers/NotificationController.php
+app/Domain/POS/SaleService.php                (dispatch job post-commit)
+app/Domain/CashManagement/ShiftService.php    (variance alert)
+app/Domain/Subscriptions/SubscriptionService.php (nullable actor for scheduled transitions)
+app/Http/Middleware/HandleInertiaRequests.php (unread count prop)
+bootstrap/app.php                             (scheduler + feature alias)
+routes/web.php
+database/migrations/2026_10_11_000030_create_notifications_table.php
+resources/js/Pages/Notifications/Index.tsx
+resources/js/Layouts/AuthenticatedLayout.tsx  (bell + badge)
+tests/Feature/{Notifications/NotificationTest,Platform/SubscriptionLifecycleTest}
+```
+
+### Database and migration changes
+
+- New: `notifications` (Laravel database notifications).
+- Verified on MySQL 8.0 (dev) and in-memory SQLite (tests).
+
+### Security and tenant-isolation results
+
+- The job resolves the tenant from the order (never from the queue payload beyond the id)
+  and sets the tenant context before touching kitchen data.
+- Notifications are per-user; a user only ever reads their own inbox.
+- Notification recipients are restricted to owner/admin roles of the tenant.
+
+### Tests executed
+
+```
+php artisan test   →  201 passed (884 assertions)
+```
+
+New coverage (11 tests): low-stock command notifies owners, shift variance notifies on
+close, daily-sales command notifies after a sale, a sale dispatches the kitchen job,
+inbox listing + mark read + mark all read, unread count shared, expired trials → past due,
+past-due suspended after grace, expiring subscriptions warned, usage command dispatches a
+job, and the schedule registers the recurring tasks.
+
+### Live end-to-end verification
+
+Against MySQL with a real queue worker: placed a sale → **1 job queued and 0 kitchen
+tickets**; ran `queue:work --once` → **1 ticket created** (proving asynchronous
+generation). Ran `alerts:low-stock` → "sent to 1 recipient"; `GET /notifications` → 200.
+
+### Performance considerations
+
+- Kitchen ticket work is off the request path (queued, indexed by order).
+- Scheduled tasks iterate tenants in bounded batches; low-stock runs hourly and is cheap.
+
+### Known defects and unresolved risks
+
+- Email delivery uses the configured mailer (log in dev); production requires a real
+  mailer and a queue worker running under a process manager (Supervisor/systemd).
+- Notifications are written synchronously inside scheduled commands (only the kitchen job
+  is queued); moving all notification delivery onto the queue is a later refinement.
+- Subscription warnings can repeat daily for the same tenant (no dedupe window yet).
+- **No dead-letter/alerting on failed jobs** beyond the count on the platform dashboard;
+  an on-call alerting integration is not implemented.
+- Offline/retry of client-side POS actions is still not implemented (separate design).
+
+### Deployment / rollback
+
+- Migration is additive and reversible. A queue worker and the scheduler cron entry
+  (`* * * * * php artisan schedule:run`) must run in production.
+
+### Final phase status
+
+**Complete** pending review. Awaiting approval before starting Phase 13
+(performance and production readiness).
+
+---
+
+## Phase 13 — Performance and production readiness
+
+### Business journey completed
+
+The platform is operable and observable in production: a readiness endpoint and command
+report database/cache/storage/queue health, every request carries a correlation id that
+flows into logs, sensitive responses carry security headers, entitlements are cached and
+invalidated correctly, hot query paths are indexed, backups are written and their
+restorability is verified on a schedule, and a runbook documents deployment, processes,
+monitoring and rollback.
+
+### Features implemented
+
+- **Health checks** — `GET /health` returns `{status, checks{database,cache,storage,queue}}`
+  and `503` when a critical check fails; `php artisan app:health` mirrors it (scheduled
+  every 5 minutes).
+- **Correlation logging** — `AddCorrelationContext` assigns/echoes `X-Request-ID` and puts
+  it in the log context; `ResolveTenant` adds `tenant_id` and `user_id` so logs, jobs and
+  errors share a correlation trail.
+- **Security headers** — `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
+  `X-Permitted-Cross-Domain-Policies` on every response.
+- **Caching** — tenant plan/entitlements cached for 5 minutes and **invalidated
+  automatically** on any subscription change (model observer) and on plan edits.
+- **Indexes** — composite indexes added for hot paths: `order_items(tenant_id, product_id)`,
+  `stock_balances(tenant_id, quantity)`, `payments(tenant_id, payment_method_id)`,
+  `orders(tenant_id, status, placed_at)`.
+- **Backups & restore verification** — `db:backup` writes a gzipped logical snapshot of the
+  current database (scoped to the connection's schema) and prunes to 14; `db:verify-backup`
+  re-reads and validates it (core tables present, parseable). Both scheduled.
+- **Runbook** — `docs/PRODUCTION.md`: environment, deploy procedure, required long-running
+  processes, scheduled tasks, monitoring, backups/restore, performance, migrations/rollback,
+  security and go-live checklists.
+
+### Files and modules changed
+
+```
+app/Support/{HealthChecker,DatabaseBackup}.php
+app/Http/Controllers/HealthController.php
+app/Http/Middleware/{AddCorrelationContext,AddSecurityHeaders}.php
+app/Http/Middleware/ResolveTenant.php          (log context)
+app/Console/Commands/{HealthCheck,BackupDatabase,VerifyBackup}.php
+app/Domain/Tenancy/Models/Tenant.php           (cached entitlements + forget helper)
+app/Domain/Subscriptions/Models/Subscription.php (cache invalidation observer)
+app/Http/Controllers/Platform/PlanController.php (cache flush on plan edit)
+bootstrap/app.php                              (middleware + schedule)
+routes/web.php                                 (/health)
+database/migrations/2026_10_11_000031_add_performance_indexes.php
+docs/PRODUCTION.md + docs/README.md
+tests/Feature/Readiness/ReadinessTest.php
+```
+
+### Database and migration changes
+
+- New indexes only (no schema/column changes); verified on MySQL 8.0 and SQLite.
+
+### Security and tenant-isolation results
+
+- Health endpoint is unauthenticated and read-only (no tenant data exposed).
+- Correlation context never logs secrets; `tenant_id`/`user_id` only.
+- Security headers verified present on responses.
+- Restore verification avoids touching production data (reads a file).
+
+### Tests executed
+
+```
+php artisan test   →  208 passed (902 assertions)
+```
+
+New coverage (7 tests): health endpoint ok + checks, health command success, request-id +
+security headers, supplied request-id echoed, backup created + verified, verifying a missing
+backup fails, entitlement cache invalidation on plan change.
+
+### Live end-to-end verification
+
+Against MySQL: `GET /health` → `{"status":"ok", ...}` with queue counts; response headers
+included `X-Request-ID`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`;
+`app:health` printed OK for database/cache/storage; `db:backup` wrote a 66-table / 328-row
+snapshot and `db:verify-backup` confirmed it.
+
+### Performance considerations
+
+- Entitlement/plan lookups cached (5 min) removes a query from gated routes and shared props.
+- Composite indexes aligned to tenant-scoped filters used by reports and lists.
+- Kitchen tickets and notifications remain off the request path.
+
+### Known defects and unresolved risks
+
+- **No formal load test was executed** — a k6/ab scenario against a staging copy is
+  recommended before launch (documented in the runbook).
+- The in-app backup is a **portable logical snapshot**, not a substitute for native DB
+  snapshots; large datasets should use `mysqldump`/managed backups.
+- No automated restore *into a live schema* — verification is read-back only.
+- No APM/alerting integration (Sentry/Prometheus) is wired; hooks are the log channel and
+  the health endpoint.
+- Cache uses the default store; production should use Redis (config, not code).
+- Full query profiling with real data volumes is still pending.
+
+### Deployment / rollback
+
+- The index migration is additive and reversible. A queue worker + `schedule:run` cron and
+  a real mailer are required in production (see `docs/PRODUCTION.md`).
+
+### Final phase status
+
+**Complete** pending review. Awaiting approval before starting Phase 14
+(internationalization and advanced features).
+
+---
+
+## Phase 14 — Internationalization and advanced features
+
+### Business journey completed
+
+The platform is localized (English and Bangla) with the locale resolved server-side from a
+session choice, the user's preference, or the tenant's regional default. Tenants can keep a
+customer directory with loyalty points earned automatically on sales; delivery zones apply
+fees and minimum-order rules; and external payment providers integrate through a gateway
+abstraction with signature-verified, idempotent webhooks. Owner analytics gained hourly and
+loyalty reports.
+
+### Features implemented
+
+- **Internationalization** — `SetLocale` middleware resolves the locale from session →
+  user → tenant region → app default (never client input); `en`/`bn` message and validation
+  files; a locale column on users; a locale switcher in the nav; locale + available locales
+  shared to the frontend.
+- **Customers** — directory (name, phone, email, notes) with management UI.
+- **Loyalty** — append-only points ledger (earn/redeem/adjust) with an account balance;
+  points earned automatically on completed sales when loyalty is enabled and a customer is
+  attached (`loyalty.points_per_currency`); redemption cannot go negative; manual adjust UI.
+- **Delivery zones** — per-branch or company-wide zones with fee and minimum order; the fee
+  is added to the order total server-side and the minimum is enforced; orders store the
+  zone, address and driver details.
+- **Payment gateway abstraction** — `PaymentGateway` contract with a default `Manual`
+  gateway and a `Stub` external gateway; a manager resolves the provider from a server-side
+  tenant setting.
+- **Webhooks** — `POST /webhooks/payments/{provider}`, CSRF-exempt and signature-verified
+  (HMAC-SHA256), stored raw and deduplicated by provider + event id, processing a valid
+  first-seen event once and marking matching payments succeeded.
+- **Advanced analytics** — hourly sales (with busiest-hour) and loyalty reports added to the
+  reports workspace.
+
+### Files and modules changed
+
+```
+app/Domain/Customers/Models/Customer.php
+app/Domain/Loyalty/{Enums/LoyaltyTransactionType,Models/LoyaltyAccount,LoyaltyTransaction,LoyaltyService}
+app/Domain/Delivery/{Models/DeliveryZone,DeliveryService}
+app/Domain/Payments/{Contracts/PaymentGateway,Gateways/ManualGateway,Gateways/StubGateway,PaymentGatewayManager,WebhookService,Models/PaymentWebhookEvent}
+app/Http/Middleware/SetLocale.php
+app/Http/Controllers/{Customers/CustomerController,Loyalty/LoyaltyController,Delivery/DeliveryZoneController,Payments/PaymentWebhookController,LocaleController}
+app/Http/Requests/{Customers/CustomerRequest,Delivery/DeliveryZoneRequest}
+app/Domain/POS/SaleService.php            (customer, delivery fee, loyalty)
+app/Domain/Orders/Models/Order.php        (customer/delivery fields)
+app/Http/Controllers/POS/PosController.php (customers + zones props)
+app/Domain/Reporting/ReportService.php    (hourly + loyalty)
+app/Http/Controllers/Reporting/ReportController.php
+app/Models/User.php                       (locale)
+config/{app.php,services.php} + bootstrap/app.php + routes/web.php
+lang/{en,bn}/{messages,validation}.php
+database/migrations/2026_10_11_0000{32,33,34,35}_*
+resources/js/Pages/{Customers/Index,Delivery/Index}.tsx
+resources/js/Layouts/AuthenticatedLayout.tsx (locale switcher + nav)
+tests/Feature/Advanced/{AdvancedFeaturesTest,I18nTest}
+```
+
+### Database and migration changes
+
+- New: `customers`, `loyalty_accounts`, `loyalty_transactions`, `delivery_zones`,
+  `payment_webhook_events`; altered `users` (+`locale`) and `orders` (+`customer_id`,
+  `delivery_zone_id`, `delivery_fee`, `delivery_address`, `driver_name`, `driver_phone`).
+- Verified on MySQL 8.0 and SQLite.
+
+### Security and tenant-isolation results
+
+- Locale is resolved server-side (a client cannot force an unsupported locale).
+- Loyalty balances update through a single append-only ledger; redemption cannot go negative.
+- Delivery fee and minimum-order are computed server-side.
+- Webhooks are authenticated by signature (not session/CSRF), stored raw, deduplicated and
+  processed once; invalid signatures are recorded but never processed.
+- All new models are tenant-scoped.
+
+### Tests executed
+
+```
+php artisan test   →  220 passed (944 assertions)
+```
+
+New coverage (12 tests): loyalty earned on a sale with a customer; redeem + non-negative
+guard; delivery fee added to the total; zone minimum enforced; customers CRUD; signed
+webhook verified/recorded/processed; invalid webhook rejected; duplicate webhook not
+processed twice; locale resolved from tenant default; user locale switch persisted;
+unsupported locale rejected; validation messages localized.
+
+### Live end-to-end verification
+
+Against MySQL: placed a delivery sale (2 × 100 + 25 zone fee = 225) for a customer → order
+total 225, delivery fee 25, customer attached, **225 loyalty points earned**; switched the
+locale to Bangla (persisted on the user); posted a signed stub webhook (200, 1 event
+recorded); `/customers` and `/delivery-zones` render.
+
+### Performance considerations
+
+- Loyalty/delivery effects are post-commit and best-effort (never block a sale).
+- Webhook dedupe uses a unique index on (provider, event_id).
+
+### Known defects and unresolved risks
+
+- **Only the backend is fully localized** — the React UI is not string-extracted; the
+  switcher and shared locale are wired, but full UI translation needs a frontend i18n pass.
+- Loyalty is a points ledger only: **no redemption at checkout, tiers, campaigns or expiry**
+  yet.
+- Delivery is zones + fees + driver fields; **third-party marketplace sync and live driver
+  tracking** remain expansion points.
+- The `Stub` gateway is a stand-in — a **real provider integration** (and its webhook
+  schema) still needs implementing; the `payment_webhook_events` processing is minimal.
+- Per-tenant locale/currency display formatting in the React UI is not applied to numbers/
+  dates yet.
+- Customers have no segmentation/consent-management features beyond notes.
+
+### Deployment / rollback
+
+- Migrations are additive and reversible. Provider webhooks must be reachable and the stub
+  secret replaced with a real provider secret in production.
+
+### Final phase status
+
+**Complete.** All 14 roadmap phases are implemented and verified. Continued work should be
+driven by the "known defects and unresolved risks" noted per phase (real gateway, full UI
+i18n, loyalty redemption, delivery integrations) and the production runbook in
+[docs/PRODUCTION.md](./PRODUCTION.md).

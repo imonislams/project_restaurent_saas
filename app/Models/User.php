@@ -1,0 +1,134 @@
+<?php
+
+namespace App\Models;
+
+use App\Domain\Branches\Models\Branch;
+use App\Domain\Identity\Concerns\HasRoles;
+use App\Domain\Identity\Enums\RoleName;
+use App\Domain\Tenancy\Models\Tenant;
+use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class User extends Authenticatable
+{
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, HasRoles, Notifiable;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'tenant_id',
+        'is_platform_admin',
+        'status',
+        'name',
+        'email',
+        'password',
+        'locale',
+        'last_login_at',
+        'deactivated_at',
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+        'manager_pin',
+    ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'is_platform_admin' => 'boolean',
+            'last_login_at' => 'datetime',
+            'deactivated_at' => 'datetime',
+        ];
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    public function branches(): BelongsToMany
+    {
+        return $this->belongsToMany(Branch::class)
+            ->withPivot('tenant_id')
+            ->withTimestamps();
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === 'active' && $this->deactivated_at === null;
+    }
+
+    public function hasManagerPin(): bool
+    {
+        return $this->manager_pin !== null;
+    }
+
+    /**
+     * Roles whose holders may access every branch in the tenant.
+     */
+    protected function hasTenantWideBranchAccess(): bool
+    {
+        return $this->isPlatformAdmin()
+            || $this->hasRole([RoleName::TenantOwner, RoleName::TenantAdmin])
+            || $this->hasPermission('branches.manage');
+    }
+
+    /**
+     * Branch IDs this user may operate in.
+     *
+     * Owners/admins get every branch; everyone else gets explicitly granted branches.
+     *
+     * @return list<int>
+     */
+    public function accessibleBranchIds(): array
+    {
+        if ($this->hasTenantWideBranchAccess()) {
+            return $this->tenant?->branches()->pluck('id')->all() ?? [];
+        }
+
+        return $this->branches()->pluck('branches.id')->all();
+    }
+
+    public function canAccessBranch(Branch|int $branch): bool
+    {
+        $id = $branch instanceof Branch ? $branch->getKey() : $branch;
+
+        return in_array($id, $this->accessibleBranchIds(), true);
+    }
+
+    /**
+     * Replace the user's branch access with the given branch IDs (scoped to their tenant).
+     *
+     * @param  list<int>  $branchIds
+     */
+    public function syncBranchAccess(array $branchIds): void
+    {
+        $valid = $this->tenant
+            ? $this->tenant->branches()->whereIn('id', $branchIds)->pluck('id')->all()
+            : [];
+
+        $this->branches()->syncWithPivotValues($valid, ['tenant_id' => $this->tenant_id]);
+        $this->unsetRelation('branches');
+    }
+}
