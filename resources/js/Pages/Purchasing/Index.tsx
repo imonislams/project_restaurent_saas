@@ -1,3 +1,4 @@
+import { Button, PageHeader } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
@@ -109,27 +110,22 @@ export default function PurchasingIndex({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Purchasing &amp; suppliers
-                    </h2>
-                    {canManage && (
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setShowSupplier((v) => !v)}
-                                className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                                {showSupplier ? 'Close' : 'Add supplier'}
-                            </button>
-                            <button
-                                onClick={() => setShowOrder((v) => !v)}
-                                className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-                            >
-                                {showOrder ? 'Close' : 'New purchase order'}
-                            </button>
-                        </div>
-                    )}
-                </div>
+                <PageHeader
+                    title="Purchasing & suppliers"
+                    description="Raise purchase orders, receive goods and track supplier balances."
+                    actions={
+                        canManage && (
+                            <>
+                                <Button size="sm" variant="secondary" onClick={() => setShowSupplier((v) => !v)}>
+                                    {showSupplier ? 'Close' : 'Add supplier'}
+                                </Button>
+                                <Button size="sm" onClick={() => setShowOrder((v) => !v)}>
+                                    {showOrder ? 'Close' : 'New purchase order'}
+                                </Button>
+                            </>
+                        )
+                    }
+                />
             }
         >
             <Head title="Purchasing" />

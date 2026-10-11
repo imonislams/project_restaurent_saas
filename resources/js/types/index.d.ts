@@ -22,14 +22,24 @@ export interface FlashProps {
     error?: string | null;
 }
 
+export interface BranchSummary {
+    id: number;
+    name: string;
+    code?: string | null;
+    currency?: string;
+}
+
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
     auth: {
         user: User;
         permissions: string[];
+        platform_permissions?: string[];
     };
     tenant: TenantSummary | null;
+    branches?: BranchSummary[];
+    active_branch_id?: number | null;
     flash: FlashProps;
 };
 

@@ -2,37 +2,37 @@
 
 namespace App\Console\Commands;
 
-use App\Support\DatabaseBackup;
+use App\Domain\BackupAndRecovery\BackupService;
+use App\Domain\BackupAndRecovery\Models\Backup;
 use Illuminate\Console\Command;
 
 class VerifyBackup extends Command
 {
-    protected $signature = 'db:verify-backup {file?}';
+    protected $signature = 'db:verify-backup {id?}';
 
     protected $description = 'Verify that a backup can be read back and contains the core tables';
 
-    public function handle(DatabaseBackup $backup): int
+    public function handle(BackupService $backups): int
     {
-        $path = $this->argument('file') ?: $backup->latest();
+        $backup = $this->argument('id')
+            ? Backup::query()->find($this->argument('id'))
+            : Backup::query()->latest('id')->first();
 
-        if (! $path) {
-            $this->error('No backup files found.');
+        if (! $backup) {
+            $this->error('No backup records found.');
 
             return self::FAILURE;
         }
 
-        $result = $backup->verify($path);
+        $result = $backups->verify($backup);
 
         if (! $result['ok']) {
-            $this->error('Backup verification FAILED for '.$path.' — '.($result['error'] ?? 'missing tables: '.implode(', ', $result['missing'])));
+            $this->error("Backup #{$backup->getKey()} verification FAILED — {$result['notes']}");
 
             return self::FAILURE;
         }
 
-        $this->info(sprintf(
-            'Backup OK: %s (%d tables, %d rows, created %s)',
-            $path, $result['tables'], $result['rows'], $result['created_at'] ?? 'unknown',
-        ));
+        $this->info("Backup #{$backup->getKey()} OK — {$result['notes']}");
 
         return self::SUCCESS;
     }

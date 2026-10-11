@@ -1,3 +1,4 @@
+import { Badge, Button, Card, CardBody, CardHeader, Drawer, EmptyState, PageHeader, TextField } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
@@ -20,7 +21,7 @@ export default function CustomersIndex({
     loyaltyEnabled: boolean;
     filters: { search: string };
 }) {
-    const { auth, flash } = usePage().props;
+    const { auth, flash } = usePage().props as Record<string, any>;
     const canManage = auth.permissions.includes('customers.manage');
 
     const [search, setSearch] = useState(filters.search ?? '');
@@ -31,10 +32,7 @@ export default function CustomersIndex({
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        form.post(route('customers.store'), {
-            preserveScroll: true,
-            onSuccess: () => form.reset(),
-        });
+        form.post(route('customers.store'), { preserveScroll: true, onSuccess: () => form.reset() });
     };
 
     const adjustPoints = () => {
@@ -50,116 +48,96 @@ export default function CustomersIndex({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Customers</h2>}
+            header={
+                <PageHeader
+                    title="Customers"
+                    description="Your customer book, contact details and loyalty points."
+                    actions={!loyaltyEnabled ? <Badge tone="neutral">Loyalty disabled</Badge> : undefined}
+                />
+            }
         >
             <Head title="Customers" />
 
-            <div className="py-8">
-                <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                    {flash?.success && <div className="rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">{flash.success}</div>}
+            <div className="py-6">
+                <div className="mx-auto max-w-7xl space-y-5 px-4 sm:px-6 lg:px-8">
+                    {flash?.success && <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{flash.success}</div>}
 
                     {canManage && (
-                        <div className="rounded-lg bg-white p-6 shadow-sm">
-                            <h3 className="mb-3 text-base font-semibold text-gray-900">Add customer</h3>
-                            <form onSubmit={submit} className="flex flex-wrap items-end gap-3">
-                                <div>
-                                    <label className="text-xs text-gray-500">Name</label>
-                                    <input className="block rounded-md border-gray-300 text-sm" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} required />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-gray-500">Phone</label>
-                                    <input className="block rounded-md border-gray-300 text-sm" value={form.data.phone} onChange={(e) => form.setData('phone', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-gray-500">Email</label>
-                                    <input className="block rounded-md border-gray-300 text-sm" value={form.data.email} onChange={(e) => form.setData('email', e.target.value)} />
-                                </div>
-                                <button type="submit" className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-                                    Save
-                                </button>
-                                {Object.values(form.errors)[0] && <p className="text-sm text-red-600">{Object.values(form.errors)[0]}</p>}
-                            </form>
-                        </div>
+                        <Card>
+                            <CardHeader title="Add customer" />
+                            <CardBody>
+                                <form onSubmit={submit} className="flex flex-wrap items-end gap-3">
+                                    <TextField label="Name" className="w-56" value={form.data.name} error={form.errors.name} onChange={(v) => form.setData('name', v)} />
+                                    <TextField label="Phone" className="w-44" value={form.data.phone} error={form.errors.phone} onChange={(v) => form.setData('phone', v)} />
+                                    <TextField label="Email" type="email" className="w-56" value={form.data.email} error={form.errors.email} onChange={(v) => form.setData('email', v)} />
+                                    <Button type="submit" loading={form.processing}>Save</Button>
+                                </form>
+                            </CardBody>
+                        </Card>
                     )}
 
-                    <div className="rounded-lg bg-white p-6 shadow-sm">
-                        <div className="mb-4 flex items-center justify-between">
-                            <h3 className="text-base font-semibold text-gray-900">
-                                Customers {!loyaltyEnabled && <span className="text-xs font-normal text-gray-400">(loyalty disabled)</span>}
-                            </h3>
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    router.get(route('customers.index'), { search }, { preserveState: true, preserveScroll: true, replace: true });
-                                }}
-                                className="flex gap-2"
-                            >
-                                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search" className="rounded-md border-gray-300 text-sm" />
-                                <button type="submit" className="rounded-md bg-gray-800 px-3 py-1.5 text-sm text-white">Search</button>
-                            </form>
-                        </div>
-
-                        <table className="w-full text-left text-sm">
-                            <thead className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-                                <tr>
-                                    <th className="py-2">Name</th>
-                                    <th className="py-2">Phone</th>
-                                    <th className="py-2 text-right">Points</th>
-                                    {canManage && <th className="py-2 text-right">Actions</th>}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {customers.map((customer) => (
-                                    <tr key={customer.id}>
-                                        <td className="py-3 text-gray-800">{customer.name}</td>
-                                        <td className="py-3 text-gray-600">{customer.phone}</td>
-                                        <td className="py-3 text-right text-gray-700">{customer.points}</td>
-                                        {canManage && (
-                                            <td className="py-3 text-right">
-                                                <button onClick={() => setEditing(customer)} className="text-xs text-indigo-600 hover:text-indigo-700">
-                                                    Adjust points
-                                                </button>
-                                            </td>
-                                        )}
-                                    </tr>
-                                ))}
-                                {customers.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} className="py-8 text-center text-gray-500">No customers yet.</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                    <Card>
+                        <CardHeader
+                            title={`Customers${!loyaltyEnabled ? ' · loyalty disabled' : ''}`}
+                            description={`${customers.length} shown`}
+                            action={<TextField placeholder="Search" value={search} onChange={setSearch} onEnter={() => router.get(route('customers.index'), { search }, { preserveState: true, preserveScroll: true, replace: true })} />}
+                        />
+                        <CardBody className="p-0">
+                            {customers.length === 0 ? (
+                                <EmptyState title="No customers yet" description="Add your first customer to start tracking loyalty." />
+                            ) : (
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                                        <tr>
+                                            <th className="px-5 py-3">Name</th>
+                                            <th className="px-5 py-3">Contact</th>
+                                            <th className="px-5 py-3 text-right">Points</th>
+                                            {canManage && <th className="px-5 py-3 text-right">Actions</th>}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {customers.map((customer) => (
+                                            <tr key={customer.id} className="hover:bg-gray-50">
+                                                <td className="px-5 py-3 font-medium text-gray-800">{customer.name}</td>
+                                                <td className="px-5 py-3 text-gray-600">
+                                                    {customer.phone ?? '—'}
+                                                    {customer.email ? <span className="block text-xs text-gray-400">{customer.email}</span> : null}
+                                                </td>
+                                                <td className="px-5 py-3 text-right tabular-nums text-gray-700">{customer.points}</td>
+                                                {canManage && (
+                                                    <td className="px-5 py-3 text-right">
+                                                        <Button size="xs" variant="ghost" onClick={() => setEditing(customer)} disabled={!loyaltyEnabled}>
+                                                            Adjust points
+                                                        </Button>
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </CardBody>
+                    </Card>
                 </div>
             </div>
 
-            {editing && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                    <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
-                        <h3 className="text-base font-semibold text-gray-900">Adjust points — {editing.name}</h3>
-                        <p className="mt-1 text-sm text-gray-500">Current balance: {editing.points}</p>
-                        <input
-                            type="number"
-                            className="mt-3 block w-full rounded-md border-gray-300"
-                            value={pointsForm.data.points}
-                            onChange={(e) => pointsForm.setData('points', Number(e.target.value))}
-                            placeholder="Points (+/-)"
-                        />
-                        <input
-                            className="mt-2 block w-full rounded-md border-gray-300"
-                            value={pointsForm.data.reason}
-                            onChange={(e) => pointsForm.setData('reason', e.target.value)}
-                            placeholder="Reason"
-                        />
-                        {Object.values(pointsForm.errors)[0] && <p className="mt-2 text-sm text-red-600">{Object.values(pointsForm.errors)[0]}</p>}
-                        <div className="mt-4 flex justify-end gap-2">
-                            <button onClick={() => setEditing(null)} className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700">Cancel</button>
-                            <button onClick={adjustPoints} className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Apply</button>
-                        </div>
+            <Drawer
+                show={editing !== null}
+                onClose={() => setEditing(null)}
+                title={`Adjust points — ${editing?.name ?? ''}`}
+                footer={
+                    <div className="flex justify-end gap-2">
+                        <Button variant="secondary" onClick={() => setEditing(null)}>Cancel</Button>
+                        <Button loading={pointsForm.processing} onClick={adjustPoints}>Apply</Button>
                     </div>
+                }
+            >
+                <p className="mb-4 text-sm text-gray-500">Current balance: <span className="font-medium text-gray-800">{editing?.points ?? 0}</span></p>
+                <div className="space-y-4">
+                    <TextField label="Points (+/-)" type="number" value={String(pointsForm.data.points)} error={pointsForm.errors.points} onChange={(v) => pointsForm.setData('points', Number(v))} />
+                    <TextField label="Reason" value={pointsForm.data.reason} error={pointsForm.errors.reason} onChange={(v) => pointsForm.setData('reason', v)} />
                 </div>
-            )}
+            </Drawer>
         </AuthenticatedLayout>
     );
 }

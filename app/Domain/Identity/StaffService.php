@@ -78,7 +78,7 @@ class StaffService
     {
         return Role::whereIn('slug', $slugs)
             ->whereNull('tenant_id')
-            ->where('slug', '!=', RoleName::SaasSuperAdmin->value)
+            ->whereNotIn('slug', RoleName::platformValues())
             ->pluck('id')
             ->all();
     }

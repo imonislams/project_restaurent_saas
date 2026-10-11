@@ -1,3 +1,4 @@
+import { Badge, Button, PageHeader } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
@@ -151,19 +152,17 @@ export default function StaffIndex({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Staff &amp; permissions
-                    </h2>
-                    {canManage && (
-                        <button
-                            onClick={() => setShowInvite((v) => !v)}
-                            className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-                        >
-                            {showInvite ? 'Close' : 'Invite staff'}
-                        </button>
-                    )}
-                </div>
+                <PageHeader
+                    title="Staff & permissions"
+                    description="Invite your team and control what each person can access."
+                    actions={
+                        canManage && (
+                            <Button size="sm" onClick={() => setShowInvite((v) => !v)}>
+                                {showInvite ? 'Close' : 'Invite staff'}
+                            </Button>
+                        )
+                    }
+                />
             }
         >
             <Head title="Staff" />
@@ -415,18 +414,9 @@ export default function StaffIndex({
                                                 'All'}
                                         </td>
                                         <td className="py-3">
-                                            <span
-                                                className={
-                                                    'rounded-full px-2 py-0.5 text-xs font-medium ' +
-                                                    (member.is_active
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-gray-200 text-gray-600')
-                                                }
-                                            >
-                                                {member.is_active
-                                                    ? 'Active'
-                                                    : 'Deactivated'}
-                                            </span>
+                                            <Badge tone={member.is_active ? 'success' : 'neutral'}>
+                                                {member.is_active ? 'Active' : 'Deactivated'}
+                                            </Badge>
                                         </td>
                                         <td className="py-3 text-gray-600">
                                             {member.last_login_at

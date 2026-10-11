@@ -48,7 +48,7 @@ class SubscriptionLifecycleTest extends TestCase
         $this->assertSame(SubscriptionStatus::PastDue, Subscription::withoutGlobalScopes()->first()->status);
     }
 
-    public function test_past_due_subscriptions_are_suspended_after_grace(): void
+    public function test_past_due_subscriptions_enter_grace_after_dunning(): void
     {
         $tenant = Tenant::factory()->create();
         $plan = Plan::where('slug', 'starter')->firstOrFail();
@@ -59,6 +59,29 @@ class SubscriptionLifecycleTest extends TestCase
             'status' => SubscriptionStatus::PastDue,
             'billing_cycle' => 'monthly',
             'current_period_end' => now()->subDays(10),
+        ]);
+
+        $this->artisan('subscriptions:process')->assertSuccessful();
+
+        $subscription = Subscription::withoutGlobalScopes()->first();
+        $this->assertSame(SubscriptionStatus::GracePeriod, $subscription->status);
+        $this->assertNotNull($subscription->grace_ends_at);
+        // Access is retained during the grace period.
+        $this->assertSame('active', $tenant->fresh()->status->value);
+    }
+
+    public function test_grace_period_expiry_suspends_the_subscription_and_tenant(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $plan = Plan::where('slug', 'starter')->firstOrFail();
+
+        Subscription::create([
+            'tenant_id' => $tenant->id,
+            'plan_id' => $plan->id,
+            'status' => SubscriptionStatus::GracePeriod,
+            'billing_cycle' => 'monthly',
+            'current_period_end' => now()->subDays(20),
+            'grace_ends_at' => now()->subDay(),
         ]);
 
         $this->artisan('subscriptions:process')->assertSuccessful();

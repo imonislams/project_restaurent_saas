@@ -22,7 +22,7 @@ class UpdateStaffRequest extends FormRequest
             'roles.*' => [
                 'string',
                 Rule::exists('roles', 'slug')->whereNull('tenant_id'),
-                Rule::notIn([RoleName::SaasSuperAdmin->value]),
+                Rule::notIn(RoleName::platformValues()),
             ],
             'branch_ids' => ['nullable', 'array'],
             'branch_ids.*' => [

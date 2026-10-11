@@ -87,7 +87,7 @@ class DatabaseBackup
      *
      * @return list<string>
      */
-    protected function tables(): array
+    public function tables(): array
     {
         $driver = DB::getDriverName();
         $database = DB::connection()->getDatabaseName();

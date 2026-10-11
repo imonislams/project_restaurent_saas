@@ -8,6 +8,7 @@ use App\Domain\Identity\ManagerPinService;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
 use App\Domain\Inventory\Models\Ingredient;
 use App\Domain\Inventory\StockService;
+use App\Domain\Menu\Models\Product;
 use App\Domain\Purchasing\Models\PurchaseOrder;
 use App\Domain\Purchasing\Models\Supplier;
 use App\Domain\Tenancy\Models\Tenant;
@@ -65,6 +66,15 @@ class PurchasingTest extends TestCase
         ])->assertRedirect();
 
         return PurchaseOrder::latest('id')->firstOrFail();
+    }
+
+    public function test_purchasing_index_renders_with_ingredients_and_products(): void
+    {
+        // Regression: itemOptions() mapped Eloquent collections to arrays and
+        // then merged them, which threw "getKey() on array".
+        Product::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Cola', 'cost_price' => 3]);
+
+        $this->actingAs($this->owner)->get('/purchasing/orders')->assertOk();
     }
 
     public function test_a_draft_purchase_order_is_created_with_computed_totals(): void

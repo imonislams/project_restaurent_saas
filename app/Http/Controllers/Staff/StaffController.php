@@ -157,7 +157,7 @@ class StaffController extends Controller
     protected function roleOptions(): Collection
     {
         return Role::whereNull('tenant_id')
-            ->where('slug', '!=', RoleName::SaasSuperAdmin->value)
+            ->whereNotIn('slug', RoleName::platformValues())
             ->orderBy('name')
             ->get()
             ->map(fn (Role $role) => ['value' => $role->slug, 'label' => $role->name]);

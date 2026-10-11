@@ -47,6 +47,8 @@ class DashboardController extends Controller
                 'onboarding_completed' => $tenant->hasCompletedOnboarding(),
                 'currency' => $this->currency($tenant, $branch),
                 'timezone' => $branch?->effectiveTimezone() ?? $tenant->getSetting('region.timezone'),
+                'plan' => $tenant->currentPlan()?->name,
+                'subscription_status' => $tenant->subscription?->status?->value,
             ],
             'checklist' => $this->onboarding->checklist($tenant),
             'warnings' => $this->onboarding->incompleteWarnings($tenant),

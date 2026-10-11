@@ -1,8 +1,8 @@
+import AuthSplitLayout from '@/Components/Auth/AuthSplitLayout';
+import PasswordInput from '@/Components/Auth/PasswordInput';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
@@ -20,37 +20,70 @@ export default function ConfirmPassword() {
     };
 
     return (
-        <GuestLayout>
+        <AuthSplitLayout
+            variant="general"
+            heroBadge="AUTHENTICATION CHALLENGE"
+            heroHeadline="Secure manager confirmation."
+            heroSubheadline="Confirm your account password before accessing critical financial reports, payroll, and configuration."
+            imageUrl="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=85"
+        >
             <Head title="Confirm Password" />
 
-            <div className="mb-4 text-sm text-gray-600">
-                This is a secure area of the application. Please confirm your
-                password before continuing.
+            {/* Lock Icon */}
+            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100 text-[#0F3D30] border border-stone-200/80 shadow-sm">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="h-7 w-7 text-[#0F3D30]"
+                >
+                    <path
+                        fillRule="evenodd"
+                        d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z"
+                        clipRule="evenodd"
+                    />
+                </svg>
             </div>
 
-            <form onSubmit={submit}>
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
+            {/* Header */}
+            <div className="mb-8">
+                <h1 className="font-display text-2xl font-bold tracking-tight text-[#0B271F] sm:text-3xl">
+                    Confirm your password
+                </h1>
+                <p className="mt-2 text-sm text-stone-500 leading-relaxed">
+                    This is a secure area of Restrly. Please confirm your account password
+                    before continuing.
+                </p>
+            </div>
 
-                    <TextInput
+            {/* Form */}
+            <form onSubmit={submit} className="space-y-5" noValidate>
+                <div>
+                    <InputLabel htmlFor="password" value="Password" required />
+
+                    <PasswordInput
                         id="password"
-                        type="password"
                         name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
                         isFocused={true}
+                        hasError={Boolean(errors.password)}
+                        placeholder="••••••••"
                         onChange={(e) => setData('password', e.target.value)}
+                        required
                     />
 
-                    <InputError message={errors.password} className="mt-2" />
+                    <InputError message={errors.password} />
                 </div>
 
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Confirm
+                <div className="pt-2">
+                    <PrimaryButton
+                        className="w-full justify-center text-sm py-3 font-semibold shadow-md"
+                        disabled={processing}
+                    >
+                        <span>{processing ? 'Confirming…' : 'Confirm & Proceed'}</span>
                     </PrimaryButton>
                 </div>
             </form>
-        </GuestLayout>
+        </AuthSplitLayout>
     );
 }

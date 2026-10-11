@@ -1,2 +1,41 @@
+# Restrly Robots.txt - SEO & Crawler Access Configuration
 User-agent: *
-Disallow:
+Allow: /
+Allow: /product
+Allow: /features
+Allow: /features/*
+Allow: /solutions
+Allow: /solutions/*
+Allow: /pricing
+Allow: /about
+Allow: /contact
+Allow: /resources
+Allow: /resources/*
+Allow: /help
+Allow: /privacy-policy
+Allow: /terms-of-service
+Allow: /cookie-policy
+Allow: /refund-policy
+Allow: /register
+Allow: /login
+
+# Disallow private tenant and administrative paths
+Disallow: /dashboard
+Disallow: /pos
+Disallow: /platform/
+Disallow: /onboarding/
+Disallow: /orders/
+Disallow: /tables/
+Disallow: /inventory/
+Disallow: /menu/
+Disallow: /reports/
+Disallow: /expenses/
+Disallow: /cash/
+Disallow: /staff/
+Disallow: /branches/
+Disallow: /settings/
+Disallow: /api/
+Disallow: /webhooks/
+
+# Sitemap
+Sitemap: https://restrly.com/sitemap.xml

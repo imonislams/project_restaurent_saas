@@ -20,6 +20,8 @@ class ImpersonationController extends Controller
 
     public function start(Request $request, Tenant $tenant): RedirectResponse
     {
+        abort_unless(app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('features.impersonation', true), 403, 'Support impersonation is disabled.');
+
         $data = $request->validate([
             'reason' => ['required', 'string', 'max:255'],
         ]);

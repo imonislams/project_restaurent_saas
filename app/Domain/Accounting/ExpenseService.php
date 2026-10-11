@@ -38,14 +38,18 @@ class ExpenseService
         $limit = $this->context->tenant()?->getSetting('expenses.auto_approve_limit');
         $autoApprove = $limit !== null && $amount <= (float) $limit;
 
-        return DB::transaction(function () use ($data, $amount, $user, $autoApprove) {
+        // Expense dates are business-day dates in the tenant's timezone, so they
+        // line up with tenant-timezone reporting periods.
+        $timezone = $this->context->tenant()?->getSetting('region.timezone') ?? config('app.timezone');
+
+        return DB::transaction(function () use ($data, $amount, $user, $autoApprove, $timezone) {
             $expense = Expense::create([
                 'tenant_id' => $user->tenant_id,
                 'branch_id' => $data['branch_id'] ?? null,
                 'expense_category_id' => $data['expense_category_id'] ?? null,
                 'financial_account_id' => $data['financial_account_id'] ?? null,
                 'amount' => $amount,
-                'expense_date' => $data['expense_date'] ?? now()->toDateString(),
+                'expense_date' => $data['expense_date'] ?? now($timezone)->toDateString(),
                 'payment_method' => $data['payment_method'] ?? null,
                 'reference' => $data['reference'] ?? null,
                 'description' => $data['description'],

@@ -2,58 +2,39 @@
 
 namespace App\Http\Controllers\Platform;
 
-use App\Domain\Subscriptions\Enums\SubscriptionStatus;
-use App\Domain\Subscriptions\Models\Plan;
-use App\Domain\Subscriptions\Models\Subscription;
-use App\Domain\Tenancy\Enums\TenantStatus;
-use App\Domain\Tenancy\Models\Tenant;
+use App\Domain\PlatformAnalytics\PlatformAnalyticsService;
+use App\Domain\PlatformAnalytics\PlatformPeriod;
+use App\Domain\PlatformAnalytics\SystemHealth;
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(): Response
+    public function index(PlatformAnalyticsService $analytics, SystemHealth $health): Response
     {
-        $subscriptions = Subscription::withoutGlobalScopes()->with('plan')->get();
-
-        $mrr = $subscriptions
-            ->filter(fn (Subscription $s) => $s->status === SubscriptionStatus::Active)
-            ->sum(function (Subscription $s) {
-                $price = (float) $s->plan?->price_monthly;
-
-                return $s->billing_cycle->value === 'yearly' ? round($price, 2) : $price;
-            });
-
-        $recent = Tenant::query()->with(['subscription.plan'])->latest('id')->limit(8)->get()
-            ->map(fn (Tenant $tenant) => [
-                'id' => $tenant->getKey(),
-                'name' => $tenant->name,
-                'slug' => $tenant->slug,
-                'status' => $tenant->status->value,
-                'plan' => $tenant->subscription?->plan?->name,
-                'subscription_status' => $tenant->subscription?->status->value,
-                'created_at' => $tenant->created_at?->toIso8601String(),
-            ]);
+        $period = PlatformPeriod::make();
 
         return Inertia::render('Platform/Dashboard', [
-            'kpis' => [
-                ['label' => 'Tenants', 'value' => Tenant::count()],
-                ['label' => 'Active tenants', 'value' => Tenant::where('status', TenantStatus::Active->value)->count()],
-                ['label' => 'Trialing', 'value' => $subscriptions->where('status', SubscriptionStatus::Trialing)->count()],
-                ['label' => 'Suspended', 'value' => Tenant::where('status', TenantStatus::Suspended->value)->count()],
-                ['label' => 'Active users', 'value' => User::whereNotNull('tenant_id')->count()],
-                ['label' => 'MRR', 'value' => round($mrr, 2)],
-                ['label' => 'Plans', 'value' => Plan::where('is_active', true)->count()],
+            'kpis' => $analytics->kpis($period),
+            'charts' => [
+                'revenue_trend' => $analytics->revenueTrend($period),
+                'subscription_movement' => $analytics->subscriptionMovement($period),
+                'tenant_growth' => $analytics->tenantGrowth($period),
+                'revenue_by_plan' => $analytics->revenueByPlan($period),
+                'subscriptions_by_status' => $analytics->subscriptionsByStatus(),
             ],
-            'health' => [
-                'failed_jobs' => DB::table('failed_jobs')->count(),
-                'queued_jobs' => DB::table('jobs')->count(),
-                'db' => 'ok',
+            'health' => $health->indicators(),
+            'healthSummary' => $health->summary(),
+            'recentTenants' => $analytics->recentTenants(8),
+            'activity' => $analytics->recentActivity(12),
+            'currency' => $analytics->currency(),
+            'methodology' => $analytics->methodology(),
+            'period' => [
+                'label' => $period->label,
+                'from' => $period->localFrom()->toDateString(),
+                'to' => $period->localTo()->toDateString(),
             ],
-            'recentTenants' => $recent,
         ]);
     }
 }

@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Platform;
 
+use App\Domain\Subscriptions\Enums\PlanFeature;
+use App\Domain\Subscriptions\Enums\PlanVisibility;
 use App\Domain\Subscriptions\Models\Plan;
-use App\Domain\Subscriptions\Models\Subscription;
-use App\Domain\Tenancy\Models\Tenant;
+use App\Domain\Subscriptions\PlanService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,47 +15,128 @@ use Inertia\Response;
 
 class PlanController extends Controller
 {
+    public function __construct(protected PlanService $plans) {}
+
     public function index(): Response
     {
+        $settings = app(\App\Domain\PlatformSettings\PlatformSettings::class);
+        $defaultCurrency = $settings->get('billing.default_currency')
+            ?? $settings->get('general.default_currency')
+            ?? config('platform.reporting_currency', 'USD');
+
+        $enabledCurrencies = $settings->enabledCurrencies();
+
         return Inertia::render('Platform/Plans', [
             'plans' => Plan::query()
+                ->with('prices')
                 ->withCount('subscriptions')
                 ->orderBy('sort_order')
                 ->get()
-                ->map(fn (Plan $plan) => [
-                    'id' => $plan->getKey(),
-                    'name' => $plan->name,
-                    'slug' => $plan->slug,
-                    'description' => $plan->description,
-                    'price_monthly' => (float) $plan->price_monthly,
-                    'price_yearly' => (float) $plan->price_yearly,
-                    'trial_days' => $plan->trial_days,
-                    'features' => $plan->features ?? [],
-                    'limits' => $plan->limits ?? [],
-                    'is_active' => $plan->is_active,
-                    'subscriptions_count' => $plan->subscriptions_count,
-                ]),
+                ->map(fn (Plan $plan) => $this->row($plan)),
+            'currencies' => collect(config('platform.currencies'))
+                ->filter(fn ($label, $code) => in_array(strtoupper((string) $code), $enabledCurrencies, true))
+                ->map(fn ($label, $code) => ['value' => $code, 'label' => $code.' — '.$label])
+                ->values()
+                ->all(),
+            'enabled_currencies' => $enabledCurrencies,
+            'default_currency' => $defaultCurrency,
         ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('Platform/Plans/Form', $this->formProps());
+    }
+
+    public function edit(Plan $plan): Response
+    {
+        $plan->load('prices')->loadCount('subscriptions');
+
+        return Inertia::render('Platform/Plans/Form', $this->formProps($this->row($plan)));
     }
 
     public function store(Request $request): RedirectResponse
     {
-        Plan::create($this->validated($request));
+        $this->plans->create($this->validated($request), $request->user());
 
         return back()->with('success', 'Plan created.');
     }
 
     public function update(Request $request, Plan $plan): RedirectResponse
     {
-        $plan->update($this->validated($request, $plan));
+        $this->plans->update($plan, $this->validated($request, $plan), $request->user());
 
-        // Plan changes affect entitlements; drop cached plans for its tenants.
-        Subscription::withoutGlobalScopes()
-            ->where('plan_id', $plan->getKey())
-            ->pluck('tenant_id')
-            ->each(fn ($tenantId) => Tenant::forgetEntitlementCache((int) $tenantId));
+        return back()->with('success', 'Plan updated. Existing subscriptions keep their captured terms.');
+    }
 
-        return back()->with('success', 'Plan updated.');
+    public function archive(Request $request, Plan $plan): RedirectResponse
+    {
+        $this->plans->archive($plan, $request->user());
+
+        return back()->with('success', 'Plan archived — no longer assignable, existing subscriptions unaffected.');
+    }
+
+    public function destroy(Request $request, Plan $plan): RedirectResponse
+    {
+        // Throws a validation exception (with a message) when subscriptions exist.
+        $this->plans->delete($plan, $request->user());
+
+        return back()->with('success', 'Plan deleted.');
+    }
+
+    /** @return array<string, mixed> */
+    protected function formProps(?array $plan = null): array
+    {
+        $settings = app(\App\Domain\PlatformSettings\PlatformSettings::class);
+        $defaultCurrency = $settings->get('billing.default_currency')
+            ?? $settings->get('general.default_currency')
+            ?? config('platform.reporting_currency', 'USD');
+
+        $enabledCurrencies = $settings->enabledCurrencies();
+
+        return [
+            'plan' => $plan,
+            'currencies' => collect(config('platform.currencies'))
+                ->filter(fn ($label, $code) => in_array(strtoupper((string) $code), $enabledCurrencies, true))
+                ->map(fn ($label, $code) => ['value' => $code, 'label' => $code.' — '.$label])
+                ->values()
+                ->all(),
+            'enabled_currencies' => $enabledCurrencies,
+            'default_currency' => $defaultCurrency,
+            'feature_options' => PlanFeature::options(),
+            'limit_keys' => [
+                ['key' => 'branches', 'label' => 'Branches', 'hint' => 'Number of restaurant locations allowed'],
+                ['key' => 'users', 'label' => 'Users', 'hint' => 'Staff accounts allowed'],
+                ['key' => 'orders_this_month', 'label' => 'Orders / month', 'hint' => 'Sales allowed per month'],
+            ],
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    protected function row(Plan $plan): array
+    {
+        return [
+            'id' => $plan->getKey(),
+            'name' => $plan->name,
+            'slug' => $plan->slug,
+            'description' => $plan->description,
+            'currency' => $plan->currency,
+            'price_monthly' => (float) $plan->price_monthly,
+            'price_yearly' => (float) $plan->price_yearly,
+            'trial_days' => $plan->trial_days,
+            'features' => $plan->features ?? [],
+            'limits' => $plan->limits ?? [],
+            'is_active' => $plan->is_active,
+            'visibility' => $plan->visibility->value,
+            'version' => $plan->version,
+            'archived' => $plan->isArchived(),
+            'subscriptions_count' => $plan->subscriptions_count,
+            'prices' => $plan->prices->map(fn ($price) => [
+                'currency' => $price->currency,
+                'interval' => $price->interval,
+                'price' => (float) $price->price,
+            ])->values()->all(),
+        ];
     }
 
     /**
@@ -66,6 +148,7 @@ class PlanController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', Rule::unique('plans', 'slug')->ignore($plan?->getKey())],
             'description' => ['nullable', 'string', 'max:255'],
+            'currency' => ['required', 'string', 'size:3'],
             'price_monthly' => ['required', 'numeric', 'min:0'],
             'price_yearly' => ['required', 'numeric', 'min:0'],
             'trial_days' => ['required', 'integer', 'min:0', 'max:365'],
@@ -76,13 +159,24 @@ class PlanController extends Controller
             'limits.users' => ['nullable', 'integer', 'min:0'],
             'limits.orders_this_month' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['boolean'],
+            'visibility' => ['required', Rule::in(PlanVisibility::values())],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'prices' => ['nullable', 'array'],
+            'prices.*.currency' => ['required', 'string', 'size:3'],
+            'prices.*.interval' => ['required', Rule::in(['monthly', 'yearly'])],
+            'prices.*.price' => ['required', 'numeric', 'min:0'],
         ]);
 
-        $data['features'] = $data['features'] ?? [];
-        $data['limits'] = $data['limits'] ?? [];
-        $data['sort_order'] = $data['sort_order'] ?? 0;
-        $data['is_active'] = $data['is_active'] ?? true;
+        // Only apply create-time defaults on store; partial updates must not wipe
+        // fields the caller did not send.
+        if ($plan === null) {
+            $data['features'] = $data['features'] ?? [];
+            $data['limits'] = $data['limits'] ?? [];
+            $data['sort_order'] = $data['sort_order'] ?? 0;
+            $data['is_active'] = $data['is_active'] ?? true;
+        }
+
+        $data['currency'] = strtoupper($data['currency']);
 
         return $data;
     }

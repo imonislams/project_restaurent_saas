@@ -2,23 +2,24 @@
 
 namespace App\Console\Commands;
 
-use App\Support\DatabaseBackup;
+use App\Domain\BackupAndRecovery\BackupService;
 use Illuminate\Console\Command;
 
 class BackupDatabase extends Command
 {
-    protected $signature = 'db:backup {--keep=14}';
+    protected $signature = 'db:backup';
 
-    protected $description = 'Write a portable gzipped snapshot of the database';
+    protected $description = 'Write a portable, metadata-tracked snapshot of the database';
 
-    public function handle(DatabaseBackup $backup): int
+    public function handle(BackupService $backups): int
     {
-        $result = $backup->create();
-        $backup->prune((int) $this->option('keep'));
+        $backup = $backups->createPlatform();
+        $pruned = $backups->prune();
 
         $this->info(sprintf(
-            'Backup written: %s (%d tables, %d rows, %d bytes)',
-            $result['path'], $result['tables'], $result['rows'], $result['bytes'],
+            'Backup #%d written: %s (%d tables, %d rows, %s)%s',
+            $backup->getKey(), $backup->path, $backup->tables_count, $backup->rows_count, $backup->humanSize(),
+            $pruned > 0 ? "; pruned {$pruned} expired backup(s)" : '',
         ));
 
         return self::SUCCESS;

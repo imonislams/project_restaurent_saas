@@ -38,6 +38,9 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user,
                 'permissions' => fn () => $user ? $user->allPermissions() : [],
+                'platform_permissions' => fn () => $user && $user->isPlatformAdmin()
+                    ? $user->allPermissions()->filter(fn (string $p) => str_starts_with($p, 'platform.'))->values()
+                    : [],
             ],
             'tenant' => $tenant ? [
                 'id' => $tenant->getKey(),
@@ -58,6 +61,19 @@ class HandleInertiaRequests extends Middleware
             'notifications' => [
                 'unread' => fn () => $user ? $user->unreadNotifications()->count() : 0,
             ],
+            'branches' => fn () => $user && $tenant
+                ? $tenant->branches()->whereIn('id', $user->accessibleBranchIds())->active()->orderBy('name')->get(['id', 'name', 'code', 'currency'])->map(fn ($b) => [
+                    'id' => $b->id,
+                    'name' => $b->name,
+                    'code' => $b->code,
+                    'currency' => $b->currency ?? $tenant->getSetting('region.currency') ?? 'USD',
+                ])->values()
+                : [],
+            'active_branch_id' => fn () => $request->session()->get('active_branch_id')
+                ?: ($user && $tenant ? ($tenant->primaryBranch?->getKey() ?? ($user->accessibleBranchIds()[0] ?? null)) : null),
+            'announcements' => fn () => $tenant
+                ? app(\App\Domain\Communications\AnnouncementService::class)->forTenant($tenant)
+                : [],
             'locale' => app()->getLocale(),
             'locales' => collect(config('app.locales', ['en' => 'English']))
                 ->map(fn ($label, $code) => ['value' => $code, 'label' => $label])->values(),

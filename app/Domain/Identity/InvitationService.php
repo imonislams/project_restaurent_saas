@@ -174,7 +174,7 @@ class InvitationService
         return Role::whereIn('slug', $slugs)
             ->whereNull('tenant_id')
             ->pluck('slug')
-            ->reject(fn (string $slug) => $slug === RoleName::SaasSuperAdmin->value)
+            ->reject(fn (string $slug) => in_array($slug, RoleName::platformValues(), true))
             ->values()
             ->all();
     }

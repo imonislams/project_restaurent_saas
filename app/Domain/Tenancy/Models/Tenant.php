@@ -34,6 +34,7 @@ class Tenant extends Model
         'onboarding_step',
         'first_sale_at',
         'suspended_at',
+        'verified_at',
         'settings',
     ];
 
@@ -45,6 +46,7 @@ class Tenant extends Model
             'onboarding_completed_at' => 'datetime',
             'first_sale_at' => 'datetime',
             'suspended_at' => 'datetime',
+            'verified_at' => 'datetime',
             'settings' => 'array',
         ];
     }
@@ -144,6 +146,11 @@ class Tenant extends Model
     public function hasRecordedFirstSale(): bool
     {
         return $this->first_sale_at !== null;
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->verified_at !== null;
     }
 
     public function getSetting(string $key, mixed $default = null): mixed

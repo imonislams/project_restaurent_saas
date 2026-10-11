@@ -26,7 +26,10 @@ class PlatformAccessTest extends TestCase
 
     protected function admin(): User
     {
-        return User::factory()->platformAdmin()->create();
+        $admin = User::factory()->platformAdmin()->create();
+        $admin->assignRole(RoleName::SaasSuperAdmin);
+
+        return $admin;
     }
 
     public function test_tenant_users_cannot_reach_the_platform_workspace(): void
@@ -62,7 +65,7 @@ class PlatformAccessTest extends TestCase
         $admin = $this->admin();
         $tenant = Tenant::factory()->create();
 
-        $this->actingAs($admin)->post("/platform/tenants/{$tenant->id}/suspend")->assertRedirect();
+        $this->actingAs($admin)->post("/platform/tenants/{$tenant->id}/suspend", ['reason' => 'Non-payment'])->assertRedirect();
         $this->assertSame('suspended', $tenant->fresh()->status->value);
         $this->assertDatabaseHas('audit_logs', ['action' => 'platform.tenant_suspended']);
 
@@ -122,7 +125,7 @@ class PlatformAccessTest extends TestCase
         $owner = User::factory()->forTenant($tenant)->create();
         $owner->assignRole(RoleName::TenantOwner);
 
-        $this->actingAs($admin)->post("/platform/tenants/{$tenant->id}/suspend")->assertRedirect();
+        $this->actingAs($admin)->post("/platform/tenants/{$tenant->id}/suspend", ['reason' => 'Non-payment'])->assertRedirect();
 
         $this->actingAs($admin)->post("/platform/tenants/{$tenant->id}/impersonate", [
             'reason' => 'Support',

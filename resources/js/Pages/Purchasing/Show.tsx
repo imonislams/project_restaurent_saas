@@ -1,3 +1,4 @@
+import { Button, Card, CardBody, CardHeader, PageHeader, TextField } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -52,13 +53,11 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h2 className="text-xl font-semibold leading-tight text-gray-800">{order.number}</h2>
-                        <p className="text-sm text-gray-500">
-                            {order.supplier} · {order.branch} · <span className="capitalize">{order.status_label}</span>
-                        </p>
-                    </div>
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                    <PageHeader
+                        title={order.number}
+                        description={`${order.supplier} · ${order.branch} · ${order.status_label}`}
+                    />
                     <div className="flex gap-2">
                         <Link href={route('purchasing.orders.index')} className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                             Back
@@ -87,55 +86,56 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
         >
             <Head title={`Purchase order ${order.number}`} />
 
-            <div className="py-8">
-                <div className="mx-auto max-w-5xl space-y-6 sm:px-6 lg:px-8">
+            <div className="py-6">
+                <div className="mx-auto max-w-5xl space-y-5 px-4 sm:px-6 lg:px-8">
                     {flash?.success && <div className="rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">{flash.success}</div>}
                     {flash?.error && <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-800">{flash.error}</div>}
 
                     {canApprove && order.is_approvable && (
-                        <div className="rounded-lg bg-white p-4 shadow-sm">
-                            <label className="text-sm text-gray-700">Manager PIN (required above the approval limit)</label>
-                            <input
-                                type="password"
-                                className="mt-1 block w-full max-w-xs rounded-md border-gray-300"
-                                value={managerPin}
-                                onChange={(e) => setManagerPin(e.target.value)}
-                            />
-                        </div>
+                        <Card>
+                            <CardBody>
+                                <TextField
+                                    label="Manager PIN (required above the approval limit)"
+                                    type="password"
+                                    className="max-w-xs"
+                                    value={managerPin}
+                                    onChange={setManagerPin}
+                                />
+                            </CardBody>
+                        </Card>
                     )}
 
-                    <div className="rounded-lg bg-white p-6 shadow-sm">
-                        <h3 className="mb-3 text-base font-semibold text-gray-900">Items</h3>
-                        <table className="w-full text-left text-sm">
-                            <thead className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-                                <tr>
-                                    <th className="py-2">Item</th>
-                                    <th className="py-2 text-right">Ordered</th>
-                                    <th className="py-2 text-right">Received</th>
-                                    <th className="py-2 text-right">Outstanding</th>
-                                    <th className="py-2 text-right">Unit</th>
-                                    <th className="py-2 text-right">Line</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {order.items.map((item) => (
-                                    <tr key={item.id}>
-                                        <td className="py-2 text-gray-800">{item.description}</td>
-                                        <td className="py-2 text-right text-gray-600">{item.quantity}</td>
-                                        <td className="py-2 text-right text-gray-600">{item.received_quantity}</td>
-                                        <td className="py-2 text-right text-gray-600">{item.outstanding}</td>
-                                        <td className="py-2 text-right text-gray-600">{item.unit_cost.toFixed(2)}</td>
-                                        <td className="py-2 text-right text-gray-800">{item.line_total.toFixed(2)}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        <div className="mt-3 text-right text-sm">
-                            <div className="text-gray-500">Total: <span className="font-medium text-gray-800">{order.total.toFixed(2)}</span></div>
-                            <div className="text-gray-500">Paid: <span className="font-medium text-gray-800">{order.paid_total.toFixed(2)}</span></div>
-                            <div className="text-gray-500">Outstanding: <span className="font-medium text-red-600">{order.outstanding.toFixed(2)}</span></div>
-                        </div>
-                    </div>
+                    <Card>
+                        <CardHeader title="Items" description={`Total ${order.total.toFixed(2)} · outstanding ${order.outstanding.toFixed(2)}`} />
+                        <CardBody className="p-0">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                                        <tr>
+                                            <th className="px-5 py-3">Item</th>
+                                            <th className="px-5 py-3 text-right">Ordered</th>
+                                            <th className="px-5 py-3 text-right">Received</th>
+                                            <th className="px-5 py-3 text-right">Outstanding</th>
+                                            <th className="px-5 py-3 text-right">Unit</th>
+                                            <th className="px-5 py-3 text-right">Line</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {order.items.map((item) => (
+                                            <tr key={item.id} className="hover:bg-gray-50">
+                                                <td className="px-5 py-3 text-gray-800">{item.description}</td>
+                                                <td className="px-5 py-3 text-right tabular-nums text-gray-600">{item.quantity}</td>
+                                                <td className="px-5 py-3 text-right tabular-nums text-gray-600">{item.received_quantity}</td>
+                                                <td className="px-5 py-3 text-right tabular-nums text-gray-600">{item.outstanding}</td>
+                                                <td className="px-5 py-3 text-right tabular-nums text-gray-600">{item.unit_cost.toFixed(2)}</td>
+                                                <td className="px-5 py-3 text-right tabular-nums text-gray-800">{item.line_total.toFixed(2)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </CardBody>
+                    </Card>
 
                     {canManage && order.is_receivable && (
                         <div className="rounded-lg bg-white p-6 shadow-sm">
@@ -160,9 +160,7 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
                                 ))}
                             </div>
                             <div className="mt-4 flex justify-end">
-                                <button onClick={receive} className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-                                    Confirm receipt
-                                </button>
+                                <Button onClick={receive}>Confirm receipt</Button>
                             </div>
                         </div>
                     )}
@@ -193,25 +191,13 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
                                 ))}
                                 {order.payments.length === 0 && <li className="text-gray-400">No payments recorded.</li>}
                             </ul>
-                            <div className="flex flex-wrap items-end gap-2">
-                                <div>
-                                    <label className="text-xs text-gray-500">Amount</label>
-                                    <input type="number" step="0.01" className="block w-32 rounded-md border-gray-300 text-sm" value={paymentForm.data.amount} onChange={(e) => paymentForm.setData('amount', Number(e.target.value))} />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-gray-500">Method</label>
-                                    <input className="block w-32 rounded-md border-gray-300 text-sm" value={paymentForm.data.method} onChange={(e) => paymentForm.setData('method', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-gray-500">Reference</label>
-                                    <input className="block w-40 rounded-md border-gray-300 text-sm" value={paymentForm.data.reference} onChange={(e) => paymentForm.setData('reference', e.target.value)} />
-                                </div>
-                                <button
-                                    onClick={() => paymentForm.post(route('purchasing.orders.pay', order.id), { preserveScroll: true })}
-                                    className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-                                >
+                            <div className="flex flex-wrap items-end gap-3">
+                                <TextField label="Amount" type="number" className="w-32" value={String(paymentForm.data.amount)} error={paymentForm.errors.amount} onChange={(v) => paymentForm.setData('amount', Number(v))} />
+                                <TextField label="Method" className="w-32" value={paymentForm.data.method} error={paymentForm.errors.method} onChange={(v) => paymentForm.setData('method', v)} />
+                                <TextField label="Reference" className="w-40" value={paymentForm.data.reference} onChange={(v) => paymentForm.setData('reference', v)} />
+                                <Button onClick={() => paymentForm.post(route('purchasing.orders.pay', order.id), { preserveScroll: true })} loading={paymentForm.processing}>
                                     Record payment
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     )}

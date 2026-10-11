@@ -1,0 +1,259 @@
+import {
+    Button,
+    MarketingHead,
+    MarketingLayout,
+    SectionHeading,
+} from '@/Components/Marketing';
+import { Link, useForm, usePage } from '@inertiajs/react';
+import { FormEventHandler } from 'react';
+
+export default function Contact() {
+    const { flash } = usePage().props as Record<string, any>;
+
+    const { data, setData, post, processing, errors, recentlySuccessful, reset } = useForm({
+        name: '',
+        email: '',
+        restaurant_name: '',
+        venue_type: 'restaurant',
+        branches_count: '1',
+        inquiry_category: 'sales',
+        message: '',
+    });
+
+    const handleSubmit: FormEventHandler = (e) => {
+        e.preventDefault();
+        post(route('contact.submit'), {
+            onSuccess: () => reset(),
+        });
+    };
+
+    return (
+        <MarketingLayout>
+            <MarketingHead
+                title="Contact Restrly — Sales, Demos & Migration Support"
+                description="Get in touch with a Restrly restaurant specialist. Book a personalized demo, discuss menu data migration, or request custom enterprise rollouts."
+            />
+
+            <section className="pt-12 pb-20 sm:pt-20 sm:pb-28">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <SectionHeading
+                        badge="TALK TO A RESTAURANT SPECIALIST"
+                        title="How Can We Support Your Restaurant?"
+                        description="Whether you have questions about printer hardware compatibility, need help migrating your existing menu, or want a guided walkthrough, we are here to help."
+                    />
+
+                    <div className="mt-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
+                        {/* Left 5 Cols: Direct Contact Details & Links */}
+                        <div className="lg:col-span-5 space-y-8">
+                            <div className="rounded-3xl border border-stone-200/90 bg-white p-8 space-y-6 shadow-xs">
+                                <h3 className="font-display text-xl font-bold text-stone-900">
+                                    Direct Channels
+                                </h3>
+
+                                <div className="space-y-4 text-xs sm:text-sm text-stone-600">
+                                    <div className="flex items-start gap-3">
+                                        <div className="rounded-lg bg-emerald-100 p-2 text-emerald-800 shrink-0">
+                                            ✉️
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-stone-900">Email Sales & Support</div>
+                                            <div className="text-stone-500">support@restrly.com</div>
+                                            <div className="text-[11px] text-stone-400 mt-0.5">Average response: &lt; 2 hours</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3 pt-2 border-t border-stone-100">
+                                        <div className="rounded-lg bg-indigo-100 p-2 text-indigo-800 shrink-0">
+                                            ⏱️
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-stone-900">Support Hours</div>
+                                            <div className="text-stone-500">7 Days a Week (Hospitality Hours)</div>
+                                            <div className="text-[11px] text-stone-400 mt-0.5">8:00 AM – 11:00 PM Local Time</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="rounded-3xl border border-stone-200/90 bg-stone-50 p-8 space-y-4">
+                                <h4 className="font-display font-bold text-stone-900 text-sm">
+                                    Looking for Immediate Answers?
+                                </h4>
+                                <p className="text-xs text-stone-600 leading-relaxed">
+                                    Check our searchable Help Center for printer setup tutorials, register float guides, and menu importing steps.
+                                </p>
+                                <div className="pt-2 flex flex-col gap-2 text-xs font-semibold text-[#0B271F]">
+                                    <Link href="/help" className="hover:text-[#10B981] flex items-center gap-1">
+                                        <span>Visit the Help Center</span>
+                                        <span>→</span>
+                                    </Link>
+                                    <Link href="/pricing" className="hover:text-[#10B981] flex items-center gap-1">
+                                        <span>Review Pricing & Plan Inclusions</span>
+                                        <span>→</span>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right 7 Cols: Contact Form */}
+                        <div className="lg:col-span-7">
+                            <div className="rounded-3xl border border-stone-200/90 bg-white p-8 sm:p-10 shadow-sm">
+                                <h3 className="font-display text-2xl font-bold text-stone-900 mb-6">
+                                    Send Us an Inquiry
+                                </h3>
+
+                                {flash?.success || recentlySuccessful ? (
+                                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-900 space-y-2">
+                                        <div className="font-bold text-base flex items-center gap-2">
+                                            <span className="h-2 w-2 rounded-full bg-emerald-600" />
+                                            Message Received Successfully!
+                                        </div>
+                                        <p className="text-xs sm:text-sm text-emerald-800 leading-relaxed">
+                                            Thank you for reaching out. A Restrly restaurant solutions specialist will review your request and get back to you within 2 business hours.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <form onSubmit={handleSubmit} className="space-y-4 text-xs sm:text-sm" noValidate>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block font-semibold text-stone-800 mb-1">
+                                                    Your Name *
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={data.name}
+                                                    onChange={(e) => setData('name', e.target.value)}
+                                                    placeholder="Elena Rostova"
+                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-[#10B981] focus:ring-[#10B981]"
+                                                    required
+                                                />
+                                                {errors.name && <p className="mt-1 text-xs text-rose-600">{errors.name}</p>}
+                                            </div>
+
+                                            <div>
+                                                <label className="block font-semibold text-stone-800 mb-1">
+                                                    Work Email *
+                                                </label>
+                                                <input
+                                                    type="email"
+                                                    value={data.email}
+                                                    onChange={(e) => setData('email', e.target.value)}
+                                                    placeholder="elena@bistro.com"
+                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-[#10B981] focus:ring-[#10B981]"
+                                                    required
+                                                />
+                                                {errors.email && <p className="mt-1 text-xs text-rose-600">{errors.email}</p>}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block font-semibold text-stone-800 mb-1">
+                                                    Restaurant Name *
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={data.restaurant_name}
+                                                    onChange={(e) => setData('restaurant_name', e.target.value)}
+                                                    placeholder="Copper Bistro & Bar"
+                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-[#10B981] focus:ring-[#10B981]"
+                                                    required
+                                                />
+                                                {errors.restaurant_name && <p className="mt-1 text-xs text-rose-600">{errors.restaurant_name}</p>}
+                                            </div>
+
+                                            <div>
+                                                <label className="block font-semibold text-stone-800 mb-1">
+                                                    Venue Concept *
+                                                </label>
+                                                <select
+                                                    value={data.venue_type}
+                                                    onChange={(e) => setData('venue_type', e.target.value)}
+                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-[#10B981] focus:ring-[#10B981] bg-white"
+                                                >
+                                                    <option value="restaurant">Casual or Fine Dining</option>
+                                                    <option value="cafe">Café or Bakery</option>
+                                                    <option value="cloud_kitchen">Cloud or Ghost Kitchen</option>
+                                                    <option value="qsr">Quick Service (QSR)</option>
+                                                    <option value="takeaway">Takeaway & Delivery</option>
+                                                    <option value="group">Multi-Location Group</option>
+                                                    <option value="other">Other Food Business</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block font-semibold text-stone-800 mb-1">
+                                                    Number of Locations
+                                                </label>
+                                                <select
+                                                    value={data.branches_count}
+                                                    onChange={(e) => setData('branches_count', e.target.value)}
+                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-[#10B981] focus:ring-[#10B981] bg-white"
+                                                >
+                                                    <option value="1">1 Location (Single Store)</option>
+                                                    <option value="2-5">2 – 5 Locations</option>
+                                                    <option value="6-15">6 – 15 Locations</option>
+                                                    <option value="15+">15+ Locations (Enterprise)</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block font-semibold text-stone-800 mb-1">
+                                                    Inquiry Category
+                                                </label>
+                                                <select
+                                                    value={data.inquiry_category}
+                                                    onChange={(e) => setData('inquiry_category', e.target.value)}
+                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-[#10B981] focus:ring-[#10B981] bg-white"
+                                                >
+                                                    <option value="sales">Sales & Pricing Inquiry</option>
+                                                    <option value="demo">Book a Guided Video Demo</option>
+                                                    <option value="migration">Menu & Data Migration</option>
+                                                    <option value="custom_hardware">Custom Hardware Compatibility</option>
+                                                    <option value="partnership">Partner & Reseller Inquiries</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block font-semibold text-stone-800 mb-1">
+                                                Message or Specific Questions *
+                                            </label>
+                                            <textarea
+                                                rows={4}
+                                                value={data.message}
+                                                onChange={(e) => setData('message', e.target.value)}
+                                                placeholder="Tell us about your current setup, hardware questions, or target launch date..."
+                                                className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-[#10B981] focus:ring-[#10B981]"
+                                                required
+                                            />
+                                            {errors.message && <p className="mt-1 text-xs text-rose-600">{errors.message}</p>}
+                                        </div>
+
+                                        <div className="pt-2">
+                                            <Button
+                                                type="submit"
+                                                variant="primary"
+                                                size="lg"
+                                                className="w-full"
+                                                disabled={processing}
+                                            >
+                                                {processing ? 'Sending Inquiry…' : 'Submit Inquiry'}
+                                            </Button>
+                                        </div>
+
+                                        <div className="text-[11px] text-stone-400 text-center pt-1">
+                                            We respect your privacy. No spam, ever. Your data is never shared.
+                                        </div>
+                                    </form>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </MarketingLayout>
+    );
+}

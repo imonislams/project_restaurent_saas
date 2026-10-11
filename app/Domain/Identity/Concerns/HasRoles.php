@@ -43,15 +43,14 @@ trait HasRoles
     /**
      * Whether the user holds the given permission.
      *
-     * Platform admins resolve platform.* permissions only and never inherit
-     * tenant business permissions (three-access separation, see SECURITY.md).
+     * Permissions are resolved from the user's assigned roles — for both tenant
+     * users and platform admins. Platform admins resolve platform.* permissions
+     * from their platform roles and never gain tenant business permissions
+     * (three-access separation, see SECURITY.md). Use isPlatformAdmin() for the
+     * workspace gate; use this for the action gate.
      */
     public function hasPermission(string $permission): bool
     {
-        if ($this->isPlatformAdmin()) {
-            return str_starts_with($permission, 'platform.');
-        }
-
         return $this->allPermissions()->contains($permission);
     }
 

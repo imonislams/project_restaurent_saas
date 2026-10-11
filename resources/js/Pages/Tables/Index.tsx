@@ -1,3 +1,4 @@
+import { Button, ConfirmDialog, PageHeader } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -44,6 +45,7 @@ export default function TablesIndex({
     const [showForm, setShowForm] = useState(false);
     const [selected, setSelected] = useState<TableRow | null>(null);
     const [transferOrder, setTransferOrder] = useState<number | ''>('');
+    const [pendingDelete, setPendingDelete] = useState<TableRow | null>(null);
 
     const form = useForm({
         branch_id: branchId ?? ('' as number | ''),
@@ -83,42 +85,35 @@ export default function TablesIndex({
         );
     };
 
-    const remove = (table: TableRow) => {
-        if (confirm(`Remove table ${table.name}?`)) {
-            router.delete(route('tables.destroy', table.id), { preserveScroll: true });
-            setSelected(null);
-        }
-    };
+    const remove = (table: TableRow) => setPendingDelete(table);
 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">Tables &amp; floor</h2>
-                    <div className="flex gap-2">
-                        <select
-                            className="rounded-md border-gray-300 py-1.5 text-sm"
-                            value={branchId ?? ''}
-                            onChange={(e) =>
-                                router.get(route('tables.index'), { branch_id: e.target.value }, { preserveScroll: true })
-                            }
-                        >
-                            {branches.map((b) => (
-                                <option key={b.id} value={b.id}>
-                                    {b.name}
-                                </option>
-                            ))}
-                        </select>
-                        {canManage && (
-                            <button
-                                onClick={() => setShowForm((v) => !v)}
-                                className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                <PageHeader
+                    title="Tables & floor"
+                    description="See table status at a glance and manage the floor."
+                    actions={
+                        <>
+                            <select
+                                className="rounded-lg border-gray-300 py-1.5 text-sm"
+                                value={branchId ?? ''}
+                                onChange={(e) => router.get(route('tables.index'), { branch_id: e.target.value }, { preserveScroll: true })}
                             >
-                                {showForm ? 'Close' : 'Add table'}
-                            </button>
-                        )}
-                    </div>
-                </div>
+                                {branches.map((b) => (
+                                    <option key={b.id} value={b.id}>
+                                        {b.name}
+                                    </option>
+                                ))}
+                            </select>
+                            {canManage && (
+                                <Button size="sm" onClick={() => setShowForm((v) => !v)}>
+                                    {showForm ? 'Close' : 'Add table'}
+                                </Button>
+                            )}
+                        </>
+                    }
+                />
             }
         >
             <Head title="Tables" />
@@ -314,6 +309,17 @@ export default function TablesIndex({
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                show={pendingDelete !== null}
+                title={`Remove ${pendingDelete?.name ?? 'table'}?`}
+                description="A table with open orders cannot be removed. This cannot be undone."
+                confirmLabel="Remove table"
+                onConfirm={() => {
+                    if (pendingDelete) router.delete(route('tables.destroy', pendingDelete.id), { preserveScroll: true, onFinish: () => { setPendingDelete(null); setSelected(null); } });
+                }}
+                onClose={() => setPendingDelete(null)}
+            />
         </AuthenticatedLayout>
     );
 }

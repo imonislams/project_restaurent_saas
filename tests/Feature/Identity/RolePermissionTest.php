@@ -24,7 +24,7 @@ class RolePermissionTest extends TestCase
 
     public function test_roles_and_permissions_are_seeded(): void
     {
-        $this->assertSame(10, Role::count());
+        $this->assertSame(16, Role::count());
         $this->assertDatabaseHas('roles', ['slug' => RoleName::TenantOwner->value, 'is_system' => true]);
         $this->assertDatabaseHas('permissions', ['slug' => 'pos.use']);
         $this->assertDatabaseHas('permissions', ['slug' => 'platform.tenants.manage']);

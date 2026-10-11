@@ -44,4 +44,9 @@ class TenantFactory extends Factory
     {
         return $this->state(fn () => ['status' => TenantStatus::Archived]);
     }
+
+    public function verified(): static
+    {
+        return $this->state(fn () => ['verified_at' => now()]);
+    }
 }

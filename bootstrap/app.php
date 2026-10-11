@@ -5,6 +5,8 @@ use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\EnsureFeature;
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsurePlatformAdmin;
+use App\Http\Middleware\EnsurePlatformOperational;
+use App\Http\Middleware\EnsurePlatformPermission;
 use App\Http\Middleware\EnsureTenantIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveTenant;
@@ -28,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ResolveTenant::class,
             SetLocale::class,
             EnsureTenantIsActive::class,
+            EnsurePlatformOperational::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
@@ -36,11 +39,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.active' => EnsureTenantIsActive::class,
             'permission' => EnsurePermission::class,
             'platform' => EnsurePlatformAdmin::class,
+            'platform.permission' => EnsurePlatformPermission::class,
             'feature' => EnsureFeature::class,
         ]);
 
-        // Provider webhooks are authenticated by signature, not CSRF tokens.
-        $middleware->validateCsrfTokens(except: ['webhooks/*']);
+        // Provider webhooks / gateway callbacks are authenticated by signature or
+        // server-side verification, not CSRF tokens.
+        $middleware->validateCsrfTokens(except: ['webhooks/*', 'payments/*']);
     })
     ->withSchedule(function (Schedule $schedule): void {
         // Subscription lifecycle and billing.
@@ -56,6 +61,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('queue:prune-failed --hours=168')->weekly();
         $schedule->command('db:backup')->dailyAt('03:00');
         $schedule->command('db:verify-backup')->dailyAt('04:00');
+        $schedule->command('backups:prune')->weekly();
         $schedule->command('app:health')->everyFiveMinutes();
     })
     ->withExceptions(function (Exceptions $exceptions): void {

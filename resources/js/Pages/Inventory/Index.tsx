@@ -1,3 +1,4 @@
+import { Badge, PageHeader } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
@@ -119,9 +120,11 @@ export default function InventoryIndex({
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Inventory
-                </h2>
+                <PageHeader
+                    title="Inventory"
+                    description="Stock levels, ingredients, units and the movement ledger."
+                    actions={!allowNegative ? <Badge tone="success">Negative stock blocked</Badge> : <Badge tone="warning">Negative stock allowed</Badge>}
+                />
             }
         >
             <Head title="Inventory" />

@@ -24,15 +24,20 @@ class Subscription extends Model
     protected $fillable = [
         'tenant_id',
         'plan_id',
+        'coupon_id',
         'status',
         'billing_cycle',
         'trial_ends_at',
         'current_period_start',
         'current_period_end',
+        'grace_ends_at',
+        'cancel_at_period_end',
         'cancelled_at',
         'suspended_at',
         'provider',
         'provider_ref',
+        'plan_snapshot',
+        'plan_version',
     ];
 
     protected function casts(): array
@@ -43,8 +48,12 @@ class Subscription extends Model
             'trial_ends_at' => 'datetime',
             'current_period_start' => 'datetime',
             'current_period_end' => 'datetime',
+            'grace_ends_at' => 'datetime',
+            'cancel_at_period_end' => 'boolean',
             'cancelled_at' => 'datetime',
             'suspended_at' => 'datetime',
+            'plan_snapshot' => 'array',
+            'plan_version' => 'integer',
         ];
     }
 
@@ -58,9 +67,52 @@ class Subscription extends Model
         return $this->belongsTo(Plan::class);
     }
 
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
+    }
+
     public function invoices(): HasMany
     {
         return $this->hasMany(SubscriptionInvoice::class);
+    }
+
+    /** Immutable snapshot of the plan terms agreed at subscription time. */
+    public function snapshotPlan(Plan $plan): void
+    {
+        $this->plan_snapshot = [
+            'name' => $plan->name,
+            'currency' => $plan->currency,
+            'price_monthly' => (float) $plan->price_monthly,
+            'price_yearly' => (float) $plan->price_yearly,
+            'trial_days' => $plan->trial_days,
+            'features' => $plan->features ?? [],
+            'limits' => $plan->limits ?? [],
+            'version' => $plan->version,
+            'captured_at' => now()->toIso8601String(),
+        ];
+        $this->plan_version = $plan->version;
+    }
+
+    /** Plan terms as agreed — the snapshot when present, else the live plan. */
+    public function effectiveTerms(): array
+    {
+        if ($this->plan_snapshot) {
+            return $this->plan_snapshot;
+        }
+
+        $plan = $this->plan;
+
+        return $plan ? [
+            'name' => $plan->name,
+            'currency' => $plan->currency,
+            'price_monthly' => (float) $plan->price_monthly,
+            'price_yearly' => (float) $plan->price_yearly,
+            'trial_days' => $plan->trial_days,
+            'features' => $plan->features ?? [],
+            'limits' => $plan->limits ?? [],
+            'version' => $plan->version,
+        ] : [];
     }
 
     public function isActive(): bool
@@ -71,6 +123,11 @@ class Subscription extends Model
     public function onTrial(): bool
     {
         return $this->status === SubscriptionStatus::Trialing && $this->trial_ends_at?->isFuture();
+    }
+
+    public function inGracePeriod(): bool
+    {
+        return $this->status === SubscriptionStatus::GracePeriod;
     }
 
     public function daysRemaining(): ?int

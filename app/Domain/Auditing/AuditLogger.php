@@ -39,4 +39,24 @@ class AuditLogger
             'ip_address' => request()->ip(),
         ]);
     }
+
+    /**
+     * Record an administrative change with explicit before/after values.
+     *
+     * @param  array<string, mixed>  $before
+     * @param  array<string, mixed>  $after
+     */
+    public function logChange(
+        string $action,
+        ?Model $subject,
+        array $before,
+        array $after,
+        ?User $actor = null,
+        ?int $tenantId = null,
+    ): AuditLog {
+        return $this->log($action, $subject, [
+            'before' => $before,
+            'after' => $after,
+        ], $actor, $tenantId);
+    }
 }

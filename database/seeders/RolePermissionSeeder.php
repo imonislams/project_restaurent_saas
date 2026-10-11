@@ -61,8 +61,61 @@ class RolePermissionSeeder extends Seeder
             fn (string $slug) => str_starts_with($slug, $group.'.') && str_ends_with($slug, '.view')
         ));
 
+        // Keep only slugs that exist in the catalog (guards against typos).
+        $platformSet = fn (array $slugs) => array_values(array_intersect($platform, $slugs));
+
         return [
             RoleName::SaasSuperAdmin->value => $platform,
+            RoleName::PlatformOwner->value => $platform,
+
+            RoleName::PlatformAdmin->value => $platformSet([
+                'platform.dashboard.view', 'platform.tenants.view', 'platform.tenants.manage',
+                'platform.tenants.suspend', 'platform.diagnostics.view', 'platform.impersonate',
+                'platform.support.view', 'platform.support.manage',
+                'platform.subscriptions.view', 'platform.subscriptions.manage',
+                'platform.plans.view', 'platform.plans.manage',
+                'platform.billing.view', 'platform.billing.manage',
+                'platform.invoices.view', 'platform.invoices.manage',
+                'platform.payments.view', 'platform.payments.manage', 'platform.refunds.manage',
+                'platform.email.view', 'platform.email.manage',
+                'platform.marketing.view', 'platform.marketing.manage',
+                'platform.backups.view', 'platform.backups.create',
+                'platform.maintenance.view', 'platform.maintenance.manage',
+                'platform.commands.run',
+                'platform.monitoring.view', 'platform.logs.view',
+                'platform.audit.view', 'platform.settings.view',
+            ]),
+
+            RoleName::BillingAdmin->value => $platformSet([
+                'platform.dashboard.view', 'platform.tenants.view',
+                'platform.subscriptions.view', 'platform.plans.view',
+                'platform.billing.view', 'platform.billing.manage',
+                'platform.invoices.view', 'platform.invoices.manage',
+                'platform.payments.view', 'platform.payments.manage',
+                'platform.refunds.manage', 'platform.audit.view',
+            ]),
+
+            RoleName::SupportOperator->value => $platformSet([
+                'platform.dashboard.view', 'platform.tenants.view', 'platform.diagnostics.view',
+                'platform.impersonate', 'platform.subscriptions.view', 'platform.audit.view',
+                'platform.support.view', 'platform.support.manage',
+            ]),
+
+            RoleName::OperationsEngineer->value => $platformSet([
+                'platform.dashboard.view', 'platform.monitoring.view', 'platform.logs.view',
+                'platform.backups.view', 'platform.backups.create', 'platform.backups.restore',
+                'platform.maintenance.view', 'platform.maintenance.manage',
+                'platform.commands.run',
+                'platform.gateways.configure', 'platform.webhooks.manage', 'platform.audit.view',
+            ]),
+
+            RoleName::PlatformAuditor->value => $platformSet([
+                'platform.dashboard.view', 'platform.tenants.view',
+                'platform.subscriptions.view', 'platform.plans.view',
+                'platform.billing.view', 'platform.invoices.view', 'platform.payments.view',
+                'platform.logs.view', 'platform.audit.view', 'platform.security.view',
+                'platform.support.view',
+            ]),
 
             RoleName::TenantOwner->value => $all,
             RoleName::TenantAdmin->value => $all,

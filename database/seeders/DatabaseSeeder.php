@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolePermissionSeeder::class);
         $this->call(PlanSeeder::class);
+        $this->call(EmailTemplateSeeder::class);
 
         $platformAdmin = User::factory()->platformAdmin()->create([
             'name' => 'Platform Admin',

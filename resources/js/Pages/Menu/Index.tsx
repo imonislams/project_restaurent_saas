@@ -1,3 +1,4 @@
+import { Button, ConfirmDialog, PageHeader } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
@@ -62,6 +63,7 @@ export default function MenuIndex({
     const [search, setSearch] = useState(filters.search ?? '');
     const [editing, setEditing] = useState<Product | 'new' | null>(null);
     const [showCategories, setShowCategories] = useState(false);
+    const [pendingDelete, setPendingDelete] = useState<Product | null>(null);
 
     const applyFilters = (params: Record<string, unknown>) => {
         router.get(
@@ -71,38 +73,27 @@ export default function MenuIndex({
         );
     };
 
-    const deleteProduct = (product: Product) => {
-        if (confirm(`Delete "${product.name}"?`)) {
-            router.delete(route('menu.products.destroy', product.id), {
-                preserveScroll: true,
-            });
-        }
-    };
+    const deleteProduct = (product: Product) => setPendingDelete(product);
 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Menu &amp; products
-                    </h2>
-                    {canManage && (
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setShowCategories((v) => !v)}
-                                className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                                Categories
-                            </button>
-                            <button
-                                onClick={() => setEditing('new')}
-                                className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-                            >
-                                New product
-                            </button>
-                        </div>
-                    )}
-                </div>
+                <PageHeader
+                    title="Menu & products"
+                    description="Categories, products, pricing and availability."
+                    actions={
+                        canManage && (
+                            <>
+                                <Button size="sm" variant="secondary" onClick={() => setShowCategories((v) => !v)}>
+                                    Categories
+                                </Button>
+                                <Button size="sm" onClick={() => setEditing('new')}>
+                                    New product
+                                </Button>
+                            </>
+                        )
+                    }
+                />
             }
         >
             <Head title="Menu" />
@@ -301,6 +292,17 @@ export default function MenuIndex({
                     onClose={() => setEditing(null)}
                 />
             )}
+
+            <ConfirmDialog
+                show={pendingDelete !== null}
+                title={`Delete "${pendingDelete?.name ?? ''}"?`}
+                description="Products used on existing orders cannot be removed. This cannot be undone."
+                confirmLabel="Delete product"
+                onConfirm={() => {
+                    if (pendingDelete) router.delete(route('menu.products.destroy', pendingDelete.id), { preserveScroll: true, onFinish: () => setPendingDelete(null) });
+                }}
+                onClose={() => setPendingDelete(null)}
+            />
         </AuthenticatedLayout>
     );
 }

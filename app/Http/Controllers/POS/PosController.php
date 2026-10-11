@@ -8,6 +8,8 @@ use App\Domain\Customers\Models\Customer;
 use App\Domain\Delivery\Models\DeliveryZone;
 use App\Domain\Menu\Models\Category;
 use App\Domain\Menu\Models\Product;
+use App\Domain\Orders\Enums\OrderStatus;
+use App\Domain\Orders\Models\Order;
 use App\Domain\POS\SaleService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\POS\PlaceOrderRequest;
@@ -57,6 +59,8 @@ class PosController extends Controller
                 ->map(fn (Product $product) => [
                     'id' => $product->getKey(),
                     'name' => $product->name,
+                    'sku' => $product->sku,
+                    'barcode' => $product->barcode,
                     'category_id' => $product->category_id,
                     'price_dine_in' => (float) $product->price_dine_in,
                     'price_takeaway' => (float) $product->price_takeaway,
@@ -69,8 +73,9 @@ class PosController extends Controller
                     ]),
                 ]),
             'categories' => Category::query()->where('is_active', true)
+                ->withCount('products')
                 ->orderBy('sort_order')->orderBy('name')->get()
-                ->map(fn (Category $c) => ['id' => $c->getKey(), 'name' => $c->name]),
+                ->map(fn (Category $c) => ['id' => $c->getKey(), 'name' => $c->name, 'products_count' => $c->products_count]),
             'paymentMethods' => $tenant->paymentMethods()->where('is_active', true)->orderBy('sort_order')->get()
                 ->map(fn ($m) => ['id' => $m->getKey(), 'name' => $m->name, 'type' => $m->type->value]),
             'taxInclusive' => (bool) $tenant->getSetting('tax.inclusive', false),
@@ -92,6 +97,25 @@ class PosController extends Controller
                     ->where(fn ($q) => $q->whereNull('branch_id')->orWhere('branch_id', $branch->getKey()))
                     ->orderBy('name')->get()
                     ->map(fn ($zone) => ['id' => $zone->getKey(), 'name' => $zone->name, 'fee' => (float) $zone->fee])
+                : [],
+            'openOrders' => $branch
+                ? Order::query()->where('branch_id', $branch->getKey())
+                    ->whereIn('status', [OrderStatus::Held->value, OrderStatus::Draft->value])
+                    ->with(['table:id,name'])
+                    ->withCount('items')
+                    ->latest()
+                    ->limit(15)
+                    ->get()
+                    ->map(fn (Order $o) => [
+                        'id' => $o->getKey(),
+                        'order_number' => $o->order_number,
+                        'table_name' => $o->table?->name,
+                        'customer_name' => $o->customer_name,
+                        'order_type' => $o->order_type->value,
+                        'total' => (float) $o->total,
+                        'items_count' => $o->items_count,
+                        'placed_at' => $o->created_at?->diffForHumans() ?? '',
+                    ])
                 : [],
         ]);
     }

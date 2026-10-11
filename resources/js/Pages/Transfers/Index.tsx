@@ -1,3 +1,5 @@
+import { Badge, Button, Card, CardBody, CardHeader, EmptyState, PageHeader, SelectField, TextField } from '@/Components/ui';
+import type { BadgeTone } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
@@ -17,6 +19,8 @@ interface TransferRow {
     can_cancel: boolean;
 }
 
+const STATUS_TONE: Record<string, BadgeTone> = { received: 'success', dispatched: 'info', cancelled: 'danger', draft: 'neutral', approved: 'info' };
+
 export default function TransfersIndex({
     branches,
     items,
@@ -26,7 +30,7 @@ export default function TransfersIndex({
     items: { value: string; label: string; type: string; id: number; cost: number }[];
     transfers: TransferRow[];
 }) {
-    const { auth, flash } = usePage().props;
+    const { auth, flash } = usePage().props as Record<string, any>;
     const canManage = auth.permissions.includes('inventory.manage');
     const canApprove = auth.permissions.includes('inventory.approve');
 
@@ -47,121 +51,79 @@ export default function TransfersIndex({
             notes: data.notes,
             items: [{ item_type, item_id: Number(item_id), quantity: data.quantity }],
         }));
-        form.post(route('transfers.store'), {
-            preserveScroll: true,
-            onSuccess: () => form.reset('quantity', 'notes'),
-        });
+        form.post(route('transfers.store'), { preserveScroll: true, onSuccess: () => form.reset('quantity', 'notes') });
     };
-
-    const statusColor = (status: string) =>
-        status === 'received'
-            ? 'bg-green-100 text-green-800'
-            : status === 'dispatched'
-              ? 'bg-indigo-100 text-indigo-800'
-              : status === 'cancelled'
-                ? 'bg-red-100 text-red-800'
-                : 'bg-gray-200 text-gray-700';
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Stock transfers</h2>}
+            header={<PageHeader title="Stock transfers" description="Move stock between branches and track each transfer to receipt." />}
         >
             <Head title="Transfers" />
 
-            <div className="py-8">
-                <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                    {flash?.success && <div className="rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">{flash.success}</div>}
-                    {flash?.error && <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-800">{flash.error}</div>}
+            <div className="py-6">
+                <div className="mx-auto max-w-7xl space-y-5 px-4 sm:px-6 lg:px-8">
+                    {flash?.success && <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{flash.success}</div>}
+                    {flash?.error && <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{flash.error}</div>}
 
                     {canManage && (
-                        <div className="rounded-lg bg-white p-6 shadow-sm">
-                            <h3 className="mb-3 text-base font-semibold text-gray-900">New transfer</h3>
-                            <form onSubmit={submit} className="flex flex-wrap items-end gap-3">
-                                <div>
-                                    <label className="text-xs text-gray-500">From</label>
-                                    <select className="block rounded-md border-gray-300 text-sm" value={form.data.from_branch_id} onChange={(e) => form.setData('from_branch_id', Number(e.target.value))}>
-                                        {branches.map((b) => (
-                                            <option key={b.id} value={b.id}>{b.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-xs text-gray-500">To</label>
-                                    <select className="block rounded-md border-gray-300 text-sm" value={form.data.to_branch_id} onChange={(e) => form.setData('to_branch_id', Number(e.target.value))}>
-                                        {branches.map((b) => (
-                                            <option key={b.id} value={b.id}>{b.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-xs text-gray-500">Item</label>
-                                    <select className="block rounded-md border-gray-300 text-sm" value={form.data.item} onChange={(e) => form.setData('item', e.target.value)}>
-                                        {items.map((i) => (
-                                            <option key={i.value} value={i.value}>{i.label}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-xs text-gray-500">Quantity</label>
-                                    <input type="number" step="0.001" className="block w-28 rounded-md border-gray-300 text-sm" value={form.data.quantity} onChange={(e) => form.setData('quantity', Number(e.target.value))} />
-                                </div>
-                                <button type="submit" disabled={form.processing} className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
-                                    Create transfer
-                                </button>
-                                {Object.values(form.errors)[0] && <p className="text-sm text-red-600">{Object.values(form.errors)[0]}</p>}
-                            </form>
-                        </div>
+                        <Card>
+                            <CardHeader title="New transfer" />
+                            <CardBody>
+                                <form onSubmit={submit} className="flex flex-wrap items-end gap-3">
+                                    <SelectField label="From" className="w-44" value={String(form.data.from_branch_id)} options={branches.map((b) => ({ value: String(b.id), label: b.name }))} onChange={(v) => form.setData('from_branch_id', Number(v))} />
+                                    <SelectField label="To" className="w-44" value={String(form.data.to_branch_id)} options={branches.map((b) => ({ value: String(b.id), label: b.name }))} onChange={(v) => form.setData('to_branch_id', Number(v))} />
+                                    <SelectField label="Item" className="w-56" value={form.data.item} options={items} onChange={(v) => form.setData('item', v)} />
+                                    <TextField label="Quantity" type="number" className="w-28" value={String(form.data.quantity)} error={form.errors.quantity} onChange={(v) => form.setData('quantity', Number(v))} />
+                                    <Button type="submit" loading={form.processing}>Create transfer</Button>
+                                </form>
+                            </CardBody>
+                        </Card>
                     )}
 
-                    <div className="rounded-lg bg-white p-6 shadow-sm">
-                        <h3 className="mb-4 text-base font-semibold text-gray-900">Transfers</h3>
-                        <table className="w-full text-left text-sm">
-                            <thead className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-                                <tr>
-                                    <th className="py-2">Number</th>
-                                    <th className="py-2">From</th>
-                                    <th className="py-2">To</th>
-                                    <th className="py-2 text-right">Items</th>
-                                    <th className="py-2">Status</th>
-                                    <th className="py-2 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {transfers.map((t) => (
-                                    <tr key={t.id}>
-                                        <td className="py-3 text-gray-800">{t.number}</td>
-                                        <td className="py-3 text-gray-600">{t.from_branch}</td>
-                                        <td className="py-3 text-gray-600">{t.to_branch}</td>
-                                        <td className="py-3 text-right text-gray-600">{t.items_count}</td>
-                                        <td className="py-3">
-                                            <span className={'rounded-full px-2 py-0.5 text-xs font-medium ' + statusColor(t.status)}>{t.status_label}</span>
-                                        </td>
-                                        <td className="py-3 text-right">
-                                            <div className="flex justify-end gap-2 text-xs">
-                                                {canApprove && t.can_approve && (
-                                                    <button onClick={() => router.post(route('transfers.approve', t.id), {}, { preserveScroll: true })} className="text-green-600 hover:text-green-700">Approve</button>
-                                                )}
-                                                {canManage && t.can_dispatch && (
-                                                    <button onClick={() => router.post(route('transfers.dispatch', t.id), {}, { preserveScroll: true })} className="text-indigo-600 hover:text-indigo-700">Dispatch</button>
-                                                )}
-                                                {canManage && t.can_receive && (
-                                                    <button onClick={() => router.post(route('transfers.receive', t.id), {}, { preserveScroll: true })} className="text-indigo-600 hover:text-indigo-700">Receive</button>
-                                                )}
-                                                {canManage && t.can_cancel && (
-                                                    <button onClick={() => router.post(route('transfers.cancel', t.id), {}, { preserveScroll: true })} className="text-red-600 hover:text-red-700">Cancel</button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {transfers.length === 0 && (
-                                    <tr>
-                                        <td colSpan={6} className="py-8 text-center text-gray-500">No transfers yet.</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                    <Card>
+                        <CardHeader title="Transfers" description={`${transfers.length} total`} />
+                        <CardBody className="p-0">
+                            {transfers.length === 0 ? (
+                                <EmptyState title="No transfers yet" description="Create a transfer to move stock between branches." />
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm">
+                                        <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                                            <tr>
+                                                <th className="px-5 py-3">Number</th>
+                                                <th className="px-5 py-3">From → To</th>
+                                                <th className="px-5 py-3 text-right">Items</th>
+                                                <th className="px-5 py-3">Status</th>
+                                                <th className="px-5 py-3 text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {transfers.map((t) => (
+                                                <tr key={t.id} className="hover:bg-gray-50">
+                                                    <td className="px-5 py-3 font-medium text-gray-800">{t.number}</td>
+                                                    <td className="px-5 py-3 text-gray-600">
+                                                        {t.from_branch} → {t.to_branch}
+                                                    </td>
+                                                    <td className="px-5 py-3 text-right tabular-nums text-gray-600">{t.items_count}</td>
+                                                    <td className="px-5 py-3">
+                                                        <Badge tone={STATUS_TONE[t.status] ?? 'neutral'}>{t.status_label}</Badge>
+                                                    </td>
+                                                    <td className="px-5 py-3 text-right">
+                                                        <div className="flex justify-end gap-2">
+                                                            {canApprove && t.can_approve && <Button size="xs" variant="success" onClick={() => router.post(route('transfers.approve', t.id), {}, { preserveScroll: true })}>Approve</Button>}
+                                                            {canManage && t.can_dispatch && <Button size="xs" variant="primary" onClick={() => router.post(route('transfers.dispatch', t.id), {}, { preserveScroll: true })}>Dispatch</Button>}
+                                                            {canManage && t.can_receive && <Button size="xs" variant="primary" onClick={() => router.post(route('transfers.receive', t.id), {}, { preserveScroll: true })}>Receive</Button>}
+                                                            {canManage && t.can_cancel && <Button size="xs" variant="danger" onClick={() => router.post(route('transfers.cancel', t.id), {}, { preserveScroll: true })}>Cancel</Button>}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </CardBody>
+                    </Card>
                 </div>
             </div>
         </AuthenticatedLayout>

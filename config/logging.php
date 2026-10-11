@@ -54,8 +54,19 @@ return [
 
         'stack' => [
             'driver' => 'stack',
-            'channels' => explode(',', (string) env('LOG_STACK', 'single')),
+            // The database channel is always attached so operational logs are
+            // captured for the in-app log viewer regardless of LOG_STACK.
+            'channels' => array_values(array_unique(array_merge(
+                explode(',', (string) env('LOG_STACK', 'single')),
+                ['database'],
+            ))),
             'ignore_exceptions' => false,
+        ],
+
+        'database' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_DATABASE_LEVEL', 'warning'),
+            'handler' => App\Logging\DatabaseHandler::class,
         ],
 
         'single' => [

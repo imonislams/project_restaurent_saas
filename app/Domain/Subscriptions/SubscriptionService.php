@@ -7,6 +7,7 @@ use App\Domain\Documents\DocumentNumberGenerator;
 use App\Domain\Subscriptions\Enums\BillingCycle;
 use App\Domain\Subscriptions\Enums\InvoiceStatus;
 use App\Domain\Subscriptions\Enums\SubscriptionStatus;
+use App\Domain\Subscriptions\Models\Coupon;
 use App\Domain\Subscriptions\Models\Plan;
 use App\Domain\Subscriptions\Models\Subscription;
 use App\Domain\Subscriptions\Models\SubscriptionInvoice;
@@ -14,21 +15,28 @@ use App\Domain\Tenancy\Enums\TenantStatus;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Subscription lifecycle. Entitlements are always resolved here on the server
  * from the stored subscription — never from a client-supplied plan.
+ *
+ * State machine: trialing → active → past_due → grace_period → suspended;
+ * cancelled / expired are terminal (access revoked). A grace period retains
+ * access while dunning.
  */
 class SubscriptionService
 {
     public function __construct(
         protected DocumentNumberGenerator $numbers,
         protected AuditLogger $audit,
+        protected PricingService $pricing,
+        protected CouponService $coupons,
     ) {}
 
     public function startTrial(Tenant $tenant, ?Plan $plan = null): ?Subscription
     {
-        $plan ??= Plan::query()->where('is_active', true)->orderBy('sort_order')->first();
+        $plan ??= Plan::query()->where('is_active', true)->whereNull('archived_at')->orderBy('sort_order')->first();
 
         if (! $plan) {
             return null;
@@ -36,7 +44,7 @@ class SubscriptionService
 
         $days = $plan->trial_days > 0 ? $plan->trial_days : 14;
 
-        return Subscription::updateOrCreate(
+        $subscription = Subscription::updateOrCreate(
             ['tenant_id' => $tenant->getKey()],
             [
                 'plan_id' => $plan->getKey(),
@@ -47,20 +55,33 @@ class SubscriptionService
                 'current_period_end' => now()->addDays($days),
                 'cancelled_at' => null,
                 'suspended_at' => null,
+                'grace_ends_at' => null,
             ],
         );
+
+        $subscription->snapshotPlan($plan);
+        $subscription->save();
+
+        return $subscription;
     }
 
     public function changePlan(Subscription $subscription, Plan $plan, BillingCycle $cycle, User $actor): Subscription
     {
+        if ($plan->isArchived()) {
+            throw ValidationException::withMessages(['plan_id' => 'This plan is archived and cannot be assigned.']);
+        }
+
         $subscription->forceFill([
             'plan_id' => $plan->getKey(),
             'billing_cycle' => $cycle,
-        ])->save();
+        ]);
+        $subscription->snapshotPlan($plan);
+        $subscription->save();
 
         $this->audit->log('subscription.plan_changed', $subscription, [
             'plan' => $plan->name,
             'cycle' => $cycle->value,
+            'plan_version' => $plan->version,
         ], $actor, $subscription->tenant_id);
 
         return $subscription->fresh('plan');
@@ -72,6 +93,8 @@ class SubscriptionService
             $subscription->forceFill([
                 'status' => SubscriptionStatus::Active,
                 'suspended_at' => null,
+                'grace_ends_at' => null,
+                'cancel_at_period_end' => false,
                 'current_period_start' => now(),
                 'current_period_end' => now()->addMonths($subscription->billing_cycle->months()),
             ])->save();
@@ -89,6 +112,23 @@ class SubscriptionService
         $subscription->forceFill(['status' => SubscriptionStatus::PastDue])->save();
 
         $this->audit->log('subscription.past_due', $subscription, [], $actor, $subscription->tenant_id);
+
+        return $subscription;
+    }
+
+    /** Extend access while dunning — the tenant keeps working during grace. */
+    public function enterGrace(Subscription $subscription, ?User $actor = null): Subscription
+    {
+        $days = (int) (app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('billing.grace_days') ?? config('platform.billing.grace_days', 7));
+
+        $subscription->forceFill([
+            'status' => SubscriptionStatus::GracePeriod,
+            'grace_ends_at' => now()->addDays($days),
+        ])->save();
+
+        $this->audit->log('subscription.grace_started', $subscription, [
+            'grace_ends_at' => $subscription->grace_ends_at?->toIso8601String(),
+        ], $actor, $subscription->tenant_id);
 
         return $subscription;
     }
@@ -114,6 +154,7 @@ class SubscriptionService
         $subscription->forceFill([
             'status' => SubscriptionStatus::Cancelled,
             'cancelled_at' => now(),
+            'cancel_at_period_end' => false,
         ])->save();
 
         $this->audit->log('subscription.cancelled', $subscription, [], $actor, $subscription->tenant_id);
@@ -121,11 +162,44 @@ class SubscriptionService
         return $subscription;
     }
 
+    /** Cancel at the end of the paid period instead of immediately. */
+    public function scheduleCancelAtPeriodEnd(Subscription $subscription, User $actor): Subscription
+    {
+        $subscription->forceFill(['cancel_at_period_end' => true])->save();
+
+        $this->audit->log('subscription.cancel_scheduled', $subscription, [
+            'ends_at' => $subscription->current_period_end?->toIso8601String(),
+        ], $actor, $subscription->tenant_id);
+
+        return $subscription;
+    }
+
+    /** Terminal state after the period ends for a scheduled cancellation. */
+    public function expire(Subscription $subscription, ?User $actor = null): Subscription
+    {
+        return DB::transaction(function () use ($subscription, $actor) {
+            $subscription->forceFill([
+                'status' => SubscriptionStatus::Expired,
+                'cancel_at_period_end' => false,
+                'cancelled_at' => $subscription->cancelled_at ?? now(),
+            ])->save();
+
+            $this->setTenantStatus($subscription, TenantStatus::Suspended);
+
+            $this->audit->log('subscription.expired', $subscription, [], $actor, $subscription->tenant_id);
+
+            return $subscription->fresh();
+        });
+    }
+
     public function renew(Subscription $subscription, ?User $actor = null): Subscription
     {
         return DB::transaction(function () use ($subscription, $actor) {
             $subscription->forceFill([
                 'status' => SubscriptionStatus::Active,
+                'grace_ends_at' => null,
+                'cancel_at_period_end' => false,
+                'suspended_at' => null,
                 'current_period_start' => now(),
                 'current_period_end' => now()->addMonths($subscription->billing_cycle->months()),
             ])->save();
@@ -141,22 +215,67 @@ class SubscriptionService
         });
     }
 
-    public function issueInvoice(Subscription $subscription): SubscriptionInvoice
+    /** Retry a failed renewal — same effect as renew, from the failed-renewals view. */
+    public function retryRenewal(Subscription $subscription, User $actor): Subscription
     {
-        return SubscriptionInvoice::create([
-            'tenant_id' => $subscription->tenant_id,
-            'subscription_id' => $subscription->getKey(),
-            'number' => $this->numbers->next($subscription->tenant_id, 'subscription_invoice', 'INV'),
-            'amount' => $subscription->billing_cycle->priceFor($subscription->plan),
-            'currency' => $subscription->tenant?->getSetting('region.currency', 'USD') ?? 'USD',
-            'status' => InvoiceStatus::Open,
-            'period_start' => $subscription->current_period_start ?? now(),
-            'period_end' => $subscription->current_period_end ?? now()->addMonth(),
-            'issued_at' => now(),
-        ]);
+        return $this->renew($subscription, $actor);
     }
 
-    public function payInvoice(SubscriptionInvoice $invoice, User $actor): SubscriptionInvoice
+    public function issueInvoice(Subscription $subscription): SubscriptionInvoice
+    {
+        $price = $this->pricing->subscriptionPrice($subscription);
+        $subtotal = $price['amount'];
+
+        $discount = 0.0;
+        $couponCode = null;
+
+        $coupon = $subscription->coupon;
+
+        if (! $coupon) {
+            $coupon = $this->coupons->bestAutoApply($subscription->plan, $subscription->tenant, $subtotal);
+
+            if ($coupon) {
+                $this->coupons->redeem($coupon, $subscription->tenant, $subscription, $coupon->discountFor($subtotal));
+            }
+        }
+
+        if ($coupon) {
+            $discount = $coupon->discountFor($subtotal);
+            $couponCode = $coupon->code;
+        }
+
+        return DB::transaction(function () use ($subscription, $subtotal, $discount, $couponCode, $price) {
+            $prefix = (string) (app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('billing.invoice_prefix') ?? 'INV');
+
+            $invoice = SubscriptionInvoice::create([
+                'tenant_id' => $subscription->tenant_id,
+                'subscription_id' => $subscription->getKey(),
+                'number' => $this->numbers->next($subscription->tenant_id, 'subscription_invoice', $prefix),
+                'subtotal' => $subtotal,
+                'discount_amount' => $discount,
+                'coupon_code' => $couponCode,
+                'amount' => round($subtotal - $discount, 2),
+                'currency' => $price['currency'],
+                'status' => InvoiceStatus::Open,
+                'period_start' => $subscription->current_period_start ?? now(),
+                'period_end' => $subscription->current_period_end ?? now()->addMonth(),
+                'issued_at' => now(),
+                'due_date' => ($subscription->current_period_start ?? now())->copy()->addDays(14),
+            ]);
+
+            $invoice->items()->create([
+                'description' => ($subscription->plan?->name ?? 'Subscription').' — '.ucfirst($subscription->billing_cycle->value).' subscription',
+                'quantity' => 1,
+                'unit_price' => $subtotal,
+                'amount' => $subtotal,
+                'sort_order' => 0,
+            ]);
+
+            return $invoice;
+        });
+    }
+
+    public function payInvoice(SubscriptionInvoice $invoice, ?User $actor = null): SubscriptionInvoice
     {
         $invoice->forceFill([
             'status' => InvoiceStatus::Paid,
@@ -166,6 +285,38 @@ class SubscriptionService
         $this->audit->log('subscription.invoice_paid', $invoice, ['number' => $invoice->number], $actor, $invoice->tenant_id);
 
         return $invoice;
+    }
+
+    /** Apply a coupon to a subscription and record the redemption once. */
+    public function applyCoupon(Subscription $subscription, string $code, User $actor): Coupon
+    {
+        $coupon = $this->coupons->findValid($code, $subscription->plan, $subscription->tenant);
+
+        if (! $coupon) {
+            throw ValidationException::withMessages([
+                'code' => 'This coupon is not valid for this subscription.',
+            ]);
+        }
+
+        $price = $this->pricing->subscriptionPrice($subscription);
+        $discount = $coupon->discountFor($price['amount']);
+
+        return DB::transaction(function () use ($subscription, $coupon, $discount, $actor) {
+            $subscription->forceFill(['coupon_id' => $coupon->getKey()])->save();
+            $this->coupons->redeem($coupon, $subscription->tenant, $subscription, $discount);
+            $this->coupons->logApplied($coupon, $subscription, $discount, $actor);
+
+            return $coupon;
+        });
+    }
+
+    public function removeCoupon(Subscription $subscription, User $actor): Subscription
+    {
+        $subscription->forceFill(['coupon_id' => null])->save();
+
+        $this->audit->log('subscription.coupon_removed', $subscription, [], $actor, $subscription->tenant_id);
+
+        return $subscription;
     }
 
     protected function setTenantStatus(Subscription $subscription, TenantStatus $status): void

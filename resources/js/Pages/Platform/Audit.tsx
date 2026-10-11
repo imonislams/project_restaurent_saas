@@ -1,5 +1,7 @@
+import { Button, Card, DataTable, FilterBar, Pagination, SelectField, TextField, ActivityBadge } from '@/Components/ui';
+import type { Column, PageLink } from '@/Components/ui';
 import PlatformLayout from '@/Layouts/PlatformLayout';
-import { Link, router } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { useState } from 'react';
 
 interface LogRow {
@@ -8,89 +10,79 @@ interface LogRow {
     action: string;
     actor: string | null;
     subject: string | null;
+    metadata: Record<string, unknown> | null;
     ip: string | null;
     created_at: string | null;
 }
 
 interface Paginated<T> {
     data: T[];
-    links: { url: string | null; label: string; active: boolean }[];
+    links: PageLink[];
+}
+
+interface Option {
+    value: string;
+    label: string;
 }
 
 export default function PlatformAudit({
     logs,
     filters,
+    actors,
 }: {
     logs: Paginated<LogRow>;
-    filters: { action: string };
+    filters: { action: string; actor: string; tenant: string; from: string; to: string };
+    actors: Option[];
 }) {
-    const [action, setAction] = useState(filters.action ?? '');
+    const [state, setState] = useState(filters);
 
-    const apply = () =>
-        router.get(route('platform.audit.index'), { action }, { preserveState: true, preserveScroll: true, replace: true });
+    const apply = (overrides: Partial<typeof state> = {}) => {
+        const next = { ...state, ...overrides };
+        setState(next);
+        router.get(route('platform.audit.index'), next, { preserveState: true, preserveScroll: true, replace: true });
+    };
+
+    const columns: Column<LogRow>[] = [
+        { key: 'created_at', label: 'When', render: (r) => (r.created_at ? new Date(r.created_at).toLocaleString() : '') },
+        { key: 'action', label: 'Action', render: (r) => (
+            <div className="flex flex-col items-start gap-1">
+                <ActivityBadge action={r.action} showIcon />
+                <span className="font-mono text-[11px] text-gray-400">{r.action}</span>
+            </div>
+        ) },
+        { key: 'actor', label: 'Actor', render: (r) => r.actor ?? 'System' },
+        { key: 'tenant_id', label: 'Tenant', render: (r) => r.tenant_id ?? '—' },
+        { key: 'subject', label: 'Subject', render: (r) => <span className="font-mono text-xs text-gray-500">{r.subject ?? '—'}</span> },
+        { key: 'ip', label: 'IP', render: (r) => r.ip ?? '—' },
+        {
+            key: 'metadata',
+            label: 'Details',
+            render: (r) =>
+                r.metadata ? (
+                    <details className="text-xs">
+                        <summary className="cursor-pointer text-indigo-600">view</summary>
+                        <pre className="mt-1 max-w-md overflow-x-auto whitespace-pre-wrap break-all rounded bg-gray-50 p-2 text-[11px] text-gray-600">{JSON.stringify(r.metadata, null, 2)}</pre>
+                    </details>
+                ) : (
+                    '—'
+                ),
+        },
+    ];
 
     return (
-        <PlatformLayout title="Audit log">
-            <div className="mb-4 flex justify-end">
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        apply();
-                    }}
-                    className="flex gap-2"
-                >
-                    <input value={action} onChange={(e) => setAction(e.target.value)} placeholder="Filter by action" className="rounded-md border-gray-300 text-sm" />
-                    <button type="submit" className="rounded-md bg-gray-800 px-3 py-1.5 text-sm text-white">Filter</button>
-                </form>
-            </div>
+        <PlatformLayout title="Audit Logs">
+            <FilterBar actions={<Button size="sm" variant="secondary" href={route('platform.audit.export', state as unknown as Record<string, unknown>)}>Export CSV</Button>}>
+                <TextField label="Action" value={state.action} placeholder="e.g. platform.tenant" onChange={(v) => setState((s) => ({ ...s, action: v }))} onEnter={() => apply()} />
+                <SelectField label="Actor" value={state.actor} options={[{ value: '', label: 'Any actor' }, ...actors]} onChange={(v) => apply({ actor: v })} />
+                <TextField label="From" type="date" value={state.from} onChange={(v) => apply({ from: v })} />
+                <TextField label="To" type="date" value={state.to} onChange={(v) => apply({ to: v })} />
+                <Button size="sm" onClick={() => apply()}>Apply</Button>
+            </FilterBar>
 
-            <div className="rounded-lg bg-white p-6 shadow-sm">
-                <table className="w-full text-left text-sm">
-                    <thead className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-                        <tr>
-                            <th className="py-2">When</th>
-                            <th className="py-2">Action</th>
-                            <th className="py-2">Actor</th>
-                            <th className="py-2">Tenant</th>
-                            <th className="py-2">IP</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {logs.data.map((log) => (
-                            <tr key={log.id}>
-                                <td className="py-2 text-gray-500">{log.created_at ? new Date(log.created_at).toLocaleString() : ''}</td>
-                                <td className="py-2 font-medium text-gray-800">{log.action}</td>
-                                <td className="py-2 text-gray-600">{log.actor ?? '—'}</td>
-                                <td className="py-2 text-gray-600">{log.tenant_id ?? '—'}</td>
-                                <td className="py-2 text-gray-500">{log.ip ?? '—'}</td>
-                            </tr>
-                        ))}
-                        {logs.data.length === 0 && (
-                            <tr>
-                                <td colSpan={5} className="py-8 text-center text-gray-500">No audit records.</td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-
-                {logs.links.length > 3 && (
-                    <div className="mt-4 flex flex-wrap gap-1">
-                        {logs.links.map((link, i) =>
-                            link.url ? (
-                                <Link
-                                    key={i}
-                                    href={link.url}
-                                    preserveScroll
-                                    className={'rounded px-3 py-1 text-sm ' + (link.active ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100')}
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
-                            ) : (
-                                <span key={i} className="px-3 py-1 text-sm text-gray-400" dangerouslySetInnerHTML={{ __html: link.label }} />
-                            ),
-                        )}
-                    </div>
-                )}
-            </div>
+            <Card>
+                <DataTable columns={columns} rows={logs.data} rowKey={(r) => r.id} empty={<p className="py-6 text-center text-sm text-gray-500">No audit records.</p>} />
+            </Card>
+            <Pagination links={logs.links} />
         </PlatformLayout>
     );
 }

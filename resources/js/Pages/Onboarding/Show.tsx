@@ -27,11 +27,11 @@ export default function OnboardingShow({
             case 'branch':
                 return <BranchStep form={form} options={options} />;
             case 'hours':
-                return <HoursStep form={form} />;
+                return <HoursStep form={form} options={options} />;
             case 'tax':
-                return <TaxStep form={form} />;
+                return <TaxStep form={form} options={options} />;
             case 'receipt':
-                return <ReceiptStep form={form} />;
+                return <ReceiptStep form={form} options={options} />;
             case 'review':
                 return <ReviewStep progress={progress} />;
             default:

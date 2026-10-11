@@ -191,6 +191,6 @@ class PurchaseOrderController extends Controller
                 'cost' => (float) $p->cost_price,
             ]);
 
-        return $ingredients->merge($products)->values()->all();
+        return array_merge($ingredients->all(), $products->all());
     }
 }

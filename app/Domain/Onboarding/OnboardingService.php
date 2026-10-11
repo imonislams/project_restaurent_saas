@@ -3,6 +3,7 @@
 namespace App\Domain\Onboarding;
 
 use App\Domain\Accounting\Actions\ProvisionAccountingDefaults;
+use App\Domain\Branches\Enums\ServiceType;
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
 use App\Domain\Onboarding\Enums\OnboardingStep;
@@ -236,47 +237,30 @@ class OnboardingService
     public function checklist(Tenant $tenant): array
     {
         return [
-            [
-                'key' => 'company',
-                'label' => 'Company & region configured',
-                'done' => $this->companyConfigured($tenant),
-                'required' => true,
-            ],
-            [
-                'key' => 'branch',
-                'label' => 'First branch created',
-                'done' => $this->branchConfigured($tenant),
-                'required' => true,
-            ],
-            [
-                'key' => 'hours',
-                'label' => 'Operating hours set',
-                'done' => $this->hoursConfigured($tenant),
-                'required' => false,
-            ],
-            [
-                'key' => 'tax',
-                'label' => 'Tax preferences set',
-                'done' => $this->taxConfigured($tenant),
-                'required' => false,
-            ],
-            [
-                'key' => 'receipt',
-                'label' => 'Receipt details set',
-                'done' => $this->receiptConfigured($tenant),
-                'required' => false,
-            ],
-            [
-                'key' => 'payments',
-                'label' => 'Payment methods configured',
-                'done' => false,
-                'required' => false,
-            ],
-            [
-                'key' => 'staff',
-                'label' => 'Team invited',
-                'done' => false,
-                'required' => false,
+            $this->checklistItem('company', 'Company & region configured', $this->companyConfigured($tenant), true, 'settings.show', ['group' => 'company']),
+            $this->checklistItem('branch', 'First branch created', $this->branchConfigured($tenant), true, 'settings.show', ['group' => 'branches']),
+            $this->checklistItem('hours', 'Operating hours set', $this->hoursConfigured($tenant), false, 'settings.show', ['group' => 'hours']),
+            $this->checklistItem('tax', 'Tax preferences set', $this->taxConfigured($tenant), false, 'settings.show', ['group' => 'tax']),
+            $this->checklistItem('receipt', 'Receipt details set', $this->receiptConfigured($tenant), false, 'settings.show', ['group' => 'receipt']),
+            $this->checklistItem('payments', 'Payment settings reviewed', $this->paymentsConfigured($tenant), false, 'settings.show', ['group' => 'pos']),
+            $this->checklistItem('staff', 'Team invited', $this->staffConfigured($tenant), false, 'staff.index', []),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array{key: string, label: string, done: bool, required: bool, action: ?array{label: string, href: string}}
+     */
+    protected function checklistItem(string $key, string $label, bool $done, bool $required, string $routeName, array $params): array
+    {
+        return [
+            'key' => $key,
+            'label' => $label,
+            'done' => $done,
+            'required' => $required,
+            'action' => $done ? null : [
+                'label' => $required ? 'Set up' : 'Configure',
+                'href' => route($routeName, $params),
             ],
         ];
     }
@@ -297,6 +281,164 @@ class OnboardingService
     public function branchForOnboarding(Tenant $tenant): ?Branch
     {
         return $tenant->branches()->orderByDesc('is_primary')->first();
+    }
+
+    protected function paymentsConfigured(Tenant $tenant): bool
+    {
+        return $tenant->getSetting('payments.provider') !== null;
+    }
+
+    protected function staffConfigured(Tenant $tenant): bool
+    {
+        return $tenant->users()->count() > 1 || $tenant->invitations()->exists();
+    }
+
+    public function savePos(Tenant $tenant, array $data): void
+    {
+        $tenant->mergeSettings([
+            'service_charge.rate' => (float) ($data['service_charge_rate'] ?? 0),
+            'pos.allow_partial' => (bool) ($data['pos_allow_partial'] ?? false),
+            'pos.cash_variance_threshold' => isset($data['pos_cash_variance_threshold']) && $data['pos_cash_variance_threshold'] !== ''
+                ? (float) $data['pos_cash_variance_threshold'] : null,
+            'pos.discount_approval_percent' => isset($data['pos_discount_approval_percent']) && $data['pos_discount_approval_percent'] !== ''
+                ? (float) $data['pos_discount_approval_percent'] : null,
+            'payments.provider' => $data['payments_provider'] ?? 'manual',
+        ]);
+
+        $tenant->save();
+    }
+
+    public function saveNotifications(Tenant $tenant, array $data): void
+    {
+        $tenant->mergeSettings([
+            'inventory.low_stock_threshold' => isset($data['low_stock_threshold']) && $data['low_stock_threshold'] !== ''
+                ? (float) $data['low_stock_threshold'] : 0,
+            'loyalty.enabled' => (bool) ($data['loyalty_enabled'] ?? false),
+            'loyalty.points_per_currency' => (float) ($data['loyalty_points_per_currency'] ?? 1),
+        ]);
+
+        $tenant->save();
+    }
+
+    /**
+     * Form payload for a Settings tab.
+     *
+     * @return array<string, mixed>
+     */
+    public function settingsFormData(Tenant $tenant, string $group): array
+    {
+        return match ($group) {
+            'pos' => [
+                'service_charge_rate' => (float) $tenant->getSetting('service_charge.rate', 0),
+                'pos_allow_partial' => (bool) $tenant->getSetting('pos.allow_partial', false),
+                'pos_cash_variance_threshold' => $tenant->getSetting('pos.cash_variance_threshold'),
+                'pos_discount_approval_percent' => $tenant->getSetting('pos.discount_approval_percent'),
+                'payments_provider' => $tenant->getSetting('payments.provider', 'manual'),
+            ],
+            'notifications' => [
+                'low_stock_threshold' => (float) $tenant->getSetting('inventory.low_stock_threshold', 0),
+                'loyalty_enabled' => (bool) $tenant->getSetting('loyalty.enabled', false),
+                'loyalty_points_per_currency' => (float) $tenant->getSetting('loyalty.points_per_currency', 1),
+            ],
+            default => $this->stepData($tenant, OnboardingStep::from($group === 'branches' ? 'branch' : $group)),
+        };
+    }
+
+    /**
+     * Shared select options for onboarding and settings.
+     *
+     * @return array<string, mixed>
+     */
+    public function options(): array
+    {
+        return [
+            'countries' => collect(config('geo.countries'))
+                ->map(fn ($name, $code) => ['value' => $code, 'label' => $name])
+                ->values(),
+            'currencies' => collect(config('geo.currencies'))
+                ->map(fn ($meta, $code) => ['value' => $code, 'label' => $code.' — '.$meta['name'], 'symbol' => $meta['symbol']])
+                ->values(),
+            'timezones' => collect(config('geo.timezones'))
+                ->map(fn ($tz) => ['value' => $tz, 'label' => $tz])
+                ->values(),
+            'service_types' => collect(ServiceType::cases())
+                ->map(fn (ServiceType $type) => ['value' => $type->value, 'label' => $type->label()])
+                ->values(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function stepData(Tenant $tenant, OnboardingStep $step): array
+    {
+        return match ($step) {
+            OnboardingStep::Company => [
+                'legal_name' => $tenant->getSetting('company.legal_name', $tenant->name),
+                'phone' => $tenant->getSetting('company.phone', ''),
+                'email' => $tenant->getSetting('company.email', $tenant->business_email),
+                'tax_id' => $tenant->getSetting('company.tax_id', ''),
+                'address' => $tenant->getSetting('company.address', ''),
+                'country' => $tenant->getSetting('region.country', 'BD'),
+                'currency' => $tenant->getSetting('region.currency', 'BDT'),
+                'timezone' => $tenant->getSetting('region.timezone', config('app.timezone')),
+            ],
+            OnboardingStep::Branch => $this->branchData($tenant),
+            OnboardingStep::Hours => ['days' => $this->hoursData($tenant)],
+            OnboardingStep::Tax => [
+                'tax_name' => $tenant->getSetting('tax.name', 'VAT'),
+                'tax_rate' => $tenant->getSetting('tax.rate', 0),
+                'tax_inclusive' => (bool) $tenant->getSetting('tax.inclusive', false),
+            ],
+            OnboardingStep::Receipt => [
+                'receipt_header' => $tenant->getSetting('receipt.header', $tenant->name),
+                'receipt_footer' => $tenant->getSetting('receipt.footer', 'Thank you for dining with us!'),
+                'receipt_show_tax' => (bool) $tenant->getSetting('receipt.show_tax', true),
+                'receipt_show_logo' => (bool) $tenant->getSetting('receipt.show_logo', false),
+            ],
+            OnboardingStep::Review => [],
+        };
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function branchData(Tenant $tenant): array
+    {
+        $branch = $this->branchForOnboarding($tenant);
+
+        return [
+            'name' => $branch?->name ?? $tenant->name,
+            'code' => $branch?->code ?? '',
+            'address' => $branch?->address ?? $tenant->getSetting('company.address', ''),
+            'phone' => $branch?->phone ?? $tenant->getSetting('company.phone', ''),
+            'timezone' => $branch?->timezone ?? $tenant->getSetting('region.timezone'),
+            'currency' => $branch?->currency ?? $tenant->getSetting('region.currency'),
+            'service_types' => $branch?->serviceTypes() ?? [ServiceType::DineIn->value],
+        ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function hoursData(Tenant $tenant): array
+    {
+        $branch = $this->branchForOnboarding($tenant);
+        $existing = $branch?->businessHours()->get()->keyBy('day_of_week');
+
+        $days = [];
+        for ($day = 0; $day <= 6; $day++) {
+            $row = $existing?->get($day);
+
+            $days[] = [
+                'day_of_week' => $day,
+                'is_closed' => $row?->is_closed ?? false,
+                'opens_at' => $row?->opens_at ? substr($row->opens_at, 0, 5) : '09:00',
+                'closes_at' => $row?->closes_at ? substr($row->closes_at, 0, 5) : '22:00',
+            ];
+        }
+
+        return $days;
     }
 
     protected function companyConfigured(Tenant $tenant): bool
