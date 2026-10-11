@@ -61,6 +61,9 @@ class InventoryController extends Controller
                 ->get()
                 ->map(fn (StockBalance $balance) => [
                     'id' => $balance->getKey(),
+                    'branch_id' => $balance->branch_id,
+                    'stock_location_id' => $balance->stock_location_id,
+                    'item_id' => $balance->stockable_id,
                     'branch_name' => $balance->branch?->name,
                     'location_name' => $balance->stockLocation?->name,
                     'item_type' => $balance->stockable_type,

@@ -119,6 +119,7 @@ export const translations: Record<string, Record<string, string>> = {
         'dash.invite_staff': 'Invite your team',
 
         'nav.settings': 'Settings',
+        'nav.branches': 'Branches',
         'settings.title': 'Settings',
         'settings.subtitle': 'Manage your restaurant profile, tax, receipts and POS preferences.',
         'settings.saved': 'Settings saved.',
@@ -294,6 +295,7 @@ export const translations: Record<string, Record<string, string>> = {
         'dash.invite_staff': 'টিম আমন্ত্রণ করুন',
 
         'nav.settings': 'সেটিংস',
+        'nav.branches': 'শাখা',
         'settings.title': 'সেটিংস',
         'settings.subtitle': 'আপনার রেস্টুরেন্ট প্রোফাইল, কর, রসিদ ও পিওএস পছন্দ পরিচালনা করুন।',
         'settings.saved': 'সেটিংস সংরক্ষিত হয়েছে।',
