@@ -41,6 +41,7 @@ class DashboardController extends Controller
             'tenant' => [
                 'name' => $tenant->name,
                 'slug' => $tenant->slug,
+                'logo_url' => $tenant->logo_url,
                 'status' => $tenant->status->value,
                 'on_trial' => $tenant->onTrial(),
                 'trial_ends_at' => $tenant->trial_ends_at?->toIso8601String(),

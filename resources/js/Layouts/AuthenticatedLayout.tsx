@@ -131,12 +131,12 @@ export default function Authenticated({
 
     return (
         <AppShell
-            brand={{ title: tenant?.name ?? 'Restrly POS', subtitle: t('shell.management') }}
+            brand={{ title: tenant?.name ?? 'Restrly POS', subtitle: t('shell.management'), logoUrl: tenant?.logo_url ?? null }}
             nav={nav}
             header={header}
             banner={banner}
             topbarRight={topbarRight}
-            user={{ name: user?.name ?? 'User', email: user?.email ?? '', role: isPlatformAdmin ? 'Platform Admin' : 'Staff' }}
+            user={{ name: user?.name ?? 'User', email: user?.email ?? '', role: isPlatformAdmin ? 'Platform Admin' : 'Staff', avatarUrl: user?.avatar_url ?? null }}
             branches={page.branches ?? []}
             activeBranchId={page.active_branch_id ?? null}
         >

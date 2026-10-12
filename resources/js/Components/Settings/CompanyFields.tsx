@@ -1,5 +1,6 @@
 import { FormSection, SelectField, TextField } from '@/Components/ui';
 import { useT } from '@/i18n';
+import LogoUploader from './LogoUploader';
 import type { FieldProps } from './types';
 
 export default function CompanyFields({ data, setData, errors, options }: FieldProps) {
@@ -7,6 +8,8 @@ export default function CompanyFields({ data, setData, errors, options }: FieldP
 
     return (
         <>
+            <LogoUploader />
+
             <FormSection title={t('settings.company_section')} description={t('settings.company_hint')}>
                 <TextField label={t('settings.legal_name')} value={data.legal_name ?? ''} error={errors.legal_name} onChange={(v) => setData('legal_name', v)} />
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -12,6 +12,7 @@ use App\Domain\Subscriptions\Models\Subscription;
 use App\Domain\Tenancy\Enums\TenantStatus;
 use App\Domain\Tenancy\Factories\TenantFactory;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -28,6 +29,7 @@ class Tenant extends Model
         'name',
         'slug',
         'business_email',
+        'logo_path',
         'status',
         'trial_ends_at',
         'onboarding_completed_at',
@@ -184,5 +186,13 @@ class Tenant extends Model
     public function getRouteKeyName(): string
     {
         return 'id';
+    }
+
+    /** Public URL of the restaurant logo (null when none is set). */
+    protected function logoUrl(): Attribute
+    {
+        return Attribute::get(
+            fn () => $this->logo_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->logo_path) : null,
+        );
     }
 }

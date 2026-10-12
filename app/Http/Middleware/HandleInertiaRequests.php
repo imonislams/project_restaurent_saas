@@ -46,6 +46,7 @@ class HandleInertiaRequests extends Middleware
                 'id' => $tenant->getKey(),
                 'name' => $tenant->name,
                 'slug' => $tenant->slug,
+                'logo_url' => $tenant->logo_url,
                 'status' => $tenant->status->value,
                 'on_trial' => $tenant->onTrial(),
                 'onboarding_completed' => $tenant->hasCompletedOnboarding(),

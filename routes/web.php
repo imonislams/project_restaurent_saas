@@ -18,6 +18,7 @@ use App\Http\Controllers\Menu\ModifierController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Onboarding\OnboardingController;
 use App\Http\Controllers\Tenant\SettingsController as TenantSettingsController;
+use App\Http\Controllers\Tenant\TenantBrandingController;
 use App\Http\Controllers\Tenant\BranchController as TenantBranchController;
 use App\Http\Controllers\Orders\OrderController;
 use App\Http\Controllers\Orders\ReceiptController;
@@ -431,6 +432,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('settings')->name('settings.')->middleware('permission:settings.manage')->group(function () {
         Route::get('/', [TenantSettingsController::class, 'index'])->name('index');
+
+        // Branding upload (registered before the /{group} catch-all below).
+        Route::post('/logo', [TenantBrandingController::class, 'updateLogo'])->name('logo.update');
+        Route::delete('/logo', [TenantBrandingController::class, 'destroyLogo'])->name('logo.destroy');
+
         Route::get('/{group}', [TenantSettingsController::class, 'show'])->name('show');
         Route::post('/{group}', [TenantSettingsController::class, 'update'])->name('update');
     });
@@ -722,6 +728,8 @@ Route::middleware('auth')->post('/platform/impersonate/stop', [PlatformImpersona
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
+    Route::delete('/profile/photo', [ProfileController::class, 'destroyPhoto'])->name('profile.photo.destroy');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 

@@ -35,12 +35,12 @@ export interface NavGroup {
 let navScrollMemory = 0;
 
 export interface AppShellProps {
-    brand: { title: string; subtitle?: string };
+    brand: { title: string; subtitle?: string; logoUrl?: string | null };
     nav: NavGroup[];
     header?: ReactNode;
     banner?: ReactNode;
     topbarRight?: ReactNode;
-    user: { name: string; email: string; role?: string };
+    user: { name: string; email: string; role?: string; avatarUrl?: string | null };
     branches?: BranchSummary[];
     activeBranchId?: number | null;
     dark?: boolean;
@@ -189,9 +189,17 @@ export default function AppShell({
                 }
             >
                 <Link href={route('dashboard')} className="flex items-center gap-2.5 min-w-0">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-restrly-600 text-white shadow-subtle">
-                        <ApplicationLogo className="h-5 w-5 fill-current text-white" />
-                    </div>
+                    {brand.logoUrl ? (
+                        <img
+                            src={brand.logoUrl}
+                            alt={brand.title}
+                            className="h-8 w-8 shrink-0 rounded-lg object-cover shadow-subtle"
+                        />
+                    ) : (
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-restrly-600 text-white shadow-subtle">
+                            <ApplicationLogo className="h-5 w-5 fill-current text-white" />
+                        </div>
+                    )}
                     {!collapsed && (
                         <div className="min-w-0">
                             <div className={'truncate text-sm font-bold tracking-tight ' + (dark ? 'text-white' : 'text-gray-900')}>
@@ -295,9 +303,13 @@ export default function AppShell({
                         (dark ? 'hover:bg-slate-800' : 'hover:bg-gray-50')
                     }
                 >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-restrly-600 text-xs font-bold text-white shadow-subtle">
-                        {user.name.slice(0, 1).toUpperCase()}
-                    </div>
+                    {user.avatarUrl ? (
+                        <img src={user.avatarUrl} alt={user.name} className="h-8 w-8 shrink-0 rounded-lg object-cover shadow-subtle" />
+                    ) : (
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-restrly-600 text-xs font-bold text-white shadow-subtle">
+                            {user.name.slice(0, 1).toUpperCase()}
+                        </div>
+                    )}
                     {!collapsed && (
                         <div className="min-w-0 flex-1">
                             <div className={'truncate text-xs font-semibold ' + (dark ? 'text-white' : 'text-gray-900')}>
@@ -424,7 +436,11 @@ export default function AppShell({
                                     aria-haspopup="true"
                                 >
                                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-restrly-600 text-xs font-bold text-white shadow-subtle">
-                                        {user.name.slice(0, 1).toUpperCase()}
+                                        {user.avatarUrl ? (
+                                            <img src={user.avatarUrl} alt={user.name} className="h-7 w-7 rounded-full object-cover" />
+                                        ) : (
+                                            user.name.slice(0, 1).toUpperCase()
+                                        )}
                                     </div>
                                     <div className="hidden text-left md:block">
                                         <div className="text-xs font-semibold text-gray-800 leading-tight">{user.name}</div>

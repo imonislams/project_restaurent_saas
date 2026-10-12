@@ -7,11 +7,13 @@ use App\Domain\Identity\Concerns\HasRoles;
 use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Tenancy\Models\Tenant;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -33,7 +35,15 @@ class User extends Authenticatable
         'locale',
         'last_login_at',
         'deactivated_at',
+        'avatar_path',
     ];
+
+    /**
+     * Attributes always exposed to the frontend.
+     *
+     * @var list<string>
+     */
+    protected $appends = ['avatar_url'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -65,6 +75,14 @@ class User extends Authenticatable
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    /** Public URL of the user's profile photo (null when none is set). */
+    protected function avatarUrl(): Attribute
+    {
+        return Attribute::get(
+            fn () => $this->avatar_path ? Storage::disk('public')->url($this->avatar_path) : null,
+        );
     }
 
     public function branches(): BelongsToMany
