@@ -39,7 +39,7 @@ export default function Authenticated({
         group(undefined, [item(t('nav.overview'), route('dashboard'), 'grid', 'dashboard')]),
         group(t('nav.section.workspace'), [
             can('pos.use') && entitled('pos') && item(t('nav.pos'), route('pos.index'), 'cart', 'pos.*'),
-            can('orders.view') && item(t('nav.orders'), route('orders.index'), 'receipt', 'orders.*'),
+            can('orders.view') && { ...item(t('nav.orders'), route('orders.index'), 'receipt', 'orders.*'), badge: Number(page.pending_approvals ?? 0) },
             can('tables.view') && entitled('tables') && item(t('nav.tables'), route('tables.index'), 'table', 'tables.*'),
             can('kitchen.view') && entitled('kitchen') && item(t('nav.kitchen'), route('kitchen.index'), 'fire', 'kitchen.*'),
         ]),
@@ -139,6 +139,7 @@ export default function Authenticated({
             user={{ name: user?.name ?? 'User', email: user?.email ?? '', role: isPlatformAdmin ? 'Platform Admin' : 'Staff', avatarUrl: user?.avatar_url ?? null }}
             branches={page.branches ?? []}
             activeBranchId={page.active_branch_id ?? null}
+            pendingApprovals={Number(page.pending_approvals ?? 0)}
         >
             {children}
         </AppShell>

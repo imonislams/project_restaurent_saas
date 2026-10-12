@@ -5,6 +5,7 @@ namespace App\Domain\Notifications;
 use App\Domain\CashManagement\Models\Shift;
 use App\Domain\Inventory\Models\StockBalance;
 use App\Domain\Notifications\Notifications\LowStockNotification;
+use App\Domain\Notifications\Notifications\QrOrderPlacedNotification;
 use App\Domain\Notifications\Notifications\SalesSummaryNotification;
 use App\Domain\Notifications\Notifications\ShiftVarianceNotification;
 use App\Domain\Notifications\Notifications\SubscriptionExpiringNotification;
@@ -29,6 +30,38 @@ class NotificationService
             ->where('status', 'active')
             ->whereHas('roles', fn ($q) => $q->whereIn('slug', ['tenant_owner', 'tenant_admin']))
             ->get();
+    }
+
+    /** Active users allowed to approve orders (holders of orders.update). */
+    public function approvalRecipients(Tenant $tenant): Collection
+    {
+        return $tenant->users()
+            ->where('status', 'active')
+            ->get()
+            ->filter(fn (User $user) => $user->hasPermission('orders.update'))
+            ->values();
+    }
+
+    /** Notify approvers that a QR order is waiting for confirmation. */
+    public function newQrOrder(Order $order): int
+    {
+        $tenant = $order->tenant;
+
+        if (! $tenant) {
+            return 0;
+        }
+
+        $recipients = $this->approvalRecipients($tenant);
+
+        Notification::send($recipients, new QrOrderPlacedNotification(
+            $order->order_number,
+            $order->table?->name ?? 'Table',
+            (float) $order->total,
+            $order->currency,
+            $order->getKey(),
+        ));
+
+        return $recipients->count();
     }
 
     public function lowStock(Tenant $tenant): int

@@ -128,10 +128,11 @@ class SettingsSchema
             ],
             'receipts' => [
                 'label' => 'Receipt Branding',
-                'description' => 'Company branding applied to every restaurant receipt. Managed here for all tenants.',
+                'description' => 'Your SaaS provider branding (logo, website and support details) shown in the footer of every restaurant receipt.',
                 'fields' => [
-                    self::f('show_logo', 'receipts.show_logo', 'Show the restaurant logo on receipts', 'boolean', true),
-                    self::f('show_company_details', 'receipts.show_company_details', 'Show company details (name, address, phone, email)', 'boolean', true),
+                    self::f('show_logo', 'receipts.show_logo', 'Show the provider logo on receipts', 'boolean', true),
+                    self::f('show_company_details', 'receipts.show_company_details', 'Show provider name and support contacts', 'boolean', true),
+                    self::f('website', 'receipts.website', 'Website shown on receipts', 'text', null, 'Falls back to the Branding support URL when empty.'),
                 ],
             ],
         ];

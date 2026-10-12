@@ -1,5 +1,6 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Icon, { IconName } from '@/Components/Icon';
+import NotificationWatcher from '@/Components/NotificationWatcher';
 import BranchSelector from '@/Components/ui/BranchSelector';
 import CommandPalette, { CommandItem } from '@/Components/ui/CommandPalette';
 import KeyboardShortcutsModal from '@/Components/ui/KeyboardShortcutsModal';
@@ -45,6 +46,7 @@ export interface AppShellProps {
     activeBranchId?: number | null;
     dark?: boolean;
     padded?: boolean;
+    pendingApprovals?: number;
 }
 
 export default function AppShell({
@@ -58,6 +60,7 @@ export default function AppShell({
     activeBranchId,
     dark = false,
     padded = false,
+    pendingApprovals = 0,
     children,
 }: PropsWithChildren<AppShellProps>) {
     const t = useT();
@@ -338,6 +341,7 @@ export default function AppShell({
 
     return (
         <ToastProvider>
+            <NotificationWatcher pending={pendingApprovals} />
             <div className="min-h-screen bg-gray-50/60 font-sans text-gray-900 antialiased selection:bg-restrly-500 selection:text-white">
                 {/* Desktop Sidebar */}
                 <aside

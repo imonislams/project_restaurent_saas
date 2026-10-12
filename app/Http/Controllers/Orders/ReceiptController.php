@@ -18,6 +18,7 @@ class ReceiptController extends Controller
         $order->load(['items', 'payments.method', 'cashier:id,name', 'branch:id,name', 'tenant']);
 
         $tenant = $order->tenant;
+        $platform = app(PlatformSettings::class);
         $reprint = request()->boolean('reprint');
 
         if ($reprint) {
@@ -62,16 +63,17 @@ class ReceiptController extends Controller
                 'header' => $tenant?->getSetting('receipt.header', $tenant?->name),
                 'footer' => $tenant?->getSetting('receipt.footer', 'Thank you!'),
                 'show_tax' => (bool) ($tenant?->getSetting('receipt.show_tax', true) ?? true),
-                // Company branding shown in the footer — controlled globally by
-                // the platform admin (Platform → Settings → Receipt Branding).
+                // SaaS provider branding shown in the footer, configured by the
+                // platform admin (Platform → Settings → Receipt Branding).
                 'branding' => [
-                    'show_logo' => (bool) app(PlatformSettings::class)->get('receipts.show_logo', true),
-                    'show_details' => (bool) app(PlatformSettings::class)->get('receipts.show_company_details', true),
-                    'logo_url' => $tenant?->logo_url,
-                    'company_name' => $tenant?->getSetting('company.legal_name') ?? $tenant?->name,
-                    'address' => $tenant?->getSetting('company.address') ?? $order->branch?->address,
-                    'phone' => $tenant?->getSetting('company.phone') ?? $order->branch?->phone,
-                    'email' => $tenant?->getSetting('company.email') ?? $tenant?->business_email,
+                    'show_logo' => (bool) $platform->get('receipts.show_logo', true),
+                    'show_details' => (bool) $platform->get('receipts.show_company_details', true),
+                    'logo_url' => $platform->get('branding.logo_url'),
+                    'company_name' => $platform->get('general.platform_name', config('app.name')),
+                    'tagline' => $platform->get('branding.tagline'),
+                    'phone' => $platform->get('general.support_phone'),
+                    'email' => $platform->get('general.support_email'),
+                    'website' => $platform->get('receipts.website') ?: $platform->get('branding.support_url'),
                 ],
             ],
         ]);

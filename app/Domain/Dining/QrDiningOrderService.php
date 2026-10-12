@@ -5,6 +5,8 @@ namespace App\Domain\Dining;
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Dining\Models\DiningParticipant;
 use App\Domain\Dining\Models\DiningSession;
+use App\Domain\Notifications\NotificationService;
+use App\Domain\Orders\Enums\AcceptanceStatus;
 use App\Domain\Orders\Models\Order;
 use App\Domain\POS\SaleService;
 use Illuminate\Support\Str;
@@ -47,6 +49,15 @@ class QrDiningOrderService
             'order_id' => $order->getKey(),
             'order_number' => $order->order_number,
         ], $participant->getKey());
+
+        // Alert staff when the order is waiting for confirmation.
+        if ($order->acceptance_status === AcceptanceStatus::Pending) {
+            try {
+                app(NotificationService::class)->newQrOrder($order);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
 
         return $order->fresh(['items.modifiers']);
     }

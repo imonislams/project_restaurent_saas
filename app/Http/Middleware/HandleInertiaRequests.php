@@ -62,6 +62,13 @@ class HandleInertiaRequests extends Middleware
             'notifications' => [
                 'unread' => fn () => $user ? $user->unreadNotifications()->count() : 0,
             ],
+            // Orders awaiting staff confirmation (QR orders when auto-accept is off).
+            'pending_approvals' => fn () => ($user && $tenant && $user->hasPermission('orders.update'))
+                ? (int) \App\Domain\Orders\Models\Order::withoutGlobalScopes()
+                    ->where('tenant_id', $tenant->getKey())
+                    ->where('acceptance_status', 'pending')
+                    ->count()
+                : 0,
             'branches' => fn () => $user && $tenant
                 ? $tenant->branches()->whereIn('id', $user->accessibleBranchIds())->active()->orderBy('name')->get(['id', 'name', 'code', 'currency'])->map(fn ($b) => [
                     'id' => $b->id,

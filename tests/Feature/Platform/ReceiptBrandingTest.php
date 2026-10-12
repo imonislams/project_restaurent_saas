@@ -11,6 +11,7 @@ use App\Domain\Menu\Models\Product;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Payments\Actions\ProvisionPaymentDefaults;
 use App\Domain\Payments\Models\PaymentMethod;
+use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\POS\SaleService;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
@@ -35,16 +36,18 @@ class ReceiptBrandingTest extends TestCase
 
         $this->seed(RolePermissionSeeder::class);
 
+        // The SaaS provider's own branding (not the restaurant's).
+        $platform = app(PlatformSettings::class);
+        $platform->set('general.platform_name', 'Restrly', 'general');
+        $platform->set('general.support_email', 'support@restrly.test', 'general');
+        $platform->set('general.support_phone', '555-9000', 'general');
+        $platform->set('branding.logo_url', 'https://cdn.test/logo.png', 'branding');
+        $platform->set('branding.tagline', 'Restaurant OS', 'branding');
+        $platform->set('branding.support_url', 'https://restrly.test', 'branding');
+        $platform->set('receipts.website', 'https://restrly.test', 'receipts');
+
         $this->tenant = Tenant::factory()->create();
-        $this->tenant->mergeSettings([
-            'tax' => ['rate' => 0, 'inclusive' => false],
-            'company' => [
-                'legal_name' => 'Acme Foods',
-                'address' => '12 Main Street',
-                'phone' => '555-0100',
-                'email' => 'hello@acme.test',
-            ],
-        ]);
+        $this->tenant->mergeSettings(['tax' => ['rate' => 0, 'inclusive' => false]]);
         $this->tenant->save();
 
         app(ProvisionInventoryDefaults::class)->forTenant($this->tenant);
@@ -92,7 +95,7 @@ class ReceiptBrandingTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('Platform/Settings/Show')
                 ->where('group', 'receipts')
-                ->has('schema.fields', 2));
+                ->has('schema.fields', 3));
     }
 
     public function test_the_platform_admin_can_toggle_receipt_branding(): void
@@ -103,10 +106,10 @@ class ReceiptBrandingTest extends TestCase
             ])
             ->assertRedirect();
 
-        $this->assertSame(false, app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('receipts.show_logo'));
+        $this->assertSame(false, app(PlatformSettings::class)->get('receipts.show_logo'));
     }
 
-    public function test_the_receipt_footer_contains_company_branding(): void
+    public function test_the_receipt_footer_shows_the_saas_provider_branding(): void
     {
         $order = $this->placeOrder();
 
@@ -117,13 +120,14 @@ class ReceiptBrandingTest extends TestCase
                 ->component('Orders/Receipt')
                 ->where('receipt.branding.show_logo', true)
                 ->where('receipt.branding.show_details', true)
-                ->where('receipt.branding.company_name', 'Acme Foods')
-                ->where('receipt.branding.address', '12 Main Street')
-                ->where('receipt.branding.phone', '555-0100')
-                ->where('receipt.branding.email', 'hello@acme.test'));
+                ->where('receipt.branding.company_name', 'Restrly')
+                ->where('receipt.branding.logo_url', 'https://cdn.test/logo.png')
+                ->where('receipt.branding.email', 'support@restrly.test')
+                ->where('receipt.branding.phone', '555-9000')
+                ->where('receipt.branding.website', 'https://restrly.test'));
     }
 
-    public function test_the_platform_admin_can_hide_the_logo_on_all_receipts(): void
+    public function test_the_platform_admin_can_hide_the_provider_logo_on_all_receipts(): void
     {
         $this->actingAs($this->platformAdmin())->post('/platform/settings/receipts', [
             'values' => ['show_logo' => false, 'show_company_details' => true],

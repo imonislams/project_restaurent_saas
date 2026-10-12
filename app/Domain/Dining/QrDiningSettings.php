@@ -56,7 +56,7 @@ class QrDiningSettings
 
     public function autoAccept(): bool
     {
-        return (bool) $this->get('qr.auto_accept', true);
+        return (bool) $this->get('qr.auto_accept', false);
     }
 
     public function allowAdditionalOrders(): bool

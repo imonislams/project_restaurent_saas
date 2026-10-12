@@ -45,9 +45,10 @@ interface ReceiptBranding {
     show_details: boolean;
     logo_url: string | null;
     company_name: string | null;
-    address: string | null;
+    tagline: string | null;
     phone: string | null;
     email: string | null;
+    website: string | null;
 }
 
 interface ReceiptSettings {
@@ -70,10 +71,28 @@ export default function Receipt({
     const { flash } = usePage().props as { flash?: { success?: string; error?: string } };
 
     return (
-        <div className="min-h-screen bg-gray-100 py-6 sm:py-10 print:bg-white print:py-0 font-sans">
+        <div className="receipt-page min-h-screen bg-gray-100 py-6 sm:py-10 print:bg-white print:py-0 font-sans">
             <Head title={`Receipt · ${order.order_number}`} />
 
-            <div className="mx-auto max-w-sm px-4 print:p-0 print:max-w-none">
+            {/* Print setup: size the paper to a thermal receipt (80mm) so the
+                browser prints a real receipt instead of a small card on A4. */}
+            <style
+                dangerouslySetInnerHTML={{
+                    __html: `
+                        @media print {
+                            @page { size: 80mm auto; margin: 3mm; }
+                            html, body { background: #ffffff !important; }
+                            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                            .receipt-page { min-height: 0 !important; padding: 0 !important; background: #ffffff !important; }
+                            .receipt-wrap { max-width: none !important; width: 74mm !important; padding: 0 !important; margin: 0 auto !important; }
+                            .receipt-card { border: 0 !important; border-radius: 0 !important; box-shadow: none !important; padding: 0 !important; }
+                            .no-print { display: none !important; }
+                        }
+                    `,
+                }}
+            />
+
+            <div className="receipt-wrap mx-auto max-w-sm px-4 print:p-0 print:max-w-none">
                 {/* Flash Messages */}
                 {flash?.success && (
                     <div className="mb-4 flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-xs sm:text-sm font-medium text-emerald-800 shadow-subtle print:hidden">
@@ -83,7 +102,7 @@ export default function Receipt({
                 )}
 
                 {/* --- THERMAL RECEIPT CARD --- */}
-                <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-card print:border-none print:shadow-none print:p-0 font-mono text-xs text-gray-900">
+                <div className="receipt-card rounded-2xl border border-gray-200 bg-white p-6 shadow-card print:border-none print:shadow-none print:p-0 font-mono text-xs text-gray-900">
                     {/* Header */}
                     <div className="text-center pb-3 border-b-2 border-dashed border-gray-300">
                         <h1 className="text-base font-extrabold uppercase tracking-tight text-gray-950">
@@ -213,36 +232,6 @@ export default function Receipt({
                         )}
                     </div>
 
-                    {/* Company branding footer (managed by the platform admin) */}
-                    {((receipt.branding.show_logo && receipt.branding.logo_url) || receipt.branding.show_details) && (
-                        <div className="py-3 border-b-2 border-dashed border-gray-300 text-center space-y-1">
-                            {receipt.branding.show_logo && receipt.branding.logo_url && (
-                                <img
-                                    src={receipt.branding.logo_url}
-                                    alt={receipt.branding.company_name ?? ''}
-                                    className="mx-auto h-14 w-14 rounded-lg object-cover ring-1 ring-gray-200"
-                                />
-                            )}
-                            {receipt.branding.show_details && (
-                                <>
-                                    {receipt.branding.company_name && (
-                                        <p className="text-xs font-extrabold uppercase tracking-tight text-gray-900">
-                                            {receipt.branding.company_name}
-                                        </p>
-                                    )}
-                                    {receipt.branding.address && (
-                                        <p className="text-[10px] leading-snug text-gray-500">{receipt.branding.address}</p>
-                                    )}
-                                    {(receipt.branding.phone || receipt.branding.email) && (
-                                        <p className="text-[10px] text-gray-500">
-                                            {[receipt.branding.phone, receipt.branding.email].filter(Boolean).join(' · ')}
-                                        </p>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    )}
-
                     {/* Verification Simulation Barcode */}
                     <div className="pt-4 text-center space-y-2">
                         <div className="font-mono text-[9px] tracking-widest text-gray-400 select-none">
@@ -251,6 +240,26 @@ export default function Receipt({
                         <p className="text-[11px] font-sans text-gray-500 font-medium">
                             {receipt.footer || 'Thank you for your visit!'}
                         </p>
+
+                        {/* SaaS provider branding — final line(s) of the receipt */}
+                        {((receipt.branding.show_logo && receipt.branding.logo_url) || receipt.branding.show_details) && (
+                            <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 pt-1 text-[10px] leading-tight text-gray-500">
+                                {receipt.branding.show_logo && receipt.branding.logo_url && (
+                                    <img
+                                        src={receipt.branding.logo_url}
+                                        alt={receipt.branding.company_name ?? ''}
+                                        className="inline-block h-3.5 w-auto max-w-[3rem] object-contain align-middle"
+                                    />
+                                )}
+                                {receipt.branding.show_details && (
+                                    <span className="font-semibold text-gray-600">
+                                        {[receipt.branding.company_name, receipt.branding.phone, receipt.branding.email, receipt.branding.website]
+                                            .filter(Boolean)
+                                            .join(' · ')}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
