@@ -14,6 +14,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Loyalty\LoyaltyController;
 use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\Menu\MenuController;
+use App\Http\Controllers\Menu\ModifierController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Onboarding\OnboardingController;
 use App\Http\Controllers\Tenant\SettingsController as TenantSettingsController;
@@ -53,6 +54,11 @@ use App\Http\Controllers\Platform\SupportTicketController as PlatformSupportTick
 use App\Http\Controllers\Platform\TenantController as PlatformTenantController;
 use App\Http\Controllers\Platform\UsageController as PlatformUsageController;
 use App\Http\Controllers\POS\PosController;
+use App\Http\Controllers\QrDining\QrEntryController;
+use App\Http\Controllers\QrDining\QrMenuController;
+use App\Http\Controllers\QrDining\QrOrderController;
+use App\Http\Controllers\QrDining\QrSessionController;
+use App\Http\Controllers\QrDining\QrTableController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\SupplierController;
@@ -137,6 +143,27 @@ Route::middleware('auth')->group(function () {
     })->name('branch.switch');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Public QR Dining (app-less ordering)
+|--------------------------------------------------------------------------
+| Unauthenticated. The QR token resolves the tenant/branch/table server-side;
+| the dining session travels in an HttpOnly cookie. Rate limited per IP.
+*/
+Route::prefix('qr')->name('qr.')->middleware(['qr.context', 'throttle:qr-public'])->group(function () {
+    Route::get('{token}', [QrEntryController::class, 'show'])->name('entry');
+
+    Route::post('{token}/session', [QrSessionController::class, 'store'])
+        ->middleware('throttle:qr-session')->name('session.start');
+
+    Route::middleware('qr.session')->group(function () {
+        Route::get('{token}/menu', [QrMenuController::class, 'show'])->name('menu');
+        Route::post('{token}/orders', [QrOrderController::class, 'store'])
+            ->middleware('throttle:qr-order')->name('orders.store');
+        Route::delete('{token}/session', [QrSessionController::class, 'destroy'])->name('session.destroy');
+    });
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -167,6 +194,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/products', [MenuController::class, 'storeProduct'])->name('products.store');
             Route::patch('/products/{product}', [MenuController::class, 'updateProduct'])->name('products.update');
             Route::delete('/products/{product}', [MenuController::class, 'destroyProduct'])->name('products.destroy');
+        });
+    });
+
+    Route::prefix('modifiers')->name('modifiers.')->group(function () {
+        Route::get('/', [ModifierController::class, 'index'])
+            ->middleware('permission:modifiers.view')->name('index');
+
+        Route::middleware('permission:modifiers.manage')->group(function () {
+            Route::post('/groups', [ModifierController::class, 'storeGroup'])->name('groups.store');
+            Route::patch('/groups/{group}', [ModifierController::class, 'updateGroup'])->name('groups.update');
+            Route::delete('/groups/{group}', [ModifierController::class, 'destroyGroup'])->name('groups.destroy');
+            Route::post('/options', [ModifierController::class, 'storeOption'])->name('options.store');
+            Route::patch('/options/{option}', [ModifierController::class, 'updateOption'])->name('options.update');
+            Route::delete('/options/{option}', [ModifierController::class, 'destroyOption'])->name('options.destroy');
+        });
+    });
+
+    Route::prefix('qr-dining')->name('qr-dining.')->middleware('feature:qr_dining')->group(function () {
+        Route::get('/tables', [QrTableController::class, 'index'])
+            ->middleware('permission:qr.view')->name('tables.index');
+        Route::get('/tables/print', [QrTableController::class, 'print'])
+            ->middleware('permission:qr.view')->name('tables.print');
+        Route::get('/tables/{table}/qr', [QrTableController::class, 'qr'])
+            ->middleware('permission:qr.view')->name('tables.qr');
+
+        Route::middleware('permission:qr.manage')->group(function () {
+            Route::post('/tables/{table}/regenerate', [QrTableController::class, 'regenerate'])->name('tables.regenerate');
+            Route::post('/tables/{table}/revoke', [QrTableController::class, 'revoke'])->name('tables.revoke');
         });
     });
 
@@ -214,6 +269,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:pos.use')->name('orders.settle');
     Route::patch('/orders/{order}/fulfillment', [OrderController::class, 'updateFulfillment'])
         ->middleware('permission:orders.update')->name('orders.fulfillment');
+    Route::post('/orders/{order}/accept', [OrderController::class, 'accept'])
+        ->middleware('permission:orders.update')->name('orders.accept');
+    Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])
+        ->middleware('permission:orders.update')->name('orders.reject');
 
     Route::prefix('kitchen')->name('kitchen.')->middleware('feature:kitchen')->group(function () {
         Route::middleware('permission:kitchen.view')->group(function () {

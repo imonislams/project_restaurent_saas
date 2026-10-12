@@ -31,7 +31,7 @@ class KitchenDisplayController extends Controller
         $tickets = KitchenTicket::query()
             ->with([
                 'items.station:id,name',
-                'order:id,order_number,order_type,table_id,fulfillment_status,customer_name',
+                'order:id,order_number,order_type,source,table_id,fulfillment_status,customer_name',
                 'order.table:id,name',
             ])
             ->where('branch_id', $branchId)
@@ -54,6 +54,7 @@ class KitchenDisplayController extends Controller
                 'created_at' => $ticket->created_at?->toIso8601String(),
                 'order_number' => $ticket->order?->order_number,
                 'order_type' => $ticket->order?->order_type->value,
+                'order_source' => $ticket->order?->source->value,
                 'table_name' => $ticket->order?->table?->name,
                 'customer_name' => $ticket->order?->customer_name,
                 'items' => $ticket->items->map(fn (KitchenTicketItem $item) => [
@@ -63,6 +64,7 @@ class KitchenDisplayController extends Controller
                     'status' => $item->status->value,
                     'station' => $item->station?->name,
                     'notes' => $item->notes,
+                    'modifiers' => $item->modifiers,
                 ]),
             ]);
 
@@ -124,6 +126,7 @@ class KitchenDisplayController extends Controller
                     'quantity' => (float) $item->quantity,
                     'station' => $item->station?->name,
                     'notes' => $item->notes,
+                    'modifiers' => $item->modifiers,
                 ]),
             ],
         ]);

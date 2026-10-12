@@ -7,8 +7,12 @@ use App\Domain\CashManagement\Models\Register;
 use App\Domain\CashManagement\Models\Shift;
 use App\Domain\Customers\Models\Customer;
 use App\Domain\Delivery\Models\DeliveryZone;
+use App\Domain\Dining\Models\DiningParticipant;
+use App\Domain\Dining\Models\DiningSession;
 use App\Domain\Kitchen\Models\KitchenTicket;
+use App\Domain\Orders\Enums\AcceptanceStatus;
 use App\Domain\Orders\Enums\FulfillmentStatus;
+use App\Domain\Orders\Enums\OrderSource;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Enums\OrderType;
 use App\Domain\Payments\Models\Payment;
@@ -31,12 +35,16 @@ class Order extends Model
         'shift_id',
         'register_id',
         'table_id',
+        'dining_session_id',
+        'dining_participant_id',
         'delivery_zone_id',
         'customer_id',
         'user_id',
         'order_number',
         'order_type',
+        'source',
         'status',
+        'acceptance_status',
         'fulfillment_status',
         'customer_name',
         'covers',
@@ -58,6 +66,9 @@ class Order extends Model
         'idempotency_key',
         'placed_at',
         'completed_at',
+        'accepted_at',
+        'rejected_at',
+        'rejected_reason',
         'voided_at',
     ];
 
@@ -65,7 +76,9 @@ class Order extends Model
     {
         return [
             'order_type' => OrderType::class,
+            'source' => OrderSource::class,
             'status' => OrderStatus::class,
+            'acceptance_status' => AcceptanceStatus::class,
             'fulfillment_status' => FulfillmentStatus::class,
             'covers' => 'integer',
             'subtotal' => 'decimal:2',
@@ -79,6 +92,8 @@ class Order extends Model
             'change_due' => 'decimal:2',
             'placed_at' => 'datetime',
             'completed_at' => 'datetime',
+            'accepted_at' => 'datetime',
+            'rejected_at' => 'datetime',
             'voided_at' => 'datetime',
         ];
     }
@@ -101,6 +116,16 @@ class Order extends Model
     public function table(): BelongsTo
     {
         return $this->belongsTo(Table::class);
+    }
+
+    public function diningSession(): BelongsTo
+    {
+        return $this->belongsTo(DiningSession::class, 'dining_session_id');
+    }
+
+    public function participant(): BelongsTo
+    {
+        return $this->belongsTo(DiningParticipant::class, 'dining_participant_id');
     }
 
     public function customer(): BelongsTo

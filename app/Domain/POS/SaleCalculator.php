@@ -19,7 +19,7 @@ class SaleCalculator
     public function __construct(protected TenantContext $context) {}
 
     /**
-     * @param  list<array{product: Product, variant: ?ProductVariant, quantity: float, discount_amount?: float, notes?: ?string}>  $lines
+     * @param  list<array{product: Product, variant: ?ProductVariant, quantity: float, discount_amount?: float, notes?: ?string, modifiers?: list<array{option_id?: int, group_name?: string, name?: string, price_delta?: float, quantity?: float}>}>  $lines
      * @param  array{discount_type?: string, discount_value?: float, service_charge?: bool}  $options
      * @return array{items: list<array<string, mixed>>, subtotal: float, discount_total: float, tax_total: float, service_charge: float, total: float}
      */
@@ -45,9 +45,19 @@ class SaleCalculator
                 throw ValidationException::withMessages(['items' => "Quantity for \"{$product->name}\" must be greater than zero."]);
             }
 
-            $unitPrice = $variant?->price !== null
+            $basePrice = $variant?->price !== null
                 ? round((float) $variant->price, 2)
                 : round((float) $product->{$priceColumn}, 2);
+
+            $modifiers = $line['modifiers'] ?? [];
+            $modifierDelta = 0.0;
+
+            foreach ($modifiers as $modifier) {
+                $modifierDelta += round((float) ($modifier['price_delta'] ?? 0) * (float) ($modifier['quantity'] ?? 1), 2);
+            }
+
+            $modifierDelta = round($modifierDelta, 2);
+            $unitPrice = round($basePrice + $modifierDelta, 2);
 
             $lineSubtotal = round($unitPrice * $quantity, 2);
             $lineDiscount = min(round((float) ($line['discount_amount'] ?? 0), 2), $lineSubtotal);
@@ -62,6 +72,8 @@ class SaleCalculator
                 'unit_price' => $unitPrice,
                 'unit_cost' => round((float) $product->cost_price, 4),
                 'discount_amount' => $lineDiscount,
+                'modifiers' => $modifiers,
+                'modifiers_total' => round($modifierDelta * $quantity, 2),
                 'tax_rate' => $taxRate,
                 'line_net' => $lineNet,
                 'notes' => $line['notes'] ?? null,
@@ -112,6 +124,8 @@ class SaleCalculator
                 'unit_price' => $row['unit_price'],
                 'unit_cost' => $row['unit_cost'],
                 'discount_amount' => $row['discount_amount'],
+                'modifiers' => $row['modifiers'],
+                'modifiers_total' => $row['modifiers_total'],
                 'tax_rate' => $row['tax_rate'],
                 'tax_amount' => $lineTax,
                 'line_total' => $row['line_net'],

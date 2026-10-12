@@ -124,7 +124,9 @@ class RolePermissionSeeder extends Seeder
                 'dashboard.view', 'pos.use',
                 'orders.view', 'orders.create', 'orders.update', 'orders.void',
                 'tables.view', 'tables.manage', 'kitchen.view',
-                'menu.view', 'inventory.view', 'purchasing.view',
+                'menu.view', 'modifiers.view', 'modifiers.manage',
+                'qr.view', 'qr.manage',
+                'inventory.view', 'purchasing.view',
                 'waste.view', 'waste.create',
                 'customers.view', 'customers.manage',
                 'cash.view', 'cash.manage', 'expenses.view', 'expenses.manage',
@@ -135,7 +137,9 @@ class RolePermissionSeeder extends Seeder
                 'dashboard.view', 'pos.use',
                 'orders.view', 'orders.create', 'orders.update', 'orders.void', 'orders.refund',
                 'tables.view', 'tables.manage', 'kitchen.view', 'kitchen.manage',
-                'menu.view', 'inventory.view', 'waste.view', 'waste.create',
+                'menu.view', 'modifiers.view', 'modifiers.manage',
+                'qr.view', 'qr.manage',
+                'inventory.view', 'waste.view', 'waste.create',
                 'customers.view', 'cash.view', 'reports.view',
             ],
 
@@ -143,10 +147,12 @@ class RolePermissionSeeder extends Seeder
                 'dashboard.view', 'pos.use',
                 'orders.view', 'orders.create', 'orders.update',
                 'tables.view', 'kitchen.view', 'customers.view',
+                'qr.view', 'modifiers.view',
             ],
 
             RoleName::KitchenStaff->value => [
                 'dashboard.view', 'kitchen.view', 'kitchen.manage', 'orders.view',
+                'modifiers.view',
             ],
 
             RoleName::InventoryManager->value => [
@@ -164,7 +170,8 @@ class RolePermissionSeeder extends Seeder
 
             RoleName::Auditor->value => array_merge(
                 $views('dashboard'), $views('orders'), $views('tables'), $views('kitchen'),
-                $views('menu'), $views('inventory'), $views('purchasing'), $views('waste'),
+                $views('menu'), $views('modifiers'), $views('qr'),
+                $views('inventory'), $views('purchasing'), $views('waste'),
                 $views('customers'), $views('cash'), $views('accounts'), $views('expenses'),
                 $views('reports'), $views('staff'), $views('branches'), $views('settings'),
                 $views('subscription'),

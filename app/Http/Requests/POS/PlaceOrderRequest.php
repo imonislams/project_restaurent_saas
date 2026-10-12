@@ -42,6 +42,9 @@ class PlaceOrderRequest extends FormRequest
             'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
             'items.*.discount_amount' => ['nullable', 'numeric', 'min:0'],
             'items.*.notes' => ['nullable', 'string', 'max:255'],
+            'items.*.modifiers' => ['nullable', 'array'],
+            'items.*.modifiers.*.option_id' => ['required_with:items.*.modifiers', 'integer', Rule::exists('modifier_options', 'id')->where('tenant_id', $tenantId)],
+            'items.*.modifiers.*.quantity' => ['nullable', 'numeric', 'min:1'],
 
             'payments' => ['nullable', 'array'],
             'payments.*.payment_method_id' => ['required_with:payments', 'integer', Rule::exists('payment_methods', 'id')->where('tenant_id', $tenantId)],

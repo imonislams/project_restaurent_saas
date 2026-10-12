@@ -7,7 +7,7 @@ export type IconName =
     | 'shield' | 'database' | 'envelope' | 'credit-card' | 'server' | 'clock'
     | 'alert' | 'download' | 'plus' | 'filter' | 'dots' | 'building' | 'key'
     | 'activity' | 'sliders' | 'ticket' | 'tag' | 'file' | 'refresh' | 'flag'
-    | 'terminal' | 'megaphone';
+    | 'terminal' | 'megaphone' | 'qr';
 
 const common: SVGProps<SVGSVGElement> = {
     viewBox: '0 0 24 24',
@@ -231,6 +231,14 @@ const PATHS: Record<IconName, JSX.Element> = {
         <>
             <path d="M3 11v2a1 1 0 001 1h2l4 4V6L6 10H4a1 1 0 00-1 1z" />
             <path d="M15 8a4 4 0 010 8" />
+        </>
+    ),
+    qr: (
+        <>
+            <rect x="3.5" y="3.5" width="6" height="6" rx="1" />
+            <rect x="14.5" y="3.5" width="6" height="6" rx="1" />
+            <rect x="3.5" y="14.5" width="6" height="6" rx="1" />
+            <path d="M6.5 6.5h.01M17.5 6.5h.01M6.5 17.5h.01M14 14h3v3M20 14v6h-6M17 20h.01" />
         </>
     ),
 };

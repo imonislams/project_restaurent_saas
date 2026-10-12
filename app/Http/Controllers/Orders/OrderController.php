@@ -30,6 +30,7 @@ class OrderController extends Controller
         $to = $request->date('to')?->endOfDay() ?? today()->endOfDay();
         $status = $request->string('status')->toString() ?: null;
         $type = $request->string('order_type')->toString() ?: null;
+        $source = $request->string('source')->toString() ?: null;
 
         $orders = Order::query()
             ->with(['cashier:id,name', 'branch:id,name', 'table:id,name'])
@@ -37,6 +38,7 @@ class OrderController extends Controller
             ->whereBetween('placed_at', [$from, $to])
             ->when($status, fn ($q) => $q->where('status', $status))
             ->when($type, fn ($q) => $q->where('order_type', $type))
+            ->when($source, fn ($q) => $q->where('source', $source))
             ->latest('placed_at')
             ->paginate(25)
             ->withQueryString()
@@ -45,7 +47,11 @@ class OrderController extends Controller
                 'order_number' => $order->order_number,
                 'order_type' => $order->order_type->value,
                 'order_type_label' => $order->order_type->label(),
+                'source' => $order->source->value,
+                'source_label' => $order->source->label(),
                 'status' => $order->status->value,
+                'acceptance_status' => $order->acceptance_status->value,
+                'acceptance_label' => $order->acceptance_status->label(),
                 'fulfillment_status' => $order->fulfillment_status->value,
                 'fulfillment_label' => $order->fulfillment_status->label(),
                 'table_name' => $order->table?->name,
@@ -64,11 +70,14 @@ class OrderController extends Controller
                 'to' => $to->toDateString(),
                 'status' => $status,
                 'order_type' => $type,
+                'source' => $source,
             ],
             'statuses' => collect(OrderStatus::cases())
                 ->map(fn (OrderStatus $s) => ['value' => $s->value, 'label' => $s->label()])->values(),
             'types' => collect(OrderType::cases())
                 ->map(fn (OrderType $t) => ['value' => $t->value, 'label' => $t->label()])->values(),
+            'sources' => collect(\App\Domain\Orders\Enums\OrderSource::cases())
+                ->map(fn ($s) => ['value' => $s->value, 'label' => $s->label()])->values(),
         ]);
     }
 
@@ -118,6 +127,22 @@ class OrderController extends Controller
         return back()->with('success', 'Fulfillment updated.');
     }
 
+    public function accept(Request $request, Order $order): RedirectResponse
+    {
+        $this->orders->accept($order, $request->user());
+
+        return back()->with('success', 'Order '.$order->order_number.' accepted and sent to the kitchen.');
+    }
+
+    public function reject(Request $request, Order $order): RedirectResponse
+    {
+        $reason = $request->validate(['reason' => ['nullable', 'string', 'max:255']])['reason'] ?? null;
+
+        $this->orders->reject($order, $request->user(), $reason);
+
+        return back()->with('success', 'Order '.$order->order_number.' rejected.');
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -128,6 +153,10 @@ class OrderController extends Controller
             'order_number' => $order->order_number,
             'order_type' => $order->order_type->value,
             'order_type_label' => $order->order_type->label(),
+            'source' => $order->source->value,
+            'source_label' => $order->source->label(),
+            'acceptance_status' => $order->acceptance_status->value,
+            'acceptance_label' => $order->acceptance_status->label(),
             'status' => $order->status->value,
             'fulfillment_status' => $order->fulfillment_status->value,
             'fulfillment_label' => $order->fulfillment_status->label(),

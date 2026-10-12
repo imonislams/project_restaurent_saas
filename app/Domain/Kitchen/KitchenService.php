@@ -54,7 +54,14 @@ class KitchenService
                 'notes' => $order->notes,
             ]);
 
-            foreach ($order->items()->with('product')->get() as $item) {
+            foreach ($order->items()->with(['product', 'modifiers'])->get() as $item) {
+                $modifiers = $item->modifiers->map(fn ($modifier) => [
+                    'name' => $modifier->name,
+                    'group_name' => $modifier->group_name,
+                    'price_delta' => (float) $modifier->price_delta,
+                    'quantity' => (float) $modifier->quantity,
+                ])->all();
+
                 $ticket->items()->create([
                     'tenant_id' => $order->tenant_id,
                     'order_item_id' => $item->getKey(),
@@ -63,6 +70,7 @@ class KitchenService
                     'quantity' => $item->quantity,
                     'status' => KitchenItemStatus::Pending,
                     'notes' => $item->notes,
+                    'modifiers' => $modifiers ?: null,
                 ]);
             }
 

@@ -11,6 +11,7 @@ use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -75,6 +76,15 @@ class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class)->orderBy('sort_order');
+    }
+
+    public function modifierGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(ModifierGroup::class, 'modifier_group_product')
+            ->using(ModifierGroupProduct::class)
+            ->withPivot('sort_order')
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
     }
 
     public function availability(): HasMany

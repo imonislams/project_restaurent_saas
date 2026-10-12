@@ -9,6 +9,9 @@ use App\Domain\CashManagement\Enums\CashMovementType;
 use App\Domain\CashManagement\Models\Shift;
 use App\Domain\Customers\Models\Customer;
 use App\Domain\Delivery\DeliveryService;
+use App\Domain\Dining\Models\DiningParticipant;
+use App\Domain\Dining\Models\DiningSession;
+use App\Domain\Dining\QrDiningSettings;
 use App\Domain\Identity\ManagerPinService;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
 use App\Domain\Inventory\Enums\StockMovementReason;
@@ -17,7 +20,10 @@ use App\Domain\Loyalty\LoyaltyService;
 use App\Domain\Menu\Enums\InventoryMode;
 use App\Domain\Menu\Models\Product;
 use App\Domain\Menu\Models\ProductVariant;
+use App\Domain\Menu\ModifierResolver;
+use App\Domain\Orders\Enums\AcceptanceStatus;
 use App\Domain\Orders\Enums\FulfillmentStatus;
+use App\Domain\Orders\Enums\OrderSource;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Enums\OrderType;
 use App\Domain\Orders\Models\Order;
@@ -121,6 +127,47 @@ class SaleService
     }
 
     /**
+     * Create a held order from a QR dining session. No staff cashier and no open
+     * shift are required; totals come from the same server-side calculator as
+     * POS orders, and the kitchen ticket opens only when auto-accept is on.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function openQrOrder(DiningSession $session, DiningParticipant $participant, array $data, Branch $branch): Order
+    {
+        $tenant = $this->context->tenant() ?? $branch->tenant;
+
+        if ($existing = $this->findByKey($data['idempotency_key'] ?? null)) {
+            return $existing;
+        }
+
+        $autoAccept = app(QrDiningSettings::class)->autoAccept();
+
+        $data['order_type'] = $data['order_type'] ?? OrderType::DineIn->value;
+        $data['table_id'] = $session->table_id;
+        $data['customer_name'] = $data['customer_name'] ?? $participant->display_name;
+
+        $prepared = $this->prepare($data, $branch, $tenant, false, false);
+
+        $order = DB::transaction(function () use ($data, $branch, $tenant, $prepared, $session, $participant, $autoAccept) {
+            $order = $this->createOrder($data, null, $branch, $tenant, $prepared, OrderStatus::Held, [
+                'source' => OrderSource::Qr->value,
+                'dining_session_id' => $session->getKey(),
+                'dining_participant_id' => $participant->getKey(),
+                'acceptance_status' => ($autoAccept ? AcceptanceStatus::AutoAccepted : AcceptanceStatus::Pending)->value,
+                'accepted_at' => $autoAccept ? now() : null,
+            ]);
+
+            $this->deductStock($order, $branch);
+            $this->recordStatus($order, OrderStatus::Held, null, 'QR order placed');
+
+            return $order;
+        });
+
+        return $this->postCommit($order, $autoAccept);
+    }
+
+    /**
      * Settle a held order: take payment and complete it.
      *
      * @param  list<array<string, mixed>>  $payments
@@ -171,9 +218,9 @@ class SaleService
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    protected function prepare(array $data, Branch $branch, Tenant $tenant, bool $withPayments): array
+    protected function prepare(array $data, Branch $branch, Tenant $tenant, bool $withPayments, bool $requireShift = true): array
     {
-        $shift = $this->resolveShift($data, $branch);
+        $shift = $this->resolveShift($data, $branch, $requireShift);
         $type = OrderType::from($data['order_type'] ?? OrderType::Counter->value);
         $lines = $this->resolveLines($data['items'] ?? [], $branch);
 
@@ -203,21 +250,21 @@ class SaleService
      * @param  array<string, mixed>  $data
      * @param  array<string, mixed>  $prepared
      */
-    protected function createOrder(array $data, User $cashier, Branch $branch, Tenant $tenant, array $prepared, OrderStatus $status): Order
+    protected function createOrder(array $data, ?User $cashier, Branch $branch, Tenant $tenant, array $prepared, OrderStatus $status, array $extra = []): Order
     {
         $totals = $prepared['totals'];
         $table = $this->resolveTable($data, $branch);
         $customer = ! empty($data['customer_id']) ? Customer::query()->find($data['customer_id']) : null;
 
-        $order = Order::create([
+        $order = Order::create(array_merge([
             'tenant_id' => $tenant->getKey(),
             'branch_id' => $branch->getKey(),
-            'shift_id' => $prepared['shift']->getKey(),
-            'register_id' => $prepared['shift']->register_id,
+            'shift_id' => $prepared['shift']?->getKey(),
+            'register_id' => $prepared['shift']?->register_id,
             'table_id' => $table?->getKey(),
             'delivery_zone_id' => $prepared['zone']?->getKey(),
             'customer_id' => $customer?->getKey(),
-            'user_id' => $cashier->getKey(),
+            'user_id' => $cashier?->getKey(),
             'order_number' => $this->numbers->next($branch),
             'order_type' => $prepared['type'],
             'status' => $status,
@@ -239,10 +286,10 @@ class SaleService
             'currency' => $branch->effectiveCurrency(),
             'idempotency_key' => $data['idempotency_key'] ?? null,
             'placed_at' => now(),
-        ]);
+        ], $extra));
 
         foreach ($totals['items'] as $item) {
-            $order->items()->create([
+            $orderItem = $order->items()->create([
                 'tenant_id' => $tenant->getKey(),
                 'product_id' => $item['product']->getKey(),
                 'product_variant_id' => $item['variant']?->getKey(),
@@ -252,11 +299,23 @@ class SaleService
                 'unit_price' => $item['unit_price'],
                 'unit_cost' => $item['unit_cost'],
                 'discount_amount' => $item['discount_amount'],
+                'modifiers_total' => $item['modifiers_total'] ?? 0,
                 'tax_rate' => $item['tax_rate'],
                 'tax_amount' => $item['tax_amount'],
                 'line_total' => $item['line_total'],
                 'notes' => $item['notes'],
             ]);
+
+            foreach ($item['modifiers'] ?? [] as $modifier) {
+                $orderItem->modifiers()->create([
+                    'tenant_id' => $tenant->getKey(),
+                    'modifier_option_id' => $modifier['option_id'],
+                    'group_name' => $modifier['group_name'],
+                    'name' => $modifier['name'],
+                    'price_delta' => $modifier['price_delta'],
+                    'quantity' => $modifier['quantity'],
+                ]);
+            }
         }
 
         if ($table) {
@@ -297,24 +356,26 @@ class SaleService
         }
     }
 
-    protected function recordStatus(Order $order, OrderStatus $status, User $user, string $note): void
+    protected function recordStatus(Order $order, OrderStatus $status, ?User $user, string $note): void
     {
         $order->statusHistory()->create([
             'tenant_id' => $order->tenant_id,
             'status' => $status,
-            'user_id' => $user->getKey(),
+            'user_id' => $user?->getKey(),
             'note' => $note,
         ]);
     }
 
-    protected function postCommit(Order $order): Order
+    protected function postCommit(Order $order, bool $openKitchen = true): Order
     {
         // Secondary work runs after the core transaction, on the queue. The job
         // is idempotent per order, so a retry never duplicates the sale.
-        try {
-            OpenKitchenTicket::dispatch($order->getKey());
-        } catch (\Throwable $e) {
-            report($e);
+        if ($openKitchen) {
+            try {
+                OpenKitchenTicket::dispatch($order->getKey());
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         $this->tables->refreshForOrder($order);
@@ -343,13 +404,23 @@ class SaleService
     /**
      * @param  array<string, mixed>  $data
      */
-    protected function resolveShift(array $data, Branch $branch): Shift
+    protected function resolveShift(array $data, Branch $branch, bool $required = true): ?Shift
     {
         $shift = ! empty($data['shift_id'])
             ? Shift::query()->findOrFail($data['shift_id'])
             : Shift::query()->where('branch_id', $branch->getKey())->open()->latest('opened_at')->first();
 
-        if (! $shift || ! $shift->isOpen()) {
+        if (! $shift) {
+            if ($required) {
+                throw ValidationException::withMessages([
+                    'shift' => 'Open a cashier shift before taking orders.',
+                ]);
+            }
+
+            return null;
+        }
+
+        if (! $shift->isOpen() && $required) {
             throw ValidationException::withMessages([
                 'shift' => 'Open a cashier shift before taking orders.',
             ]);
@@ -415,6 +486,7 @@ class SaleService
                 'quantity' => (float) ($row['quantity'] ?? 1),
                 'discount_amount' => (float) ($row['discount_amount'] ?? 0),
                 'notes' => $row['notes'] ?? null,
+                'modifiers' => app(ModifierResolver::class)->resolve($product, $row['modifiers'] ?? []),
             ];
         }
 

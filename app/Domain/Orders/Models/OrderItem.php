@@ -7,6 +7,7 @@ use App\Domain\Menu\Models\ProductVariant;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrderItem extends Model
 {
@@ -23,6 +24,7 @@ class OrderItem extends Model
         'unit_price',
         'unit_cost',
         'discount_amount',
+        'modifiers_total',
         'tax_rate',
         'tax_amount',
         'line_total',
@@ -36,6 +38,7 @@ class OrderItem extends Model
             'unit_price' => 'decimal:2',
             'unit_cost' => 'decimal:4',
             'discount_amount' => 'decimal:2',
+            'modifiers_total' => 'decimal:2',
             'tax_rate' => 'decimal:3',
             'tax_amount' => 'decimal:2',
             'line_total' => 'decimal:2',
@@ -56,4 +59,10 @@ class OrderItem extends Model
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
+
+    public function modifiers(): HasMany
+    {
+        return $this->hasMany(OrderItemModifier::class);
+    }
 }
+

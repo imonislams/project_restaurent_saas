@@ -3,6 +3,7 @@
 namespace App\Domain\Orders;
 
 use App\Domain\Auditing\AuditLogger;
+use App\Domain\Branches\Models\Branch;
 use App\Domain\CashManagement\CashService;
 use App\Domain\CashManagement\Enums\CashMovementType;
 use App\Domain\Identity\ManagerPinService;
@@ -11,12 +12,14 @@ use App\Domain\Inventory\Enums\StockMovementReason;
 use App\Domain\Inventory\StockService;
 use App\Domain\Kitchen\KitchenService;
 use App\Domain\Menu\Enums\InventoryMode;
+use App\Domain\Orders\Enums\AcceptanceStatus;
 use App\Domain\Orders\Enums\FulfillmentStatus;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Payments\Enums\PaymentStatus;
 use App\Domain\Tables\TableService;
 use App\Domain\Tenancy\TenantContext;
+use App\Jobs\OpenKitchenTicket;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -52,44 +55,10 @@ class OrderService
             throw ValidationException::withMessages(['manager_pin' => 'A manager PIN is required to void an order.']);
         }
 
-        return DB::transaction(function () use ($order, $user) {
+        DB::transaction(function () use ($order, $user) {
             $branch = $order->branch;
-            $location = app(ProvisionInventoryDefaults::class)->defaultLocationFor($branch);
 
-            foreach ($order->items()->get() as $item) {
-                $product = $item->product;
-
-                if (! $product) {
-                    continue;
-                }
-
-                if ($product->inventory_mode === InventoryMode::Product) {
-                    $this->stock->record(
-                        $product, $location, (float) $item->quantity,
-                        StockMovementReason::Return, (float) $item->unit_cost, $order, 'Void '.$order->order_number, true,
-                    );
-                } elseif ($product->inventory_mode === InventoryMode::Recipe) {
-                    $recipe = $product->recipe()->where('is_active', true)->with('items.ingredient')->first();
-
-                    if (! $recipe) {
-                        continue;
-                    }
-
-                    $yield = (float) $recipe->yield_quantity ?: 1.0;
-
-                    foreach ($recipe->items as $recipeItem) {
-                        if (! $recipeItem->ingredient) {
-                            continue;
-                        }
-
-                        $quantity = round((float) $recipeItem->quantity / $yield * (float) $item->quantity, 3);
-                        $this->stock->record(
-                            $recipeItem->ingredient, $location, $quantity,
-                            StockMovementReason::Return, null, $order, 'Void '.$order->order_number, true,
-                        );
-                    }
-                }
-            }
+            $this->reverseStock($order, $branch, 'Void '.$order->order_number);
 
             $cashPaid = (float) $order->payments()
                 ->whereHas('method', fn ($q) => $q->where('type', 'cash'))
@@ -125,6 +94,123 @@ class OrderService
         $this->tables->refreshForOrder($order);
 
         return $order->fresh(['items', 'payments']);
+    }
+
+    /**
+     * Reverse stock for every line (shared by void and QR rejection).
+     */
+    protected function reverseStock(Order $order, Branch $branch, string $label): void
+    {
+        $location = app(ProvisionInventoryDefaults::class)->defaultLocationFor($branch);
+
+        foreach ($order->items()->get() as $item) {
+            $product = $item->product;
+
+            if (! $product) {
+                continue;
+            }
+
+            if ($product->inventory_mode === InventoryMode::Product) {
+                $this->stock->record(
+                    $product, $location, (float) $item->quantity,
+                    StockMovementReason::Return, (float) $item->unit_cost, $order, $label, true,
+                );
+            } elseif ($product->inventory_mode === InventoryMode::Recipe) {
+                $recipe = $product->recipe()->where('is_active', true)->with('items.ingredient')->first();
+
+                if (! $recipe) {
+                    continue;
+                }
+
+                $yield = (float) $recipe->yield_quantity ?: 1.0;
+
+                foreach ($recipe->items as $recipeItem) {
+                    if (! $recipeItem->ingredient) {
+                        continue;
+                    }
+
+                    $quantity = round((float) $recipeItem->quantity / $yield * (float) $item->quantity, 3);
+                    $this->stock->record(
+                        $recipeItem->ingredient, $location, $quantity,
+                        StockMovementReason::Return, null, $order, $label, true,
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * Staff-confirm a pending QR order and send it to the kitchen.
+     */
+    public function accept(Order $order, User $user): Order
+    {
+        if ($order->acceptance_status !== AcceptanceStatus::Pending) {
+            return $order;
+        }
+
+        $order->forceFill([
+            'acceptance_status' => AcceptanceStatus::Accepted,
+            'accepted_at' => now(),
+        ])->save();
+
+        $order->statusHistory()->create([
+            'tenant_id' => $order->tenant_id,
+            'status' => $order->status,
+            'user_id' => $user->getKey(),
+            'note' => 'QR order accepted',
+        ]);
+
+        try {
+            OpenKitchenTicket::dispatch($order->getKey());
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        $this->audit->log('order.accepted', $order, ['order_number' => $order->order_number], $user, $order->tenant_id);
+
+        return $order->fresh();
+    }
+
+    /**
+     * Reject a pending QR order, reversing the stock it reserved.
+     */
+    public function reject(Order $order, User $user, ?string $reason = null): Order
+    {
+        if ($order->acceptance_status === AcceptanceStatus::Accepted) {
+            throw ValidationException::withMessages([
+                'order' => 'An accepted order cannot be rejected; void it instead.',
+            ]);
+        }
+
+        DB::transaction(function () use ($order, $user, $reason) {
+            $branch = $order->branch;
+
+            $this->reverseStock($order, $branch, 'Rejected '.$order->order_number);
+
+            $order->forceFill([
+                'acceptance_status' => AcceptanceStatus::Rejected,
+                'rejected_at' => now(),
+                'rejected_reason' => $reason,
+                'status' => OrderStatus::Voided,
+                'voided_at' => now(),
+            ])->save();
+
+            $order->statusHistory()->create([
+                'tenant_id' => $order->tenant_id,
+                'status' => OrderStatus::Voided,
+                'user_id' => $user->getKey(),
+                'note' => 'QR order rejected'.($reason ? ': '.$reason : ''),
+            ]);
+
+            $this->audit->log('order.rejected', $order, [
+                'order_number' => $order->order_number,
+                'reason' => $reason,
+            ], $user, $order->tenant_id);
+        });
+
+        $this->tables->refreshForOrder($order);
+
+        return $order->fresh();
     }
 
     /**

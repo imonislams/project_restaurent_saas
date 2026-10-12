@@ -43,8 +43,12 @@ export default function Authenticated({
             can('tables.view') && entitled('tables') && item(t('nav.tables'), route('tables.index'), 'table', 'tables.*'),
             can('kitchen.view') && entitled('kitchen') && item(t('nav.kitchen'), route('kitchen.index'), 'fire', 'kitchen.*'),
         ]),
+        group(t('nav.section.operations'), [
+            can('qr.view') && entitled('qr_dining') && item(t('nav.qr_tables'), route('qr-dining.tables.index'), 'qr', 'qr-dining.*'),
+        ]),
         group(t('nav.section.catalog'), [
             can('menu.view') && entitled('menu') && item(t('nav.menu'), route('menu.index'), 'book', 'menu.*'),
+            can('modifiers.view') && entitled('menu') && item(t('nav.modifiers'), route('modifiers.index'), 'tag', 'modifiers.*'),
             can('inventory.view') && entitled('inventory') && item(t('nav.inventory'), route('inventory.index'), 'cube', 'inventory.*'),
             can('purchasing.view') && entitled('purchasing') && item(t('nav.purchasing'), route('purchasing.orders.index'), 'store', 'purchasing.*'),
             can('waste.view') && entitled('waste') && item(t('nav.waste'), route('waste.index'), 'trash', 'waste.*'),

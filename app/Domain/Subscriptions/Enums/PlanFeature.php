@@ -13,6 +13,7 @@ enum PlanFeature: string
     case Kitchen = 'kitchen';
     case Tables = 'tables';
     case Menu = 'menu';
+    case QrDining = 'qr_dining';
     case Inventory = 'inventory';
     case Purchasing = 'purchasing';
     case Waste = 'waste';
@@ -27,6 +28,7 @@ enum PlanFeature: string
             self::Kitchen => 'Kitchen Display',
             self::Tables => 'Tables & Floor',
             self::Menu => 'Menu & Products',
+            self::QrDining => 'QR Smart Dining',
             self::Inventory => 'Inventory',
             self::Purchasing => 'Purchasing',
             self::Waste => 'Waste & Loss',

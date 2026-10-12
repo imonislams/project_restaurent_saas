@@ -79,7 +79,7 @@ class HandleInertiaRequests extends Middleware
                 ->map(fn ($label, $code) => ['value' => $code, 'label' => $label])->values(),
             // Enabled plan features (null = unrestricted, e.g. no subscription).
             'features' => $tenant === null ? null : collect([
-                'pos', 'kitchen', 'tables', 'menu', 'inventory',
+                'pos', 'kitchen', 'tables', 'menu', 'qr_dining', 'inventory',
                 'purchasing', 'waste', 'transfers', 'accounts', 'reports',
             ])->filter(fn (string $feature) => $tenant->hasFeature($feature))->values(),
         ];

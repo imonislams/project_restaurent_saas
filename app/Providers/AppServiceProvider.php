@@ -18,13 +18,16 @@ use App\Models\User;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Mail\Events\MessageSendingFailed;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
@@ -44,6 +47,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Vite::prefetch(concurrency: 3);
+
+        $this->registerQrRateLimiters();
 
         // Stable morph aliases so stored stock records survive class moves.
         Relation::morphMap([
@@ -91,5 +96,20 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Throwable) {
             // Settings unavailable — keep the configured session lifetime.
         }
+    }
+
+    /**
+     * Rate limiters for the public QR dining endpoints. These protect the
+     * unauthenticated surface from abuse and brute-force token probing.
+     */
+    protected function registerQrRateLimiters(): void
+    {
+        RateLimiter::for('qr-public', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
+
+        RateLimiter::for('qr-session', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+
+        RateLimiter::for('qr-order', fn (Request $request) => Limit::perMinute(20)->by(
+            $request->header('X-Dining-Token') ?: $request->ip()
+        ));
     }
 }

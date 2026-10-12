@@ -12,6 +12,7 @@ interface TicketItem {
     status: string; // 'pending' | 'preparing' | 'ready' | 'served' | 'cancelled'
     station: string | null;
     notes: string | null;
+    modifiers: { name: string; group_name: string | null; quantity: number }[] | null;
 }
 
 interface Ticket {
@@ -23,6 +24,7 @@ interface Ticket {
     created_at: string | null;
     order_number: string | null;
     order_type: string | null;
+    order_source: string | null;
     table_name: string | null;
     customer_name: string | null;
     items: TicketItem[];
@@ -626,6 +628,11 @@ function KdsTicketCard({
                                 {ticket.order_type}
                             </span>
                         )}
+                        {ticket.order_source === 'qr' && (
+                            <span className="rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300 border border-emerald-500/30">
+                                QR
+                            </span>
+                        )}
                     </div>
 
                     {ticket.customer_name && (
@@ -690,6 +697,21 @@ function KdsTicketCard({
                                         </span>
                                     )}
                                 </div>
+
+                                {/* Modifiers / add-ons chosen by the customer or cashier */}
+                                {item.modifiers && item.modifiers.length > 0 && (
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                        {item.modifiers.map((modifier, index) => (
+                                            <span
+                                                key={index}
+                                                className="rounded-md bg-gray-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-gray-200"
+                                            >
+                                                {modifier.name}
+                                                {modifier.quantity > 1 ? ` ×${modifier.quantity}` : ''}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
 
                                 {/* Custom Kitchen Modifiers / Preparation Notes */}
                                 {item.notes && (

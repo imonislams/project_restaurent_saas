@@ -1,8 +1,19 @@
-import { Badge, Button, Card, CardBody, CardHeader, EmptyState, KpiCard, PageHeader, SelectField, TextField } from '@/Components/ui';
+import Modal from '@/Components/Modal';
+import {
+    Badge,
+    Button,
+    Card,
+    CardBody,
+    CardHeader,
+    EmptyState,
+    KpiCard,
+    PageHeader,
+    ConfirmDialog,
+} from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { FormEventHandler, useState } from 'react';
+import { FormEventHandler, useMemo, useState } from 'react';
 
 interface ExpenseRow {
     id: number;
@@ -12,13 +23,18 @@ interface ExpenseRow {
     category: string | null;
     branch: string | null;
     account: string | null;
-    status: string;
+    status: 'approved' | 'submitted' | 'rejected' | 'draft' | string;
     status_label: string;
     created_by: string | null;
     reference: string | null;
 }
 
-const STATUS_TONE: Record<string, BadgeTone> = { approved: 'success', submitted: 'warning', rejected: 'danger', draft: 'neutral' };
+const STATUS_TONE: Record<string, BadgeTone> = {
+    approved: 'success',
+    submitted: 'warning',
+    rejected: 'danger',
+    draft: 'neutral',
+};
 
 export default function ExpensesIndex({
     branches,
@@ -37,9 +53,25 @@ export default function ExpensesIndex({
     const canManage = auth.permissions.includes('expenses.manage');
     const canApprove = auth.permissions.includes('expenses.approve');
 
-    const [showCategory, setShowCategory] = useState(false);
+    // UI State
+    const [statusFilter, setStatusFilter] = useState<'all' | 'submitted' | 'approved' | 'rejected'>('all');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState<string>('all');
+    const [branchFilter, setBranchFilter] = useState<string>('all');
 
-    const form = useForm<{
+    const [expenseModalOpen, setExpenseModalOpen] = useState(false);
+    const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<{
+        open: boolean;
+        title: string;
+        message: string;
+        tone: 'danger' | 'primary';
+        confirmLabel: string;
+        onConfirm: () => void;
+    }>({ open: false, title: '', message: '', tone: 'primary', confirmLabel: 'Confirm', onConfirm: () => {} });
+
+    // Expense Form
+    const expenseForm = useForm<{
         branch_id: number | '';
         expense_category_id: number | '';
         financial_account_id: number | '';
@@ -50,9 +82,9 @@ export default function ExpensesIndex({
         description: string;
         notes: string;
     }>({
-        branch_id: branches[0]?.id ?? '',
-        expense_category_id: categories[0]?.id ?? '',
-        financial_account_id: accounts[0]?.id ?? '',
+        branch_id: (branches[0]?.id ?? '') as number | '',
+        expense_category_id: (categories[0]?.id ?? '') as number | '',
+        financial_account_id: (accounts[0]?.id ?? '') as number | '',
         amount: 0,
         expense_date: new Date().toISOString().slice(0, 10),
         payment_method: 'cash',
@@ -61,157 +93,364 @@ export default function ExpensesIndex({
         notes: '',
     });
 
-    const catForm = useForm({ name: '', type: 'expense' });
+    // Category Form
+    const categoryForm = useForm({
+        name: '',
+        type: 'expense',
+    });
 
-    const submit: FormEventHandler = (e) => {
+    const submitExpense: FormEventHandler = (e) => {
         e.preventDefault();
-        form.post(route('expenses.store'), {
+        expenseForm.post(route('expenses.store'), {
             preserveScroll: true,
-            onSuccess: () => form.reset('amount', 'description', 'reference', 'notes'),
+            onSuccess: () => {
+                setExpenseModalOpen(false);
+                expenseForm.reset('amount', 'description', 'reference', 'notes');
+            },
         });
     };
 
     const submitCategory: FormEventHandler = (e) => {
         e.preventDefault();
-        catForm.post(route('expenses.categories.store'), {
+        categoryForm.post(route('expenses.categories.store'), {
             preserveScroll: true,
             onSuccess: () => {
-                catForm.reset('name');
-                setShowCategory(false);
+                categoryForm.reset('name');
+                setCategoryModalOpen(false);
             },
         });
     };
 
-    const total = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const pending = expenses.filter((e) => e.status === 'submitted').length;
+    // KPI Metrics
+    const totalExpenses = useMemo(() => expenses.reduce((sum, e) => sum + e.amount, 0), [expenses]);
+    const pendingExpenses = useMemo(() => expenses.filter((e) => e.status === 'submitted'), [expenses]);
+    const pendingCount = pendingExpenses.length;
+    const pendingSum = useMemo(() => pendingExpenses.reduce((sum, e) => sum + e.amount, 0), [pendingExpenses]);
+    const approvedCount = useMemo(() => expenses.filter((e) => e.status === 'approved').length, [expenses]);
+
+    // Filtered expenses
+    const filteredExpenses = useMemo(() => {
+        return expenses.filter((e) => {
+            if (statusFilter !== 'all' && e.status !== statusFilter) return false;
+            if (categoryFilter !== 'all' && e.category !== categoryFilter) return false;
+            if (branchFilter !== 'all' && e.branch !== branchFilter) return false;
+            if (searchQuery) {
+                const q = searchQuery.toLowerCase();
+                const matchDesc = e.description.toLowerCase().includes(q);
+                const matchRef = e.reference?.toLowerCase().includes(q);
+                const matchUser = e.created_by?.toLowerCase().includes(q);
+                const matchAcc = e.account?.toLowerCase().includes(q);
+                if (!matchDesc && !matchRef && !matchUser && !matchAcc) return false;
+            }
+            return true;
+        });
+    }, [expenses, statusFilter, categoryFilter, branchFilter, searchQuery]);
+
+    // Approval / Rejection
+    const handleApprove = (expense: ExpenseRow) => {
+        setConfirmAction({
+            open: true,
+            title: `Approve Expense #${expense.id}?`,
+            message: `Approving will debit $${expense.amount.toFixed(2)} from account "${expense.account ?? 'Default'}" and post the journal entry.`,
+            tone: 'primary',
+            confirmLabel: 'Approve Expense',
+            onConfirm: () => {
+                router.post(
+                    route('expenses.approve', expense.id),
+                    {},
+                    {
+                        preserveScroll: true,
+                        onSuccess: () => setConfirmAction((prev) => ({ ...prev, open: false })),
+                    }
+                );
+            },
+        });
+    };
+
+    const handleReject = (expense: ExpenseRow) => {
+        setConfirmAction({
+            open: true,
+            title: `Reject Expense #${expense.id}?`,
+            message: `Rejecting this expense leaves financial accounts untouched and sets the record status to Rejected.`,
+            tone: 'danger',
+            confirmLabel: 'Reject Expense',
+            onConfirm: () => {
+                router.post(
+                    route('expenses.reject', expense.id),
+                    {},
+                    {
+                        preserveScroll: true,
+                        onSuccess: () => setConfirmAction((prev) => ({ ...prev, open: false })),
+                    }
+                );
+            },
+        });
+    };
+
+    const categoryNames = useMemo(() => Array.from(new Set(categories.map((c) => c.name))), [categories]);
+    const branchNames = useMemo(() => Array.from(new Set(branches.map((b) => b.name))), [branches]);
+
+    const isAboveAutoApprove = autoApproveLimit !== null && expenseForm.data.amount > autoApproveLimit;
 
     return (
         <AuthenticatedLayout
             header={
                 <PageHeader
-                    title="Expenses"
-                    description="Record spending and route anything above the threshold for approval."
+                    title="Operating Expenses"
+                    description="Record kitchen, operational, and utility expenditures with automated approval thresholds."
                     actions={
                         canManage && (
-                            <Button size="sm" variant="secondary" onClick={() => setShowCategory((v) => !v)}>
-                                {showCategory ? 'Close' : 'Expense categories'}
-                            </Button>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => setCategoryModalOpen(true)}
+                                >
+                                    + Add Category
+                                </Button>
+                                <Button
+                                    variant="primary"
+                                    size="sm"
+                                    onClick={() => setExpenseModalOpen(true)}
+                                >
+                                    + Record Expense
+                                </Button>
+                            </div>
                         )
                     }
                 />
             }
         >
-            <Head title="Expenses" />
+            <Head title="Operating Expenses" />
 
             <div className="py-6">
-                <div className="mx-auto max-w-7xl space-y-5 px-4 sm:px-6 lg:px-8">
-                    {flash?.success && <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{flash.success}</div>}
-                    {flash?.error && <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{flash.error}</div>}
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+                    {/* Flash messages */}
+                    {flash?.success && (
+                        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                            {flash.success}
+                        </div>
+                    )}
+                    {flash?.error && (
+                        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                            {flash.error}
+                        </div>
+                    )}
 
-                    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                        <KpiCard label="Total recorded" value={total.toFixed(2)} />
-                        <KpiCard label="Entries" value={expenses.length} />
-                        <KpiCard label="Awaiting approval" value={pending} tone={pending > 0 ? 'warning' : 'neutral'} />
-                        <KpiCard label="Auto-approve limit" value={autoApproveLimit ?? 'Off'} hint={autoApproveLimit !== null ? 'above this needs approval' : undefined} />
+                    {/* KPI Summary Cards */}
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                        <KpiCard
+                            label="Total Recorded Expenses"
+                            value={`$${totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            hint={`${expenses.length} total entries`}
+                        />
+                        <KpiCard
+                            label="Awaiting Approval"
+                            value={pendingCount}
+                            tone={pendingCount > 0 ? 'warning' : 'neutral'}
+                            hint={pendingCount > 0 ? `$${pendingSum.toFixed(2)} pending sign-off` : 'No pending reviews'}
+                        />
+                        <KpiCard
+                            label="Approved Expenses"
+                            value={approvedCount}
+                            tone="success"
+                            hint="Posted to financial ledger"
+                        />
+                        <KpiCard
+                            label="Auto-Approve Limit"
+                            value={autoApproveLimit ? `$${Number(autoApproveLimit).toFixed(2)}` : 'Unrestricted'}
+                            hint={autoApproveLimit ? 'Entries above require approval' : 'All recorded expenses auto-approve'}
+                        />
                     </div>
 
-                    {showCategory && canManage && (
-                        <Card>
-                            <CardHeader title="New category" />
-                            <CardBody>
-                                <form onSubmit={submitCategory} className="flex flex-wrap items-end gap-3">
-                                    <TextField label="Category name" className="w-64" value={catForm.data.name} error={catForm.errors.name} onChange={(v) => catForm.setData('name', v)} />
-                                    <SelectField
-                                        label="Type"
-                                        className="w-40"
-                                        value={catForm.data.type}
-                                        options={[
-                                            { value: 'expense', label: 'Expense' },
-                                            { value: 'income', label: 'Income' },
-                                        ]}
-                                        onChange={(v) => catForm.setData('type', v)}
-                                    />
-                                    <Button type="submit" loading={catForm.processing}>Add</Button>
-                                </form>
-                            </CardBody>
-                        </Card>
-                    )}
-
-                    {canManage && (
-                        <Card>
-                            <CardHeader title="Record expense" />
-                            <CardBody>
-                                <form onSubmit={submit} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                    <TextField label="Description" value={form.data.description} error={form.errors.description} onChange={(v) => form.setData('description', v)} />
-                                    <TextField label="Amount" type="number" value={String(form.data.amount)} error={form.errors.amount} onChange={(v) => form.setData('amount', Number(v))} />
-                                    <TextField label="Date" type="date" value={form.data.expense_date} error={form.errors.expense_date} onChange={(v) => form.setData('expense_date', v)} />
-                                    <SelectField
-                                        label="Category"
-                                        value={form.data.expense_category_id === '' ? '' : String(form.data.expense_category_id)}
-                                        options={[{ value: '', label: 'None' }, ...categories.map((c) => ({ value: String(c.id), label: c.name }))]}
-                                        onChange={(v) => form.setData('expense_category_id', v ? Number(v) : '')}
-                                    />
-                                    <SelectField
-                                        label="Account"
-                                        value={form.data.financial_account_id === '' ? '' : String(form.data.financial_account_id)}
-                                        options={[{ value: '', label: 'None' }, ...accounts.map((a) => ({ value: String(a.id), label: a.name }))]}
-                                        onChange={(v) => form.setData('financial_account_id', v ? Number(v) : '')}
-                                    />
-                                    <SelectField
-                                        label="Branch"
-                                        value={form.data.branch_id === '' ? '' : String(form.data.branch_id)}
-                                        options={[{ value: '', label: 'Company-wide' }, ...branches.map((b) => ({ value: String(b.id), label: b.name }))]}
-                                        onChange={(v) => form.setData('branch_id', v ? Number(v) : '')}
-                                    />
-                                    <TextField label="Reference" value={form.data.reference} error={form.errors.reference} onChange={(v) => form.setData('reference', v)} />
-                                    <div className="flex items-end sm:col-span-2">
-                                        <Button type="submit" loading={form.processing}>Save expense</Button>
-                                    </div>
-                                </form>
-                            </CardBody>
-                        </Card>
-                    )}
-
+                    {/* Main Expenses Table */}
                     <Card>
-                        <CardHeader title="Expenses" description={`${expenses.length} entries`} />
+                        <CardHeader
+                            title="Expense Transactions"
+                            description={`${filteredExpenses.length} of ${expenses.length} records`}
+                            action={
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Search description, reference, user…"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="h-9 w-48 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:w-60"
+                                    />
+                                    <select
+                                        value={categoryFilter}
+                                        onChange={(e) => setCategoryFilter(e.target.value)}
+                                        className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    >
+                                        <option value="all">All Categories</option>
+                                        {categoryNames.map((name) => (
+                                            <option key={name} value={name}>
+                                                {name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <select
+                                        value={branchFilter}
+                                        onChange={(e) => setBranchFilter(e.target.value)}
+                                        className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    >
+                                        <option value="all">All Branches</option>
+                                        {branchNames.map((name) => (
+                                            <option key={name} value={name}>
+                                                {name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            }
+                        />
+
+                        {/* Status Filter Chips */}
+                        <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50/50 px-6 py-2.5 text-xs">
+                            <span className="font-semibold text-gray-500">Status:</span>
+                            <button
+                                type="button"
+                                onClick={() => setStatusFilter('all')}
+                                className={`rounded-full px-2.5 py-1 font-medium transition ${
+                                    statusFilter === 'all'
+                                        ? 'bg-gray-900 text-white'
+                                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                                }`}
+                            >
+                                All ({expenses.length})
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setStatusFilter('submitted')}
+                                className={`rounded-full px-2.5 py-1 font-medium transition ${
+                                    statusFilter === 'submitted'
+                                        ? 'bg-amber-600 text-white'
+                                        : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'
+                                }`}
+                            >
+                                Pending Review ({pendingCount})
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setStatusFilter('approved')}
+                                className={`rounded-full px-2.5 py-1 font-medium transition ${
+                                    statusFilter === 'approved'
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+                                }`}
+                            >
+                                Approved ({approvedCount})
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setStatusFilter('rejected')}
+                                className={`rounded-full px-2.5 py-1 font-medium transition ${
+                                    statusFilter === 'rejected'
+                                        ? 'bg-rose-600 text-white'
+                                        : 'bg-rose-50 text-rose-800 hover:bg-rose-100 border border-rose-200'
+                                }`}
+                            >
+                                Rejected
+                            </button>
+                        </div>
+
                         <CardBody className="p-0">
-                            {expenses.length === 0 ? (
-                                <EmptyState title="No expenses recorded yet" description="Record your first expense to start tracking spend." />
+                            {filteredExpenses.length === 0 ? (
+                                <EmptyState
+                                    title="No Expense Records Found"
+                                    description={
+                                        searchQuery || statusFilter !== 'all' || categoryFilter !== 'all'
+                                            ? 'No expense entries match your active search filters.'
+                                            : 'No operating expenses logged yet.'
+                                    }
+                                    action={
+                                        canManage && (
+                                            <Button
+                                                size="sm"
+                                                onClick={() => setExpenseModalOpen(true)}
+                                            >
+                                                Record First Expense
+                                            </Button>
+                                        )
+                                    }
+                                />
                             ) : (
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left text-sm">
-                                        <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                                        <thead className="border-b border-gray-200 bg-gray-50/80 text-xs font-semibold uppercase tracking-wider text-gray-500">
                                             <tr>
-                                                <th className="px-5 py-3">Date</th>
-                                                <th className="px-5 py-3">Description</th>
-                                                <th className="px-5 py-3">Category</th>
-                                                <th className="px-5 py-3">Account</th>
-                                                <th className="px-5 py-3 text-right">Amount</th>
-                                                <th className="px-5 py-3">Status</th>
-                                                {canApprove && <th className="px-5 py-3 text-right">Actions</th>}
+                                                <th className="px-6 py-3.5">Expense Date</th>
+                                                <th className="px-6 py-3.5">Description</th>
+                                                <th className="px-6 py-3.5">Category</th>
+                                                <th className="px-6 py-3.5">Branch</th>
+                                                <th className="px-6 py-3.5">Paid From</th>
+                                                <th className="px-6 py-3.5 text-right">Amount</th>
+                                                <th className="px-6 py-3.5 text-center">Status</th>
+                                                <th className="px-6 py-3.5">Recorded By</th>
+                                                {canApprove && (
+                                                    <th className="px-6 py-3.5 text-right">Actions</th>
+                                                )}
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-100">
-                                            {expenses.map((e) => (
-                                                <tr key={e.id} className="hover:bg-gray-50">
-                                                    <td className="px-5 py-3 text-gray-500">{e.expense_date}</td>
-                                                    <td className="px-5 py-3 text-gray-800">
-                                                        {e.description}
-                                                        {e.reference && <span className="block text-xs text-gray-400">{e.reference}</span>}
+                                        <tbody className="divide-y divide-gray-100 bg-white">
+                                            {filteredExpenses.map((e) => (
+                                                <tr key={e.id} className="hover:bg-gray-50/60 transition-colors">
+                                                    <td className="px-6 py-4 text-xs font-mono text-gray-500 whitespace-nowrap">
+                                                        {e.expense_date ?? '—'}
                                                     </td>
-                                                    <td className="px-5 py-3 text-gray-600">{e.category ?? '—'}</td>
-                                                    <td className="px-5 py-3 text-gray-600">{e.account ?? '—'}</td>
-                                                    <td className="px-5 py-3 text-right tabular-nums text-gray-800">{e.amount.toFixed(2)}</td>
-                                                    <td className="px-5 py-3">
-                                                        <Badge tone={STATUS_TONE[e.status] ?? 'neutral'}>{e.status_label}</Badge>
+                                                    <td className="px-6 py-4 font-medium text-gray-900">
+                                                        {e.description}
+                                                        {e.reference && (
+                                                            <span className="block font-mono text-xs text-gray-400 mt-0.5">
+                                                                Ref: {e.reference}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+                                                            {e.category ?? 'General'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-gray-600 text-xs">
+                                                        {e.branch ?? 'Company-wide'}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-gray-600 text-xs">
+                                                        {e.account ?? 'General Account'}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right font-mono font-bold tabular-nums text-gray-900">
+                                                        ${e.amount.toFixed(2)}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <Badge tone={STATUS_TONE[e.status] ?? 'neutral'}>
+                                                            {e.status_label}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-xs text-gray-500">
+                                                        {e.created_by ?? 'System'}
                                                     </td>
                                                     {canApprove && (
-                                                        <td className="px-5 py-3 text-right">
-                                                            {e.status === 'submitted' && (
-                                                                <div className="flex justify-end gap-2">
-                                                                    <Button size="xs" variant="success" onClick={() => router.post(route('expenses.approve', e.id), {}, { preserveScroll: true })}>Approve</Button>
-                                                                    <Button size="xs" variant="danger" onClick={() => router.post(route('expenses.reject', e.id), {}, { preserveScroll: true })}>Reject</Button>
+                                                        <td className="px-6 py-4 text-right">
+                                                            {e.status === 'submitted' ? (
+                                                                <div className="flex items-center justify-end gap-1.5">
+                                                                    <Button
+                                                                        size="xs"
+                                                                        variant="success"
+                                                                        onClick={() => handleApprove(e)}
+                                                                    >
+                                                                        Approve
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="xs"
+                                                                        variant="danger"
+                                                                        onClick={() => handleReject(e)}
+                                                                    >
+                                                                        Reject
+                                                                    </Button>
                                                                 </div>
+                                                            ) : (
+                                                                <span className="text-xs text-gray-400">
+                                                                    Finalized
+                                                                </span>
                                                             )}
                                                         </td>
                                                     )}
@@ -225,6 +464,294 @@ export default function ExpensesIndex({
                     </Card>
                 </div>
             </div>
+
+            {/* MODAL: RECORD EXPENSE */}
+            <Modal
+                show={expenseModalOpen}
+                maxWidth="lg"
+                onClose={() => setExpenseModalOpen(false)}
+            >
+                <form onSubmit={submitExpense} className="p-6">
+                    <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                Record Operating Expense
+                            </h3>
+                            <p className="mt-0.5 text-xs text-gray-500">
+                                Log operational costs, supplies, or vendor disbursements.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setExpenseModalOpen(false)}
+                            className="rounded-md p-1.5 text-gray-400 hover:text-gray-500"
+                        >
+                            ✕
+                        </button>
+                    </div>
+
+                    <div className="mt-4 space-y-4">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700">
+                                Description <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Weekly vegetable restock, Electricity bill, Cleaning supplies"
+                                value={expenseForm.data.description}
+                                onChange={(e) => expenseForm.setData('description', e.target.value)}
+                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                required
+                            />
+                            {expenseForm.errors.description && (
+                                <p className="mt-1 text-xs text-rose-600">{expenseForm.errors.description}</p>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700">
+                                    Amount ($) <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    value={expenseForm.data.amount}
+                                    onChange={(e) => expenseForm.setData('amount', Number(e.target.value))}
+                                    className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    required
+                                />
+                                {expenseForm.errors.amount && (
+                                    <p className="mt-1 text-xs text-rose-600">{expenseForm.errors.amount}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700">
+                                    Expense Date <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="date"
+                                    value={expenseForm.data.expense_date}
+                                    onChange={(e) => expenseForm.setData('expense_date', e.target.value)}
+                                    className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    required
+                                />
+                                {expenseForm.errors.expense_date && (
+                                    <p className="mt-1 text-xs text-rose-600">{expenseForm.errors.expense_date}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700">
+                                    Category
+                                </label>
+                                <select
+                                    value={expenseForm.data.expense_category_id === '' ? '' : String(expenseForm.data.expense_category_id)}
+                                    onChange={(e) => expenseForm.setData('expense_category_id', e.target.value ? Number(e.target.value) : '')}
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                >
+                                    <option value="">No category</option>
+                                    {categories.map((c) => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700">
+                                    Branch Location
+                                </label>
+                                <select
+                                    value={expenseForm.data.branch_id === '' ? '' : String(expenseForm.data.branch_id)}
+                                    onChange={(e) => expenseForm.setData('branch_id', e.target.value ? Number(e.target.value) : '')}
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                >
+                                    {branches.map((b) => (
+                                        <option key={b.id} value={b.id}>
+                                            {b.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700">
+                                    Financial Account
+                                </label>
+                                <select
+                                    value={expenseForm.data.financial_account_id === '' ? '' : String(expenseForm.data.financial_account_id)}
+                                    onChange={(e) => expenseForm.setData('financial_account_id', e.target.value ? Number(e.target.value) : '')}
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                >
+                                    {accounts.map((a) => (
+                                        <option key={a.id} value={a.id}>
+                                            {a.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700">
+                                    Payment Method
+                                </label>
+                                <select
+                                    value={expenseForm.data.payment_method}
+                                    onChange={(e) => expenseForm.setData('payment_method', e.target.value)}
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                >
+                                    <option value="cash">Cash</option>
+                                    <option value="bank_transfer">Bank Transfer</option>
+                                    <option value="card">Company Card</option>
+                                    <option value="check">Check</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700">
+                                    Reference / Receipt #
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. REC-8492"
+                                    value={expenseForm.data.reference}
+                                    onChange={(e) => expenseForm.setData('reference', e.target.value)}
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Approval Threshold Notice */}
+                        {isAboveAutoApprove && (
+                            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                                ⚠️ This amount exceeds the auto-approval threshold (${Number(autoApproveLimit).toFixed(2)}).
+                                This expense will be submitted as <span className="font-bold underline">Pending Approval</span> and will require a manager review before posting to accounts.
+                            </div>
+                        )}
+
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700">
+                                Additional Notes
+                            </label>
+                            <textarea
+                                rows={2}
+                                placeholder="Extra justification, tax notes, or invoice comments"
+                                value={expenseForm.data.notes}
+                                onChange={(e) => expenseForm.setData('notes', e.target.value)}
+                                className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setExpenseModalOpen(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            loading={expenseForm.processing}
+                        >
+                            Record Expense
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* MODAL: ADD CATEGORY */}
+            <Modal
+                show={categoryModalOpen}
+                maxWidth="sm"
+                onClose={() => setCategoryModalOpen(false)}
+            >
+                <form onSubmit={submitCategory} className="p-6">
+                    <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                            Add Expense Category
+                        </h3>
+                        <button
+                            type="button"
+                            onClick={() => setCategoryModalOpen(false)}
+                            className="rounded-md p-1.5 text-gray-400 hover:text-gray-500"
+                        >
+                            ✕
+                        </button>
+                    </div>
+
+                    <div className="mt-4 space-y-4">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700">
+                                Category Name <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Kitchen Supplies, Marketing, Utilities"
+                                value={categoryForm.data.name}
+                                onChange={(e) => categoryForm.setData('name', e.target.value)}
+                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                required
+                            />
+                            {categoryForm.errors.name && (
+                                <p className="mt-1 text-xs text-rose-600">{categoryForm.errors.name}</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700">
+                                Accounting Type
+                            </label>
+                            <select
+                                value={categoryForm.data.type}
+                                onChange={(e) => categoryForm.setData('type', e.target.value)}
+                                className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            >
+                                <option value="expense">Expense (Operational Cost)</option>
+                                <option value="income">Income (Miscellaneous Credit)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setCategoryModalOpen(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            loading={categoryForm.processing}
+                        >
+                            Save Category
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* CONFIRM ACTION DIALOG */}
+            <ConfirmDialog
+                show={confirmAction.open}
+                title={confirmAction.title}
+                description={confirmAction.message}
+                tone={confirmAction.tone}
+                confirmLabel={confirmAction.confirmLabel}
+                onConfirm={confirmAction.onConfirm}
+                onClose={() => setConfirmAction((prev) => ({ ...prev, open: false }))}
+            />
         </AuthenticatedLayout>
     );
 }

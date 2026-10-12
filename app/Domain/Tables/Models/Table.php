@@ -2,9 +2,12 @@
 
 namespace App\Domain\Tables\Models;
 
+use App\Domain\Dining\Models\DiningSession;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Tables\Enums\TableStatus;
+use App\Domain\Tables\Factories\TableFactory;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Table extends Model
 {
-    use BelongsToTenant, SoftDeletes;
+    use BelongsToTenant, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',
@@ -35,6 +38,11 @@ class Table extends Model
         ];
     }
 
+    protected static function newFactory(): TableFactory
+    {
+        return TableFactory::new();
+    }
+
     public function diningArea(): BelongsTo
     {
         return $this->belongsTo(DiningArea::class);
@@ -43,6 +51,16 @@ class Table extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function qrTokens(): HasMany
+    {
+        return $this->hasMany(TableQrToken::class);
+    }
+
+    public function diningSessions(): HasMany
+    {
+        return $this->hasMany(DiningSession::class);
     }
 
     public function hasOpenOrders(): bool

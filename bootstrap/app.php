@@ -10,6 +10,8 @@ use App\Http\Middleware\EnsurePlatformPermission;
 use App\Http\Middleware\EnsureTenantIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveTenant;
+use App\Http\Middleware\ResolveQrContext;
+use App\Http\Middleware\ResolveDiningSession;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -41,6 +43,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'platform' => EnsurePlatformAdmin::class,
             'platform.permission' => EnsurePlatformPermission::class,
             'feature' => EnsureFeature::class,
+            'qr.context' => ResolveQrContext::class,
+            'qr.session' => ResolveDiningSession::class,
         ]);
 
         // Provider webhooks / gateway callbacks are authenticated by signature or

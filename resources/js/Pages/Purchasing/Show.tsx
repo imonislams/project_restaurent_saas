@@ -78,7 +78,7 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
         open: boolean;
         title: string;
         message: string;
-        tone: 'danger' | 'warning' | 'primary';
+        tone: 'danger' | 'primary';
         confirmLabel: string;
         onConfirm: () => void;
     }>({ open: false, title: '', message: '', tone: 'primary', confirmLabel: 'Confirm', onConfirm: () => {} });
@@ -260,24 +260,24 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
                         <KpiCard
                             label="Total Order Amount"
                             value={`$${order.total.toFixed(2)}`}
-                            helpText={`Subtotal: $${order.subtotal.toFixed(2)}`}
+                            hint={`Subtotal: $${order.subtotal.toFixed(2)}`}
                         />
                         <KpiCard
                             label="Paid to Vendor"
                             value={`$${order.paid_total.toFixed(2)}`}
                             tone="success"
-                            helpText={`${order.payments.length} recorded payments`}
+                            hint={`${order.payments.length} recorded payments`}
                         />
                         <KpiCard
                             label="Outstanding Due"
                             value={`$${order.outstanding.toFixed(2)}`}
                             tone={order.outstanding > 0 ? 'warning' : 'neutral'}
-                            helpText={order.outstanding > 0 ? 'Pending payment' : 'Fully settled'}
+                            hint={order.outstanding > 0 ? 'Pending payment' : 'Fully settled'}
                         />
                         <KpiCard
                             label="Line Items Count"
                             value={order.items.length}
-                            helpText={`${order.receipts.length} partial receipts logged`}
+                            hint={`${order.receipts.length} partial receipts logged`}
                         />
                     </div>
 
@@ -575,13 +575,13 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
 
             {/* CONFIRM ACTION DIALOG */}
             <ConfirmDialog
-                isOpen={confirmAction.open}
+                show={confirmAction.open}
                 title={confirmAction.title}
                 description={confirmAction.message}
                 tone={confirmAction.tone}
                 confirmLabel={confirmAction.confirmLabel}
                 onConfirm={confirmAction.onConfirm}
-                onCancel={() => setConfirmAction((prev) => ({ ...prev, open: false }))}
+                onClose={() => setConfirmAction((prev) => ({ ...prev, open: false }))}
             />
         </AuthenticatedLayout>
     );

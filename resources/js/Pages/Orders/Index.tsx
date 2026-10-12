@@ -12,7 +12,11 @@ interface OrderRow {
     order_number: string;
     order_type: string;
     order_type_label: string;
+    source: string;
+    source_label: string;
     status: string;
+    acceptance_status: string;
+    acceptance_label: string;
     fulfillment_status?: string;
     fulfillment_label?: string;
     table_name?: string | null;
@@ -416,8 +420,15 @@ export default function OrdersIndex({
 
                                                     {/* Channel & Table */}
                                                     <td className="px-5 py-3.5">
-                                                        <div className="font-semibold text-gray-900">
-                                                            {order.order_type_label}
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="font-semibold text-gray-900">
+                                                                {order.order_type_label}
+                                                            </span>
+                                                            {order.source === 'qr' && (
+                                                                <span className="rounded-md bg-restrly-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-restrly-700 border border-restrly-200">
+                                                                    QR
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         {order.table_name && (
                                                             <span className="inline-block mt-0.5 rounded-md bg-amber-50 px-1.5 py-0.2 text-[10px] font-bold text-amber-800 border border-amber-200">
@@ -451,6 +462,16 @@ export default function OrdersIndex({
                                                         <Badge tone={statusTone}>
                                                             {order.status}
                                                         </Badge>
+                                                        {order.acceptance_status === 'pending' && (
+                                                            <div className="mt-1">
+                                                                <Badge tone="warning">Awaiting confirmation</Badge>
+                                                            </div>
+                                                        )}
+                                                        {order.acceptance_status === 'rejected' && (
+                                                            <div className="mt-1">
+                                                                <Badge tone="danger">Rejected</Badge>
+                                                            </div>
+                                                        )}
                                                     </td>
 
                                                     {/* Placed at */}
@@ -466,6 +487,23 @@ export default function OrdersIndex({
                                                     {/* Actions */}
                                                     <td className="px-5 py-3.5 text-right whitespace-nowrap">
                                                         <div className="flex items-center justify-end gap-1.5">
+                                                            {order.acceptance_status === 'pending' && (
+                                                                <>
+                                                                    <Button
+                                                                        size="xs"
+                                                                        onClick={() => router.post(route('orders.accept', order.id), {}, { preserveScroll: true })}
+                                                                    >
+                                                                        Accept
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="xs"
+                                                                        variant="ghost"
+                                                                        onClick={() => router.post(route('orders.reject', order.id), {}, { preserveScroll: true })}
+                                                                    >
+                                                                        Reject
+                                                                    </Button>
+                                                                </>
+                                                            )}
                                                             <Link
                                                                 href={route('orders.show', order.id)}
                                                                 className="rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-subtle"

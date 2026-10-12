@@ -21,6 +21,7 @@ class KitchenTicketItem extends Model
         'quantity',
         'status',
         'notes',
+        'modifiers',
     ];
 
     protected function casts(): array
@@ -28,6 +29,7 @@ class KitchenTicketItem extends Model
         return [
             'status' => KitchenItemStatus::class,
             'quantity' => 'decimal:3',
+            'modifiers' => 'array',
         ];
     }
 

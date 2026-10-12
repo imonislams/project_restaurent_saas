@@ -20,6 +20,8 @@ final class Permissions
             'tables' => ['view', 'manage'],
             'kitchen' => ['view', 'manage'],
             'menu' => ['view', 'manage'],
+            'modifiers' => ['view', 'manage'],
+            'qr' => ['view', 'manage', 'settings', 'analytics'],
             'inventory' => ['view', 'manage', 'adjust', 'approve'],
             'purchasing' => ['view', 'manage', 'approve'],
             'waste' => ['view', 'create', 'approve'],

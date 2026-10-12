@@ -26,6 +26,29 @@ interface Variant {
     price: number | null;
 }
 
+interface ModifierOption {
+    id: number;
+    name: string;
+    price_delta: number;
+}
+
+interface ModifierGroup {
+    id: number;
+    name: string;
+    selection_type: string;
+    min_select: number;
+    max_select: number;
+    is_required: boolean;
+    options: ModifierOption[];
+}
+
+interface SelectedModifier {
+    option_id: number;
+    name: string;
+    price_delta: number;
+    quantity: number;
+}
+
 interface Product {
     id: number;
     name: string;
@@ -37,6 +60,7 @@ interface Product {
     price_delivery: number;
     is_available: boolean;
     variants: Variant[];
+    modifier_groups: ModifierGroup[];
 }
 
 interface CartLine {
@@ -48,6 +72,7 @@ interface CartLine {
     quantity: number;
     discount_amount: number;
     notes: string | null;
+    modifiers: SelectedModifier[];
 }
 
 interface PaymentMethod {
@@ -196,6 +221,8 @@ export default function PosIndex({
     const [showShortcuts, setShowShortcuts] = useState(false);
     const [editingNoteKey, setEditingNoteKey] = useState<string | null>(null);
     const [itemNoteInput, setItemNoteInput] = useState('');
+    const [configuring, setConfiguring] = useState<{ product: Product; variant: Variant | null } | null>(null);
+    const [selectedModifiers, setSelectedModifiers] = useState<Record<number, number[]>>({});
 
     // Pricing & Discounts
     const [discountType, setDiscountType] = useState<'none' | 'amount' | 'percent'>('none');
@@ -281,10 +308,12 @@ export default function PosIndex({
     }, [cart, discountType, discountValue, serviceCharge, taxInclusive, taxRate, serviceChargeRate, deliveryFee]);
 
     // Cart operations
-    const addToCart = (product: Product, variant: Variant | null) => {
+    const addToCart = (product: Product, variant: Variant | null, modifiers: SelectedModifier[] = []) => {
         playSound('add');
-        const key = `${product.id}-${variant?.id ?? 'base'}`;
-        const price = variant?.price ?? priceFor(product);
+        const signature = modifiers.map((m) => m.option_id).sort((a, b) => a - b).join('.');
+        const key = `${product.id}-${variant?.id ?? 'base'}${signature ? `-m${signature}` : ''}`;
+        const modifierDelta = modifiers.reduce((sum, m) => sum + m.price_delta * m.quantity, 0);
+        const price = Math.round(((variant?.price ?? priceFor(product)) + modifierDelta) * 100) / 100;
 
         setCart((prev) => {
             const existing = prev.find((l) => l.key === key);
@@ -304,9 +333,67 @@ export default function PosIndex({
                     quantity: 1,
                     discount_amount: 0,
                     notes: null,
+                    modifiers,
                 },
             ];
         });
+    };
+
+    // Products with modifier groups open a configuration modal; others add directly.
+    const addOrConfigure = (product: Product, variant: Variant | null) => {
+        if ((product.modifier_groups ?? []).length > 0) {
+            setSelectedModifiers({});
+            setConfiguring({ product, variant });
+            return;
+        }
+        addToCart(product, variant);
+    };
+
+    const toggleModifier = (group: ModifierGroup, optionId: number) => {
+        setSelectedModifiers((prev) => {
+            const current = prev[group.id] ?? [];
+            if (group.selection_type === 'single') {
+                return { ...prev, [group.id]: current.includes(optionId) ? [] : [optionId] };
+            }
+            if (current.includes(optionId)) {
+                return { ...prev, [group.id]: current.filter((id) => id !== optionId) };
+            }
+            if (current.length >= group.max_select) {
+                return prev;
+            }
+            return { ...prev, [group.id]: [...current, optionId] };
+        });
+    };
+
+    const configureValid = configuring
+        ? (configuring.product.modifier_groups ?? []).every((group) => {
+              const count = (selectedModifiers[group.id] ?? []).length;
+              return count >= group.min_select && count <= group.max_select;
+          })
+        : true;
+
+    const configureDelta = configuring
+        ? (configuring.product.modifier_groups ?? []).reduce((sum, group) => {
+              const selected = selectedModifiers[group.id] ?? [];
+              return sum + group.options.filter((o) => selected.includes(o.id)).reduce((s, o) => s + o.price_delta, 0);
+          }, 0)
+        : 0;
+
+    const confirmConfigure = () => {
+        if (!configuring || !configureValid) return;
+        const { product, variant } = configuring;
+        const selected: SelectedModifier[] = [];
+        for (const group of product.modifier_groups ?? []) {
+            for (const optionId of selectedModifiers[group.id] ?? []) {
+                const option = group.options.find((o) => o.id === optionId);
+                if (option) {
+                    selected.push({ option_id: option.id, name: option.name, price_delta: option.price_delta, quantity: 1 });
+                }
+            }
+        }
+        addToCart(product, variant, selected);
+        setConfiguring(null);
+        setSelectedModifiers({});
     };
 
     const updateQty = (key: string, delta: number) => {
@@ -432,6 +519,7 @@ export default function PosIndex({
                     quantity: l.quantity,
                     discount_amount: l.discount_amount,
                     notes: l.notes,
+                    modifiers: l.modifiers.map((m) => ({ option_id: m.option_id, quantity: m.quantity })),
                 })),
             },
             {
@@ -778,7 +866,7 @@ export default function PosIndex({
                                     <button
                                         type="button"
                                         disabled={!product.is_available}
-                                        onClick={() => addToCart(product, null)}
+                                        onClick={() => addOrConfigure(product, null)}
                                         className="flex flex-1 flex-col text-left focus:outline-none"
                                     >
                                         <div className="flex items-center justify-between gap-1">
@@ -811,7 +899,7 @@ export default function PosIndex({
                                                     disabled={!product.is_available}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        addToCart(product, v);
+                                                        addOrConfigure(product, v);
                                                     }}
                                                     className="rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-700 hover:bg-restrly-100 hover:text-restrly-800 transition disabled:opacity-50"
                                                 >
@@ -997,6 +1085,11 @@ export default function PosIndex({
                                                 <div className="text-xs font-semibold text-gray-900 leading-tight">
                                                     {line.name}
                                                 </div>
+                                                {line.modifiers.length > 0 && (
+                                                    <div className="mt-0.5 text-[10px] text-gray-500">
+                                                        {line.modifiers.map((m) => m.name).join(', ')}
+                                                    </div>
+                                                )}
                                                 <div className="mt-0.5 font-mono text-[11px] text-gray-500">
                                                     {money(line.unit_price, currency)} each
                                                 </div>
@@ -1261,9 +1354,104 @@ export default function PosIndex({
                             quantity: l.quantity,
                             discount_amount: l.discount_amount,
                             notes: l.notes,
+                            modifiers: l.modifiers.map((m) => ({ option_id: m.option_id, quantity: m.quantity })),
                         })),
                     })}
                 />
+            )}
+
+            {/* --- MODAL: CONFIGURE MODIFIERS --- */}
+            {configuring && (
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-xs sm:items-center sm:p-4">
+                    <div className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-t-2xl bg-white shadow-elevated sm:rounded-2xl">
+                        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
+                            <div>
+                                <h3 className="text-sm font-bold text-gray-900">{configuring.product.name}</h3>
+                                <p className="text-xs text-gray-500">
+                                    {configuring.variant ? configuring.variant.name : 'Base'}
+                                    {configureDelta > 0 && (
+                                        <span className="ml-1 font-mono text-gray-700">
+                                            ({money(configuring.variant?.price ?? priceFor(configuring.product) + configureDelta, currency)})
+                                        </span>
+                                    )}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setConfiguring(null)}
+                                className="text-gray-400 hover:text-gray-600"
+                                aria-label="Close"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+                            {(configuring.product.modifier_groups ?? []).map((group) => {
+                                const selected = selectedModifiers[group.id] ?? [];
+                                return (
+                                    <div key={group.id}>
+                                        <div className="mb-1.5 flex items-center gap-2">
+                                            <span className="text-xs font-semibold text-gray-700">{group.name}</span>
+                                            {group.is_required && (
+                                                <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                                                    Required
+                                                </span>
+                                            )}
+                                            <span className="text-[10px] text-gray-400">
+                                                {group.selection_type === 'single'
+                                                    ? 'Choose one'
+                                                    : `Choose up to ${group.max_select}`}
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {group.options.map((option) => {
+                                                const active = selected.includes(option.id);
+                                                return (
+                                                    <button
+                                                        key={option.id}
+                                                        type="button"
+                                                        onClick={() => toggleModifier(group, option.id)}
+                                                        className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
+                                                            active
+                                                                ? 'border-restrly-500 bg-restrly-50 text-restrly-800'
+                                                                : 'border-gray-200 bg-white text-gray-700 hover:border-restrly-300'
+                                                        }`}
+                                                    >
+                                                        {option.name}
+                                                        {option.price_delta !== 0 && (
+                                                            <span className="ml-1 font-mono text-[10px] text-gray-500">
+                                                                +{money(option.price_delta, currency)}
+                                                            </span>
+                                                        )}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 border-t border-gray-100 px-5 py-3">
+                            <button
+                                type="button"
+                                onClick={() => setConfiguring(null)}
+                                className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                disabled={!configureValid}
+                                onClick={confirmConfigure}
+                                className="rounded-xl bg-restrly-600 px-4 py-2 text-sm font-bold text-white shadow-card hover:bg-restrly-700 disabled:opacity-50"
+                            >
+                                Add to order
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* --- MODAL 2: SHIFT & CASH DRAWER --- */}

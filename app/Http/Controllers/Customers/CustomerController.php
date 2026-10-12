@@ -22,6 +22,8 @@ class CustomerController extends Controller
         return Inertia::render('Customers/Index', [
             'customers' => Customer::query()
                 ->with('loyaltyAccount')
+                ->withCount('orders')
+                ->withSum('orders', 'total')
                 ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$search}%"))
                 ->orderBy('name')
                 ->limit(100)
@@ -31,6 +33,9 @@ class CustomerController extends Controller
                     'name' => $customer->name,
                     'phone' => $customer->phone,
                     'email' => $customer->email,
+                    'notes' => $customer->notes,
+                    'orders_count' => (int) ($customer->orders_count ?? 0),
+                    'orders_sum_total' => (float) ($customer->orders_sum_total ?? 0),
                     'points' => $customer->loyaltyAccount?->points_balance ?? 0,
                     'is_active' => $customer->is_active,
                 ]),

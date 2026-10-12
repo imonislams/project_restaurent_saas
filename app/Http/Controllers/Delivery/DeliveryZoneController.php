@@ -25,6 +25,7 @@ class DeliveryZoneController extends Controller
                     'id' => $zone->getKey(),
                     'name' => $zone->name,
                     'branch' => $zone->branch?->name,
+                    'branch_id' => $zone->branch_id,
                     'fee' => (float) $zone->fee,
                     'min_order' => (float) $zone->min_order,
                     'is_active' => $zone->is_active,

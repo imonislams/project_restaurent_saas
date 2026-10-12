@@ -38,7 +38,7 @@ class PlatformPlanFormTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('Platform/Plans/Form')
                 ->where('plan', null)
-                ->has('feature_options', 10)
+                ->has('feature_options', 11)
                 ->has('limit_keys', 3));
     }
 

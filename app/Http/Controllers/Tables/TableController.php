@@ -39,7 +39,7 @@ class TableController extends Controller
                 ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
                 ->with([
                     'diningArea:id,name',
-                    'orders' => fn ($q) => $q->whereNotIn('status', ['completed', 'voided'])->select('id', 'table_id', 'order_number', 'total'),
+                    'orders' => fn ($q) => $q->whereNotIn('status', ['completed', 'voided'])->select('id', 'table_id', 'order_number', 'total', 'created_at'),
                 ])
                 ->orderBy('sort_order')->orderBy('name')->get()
                 ->map(fn (Table $table) => [
@@ -48,10 +48,14 @@ class TableController extends Controller
                     'seats' => $table->seats,
                     'status' => $table->status->value,
                     'dining_area' => $table->diningArea?->name,
+                    'dining_area_id' => $table->dining_area_id,
+                    'sort_order' => $table->sort_order,
+                    'is_active' => $table->is_active,
                     'open_orders' => $table->orders->map(fn ($order) => [
                         'id' => $order->getKey(),
                         'order_number' => $order->order_number,
                         'total' => (float) $order->total,
+                        'created_at' => $order->created_at?->toIso8601String(),
                     ])->values(),
                 ]),
             'statuses' => collect(TableStatus::cases())
