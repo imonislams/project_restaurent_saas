@@ -126,6 +126,14 @@ class SettingsSchema
                     self::f('command_terminal', 'features.command_terminal', 'Advanced command terminal (super admin only)', 'boolean', false),
                 ],
             ],
+            'receipts' => [
+                'label' => 'Receipt Branding',
+                'description' => 'Company branding applied to every restaurant receipt. Managed here for all tenants.',
+                'fields' => [
+                    self::f('show_logo', 'receipts.show_logo', 'Show the restaurant logo on receipts', 'boolean', true),
+                    self::f('show_company_details', 'receipts.show_company_details', 'Show company details (name, address, phone, email)', 'boolean', true),
+                ],
+            ],
         ];
     }
 

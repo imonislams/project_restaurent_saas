@@ -40,7 +40,7 @@ interface TrackingPayload {
 
 interface TrackingProps {
     token: string;
-    restaurant: { name: string; branch: string };
+    restaurant: { name: string; branch: string; logo_url?: string | null };
     table: { id: number; name: string };
     participant_token: string | null;
     initial: TrackingPayload;

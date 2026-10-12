@@ -11,7 +11,6 @@ export default function ReceiptFields({ data, setData, errors }: FieldProps) {
             <TextField label={t('settings.receipt_footer')} value={data.receipt_footer ?? ''} error={errors.receipt_footer} onChange={(v) => setData('receipt_footer', v)} />
             <div className="space-y-2">
                 <CheckboxField label={t('settings.receipt_show_tax')} checked={Boolean(data.receipt_show_tax)} onChange={(v) => setData('receipt_show_tax', v)} />
-                <CheckboxField label={t('settings.receipt_show_logo')} checked={Boolean(data.receipt_show_logo)} onChange={(v) => setData('receipt_show_logo', v)} />
             </div>
         </FormSection>
     );

@@ -73,6 +73,7 @@ class QrMenuService
                 'name' => $tenant->name,
                 'branch' => $branch->name,
                 'currency' => $branch->effectiveCurrency(),
+                'logo_url' => $tenant->logo_url,
             ],
             'categories' => $categories,
             'products' => $products,

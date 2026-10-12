@@ -28,7 +28,7 @@ class QrEntryController extends Controller
         $branch = $request->attributes->get('qr_branch');
         $settings = app(QrDiningSettings::class);
 
-        $restaurant = ['name' => $tenant->name, 'branch' => $branch->name];
+        $restaurant = ['name' => $tenant->name, 'branch' => $branch->name, 'logo_url' => $tenant->logo_url];
         $tableInfo = ['id' => $table->getKey(), 'name' => $table->name];
 
         $session = $this->diningSessionFromRequest($request);

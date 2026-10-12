@@ -645,7 +645,7 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
     Route::middleware('platform.permission:platform.settings.view')->group(function () {
         foreach ([
             'general', 'branding', 'localization', 'billing', 'payments',
-            'operations', 'security', 'retention', 'features',
+            'operations', 'security', 'retention', 'features', 'receipts',
         ] as $settingsGroup) {
             Route::get("/settings/{$settingsGroup}", [PlatformSettingsController::class, 'show'])
                 ->defaults('group', $settingsGroup)
@@ -653,7 +653,7 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
         }
     });
     Route::post('/settings/{group}', [PlatformSettingsController::class, 'update'])
-        ->whereIn('group', ['general', 'branding', 'localization', 'billing', 'payments', 'operations', 'security', 'retention', 'features'])
+        ->whereIn('group', ['general', 'branding', 'localization', 'billing', 'payments', 'operations', 'security', 'retention', 'features', 'receipts'])
         ->middleware('platform.permission:platform.settings.manage')->name('settings.update');
 
     Route::get('/diagnostics', [PlatformDiagnosticsController::class, 'index'])

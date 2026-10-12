@@ -63,7 +63,7 @@ interface CartLine {
 
 interface MenuProps {
     token: string;
-    restaurant: { name: string; branch: string; currency: string };
+    restaurant: { name: string; branch: string; currency: string; logo_url?: string | null };
     table: { id: number; name: string };
     session: { id: number; status: string; billing_mode: string };
     policy: { allow_additional_orders: boolean; allow_notes: boolean };

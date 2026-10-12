@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 interface EntryProps {
     token: string;
-    restaurant: { name: string; branch: string };
+    restaurant: { name: string; branch: string; logo_url?: string | null };
     table: { id: number; name: string };
     enabled: boolean;
     policy: { guest_checkout: boolean; require_phone: boolean; require_email: boolean };

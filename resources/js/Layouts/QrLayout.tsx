@@ -10,7 +10,7 @@ export default function QrLayout({
     headerRight,
     children,
 }: {
-    restaurant?: { name: string; branch: string } | null;
+    restaurant?: { name: string; branch: string; logo_url?: string | null } | null;
     tableName?: string | null;
     headerRight?: ReactNode;
     children: ReactNode;
@@ -19,14 +19,19 @@ export default function QrLayout({
         <div className="min-h-screen bg-gray-50">
             <header className="sticky top-0 z-30 border-b border-gray-100 bg-white/95 backdrop-blur">
                 <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
-                    <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-gray-900">
-                            {restaurant?.name ?? 'Restaurant'}
-                        </p>
-                        <p className="truncate text-xs text-gray-500">
-                            {restaurant?.branch}
-                            {tableName ? ` · Table ${tableName}` : ''}
-                        </p>
+                    <div className="flex min-w-0 items-center gap-2.5">
+                        {restaurant?.logo_url && (
+                            <img src={restaurant.logo_url} alt={restaurant.name} className="h-8 w-8 shrink-0 rounded-lg object-cover" />
+                        )}
+                        <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-gray-900">
+                                {restaurant?.name ?? 'Restaurant'}
+                            </p>
+                            <p className="truncate text-xs text-gray-500">
+                                {restaurant?.branch}
+                                {tableName ? ` · Table ${tableName}` : ''}
+                            </p>
+                        </div>
                     </div>
                     {headerRight}
                 </div>

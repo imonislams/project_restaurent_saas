@@ -34,7 +34,7 @@ class QrTrackingController extends Controller
 
         return Inertia::render('Qr/Tracking', [
             'token' => $qr->token,
-            'restaurant' => ['name' => $tenant->name, 'branch' => $branch->name],
+            'restaurant' => ['name' => $tenant->name, 'branch' => $branch->name, 'logo_url' => $tenant->logo_url],
             'table' => ['id' => $table->getKey(), 'name' => $table->name],
             'participant_token' => $participant?->participant_token,
             'initial' => app(DiningTrackingService::class)->payload($session, $participant),

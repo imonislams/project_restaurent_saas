@@ -40,11 +40,21 @@ interface ReceiptOrder {
     payments: ReceiptPayment[];
 }
 
+interface ReceiptBranding {
+    show_logo: boolean;
+    show_details: boolean;
+    logo_url: string | null;
+    company_name: string | null;
+    address: string | null;
+    phone: string | null;
+    email: string | null;
+}
+
 interface ReceiptSettings {
     header: string | null;
     footer: string | null;
     show_tax: boolean;
-    show_logo: boolean;
+    branding: ReceiptBranding;
 }
 
 const money = (n: number, currency: string) =>
@@ -202,6 +212,36 @@ export default function Receipt({
                             </div>
                         )}
                     </div>
+
+                    {/* Company branding footer (managed by the platform admin) */}
+                    {((receipt.branding.show_logo && receipt.branding.logo_url) || receipt.branding.show_details) && (
+                        <div className="py-3 border-b-2 border-dashed border-gray-300 text-center space-y-1">
+                            {receipt.branding.show_logo && receipt.branding.logo_url && (
+                                <img
+                                    src={receipt.branding.logo_url}
+                                    alt={receipt.branding.company_name ?? ''}
+                                    className="mx-auto h-14 w-14 rounded-lg object-cover ring-1 ring-gray-200"
+                                />
+                            )}
+                            {receipt.branding.show_details && (
+                                <>
+                                    {receipt.branding.company_name && (
+                                        <p className="text-xs font-extrabold uppercase tracking-tight text-gray-900">
+                                            {receipt.branding.company_name}
+                                        </p>
+                                    )}
+                                    {receipt.branding.address && (
+                                        <p className="text-[10px] leading-snug text-gray-500">{receipt.branding.address}</p>
+                                    )}
+                                    {(receipt.branding.phone || receipt.branding.email) && (
+                                        <p className="text-[10px] text-gray-500">
+                                            {[receipt.branding.phone, receipt.branding.email].filter(Boolean).join(' · ')}
+                                        </p>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    )}
 
                     {/* Verification Simulation Barcode */}
                     <div className="pt-4 text-center space-y-2">

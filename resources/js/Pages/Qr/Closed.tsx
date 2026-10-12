@@ -27,7 +27,7 @@ interface Receipt {
 
 interface ClosedProps {
     token: string;
-    restaurant: { name: string; branch: string };
+    restaurant: { name: string; branch: string; logo_url?: string | null };
     table: { id: number; name: string };
     receipt: Receipt;
     feedback_enabled: boolean;

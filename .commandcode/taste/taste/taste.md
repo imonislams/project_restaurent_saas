@@ -35,3 +35,4 @@
 - Wants to be able to run framework/build commands (all Laravel artisan commands and npm/Node commands) from within the system UI itself, not only from an external terminal. Confidence: 0.7
 - Wants every module developed to an equally "advanced"/complete standard — does not accept basic or placeholder functionality lingering in some modules while others are polished. Confidence: 0.65
 - Prefers admin-managed content (email templates/notifications and similar) to be editable from the UI with live preview and a test-send, rather than being read-only or hard-coded. Confidence: 0.6
+- For cross-cutting/branding concerns, prefers a single **platform-admin (super-admin) managed global setting applied to all tenants** rather than per-tenant configuration — explicit example: receipt branding is controlled centrally by the platform admin for every restaurant. Confidence: 0.6

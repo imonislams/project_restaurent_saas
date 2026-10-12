@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Orders;
 
 use App\Domain\Auditing\AuditLogger;
 use App\Domain\Orders\Models\Order;
+use App\Domain\PlatformSettings\PlatformSettings;
 use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -61,7 +62,17 @@ class ReceiptController extends Controller
                 'header' => $tenant?->getSetting('receipt.header', $tenant?->name),
                 'footer' => $tenant?->getSetting('receipt.footer', 'Thank you!'),
                 'show_tax' => (bool) ($tenant?->getSetting('receipt.show_tax', true) ?? true),
-                'show_logo' => (bool) ($tenant?->getSetting('receipt.show_logo', false) ?? false),
+                // Company branding shown in the footer — controlled globally by
+                // the platform admin (Platform → Settings → Receipt Branding).
+                'branding' => [
+                    'show_logo' => (bool) app(PlatformSettings::class)->get('receipts.show_logo', true),
+                    'show_details' => (bool) app(PlatformSettings::class)->get('receipts.show_company_details', true),
+                    'logo_url' => $tenant?->logo_url,
+                    'company_name' => $tenant?->getSetting('company.legal_name') ?? $tenant?->name,
+                    'address' => $tenant?->getSetting('company.address') ?? $order->branch?->address,
+                    'phone' => $tenant?->getSetting('company.phone') ?? $order->branch?->phone,
+                    'email' => $tenant?->getSetting('company.email') ?? $tenant?->business_email,
+                ],
             ],
         ]);
     }
