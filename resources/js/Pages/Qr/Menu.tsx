@@ -260,6 +260,12 @@ export default function QrMenu({ token, restaurant, table, policy, categories, p
                         Total {money(placed.total)}. The kitchen has been notified.
                         {policy.allow_additional_orders ? ' You can keep ordering from the menu.' : ''}
                     </p>
+                    <a
+                        href={route('qr.tracking', { token })}
+                        className="mt-3 inline-block rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white"
+                    >
+                        Track your order
+                    </a>
                 </div>
             )}
 

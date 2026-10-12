@@ -79,6 +79,14 @@ class QrDiningSettings
         return (bool) $this->get('qr.live_tracking', true);
     }
 
+    /** @return array<string, string> */
+    public function statusLabels(): array
+    {
+        $labels = $this->get('qr.status_labels', []);
+
+        return is_array($labels) ? $labels : [];
+    }
+
     public function allowBillRequest(): bool
     {
         return (bool) $this->get('qr.allow_bill_request', true);

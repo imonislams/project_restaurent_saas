@@ -3,6 +3,7 @@ import CompanyFields from '@/Components/Settings/CompanyFields';
 import HoursFields from '@/Components/Settings/HoursFields';
 import NotificationFields from '@/Components/Settings/NotificationFields';
 import PosFields from '@/Components/Settings/PosFields';
+import QrFields from '@/Components/Settings/QrFields';
 import ReceiptFields from '@/Components/Settings/ReceiptFields';
 import TaxFields from '@/Components/Settings/TaxFields';
 import type { SettingsOptions } from '@/Components/Settings/types';
@@ -12,7 +13,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useEffect } from 'react';
 
-const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'pos', 'notifications'] as const;
+const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'pos', 'notifications', 'qr'] as const;
 
 export default function SettingsShow({
     group,
@@ -54,6 +55,8 @@ export default function SettingsShow({
                 return <PosFields data={data} setData={setData} errors={errors} options={options} />;
             case 'notifications':
                 return <NotificationFields data={data} setData={setData} errors={errors} options={options} />;
+            case 'qr':
+                return <QrFields data={data} setData={setData} errors={errors} options={options} />;
             default:
                 return null;
         }

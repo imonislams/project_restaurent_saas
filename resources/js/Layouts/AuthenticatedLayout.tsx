@@ -45,6 +45,7 @@ export default function Authenticated({
         ]),
         group(t('nav.section.operations'), [
             can('qr.view') && entitled('qr_dining') && item(t('nav.qr_tables'), route('qr-dining.tables.index'), 'qr', 'qr-dining.*'),
+            can('qr.analytics') && entitled('qr_dining') && item(t('nav.qr_analytics'), route('qr-dining.analytics'), 'chart', 'qr-dining.analytics'),
         ]),
         group(t('nav.section.catalog'), [
             can('menu.view') && entitled('menu') && item(t('nav.menu'), route('menu.index'), 'book', 'menu.*'),

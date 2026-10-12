@@ -158,9 +158,13 @@ export default function AppShell({
         });
     };
 
+    // Never render a section header with nothing under it (e.g. a group whose
+    // items were all filtered out by permissions or plan entitlements).
+    const visibleGroups = useMemo(() => nav.filter((group) => group.items.length > 0), [nav]);
+
     // Flatten all navigable items for Command Palette
     const commandItems: CommandItem[] = useMemo(() => {
-        return nav.flatMap((g, gIdx) =>
+        return visibleGroups.flatMap((g, gIdx) =>
             g.items.map((item, iIdx) => ({
                 id: `${gIdx}-${iIdx}-${item.href}`,
                 label: item.label,
@@ -170,7 +174,7 @@ export default function AppShell({
                 keywords: item.keywords,
             })),
         );
-    }, [nav]);
+    }, [visibleGroups]);
 
     const sidebarWidth = collapsed ? 'lg:w-[4.5rem]' : 'lg:w-64';
     const sidebarSide = dark ? 'bg-slate-900 text-slate-300' : 'bg-white text-gray-700';
@@ -216,7 +220,7 @@ export default function AppShell({
 
             {/* Navigation Groups */}
             <nav ref={navRef} onScroll={handleNavScroll} className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4">
-                {nav.map((group, gi) => {
+                {visibleGroups.map((group, gi) => {
                     const key = groupKey(group, gi);
                     const open = collapsed ? true : openGroups[key] !== false;
 

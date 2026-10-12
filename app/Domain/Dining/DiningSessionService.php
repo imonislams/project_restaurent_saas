@@ -2,9 +2,12 @@
 
 namespace App\Domain\Dining;
 
+use App\Domain\Dining\Enums\BillRequestStatus;
 use App\Domain\Dining\Enums\DiningSessionStatus;
+use App\Domain\Dining\Models\BillRequest;
 use App\Domain\Dining\Models\DiningParticipant;
 use App\Domain\Dining\Models\DiningSession;
+use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Tables\Models\Table;
 use App\Domain\Tables\Models\TableQrToken;
 use App\Models\User;
@@ -108,6 +111,75 @@ class DiningSessionService
         $this->record($session, 'session.closed', $by ? 'staff' : 'system', ['reason' => $reason], $by?->getKey());
 
         return $session;
+    }
+
+    /**
+     * Customer asks for the bill. Idempotent — a second request while one is
+     * open returns the existing one instead of duplicating it.
+     */
+    public function requestBill(DiningSession $session, ?DiningParticipant $participant): BillRequest
+    {
+        $existing = $session->billRequests()
+            ->whereIn('status', [BillRequestStatus::Pending->value, BillRequestStatus::InProgress->value])
+            ->latest('id')
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $request = $session->billRequests()->create([
+            'tenant_id' => $session->tenant_id,
+            'requested_by_participant_id' => $participant?->getKey(),
+            'status' => BillRequestStatus::Pending,
+            'requested_at' => now(),
+        ]);
+
+        if ($session->status === DiningSessionStatus::Open) {
+            $session->forceFill(['status' => DiningSessionStatus::BillRequested])->save();
+        }
+
+        $this->record($session, 'bill.requested', 'participant', [], $participant?->getKey());
+
+        return $request;
+    }
+
+    /**
+     * Close the session once every order is settled and fully paid. Called after
+     * a staff settlement or a verified online payment.
+     */
+    public function maybeCloseAfterSettlement(DiningSession $session): bool
+    {
+        if ($session->isClosed()) {
+            return false;
+        }
+
+        $hasOpen = $session->orders()
+            ->whereNotIn('status', [OrderStatus::Completed->value, OrderStatus::Voided->value])
+            ->exists();
+
+        if ($hasOpen) {
+            return false;
+        }
+
+        $unpaid = $session->orders()
+            ->where('status', OrderStatus::Completed->value)
+            ->whereColumn('paid_total', '<', 'total')
+            ->exists();
+
+        if ($unpaid) {
+            return false;
+        }
+
+        $session->billRequests()
+            ->whereIn('status', [BillRequestStatus::Pending->value, BillRequestStatus::InProgress->value])
+            ->update(['status' => BillRequestStatus::Settled->value, 'settled_at' => now()]);
+
+        $session->forceFill(['settled_at' => now()])->save();
+
+        $this->close($session, 'settled');
+
+        return true;
     }
 
     public function resolveByToken(?string $token): ?DiningSession

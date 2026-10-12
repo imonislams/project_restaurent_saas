@@ -105,12 +105,17 @@ class OrderController extends Controller
 
     public function settle(SettleOrderRequest $request, Order $order): RedirectResponse
     {
-        $this->sales->settle(
+        $settled = $this->sales->settle(
             $order,
             $request->validated('payments'),
             $request->user(),
             $request->validated('manager_pin'),
         );
+
+        // Close the dining session once every order at the table is settled.
+        if ($settled->dining_session_id && $session = $settled->diningSession) {
+            app(\App\Domain\Dining\DiningSessionService::class)->maybeCloseAfterSettlement($session);
+        }
 
         return redirect()->route('orders.show', $order)
             ->with('success', 'Order settled.');

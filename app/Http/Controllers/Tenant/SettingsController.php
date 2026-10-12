@@ -25,7 +25,7 @@ use Inertia\Response;
  */
 class SettingsController extends Controller
 {
-    public const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'pos', 'notifications'];
+    public const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'pos', 'notifications', 'qr'];
 
     public function __construct(
         protected OnboardingService $onboarding,
@@ -64,6 +64,7 @@ class SettingsController extends Controller
             'receipt' => $this->onboarding->saveReceipt($tenant, $data),
             'pos' => $this->onboarding->savePos($tenant, $data),
             'notifications' => $this->onboarding->saveNotifications($tenant, $data),
+            'qr' => $this->onboarding->saveQr($tenant, $data),
         };
 
         $this->audit->log("settings.{$group}_updated", $tenant, [], $request->user(), $tenant->getKey());
@@ -82,6 +83,7 @@ class SettingsController extends Controller
             'receipt' => app(ReceiptRequest::class)->rules(),
             'pos' => app(PosSettingsRequest::class)->rules(),
             'notifications' => app(NotificationSettingsRequest::class)->rules(),
+            'qr' => app(\App\Http\Requests\Tenant\QrSettingsRequest::class)->rules(),
         };
     }
 

@@ -321,6 +321,31 @@ class OnboardingService
     }
 
     /**
+     * @param  array<string, mixed>  $data
+     */
+    public function saveQr(Tenant $tenant, array $data): void
+    {
+        $tenant->mergeSettings([
+            'qr.enabled' => (bool) ($data['qr_enabled'] ?? true),
+            'qr.guest_checkout' => (bool) ($data['qr_guest_checkout'] ?? true),
+            'qr.require_phone' => (bool) ($data['qr_require_phone'] ?? false),
+            'qr.require_email' => (bool) ($data['qr_require_email'] ?? false),
+            'qr.session_timeout_minutes' => (int) ($data['qr_session_timeout_minutes'] ?? 180),
+            'qr.auto_accept' => (bool) ($data['qr_auto_accept'] ?? true),
+            'qr.allow_additional_orders' => (bool) ($data['qr_allow_additional_orders'] ?? true),
+            'qr.allow_notes' => (bool) ($data['qr_allow_notes'] ?? true),
+            'qr.live_tracking' => (bool) ($data['qr_live_tracking'] ?? true),
+            'qr.allow_bill_request' => (bool) ($data['qr_allow_bill_request'] ?? true),
+            'qr.billing_mode' => $data['qr_billing_mode'] ?? 'consolidated',
+            'qr.digital_receipt' => (bool) ($data['qr_digital_receipt'] ?? true),
+            'qr.feedback' => (bool) ($data['qr_feedback'] ?? true),
+            'qr.loyalty' => (bool) ($data['qr_loyalty'] ?? false),
+        ]);
+
+        $tenant->save();
+    }
+
+    /**
      * Form payload for a Settings tab.
      *
      * @return array<string, mixed>
@@ -339,6 +364,22 @@ class OnboardingService
                 'low_stock_threshold' => (float) $tenant->getSetting('inventory.low_stock_threshold', 0),
                 'loyalty_enabled' => (bool) $tenant->getSetting('loyalty.enabled', false),
                 'loyalty_points_per_currency' => (float) $tenant->getSetting('loyalty.points_per_currency', 1),
+            ],
+            'qr' => [
+                'qr_enabled' => (bool) $tenant->getSetting('qr.enabled', true),
+                'qr_guest_checkout' => (bool) $tenant->getSetting('qr.guest_checkout', true),
+                'qr_require_phone' => (bool) $tenant->getSetting('qr.require_phone', false),
+                'qr_require_email' => (bool) $tenant->getSetting('qr.require_email', false),
+                'qr_session_timeout_minutes' => (int) $tenant->getSetting('qr.session_timeout_minutes', 180),
+                'qr_auto_accept' => (bool) $tenant->getSetting('qr.auto_accept', true),
+                'qr_allow_additional_orders' => (bool) $tenant->getSetting('qr.allow_additional_orders', true),
+                'qr_allow_notes' => (bool) $tenant->getSetting('qr.allow_notes', true),
+                'qr_live_tracking' => (bool) $tenant->getSetting('qr.live_tracking', true),
+                'qr_allow_bill_request' => (bool) $tenant->getSetting('qr.allow_bill_request', true),
+                'qr_billing_mode' => (string) $tenant->getSetting('qr.billing_mode', 'consolidated'),
+                'qr_digital_receipt' => (bool) $tenant->getSetting('qr.digital_receipt', true),
+                'qr_feedback' => (bool) $tenant->getSetting('qr.feedback', true),
+                'qr_loyalty' => (bool) $tenant->getSetting('qr.loyalty', false),
             ],
             default => $this->stepData($tenant, OnboardingStep::from($group === 'branches' ? 'branch' : $group)),
         };

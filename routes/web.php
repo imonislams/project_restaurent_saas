@@ -54,11 +54,16 @@ use App\Http\Controllers\Platform\SupportTicketController as PlatformSupportTick
 use App\Http\Controllers\Platform\TenantController as PlatformTenantController;
 use App\Http\Controllers\Platform\UsageController as PlatformUsageController;
 use App\Http\Controllers\POS\PosController;
+use App\Http\Controllers\QrDining\QrAnalyticsController;
+use App\Http\Controllers\QrDining\QrBillController;
 use App\Http\Controllers\QrDining\QrEntryController;
+use App\Http\Controllers\QrDining\QrFeedbackController;
 use App\Http\Controllers\QrDining\QrMenuController;
 use App\Http\Controllers\QrDining\QrOrderController;
+use App\Http\Controllers\QrDining\QrPaymentController;
 use App\Http\Controllers\QrDining\QrSessionController;
 use App\Http\Controllers\QrDining\QrTableController;
+use App\Http\Controllers\QrDining\QrTrackingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\SupplierController;
@@ -156,10 +161,18 @@ Route::prefix('qr')->name('qr.')->middleware(['qr.context', 'throttle:qr-public'
     Route::post('{token}/session', [QrSessionController::class, 'store'])
         ->middleware('throttle:qr-session')->name('session.start');
 
+    Route::post('{token}/feedback', [QrFeedbackController::class, 'store'])
+        ->middleware('throttle:qr-public')->name('feedback.store');
+
     Route::middleware('qr.session')->group(function () {
         Route::get('{token}/menu', [QrMenuController::class, 'show'])->name('menu');
+        Route::get('{token}/tracking', [QrTrackingController::class, 'show'])->name('tracking');
+        Route::get('{token}/status', [QrTrackingController::class, 'status'])->name('status');
         Route::post('{token}/orders', [QrOrderController::class, 'store'])
             ->middleware('throttle:qr-order')->name('orders.store');
+        Route::post('{token}/bill-request', [QrBillController::class, 'store'])->name('bill.request');
+        Route::post('{token}/payment', [QrPaymentController::class, 'start'])->name('payment.start');
+        Route::get('{token}/payment/status', [QrPaymentController::class, 'status'])->name('payment.status');
         Route::delete('{token}/session', [QrSessionController::class, 'destroy'])->name('session.destroy');
     });
 });
@@ -218,6 +231,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('permission:qr.view')->name('tables.print');
         Route::get('/tables/{table}/qr', [QrTableController::class, 'qr'])
             ->middleware('permission:qr.view')->name('tables.qr');
+        Route::get('/analytics', [QrAnalyticsController::class, 'index'])
+            ->middleware('permission:qr.analytics')->name('analytics');
 
         Route::middleware('permission:qr.manage')->group(function () {
             Route::post('/tables/{table}/regenerate', [QrTableController::class, 'regenerate'])->name('tables.regenerate');
