@@ -1,4 +1,24 @@
-import { Badge, Button, Card, CardBody, CardHeader, CheckboxField, ConfirmDialog, Drawer, EmptyState, SelectField, TextField, TextareaField, formatDateTime } from '@/Components/ui';
+import {
+    Badge,
+    Button,
+    Card,
+    CardBody,
+    CardHeader,
+    CheckboxField,
+    ConfirmDialog,
+    Drawer,
+    EmptyState,
+    SelectField,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+    TextField,
+    TextareaField,
+    formatDateTime,
+} from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { router, useForm } from '@inertiajs/react';
@@ -98,45 +118,45 @@ export default function Announcements({ announcements, options }: { announcement
                             <EmptyState title="No announcements" description="Create an announcement to notify tenants in-app." action={<Button onClick={openCreate}>New announcement</Button>} />
                         </div>
                     ) : (
-                        <table className="w-full text-sm">
-                            <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
-                                <tr>
-                                    <th className="px-5 py-3">Title</th>
-                                    <th className="px-5 py-3">Level</th>
-                                    <th className="px-5 py-3">Audience</th>
-                                    <th className="px-5 py-3">Window</th>
-                                    <th className="px-5 py-3">State</th>
-                                    <th className="px-5 py-3" />
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Title & Content</TableHead>
+                                    <TableHead>Severity</TableHead>
+                                    <TableHead>Audience</TableHead>
+                                    <TableHead>Display Window</TableHead>
+                                    <TableHead>State</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {announcements.map((row) => (
-                                    <tr key={row.id} className="hover:bg-gray-50">
-                                        <td className="px-5 py-3">
-                                            <div className="font-medium text-gray-900">{row.title}</div>
-                                            <div className="truncate text-xs text-gray-400" style={{ maxWidth: 320 }}>{row.body}</div>
-                                        </td>
-                                        <td className="px-5 py-3"><Badge tone={tone(row.level)}>{row.level}</Badge></td>
-                                        <td className="px-5 py-3 text-gray-600">{[row.audience?.status, row.audience?.plan].filter(Boolean).join(' · ') || 'All tenants'}</td>
-                                        <td className="px-5 py-3 text-xs text-gray-500">
+                                    <TableRow key={row.id}>
+                                        <TableCell>
+                                            <div className="font-semibold text-foreground text-xs">{row.title}</div>
+                                            <div className="truncate text-xs text-muted-foreground max-w-xs">{row.body}</div>
+                                        </TableCell>
+                                        <TableCell><Badge tone={tone(row.level)}>{row.level}</Badge></TableCell>
+                                        <TableCell className="text-xs text-muted-foreground">{[row.audience?.status, row.audience?.plan].filter(Boolean).join(' · ') || 'All tenants'}</TableCell>
+                                        <TableCell className="text-xs text-muted-foreground">
                                             {row.starts_at ? formatDateTime(row.starts_at) : '—'} → {row.ends_at ? formatDateTime(row.ends_at) : '∞'}
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <Badge tone={row.live ? 'success' : 'neutral'}>{row.live ? 'live' : row.is_active ? 'scheduled' : 'off'}</Badge>
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <div className="flex justify-end gap-2">
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge tone={row.live ? 'success' : 'neutral'}>{row.live ? 'Live' : row.is_active ? 'Scheduled' : 'Off'}</Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right whitespace-nowrap">
+                                            <div className="flex justify-end gap-1">
                                                 <Button size="xs" variant="ghost" onClick={() => router.post(route('platform.marketing.announcements.toggle', row.id), {}, { preserveScroll: true })}>
                                                     {row.is_active ? 'Deactivate' : 'Activate'}
                                                 </Button>
                                                 <Button size="xs" variant="ghost" onClick={() => openEdit(row)}>Edit</Button>
-                                                <Button size="xs" variant="ghost" onClick={() => setConfirmDelete(row)}>Delete</Button>
+                                                <Button size="xs" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setConfirmDelete(row)}>Delete</Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     )}
                 </CardBody>
             </Card>

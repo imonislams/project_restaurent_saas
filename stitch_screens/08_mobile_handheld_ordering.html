@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-tint": "#b12c13", "on-background": "#1a1c1a", "primary-fixed-dim": "#ffb4a4", "tertiary-container": "#73747a", "inverse-on-surface": "#f2f1ee", "inverse-surface": "#2f312f", "primary": "#ae2a10", "surface-bright": "#faf9f6", "surface-variant": "#e3e2e0", "tertiary": "#5a5c61", "surface": "#faf9f6", "on-secondary-container": "#52695d", "on-tertiary-fixed": "#1a1c20", "on-surface": "#1a1c1a", "on-surface-variant": "#5a413c", "inverse-primary": "#ffb4a4", "tertiary-fixed": "#e2e2e8", "surface-container": "#efeeeb", "on-primary-fixed-variant": "#8d1600", "on-secondary-fixed-variant": "#354c40", "surface-container-lowest": "#ffffff", "on-tertiary-container": "#fefcff", "secondary-container": "#cfe9d9", "on-tertiary": "#ffffff", "on-secondary-fixed": "#092016", "on-secondary": "#ffffff", "error": "#ba1a1a", "on-primary": "#ffffff", "surface-dim": "#dbdad7", "primary-fixed": "#ffdad3", "outline-variant": "#e2bfb7", "surface-container-low": "#f4f3f0", "tertiary-fixed-dim": "#c6c6cc", "surface-container-highest": "#e3e2e0", "secondary-fixed": "#cfe9d9", "secondary-fixed-dim": "#b3ccbe", "on-error": "#ffffff", "primary-container": "#d04327", "background": "#faf9f6", "on-error-container": "#93000a", "on-tertiary-fixed-variant": "#45474b", "on-primary-fixed": "#3e0500", "on-primary-container": "#fffbff", "error-container": "#ffdad6", "secondary": "#4c6358", "outline": "#8e706a", "surface-container-high": "#e9e8e5" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xs": "0.25rem", "gutter-sm": "1rem", "space-2xl": "4rem", "space-md": "1rem", "margin": "3rem", "space-sm": "0.5rem", "gutter": "1.5rem", "space-xl": "2.5rem", "space-lg": "1.5rem", "space-3xl": "6rem", "margin-sm": "1.25rem" }, "fontFamily": { "display-xl": [ "Plus Jakarta Sans" ], "headline-sm": [ "Plus Jakarta Sans" ], "mono-metric": [ "Space Mono" ], "headline-lg-mobile": [ "Plus Jakarta Sans" ], "mono-ticket": [ "Space Mono" ], "label-caps": [ "Space Mono" ], "headline-lg": [ "Plus Jakarta Sans" ], "body-md": [ "Plus Jakarta Sans" ], "display-xl-mobile": [ "Plus Jakarta Sans" ], "body-lg": [ "Plus Jakarta Sans" ], "headline-md": [ "Plus Jakarta Sans" ], "body-sm": [ "Plus Jakarta Sans" ] }, "fontSize": { "display-xl": [ "64px", { "lineHeight": "70px", "letterSpacing": "-0.03em", "fontWeight": "800" } ], "headline-sm": [ "20px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "mono-metric": [ "28px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "headline-lg-mobile": [ "28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "mono-ticket": [ "13px", { "lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "400" } ], "label-caps": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" } ], "headline-lg": [ "40px", { "lineHeight": "48px", "letterSpacing": "-0.025em", "fontWeight": "700" } ], "body-md": [ "15px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" } ], "display-xl-mobile": [ "38px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "800" } ], "body-lg": [ "18px", { "lineHeight": "28px", "letterSpacing": "-0.005em", "fontWeight": "400" } ], "headline-md": [ "26px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" } ], "body-sm": [ "13px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "500" } ] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-xl border-b border-surface-container-highest shadow-[0_1px_8px_rgba(0,0,0,0.03)]"><div class="h-20 max-w-7xl mx-auto px-gutter flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-2xl"><a class="flex items-baseline gap-space-xs group" data-path="mise-restaurant-pos-multi-branch-management" href="#"><span class="font-display-xl text-headline-sm font-extrabold tracking-tight text-on-surface">mise<span class="text-primary">.</span></span><span class="font-label-caps text-label-caps uppercase text-secondary bg-secondary-container px-space-xs py-0.5 rounded">pos</span></a><nav class="hidden lg:flex items-center gap-space-lg" data-active-classes="text-primary font-semibold"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="product" href="#">Product</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="features" href="#">Features</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="solutions" href="#">Solutions</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="pricing" href="#">Pricing</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="resources" href="#">Resources</a></nav></div><div class="flex items-center gap-space-md"><a class="hidden sm:inline-flex font-body-sm text-body-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors px-space-sm py-space-xs" data-path="login" href="#">Sign In</a><a class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold px-space-lg py-space-sm rounded-lg shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]" data-path="signup" href="#">Start Free Trial</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- Section 1: Breadcrumb & Network Status Bar -->
+<section class="w-full bg-surface-container-low py-space-xs">
+<div class="max-w-7xl mx-auto px-gutter flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-xs">
+<div class="flex items-center gap-space-xs font-mono-ticket text-mono-ticket text-tertiary">
+<a class="hover:text-on-surface transition-colors" href="#">Platform</a>
+<span>/</span>
+<a class="hover:text-on-surface transition-colors" href="#">Features</a>
+<span>/</span>
+<span class="text-on-surface font-semibold">Handheld POS &amp; Mobile Ordering</span>
+</div>
+<div class="inline-flex items-center gap-space-xs bg-surface px-space-sm py-0.5 rounded-full shadow-sm">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-label-caps text-label-caps uppercase text-secondary tracking-widest">
+          SUB-GHZ OFFLINE MESH • TAP-TO-PAY ON IPHONE • 12-MIN TABLE TURNS
+        </span>
+</div>
+</div>
+</section>
+<!-- Section 2: Hero Section with Live Floor Telemetry Widget -->
+<section class="w-full relative overflow-hidden py-space-2xl lg:py-space-3xl">
+<div class="max-w-7xl mx-auto px-gutter">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-space-2xl items-center">
+<!-- Hero Left Narrative -->
+<div class="lg:col-span-7 flex flex-col">
+<div class="inline-flex items-center gap-space-xs font-label-caps text-label-caps uppercase text-primary tracking-widest mb-space-md">
+<span>[ MOBILE DINING ROOM VELOCITY • V4.2 ]</span>
+</div>
+<h1 class="font-display-xl text-display-xl lg:text-display-xl tracking-tight text-on-surface max-w-2xl">
+            Turn tables 14 minutes faster. <span class="text-primary">Never leave the guest’s side.</span>
+</h1>
+<p class="mt-space-lg font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+            A featherlight, pocket-sized terminal built for patio rushes, sommelier cellar lookups, and frictionless tableside checkout. Tap to pay right on iPhone and Android handhelds with instant chit fire to line printers.
+          </p>
+<div class="mt-space-xl flex flex-col sm:flex-row items-stretch sm:items-center gap-space-md">
+<a class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-on-primary font-body-md text-body-md font-semibold px-space-lg py-space-md rounded-lg shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]" href="#">
+              Start 14-Day Free Trial
+            </a>
+<a class="inline-flex items-center justify-center bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-body-md text-body-md font-semibold px-space-lg py-space-md rounded-lg transition-colors" href="#hardware-matrix">
+              Explore Handheld Hardware Specs
+            </a>
+</div>
+<!-- Technical Reassurance Footnote -->
+<div class="mt-space-lg flex items-center gap-space-sm text-on-surface-variant font-mono-ticket text-mono-ticket">
+<span class="material-symbols-outlined text-secondary text-[18px]">verified</span>
+<span>Runs natively on Apple Tap to Pay &amp; WisePOS E • Instant offline mesh synchronization • Drop-tested IP65 commercial durability</span>
+</div>
+</div>
+<!-- Hero Right: Live Telemetry & Handheld Pod -->
+<div class="lg:col-span-5 flex flex-col gap-space-md">
+<!-- Primary Telemetry Glass Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-xl relative overflow-hidden">
+<div class="flex items-center justify-between pb-space-md">
+<span class="font-label-caps text-label-caps uppercase text-tertiary">Real-Time Floor Telemetry</span>
+<span class="inline-flex items-center gap-1 font-mono-ticket text-mono-ticket text-secondary bg-secondary-container px-2 py-0.5 rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Live Stream
+              </span>
+</div>
+<!-- Telemetry Metrics Grid -->
+<div class="grid grid-cols-2 gap-space-md py-space-sm">
+<div class="bg-surface-container-low p-space-md rounded-lg">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant block">Average Table Turn</span>
+<span class="font-mono-metric text-mono-metric text-on-surface block mt-1">44m</span>
+<span class="font-mono-ticket text-mono-ticket text-secondary mt-1 inline-block">-14m vs stationary</span>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-lg">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant block">Guest Check Avg</span>
+<span class="font-mono-metric text-mono-metric text-on-surface block mt-1">$142.50</span>
+<span class="font-mono-ticket text-mono-ticket text-primary mt-1 inline-block">+18% dessert attach</span>
+</div>
+</div>
+<!-- Handheld Fleet Status Tray -->
+<div class="mt-space-md bg-inverse-surface text-inverse-on-surface p-space-md rounded-lg">
+<div class="flex items-center justify-between font-mono-ticket text-mono-ticket mb-space-xs">
+<span class="text-tertiary-fixed-dim">FLOOR FLEET: PATIO &amp; DINING</span>
+<span class="text-secondary-fixed">14 Active Nodes</span>
+</div>
+<div class="flex items-center justify-between text-body-sm font-mono-ticket">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-secondary-fixed">battery_charging_full</span>
+<span>Battery Health: 98%</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-primary-fixed-dim">wifi_tethering</span>
+<span>Mesh Latency: 18ms</span>
+</div>
+</div>
+<!-- Mini Sparkline inline indicator -->
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-caps text-label-caps text-tertiary-fixed-dim">
+<span>SUB-GHZ ROOFTOP RELAY</span>
+<span class="text-secondary-fixed">0 CHITS DROPPED TONIGHT</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: In-Depth Tactile Handheld Terminal Interface Showcase -->
+<section class="w-full bg-[#111418] text-white py-space-3xl relative">
+<div class="max-w-7xl mx-auto px-gutter">
+<!-- Section Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-space-2xl gap-space-md">
+<div>
+<span class="font-label-caps text-label-caps uppercase text-primary-fixed-dim tracking-widest block mb-space-xs">
+            [ ARCHITECTURAL HARDWARE ENGINE ]
+          </span>
+<h2 class="font-headline-lg text-headline-lg text-white font-extrabold tracking-tight">
+            The Tableside Ordering Engine at Work
+          </h2>
+<p class="font-body-md text-body-md text-slate-400 mt-space-xs max-w-xl">
+            Ergonomically tuned for single-thumb ordering, instant modifier firing, and split checks at the table.
+          </p>
+</div>
+<div class="font-mono-ticket text-mono-ticket text-slate-400 bg-slate-900 px-space-md py-space-sm rounded-lg flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+<span>STATION #04 - PATIO SECTION WEST</span>
+</div>
+</div>
+<!-- Live Mockup Grid: Handheld Shell + Architecture Details + Service Stream -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Left: Handheld Terminal Phone Simulator (Aspect Ratio Container) -->
+<div class="lg:col-span-5 flex justify-center">
+<div class="w-full max-w-sm bg-neutral-900 rounded-[2.5rem] p-3 shadow-2xl shadow-black/80">
+<!-- Terminal Outer Glass Rim -->
+<div class="w-full bg-[#161a20] rounded-[2rem] overflow-hidden flex flex-col font-body-sm text-slate-200 shadow-inner">
+<!-- Handheld Top Bar -->
+<div class="bg-neutral-950 px-space-md py-space-sm flex items-center justify-between text-slate-400 font-mono-ticket text-mono-ticket">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+<span class="text-white font-bold">TBL 22</span>
+<span class="text-xs text-slate-400">/ Patio W</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span>Server: Chloe S.</span>
+<div class="flex items-center gap-0.5 text-emerald-400">
+<span class="material-symbols-outlined text-[14px]">battery_5_bar</span>
+<span>84%</span>
+</div>
+</div>
+</div>
+<!-- Dining Context / Meta Banner -->
+<div class="bg-[#1f242c] px-space-md py-space-xs flex items-center justify-between text-xs font-mono-ticket text-slate-300">
+<span>GUESTS: 04</span>
+<span class="text-emerald-400">5GHz MESH CONNECTED</span>
+</div>
+<!-- Coursing State Chips -->
+<div class="grid grid-cols-3 gap-1 p-space-sm bg-neutral-900">
+<button class="bg-primary/20 text-primary-fixed font-label-caps text-label-caps py-1.5 rounded text-center">
+                  C1: STARTERS (FIRED)
+                </button>
+<button class="bg-neutral-800 text-amber-300 font-label-caps text-label-caps py-1.5 rounded text-center">
+                  C2: MAINS (HOLD)
+                </button>
+<button class="bg-neutral-800 text-slate-400 font-label-caps text-label-caps py-1.5 rounded text-center">
+                  C3: DOLCE
+                </button>
+</div>
+<!-- Active Chit Items Cascade -->
+<div class="p-space-md space-y-space-sm overflow-y-auto max-h-72">
+<!-- Item 1 -->
+<div class="bg-neutral-900/90 p-space-sm rounded-lg flex flex-col gap-1">
+<div class="flex items-start justify-between font-semibold text-white">
+<span>1× Burrata Pugliese</span>
+<span class="font-mono-ticket">$24.00</span>
+</div>
+<div class="flex items-center gap-space-xs font-mono-ticket text-xs text-primary-fixed-dim bg-primary/20 px-2 py-0.5 rounded w-fit">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+<span>NUT ALLERGY • NO PISTACHIO PESTO</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="bg-neutral-900/90 p-space-sm rounded-lg flex flex-col gap-1">
+<div class="flex items-start justify-between font-semibold text-white">
+<span>2× Woodfire Wagyu Ribeye</span>
+<span class="font-mono-ticket">$136.00</span>
+</div>
+<div class="text-xs text-slate-400 font-mono-ticket pl-2">
+                    • Rare • Black Truffle Butter • Maldon Smoked
+                  </div>
+</div>
+<!-- Item 3 -->
+<div class="bg-neutral-900/90 p-space-sm rounded-lg flex flex-col gap-1">
+<div class="flex items-start justify-between font-semibold text-white">
+<span>1× Barolo Ceretto 2018</span>
+<span class="font-mono-ticket">$185.00</span>
+</div>
+<div class="flex items-center gap-space-xs text-xs font-mono-ticket text-secondary-fixed bg-secondary/30 px-2 py-0.5 rounded w-fit">
+<span class="material-symbols-outlined text-[14px]">wine_bar</span>
+<span>CELLAR BIN #42 • DECANTER REQUESTED</span>
+</div>
+</div>
+</div>
+<!-- Terminal Primary Bottom Controls -->
+<div class="p-space-md bg-neutral-950 space-y-space-xs">
+<div class="grid grid-cols-2 gap-space-xs">
+<button class="bg-secondary text-white font-body-sm text-body-sm font-semibold py-2 px-space-sm rounded flex items-center justify-center gap-1 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[16px]">local_fire_department</span>
+                    Fire Mains
+                  </button>
+<button class="bg-neutral-800 hover:bg-neutral-700 text-slate-200 font-body-sm text-body-sm py-2 px-space-sm rounded flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">add_circle</span>
+                    Add Drink Re-Order
+                  </button>
+</div>
+<button class="w-full bg-primary hover:bg-primary-container text-white font-body-md text-body-md font-bold py-3 px-space-md rounded-lg flex items-center justify-between shadow-lg shadow-primary/20">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">contactless</span>
+<span>Tap to Pay &amp; Split</span>
+</div>
+<span class="font-mono-metric text-body-lg">$345.00</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Center: Key Tactical Ergonomics -->
+<div class="lg:col-span-3 flex flex-col gap-space-lg">
+<div class="bg-[#181d24] p-space-lg rounded-xl">
+<div class="w-10 h-10 rounded-lg bg-primary/20 text-primary-fixed-dim flex items-center justify-center mb-space-md">
+<span class="material-symbols-outlined">touch_app</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-white font-bold mb-space-xs">
+              Single-Thumb Ergonomics
+            </h3>
+<p class="font-body-md text-body-md text-slate-300">
+              Every button, modifier tray, and coursing fire action is nestled within natural thumb arcs. Servers keep one hand entirely free to pour wine or handle water carafes.
+            </p>
+</div>
+<div class="bg-[#181d24] p-space-lg rounded-xl">
+<div class="w-10 h-10 rounded-lg bg-secondary/30 text-secondary-fixed flex items-center justify-center mb-space-md">
+<span class="material-symbols-outlined">search_insights</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-white font-bold mb-space-xs">
+              Sommelier Cellar Search
+            </h3>
+<p class="font-body-md text-body-md text-slate-300">
+              Lookup vintage, cellar bin location, exact bottle counts, and producer notes in under 200 milliseconds without running back to the stationary server station.
+            </p>
+</div>
+</div>
+<!-- Right: Real-Time Floor Activity Feed -->
+<div class="lg:col-span-4 bg-[#181d24] p-space-lg rounded-xl flex flex-col">
+<div class="flex items-center justify-between pb-space-md">
+<span class="font-label-caps text-label-caps uppercase text-slate-400">Live Service Event Stream</span>
+<span class="font-mono-ticket text-mono-ticket text-emerald-400">UDP Synced</span>
+</div>
+<div class="space-y-space-md font-mono-ticket text-mono-ticket text-slate-300">
+<!-- Event 1 -->
+<div class="bg-neutral-900/60 p-space-md rounded-lg">
+<div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+<span class="font-bold text-white">TABLE 14 • PATIO</span>
+<span class="text-emerald-400">0s delay</span>
+</div>
+<p class="text-slate-200">
+                Tap to Pay completed ($188.40 via Apple Pay). Digital itemized folio sent via SMS. Table status auto-promoted to <span class="text-amber-300">BUSSING</span>.
+              </p>
+</div>
+<!-- Event 2 -->
+<div class="bg-neutral-900/60 p-space-md rounded-lg">
+<div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+<span class="font-bold text-white">TABLE 09 • DINING</span>
+<span class="text-slate-400">42s ago</span>
+</div>
+<p class="text-slate-200">
+                Barolo bottle barcode scanned via rear camera sensor. Central wine inventory decremented by 1 bottle live.
+              </p>
+</div>
+<!-- Event 3 -->
+<div class="bg-neutral-900/60 p-space-md rounded-lg">
+<div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+<span class="font-bold text-white">PATIO 03 • CABANA</span>
+<span class="text-slate-400">1m ago</span>
+</div>
+<p class="text-slate-200">
+                Appetizer chit printed to Cold Larder while server was still explaining the crudo provenance to the guest. Zero sprint steps required.
+              </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 4: Four Core Architectural Pillars (Numbered Cards 01-04) -->
+<section class="w-full py-space-3xl bg-surface">
+<div class="max-w-7xl mx-auto px-gutter">
+<div class="max-w-2xl mb-space-2xl">
+<span class="font-label-caps text-label-caps uppercase text-primary tracking-widest block mb-space-xs">
+          [ THE FOUNDATIONAL STACK ]
+        </span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-extrabold tracking-tight">
+          Engineered for Hospitality Speed &amp; Network Durability
+        </h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs">
+          Built without compromise for the harshest dining room environments: brick cellars, outdoor umbrellas, and packed Friday rush hours.
+        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Pillar 01 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+<div>
+<div class="font-mono-metric text-mono-metric text-primary mb-space-md">01</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mb-space-sm">
+              Native Tap-to-Pay on iPhone &amp; Android
+            </h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              No bulky magnetic dongles to lose or re-pair. Take Apple Pay, contactless debit, and Visa chip cards directly against the glass of consumer smartphones.
+            </p>
+</div>
+<div class="mt-space-lg pt-space-sm font-mono-ticket text-mono-ticket text-secondary">
+            EMV L3 • Zero Bluetooth drops
+          </div>
+</div>
+<!-- Pillar 02 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+<div>
+<div class="font-mono-metric text-mono-metric text-primary mb-space-md">02</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mb-space-sm">
+              Bulletproof Offline Mesh Protocol
+            </h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              When patio Wi-Fi drops behind thick brick walls or metal awnings, Mise handhelds peer-mesh instantly with local line printers and the KDS. Zero lost tickets.
+            </p>
+</div>
+<div class="mt-space-lg pt-space-sm font-mono-ticket text-mono-ticket text-secondary">
+            LAN fallback • Sub-GHz redundancy
+          </div>
+</div>
+<!-- Pillar 03 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+<div>
+<div class="font-mono-metric text-mono-metric text-primary mb-space-md">03</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mb-space-sm">
+              Tableside Split-by-Seat in 3 Taps
+            </h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              Divide six ways across cash, personal cards, and corporate accounts without leaving the table. Eliminates the awkward 15-minute receipt back-and-forth dance.
+            </p>
+</div>
+<div class="mt-space-lg pt-space-sm font-mono-ticket text-mono-ticket text-secondary">
+            Seat-by-seat • Custom ratio splitting
+          </div>
+</div>
+<!-- Pillar 04 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+<div>
+<div class="font-mono-metric text-mono-metric text-primary mb-space-md">04</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mb-space-sm">
+              Real-Time 86 &amp; Cellar Vintage Alerts
+            </h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              The exact second the raw bar sells the final dozen Kumamoto oysters, all floor handhelds vibrate and grey out the item. Never apologize for an 86’d order again.
+            </p>
+</div>
+<div class="mt-space-lg pt-space-sm font-mono-ticket text-mono-ticket text-secondary">
+            Haptic push • Live inventory sync
+          </div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 5: Deep Operational Workflow Walkthroughs (Alternating Grid) -->
+<section class="w-full py-space-3xl bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-gutter space-y-space-3xl">
+<!-- Workflow 1: Tableside Payment & Tip Prompt -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-space-2xl items-center">
+<div class="lg:col-span-6 flex flex-col">
+<span class="font-label-caps text-label-caps uppercase text-primary tracking-widest mb-space-xs">
+            [ GUEST EXPERIENCE PROTOCOL ]
+          </span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">
+            The 30-Second Tableside Payment &amp; Tip Prompt
+          </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-space-md">
+            High-converting, non-awkward tipping screens designed for dining room discretion. Guests choose 18%, 20%, 22% or custom tip with instant digital itemized receipt via QR, SMS, or thermal belt clip printer. Boosts server tips by 24%.
+          </p>
+<div class="mt-space-lg grid grid-cols-2 gap-space-md">
+<div class="bg-surface p-space-md rounded-lg shadow-sm">
+<span class="font-headline-sm text-headline-sm text-primary font-bold block">+24%</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Average server tip yield</span>
+</div>
+<div class="bg-surface p-space-md rounded-lg shadow-sm">
+<span class="font-headline-sm text-headline-sm text-secondary font-bold block">&lt; 30s</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">End-to-end checkout cycle</span>
+</div>
+</div>
+</div>
+<div class="lg:col-span-6">
+<!-- Sleek Diagram of Tip Interface Flow -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-space-sm">
+<span class="font-label-caps text-label-caps uppercase text-tertiary">Guest-Facing Discretion Display</span>
+<span class="font-mono-ticket text-mono-ticket text-on-surface-variant">Table 18 • Total: $148.00</span>
+</div>
+<div class="bg-surface-container p-space-lg rounded-lg text-center">
+<span class="font-label-caps text-label-caps uppercase text-tertiary block mb-space-xs">Select Gratuity</span>
+<div class="grid grid-cols-4 gap-space-xs my-space-md">
+<button class="bg-surface-container-highest hover:bg-surface-container-lowest p-space-md rounded-lg font-mono-ticket text-center transition-colors">
+<span class="block text-body-lg font-bold text-on-surface">18%</span>
+<span class="text-xs text-on-surface-variant">$26.64</span>
+</button>
+<button class="bg-primary text-on-primary p-space-md rounded-lg font-mono-ticket text-center shadow-md scale-105">
+<span class="block text-body-lg font-bold">20%</span>
+<span class="text-xs opacity-90">$29.60</span>
+</button>
+<button class="bg-surface-container-highest hover:bg-surface-container-lowest p-space-md rounded-lg font-mono-ticket text-center transition-colors">
+<span class="block text-body-lg font-bold text-on-surface">22%</span>
+<span class="text-xs text-on-surface-variant">$32.56</span>
+</button>
+<button class="bg-surface-container-highest hover:bg-surface-container-lowest p-space-md rounded-lg font-mono-ticket text-center transition-colors">
+<span class="block text-body-lg font-bold text-on-surface">Custom</span>
+<span class="text-xs text-on-surface-variant">Split</span>
+</button>
+</div>
+<div class="flex items-center justify-between font-mono-ticket text-mono-ticket text-on-surface pt-space-xs">
+<span>Final Authorized Amount:</span>
+<span class="text-body-lg font-bold text-primary">$177.60</span>
+</div>
+</div>
+<!-- Receipt Delivery Rail -->
+<div class="flex items-center justify-around font-body-sm text-body-sm text-on-surface-variant pt-space-xs">
+<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-primary">sms</span> SMS Receipt</span>
+<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-primary">qr_code_2</span> Instant QR Folio</span>
+<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-primary">print</span> Belt Thermal Chit</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Workflow 2: Patio & Rooftop Coverage Without Dead Zones -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-space-2xl items-center">
+<div class="lg:col-span-6 lg:order-2 flex flex-col">
+<span class="font-label-caps text-label-caps uppercase text-primary tracking-widest mb-space-xs">
+            [ RF NETWORK INFRASTRUCTURE ]
+          </span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">
+            Patio &amp; Rooftop Coverage Without Dead Zones
+          </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-space-md">
+            How Mise's sub-GHz local mesh network extends terminal coverage 500 feet beyond typical restaurant Wi-Fi limits. Orders taken at cabana tables or garden patios reach the basement kitchen in 0.08 seconds.
+          </p>
+<div class="mt-space-lg space-y-space-sm font-mono-ticket text-mono-ticket text-on-surface">
+<div class="flex items-center gap-space-sm bg-surface p-space-sm rounded-lg">
+<span class="material-symbols-outlined text-secondary">check_circle</span>
+<span>Sub-GHz 915MHz proprietary peer hops bypass concrete &amp; steel</span>
+</div>
+<div class="flex items-center gap-space-sm bg-surface p-space-sm rounded-lg">
+<span class="material-symbols-outlined text-secondary">check_circle</span>
+<span>Zero dependencies on cellular SIM connectivity or cloud pings</span>
+</div>
+</div>
+</div>
+<div class="lg:col-span-6 lg:order-1">
+<!-- Network Topology Diagram -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-lg relative overflow-hidden">
+<span class="font-label-caps text-label-caps uppercase text-tertiary block mb-space-md">
+              Topology • Offline Sub-GHz Mesh Sync
+            </span>
+<div class="grid grid-cols-3 gap-space-sm items-center text-center">
+<!-- Node 1: Handheld -->
+<div class="bg-surface-container-low p-space-md rounded-lg">
+<span class="material-symbols-outlined text-primary text-[28px]">smartphone</span>
+<span class="block font-headline-sm text-body-sm font-bold text-on-surface mt-1">Patio Device</span>
+<span class="font-mono-ticket text-xs text-on-surface-variant">Table 45 (Outdoors)</span>
+</div>
+<!-- Mesh Signal Vector -->
+<div class="flex flex-col items-center justify-center">
+<span class="font-mono-ticket text-xs text-secondary font-bold">915MHz Mesh</span>
+<div class="w-full h-0.5 bg-secondary-container relative my-1">
+<div class="absolute inset-0 bg-secondary w-1/2 mx-auto"></div>
+</div>
+<span class="font-mono-ticket text-xs text-tertiary">&lt; 80ms Latency</span>
+</div>
+<!-- Node 2: Kitchen KDS & Printers -->
+<div class="bg-surface-container-low p-space-md rounded-lg">
+<span class="material-symbols-outlined text-secondary text-[28px]">print</span>
+<span class="block font-headline-sm text-body-sm font-bold text-on-surface mt-1">Kitchen Pass</span>
+<span class="font-mono-ticket text-xs text-on-surface-variant">Hot Line &amp; Cold Prep</span>
+</div>
+</div>
+<div class="mt-space-lg bg-surface-container p-space-md rounded-lg text-center font-mono-ticket text-mono-ticket text-on-surface-variant">
+<span>Failover State: Main fiber ISP severed → Mesh tickets continue flowing uninterrupted</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Workflow 3: Real-Time Coursing Control at the Table -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-space-2xl items-center">
+<div class="lg:col-span-6 flex flex-col">
+<span class="font-label-caps text-label-caps uppercase text-primary tracking-widest mb-space-xs">
+            [ KITCHEN PACING LOGIC ]
+          </span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">
+            Real-Time Coursing Control at the Table
+          </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-space-md">
+            Servers fire appetizers, hold entrees, and re-order drinks mid-conversation. Cooks receive coursing chits timed to dining pace, avoiding cold plates or premature deliveries.
+          </p>
+<div class="mt-space-lg bg-surface p-space-md rounded-lg shadow-sm">
+<span class="font-label-caps text-label-caps uppercase text-secondary block">Chef Pass Coordination</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              “No more expo shouting across the line. Servers trigger Course 2 right as wine glasses are topped, keeping the kitchen cooking in lockstep with the guest.”
+            </p>
+</div>
+</div>
+<div class="lg:col-span-6">
+<!-- Coursing Timeline Diagram -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-lg">
+<div class="flex items-center justify-between pb-space-sm mb-space-md">
+<span class="font-label-caps text-label-caps uppercase text-tertiary">Dynamic Service Sequence</span>
+<span class="font-mono-ticket text-mono-ticket text-primary">Pacing Active</span>
+</div>
+<div class="space-y-space-md relative pl-6">
+<!-- Vertical line -->
+<div class="absolute left-2.5 top-2 bottom-2 w-0.5 bg-surface-container-highest"></div>
+<!-- Step 1 -->
+<div class="relative">
+<span class="w-3 h-3 rounded-full bg-primary absolute -left-6 top-1"></span>
+<div class="bg-surface-container-low p-space-sm rounded-lg font-mono-ticket text-mono-ticket">
+<div class="flex justify-between font-bold text-on-surface">
+<span>COURSE 1 FIRED: RAW BAR &amp; APERITIFS</span>
+<span class="text-tertiary">19:32</span>
+</div>
+<span class="text-xs text-on-surface-variant">Kitchen KDS shows active prep timer (target 8m)</span>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="relative">
+<span class="w-3 h-3 rounded-full bg-secondary absolute -left-6 top-1"></span>
+<div class="bg-surface-container-low p-space-sm rounded-lg font-mono-ticket text-mono-ticket">
+<div class="flex justify-between font-bold text-on-surface">
+<span>18-MINUTE DINING PACING INTERVAL</span>
+<span class="text-secondary">Holding Entrees</span>
+</div>
+<span class="text-xs text-on-surface-variant">Server prompts wine top-up from pocket terminal</span>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="relative">
+<span class="w-3 h-3 rounded-full bg-primary absolute -left-6 top-1"></span>
+<div class="bg-surface-container-low p-space-sm rounded-lg font-mono-ticket text-mono-ticket">
+<div class="flex justify-between font-bold text-on-surface">
+<span>COURSE 2 ONE-TAP FIRE: WOODFIRE MAINS</span>
+<span class="text-tertiary">19:50</span>
+</div>
+<span class="text-xs text-on-surface-variant">Grill station chit prints instantly • Plates fired</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 6: Compatible Commercial Handheld Hardware Matrix -->
+<section class="w-full py-space-3xl bg-surface" id="hardware-matrix">
+<div class="max-w-7xl mx-auto px-gutter">
+<div class="max-w-2xl mb-space-2xl">
+<span class="font-label-caps text-label-caps uppercase text-primary tracking-widest block mb-space-xs">
+          [ FLEET HARDWARE COMPATIBILITY ]
+        </span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-extrabold tracking-tight">
+          Battle-Tested Enterprise Handhelds
+        </h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs">
+          Run Mise Mobile on your team's personal iPhones or deploy heavy-duty commercial terminals engineered for greasy pass counters and concrete drops.
+        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Hardware 1 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-space-md">
+<span class="material-symbols-outlined text-primary text-[28px]">phone_iphone</span>
+<span class="font-label-caps text-label-caps uppercase text-secondary bg-secondary-container px-2 py-0.5 rounded">Zero Hardware Cost</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Apple iPhone 14 / 15 / 16</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-xs">
+            Leverage Tap to Pay on iPhone directly. No dongles, no sleds. Ideal for host stand seatings and sommelier drink additions.
+          </p>
+<div class="mt-space-md pt-space-sm font-mono-ticket text-mono-ticket text-tertiary">
+            NFC Native • iOS 16.4+ • FaceID Shift Auth
+          </div>
+</div>
+<!-- Hardware 2 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-space-md">
+<span class="material-symbols-outlined text-primary text-[28px]">point_of_sale</span>
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded">Most Popular</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">BBPOS WisePOS E</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-xs">
+            Pocket terminal with tactile physical PIN pad and high-gain Wi-Fi antennas. Designed for high-volume patio and poolside bars.
+          </p>
+<div class="mt-space-md pt-space-sm font-mono-ticket text-mono-ticket text-tertiary">
+            EMV Chip &amp; Dip • 14h Battery • Drop Rated
+          </div>
+</div>
+<!-- Hardware 3 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-space-md">
+<span class="material-symbols-outlined text-primary text-[28px]">devices</span>
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded">Commercial Grade</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Elo M50 Mobile Handheld</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-xs">
+            Rugged 5.5" Android terminal with 2D barcode scanner for bottle bin lookup and hot-swappable enterprise batteries.
+          </p>
+<div class="mt-space-md pt-space-sm font-mono-ticket text-mono-ticket text-tertiary">
+            IP65 Sealed • Gorilla Glass • Qualcomm Octa-core
+          </div>
+</div>
+<!-- Hardware 4 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-space-md">
+<span class="material-symbols-outlined text-primary text-[28px]">receipt_long</span>
+<span class="font-label-caps text-label-caps uppercase text-secondary bg-secondary-container px-2 py-0.5 rounded">Built-In Printer</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Sunmi V2s Rugged Handheld</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-xs">
+            Integrated high-speed 58mm thermal receipt printer right in the palm. Print chits and folios directly at the outdoor table.
+          </p>
+<div class="mt-space-md pt-space-sm font-mono-ticket text-mono-ticket text-tertiary">
+            Thermal Head • Anti-drop Shell • 4G Dual SIM
+          </div>
+</div>
+<!-- Hardware 5 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-space-md">
+<span class="material-symbols-outlined text-primary text-[28px]">security</span>
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded">Heavy Duty</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Zebra TC26 Hospitality</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-xs">
+            Military-spec shock resistance built to survive multiple drops onto concrete or tile floors during busy dinner services.
+          </p>
+<div class="mt-space-md pt-space-sm font-mono-ticket text-mono-ticket text-tertiary">
+            MIL-STD 810G • Water-tight • Removable Battery
+          </div>
+</div>
+<!-- Hardware 6 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-space-md">
+<span class="material-symbols-outlined text-primary text-[28px]">print</span>
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded">Wearable Accessory</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Star SM-L200 Belt Printer</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-xs">
+            Featherlight Bluetooth belt-clip printer for servers who prefer physical paper customer receipts at the table.
+          </p>
+<div class="mt-space-md pt-space-sm font-mono-ticket text-mono-ticket text-tertiary">
+            Bluetooth Low Energy • 13h Shift • 2-inch Thermal
+          </div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 7: Operator FAQs -->
+<section class="w-full py-space-3xl bg-surface-container-low">
+<div class="max-w-4xl mx-auto px-gutter">
+<div class="text-center mb-space-2xl">
+<span class="font-label-caps text-label-caps uppercase text-primary tracking-widest block mb-space-xs">
+          [ OPERATOR FIELD INTELLIGENCE ]
+        </span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-extrabold tracking-tight">
+          Frequently Asked Questions
+        </h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs">
+          Clear answers for floor managers, beverage directors, and hospitality directors.
+        </p>
+</div>
+<div class="space-y-space-md">
+<!-- FAQ 1 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+            What happens if a server drops a handheld into water or soup?
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-sm">
+            All certified commercial terminals feature IP65 sealed casings that resist liquid spills and grease. If a device ever sustains critical hardware damage mid-service, our 10-second instant hardware swap protocol allows any server to grab a spare unit from the charging cradle, enter their 4-digit PIN, and resume their exact open table state without losing a single item.
+          </p>
+</div>
+<!-- FAQ 2 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+            Does tableside payment feel awkward or rushed for fine dining?
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-sm">
+            Not at all. Mise provides customizable presentation folios and privacy tipping screens. For white-tablecloth environments, servers can present the terminal in an artisan leather bill folio or offer an instant tableside QR code on a discreet card so guests can pay and tip on their own phones while lingering over espresso.
+          </p>
+</div>
+<!-- FAQ 3 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+            How long does handheld battery life last during a double shift?
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-sm">
+            Our optimized low-power UI delivers 12 to 14 hours of continuous screen-on time on commercial devices. For operations running 16-hour weekend brunch-to-dinner shifts, our multi-bay charging docks support 3-second magnetic hot-swappable batteries that maintain screen state without restarting the device.
+          </p>
+</div>
+<!-- FAQ 4 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+            Can servers send orders directly from the patio if the main internet is down?
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-sm">
+            Yes. Mise Mesh operates on a local-first peer architecture. Handhelds communicate directly with kitchen printers and KDS units across the local Wi-Fi router or sub-GHz mesh radio. Even if your external fiber ISP goes down completely, orders fire to the line and receipts print locally without internet access.
+          </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 8: Conversion CTA Banner -->
+<section class="w-full bg-[#111418] text-white py-space-3xl relative overflow-hidden">
+<div class="max-w-7xl mx-auto px-gutter relative z-10 text-center flex flex-col items-center">
+<span class="font-label-caps text-label-caps uppercase text-primary-fixed-dim tracking-widest block mb-space-sm">
+        [ ZERO RISK • FLOOR DEPLOYMENT ]
+      </span>
+<h2 class="font-display-xl text-headline-lg lg:text-display-xl text-white font-extrabold tracking-tight max-w-3xl">
+        Equip your floor staff with pocket power tonight.
+      </h2>
+<p class="font-body-lg text-body-lg text-slate-300 max-w-2xl mt-space-md">
+        Eliminate steps, boost server tips by 24%, and turn patio tables without bottlenecks. 14-day free trial on your existing hardware.
+      </p>
+<div class="mt-space-xl flex flex-col sm:flex-row items-center gap-space-md">
+<a class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-white font-body-md text-body-md font-semibold px-space-xl py-space-md rounded-lg shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]" href="#">
+          Start 14-Day Free Trial
+        </a>
+<a class="inline-flex items-center justify-center bg-neutral-800 hover:bg-neutral-700 text-white font-body-md text-body-md font-semibold px-space-xl py-space-md rounded-lg transition-colors" href="#">
+          Book Mobile Hardware Demo
+        </a>
+</div>
+<div class="mt-space-2xl pt-space-lg flex flex-wrap items-center justify-center gap-space-lg font-mono-ticket text-mono-ticket text-slate-400">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-emerald-400">check_circle</span>
+          Zero contract lock-in
+        </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-emerald-400">check_circle</span>
+          Free handheld deployment kit
+        </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-emerald-400">check_circle</span>
+          24/7 Floor Support
+        </span>
+</div>
+</div>
+</section>
+</div></main><footer class="w-full bg-surface-container-low border-t border-surface-container-highest"><div class="max-w-7xl mx-auto px-gutter pt-space-3xl pb-space-2xl"><div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-space-2xl pb-space-2xl border-b border-surface-container-highest"><div class="lg:col-span-4 flex flex-col justify-between pr-0 lg:pr-space-xl"><div class="space-y-space-md"><div class="flex items-baseline gap-space-xs"><span class="font-display-xl text-headline-sm font-extrabold tracking-tight text-on-surface">mise<span class="text-primary">.</span></span></div><p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm">Engineered for ambitious restaurateurs and multi-location hospitality groups. High-velocity operations meet culinary precision.</p></div><div class="mt-space-xl space-y-space-sm"><span class="font-label-caps text-label-caps uppercase text-tertiary block">Dispatch &amp; Changelog</span><form class="flex items-center max-w-md gap-space-xs"><input class="bg-surface-container-lowest border border-surface-container-highest rounded-lg px-space-md py-space-sm font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-on-surface w-full" placeholder="chef@restaurant.com" type="email"/><button class="bg-on-surface hover:bg-inverse-surface text-surface-container-lowest font-body-sm text-body-sm px-space-md py-space-sm rounded-lg font-semibold shrink-0 transition-colors" type="button">Subscribe</button></form></div></div><div class="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-gutter"><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Platform</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors"><a data-path="cash-expense-management" href="#">Cash &amp; Expense Vault</a></li><li class="hover:text-on-surface cursor-pointer transition-colors">POS Terminal</li><li class="hover:text-on-surface cursor-pointer transition-colors">Kitchen Display (KDS)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Inventory Ledger</li><li class="hover:text-on-surface cursor-pointer transition-colors">Multi-Branch Hub</li><li class="hover:text-on-surface cursor-pointer transition-colors">Floor Architect</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Solutions</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Artisan Cafes</li><li class="hover:text-on-surface cursor-pointer transition-colors">Full-Service Dining</li><li class="hover:text-on-surface cursor-pointer transition-colors">Quick Service (QSR)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Ghost &amp; Cloud Kitchens</li><li class="hover:text-on-surface cursor-pointer transition-colors">Hospitality Groups</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Resources</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Operator Guides</li><li class="hover:text-on-surface cursor-pointer transition-colors">Hardware Catalog</li><li class="hover:text-on-surface cursor-pointer transition-colors">API Reference</li><li class="hover:text-on-surface cursor-pointer transition-colors">Changelog</li><li class="hover:text-on-surface cursor-pointer transition-colors">Kitchen Metrics</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Company</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Manifesto</li><li class="hover:text-on-surface cursor-pointer transition-colors">Careers (Hiring)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Contact Desk</li><li class="hover:text-on-surface cursor-pointer transition-colors">Press Kit</li><li class="hover:text-on-surface cursor-pointer transition-colors">Security Protocols</li></ul></div></div></div><div class="pt-space-xl flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex flex-wrap items-center gap-space-lg font-mono-ticket text-mono-ticket text-on-surface-variant"><span>© 2025 Mise Technologies, Inc.</span><a class="hover:text-on-surface transition-colors" href="#">Privacy Policy</a><a class="hover:text-on-surface transition-colors" href="#">Terms of Service</a><a class="hover:text-on-surface transition-colors" href="#">Cookie Protocol</a></div><div class="flex items-center gap-space-xs bg-secondary-container px-space-md py-space-xs rounded-full"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="font-label-caps text-label-caps uppercase text-on-secondary-container font-semibold">All Systems Operational</span></div></div></div></footer></body></html>

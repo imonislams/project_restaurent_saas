@@ -1,4 +1,4 @@
-import RestrlyLogo from '@/Components/Brand/RestrlyLogo';
+import MiseLogo from '@/Components/Brand/MiseLogo';
 import { useT } from '@/i18n';
 import { Link, router, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState } from 'react';
@@ -120,24 +120,24 @@ export default function AuthSplitLayout({
     const activeTestimonial = testimonial || defaultTestimonial;
 
     return (
-        <div className="flex min-h-screen w-full bg-[#FBFBF9] font-sans antialiased text-stone-900 selection:bg-[#0F3D30] selection:text-white">
+        <div className="flex min-h-screen w-full bg-surface font-sans antialiased text-on-surface selection:bg-primary selection:text-white">
             {/* ======================================================== */}
             {/* LEFT COLUMN: EDITORIAL BRAND EXPERIENCE (Desktop lg+)    */}
             {/* ======================================================== */}
-            <div className="relative hidden lg:flex lg:w-[48%] xl:w-[50%] flex-col justify-between overflow-hidden bg-[#071F18] p-10 xl:p-14 text-white">
+            <div className="relative hidden lg:flex lg:w-[48%] xl:w-[50%] flex-col justify-between overflow-hidden bg-[#1a1c1a] p-10 xl:p-14 text-white">
                 {/* Background Restaurant Photography with Smooth Load & Art Overlay */}
                 <div className="absolute inset-0 z-0">
                     <img
                         src={imageUrl}
-                        alt="Restrly Restaurant Ambiance"
+                        alt="Restaurant Ambiance"
                         onLoad={() => setImageLoaded(true)}
                         className={`h-full w-full object-cover object-center transition-all duration-1000 ease-out ${
-                            imageLoaded ? 'scale-100 opacity-40' : 'scale-105 opacity-20'
+                            imageLoaded ? 'scale-100 opacity-30' : 'scale-105 opacity-15'
                         }`}
                     />
-                    {/* Dark Forest Multi-Stop Radial & Linear Gradients */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#071F18] via-[#0B271F]/85 to-[#071F18]/90" />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.15),transparent_60%)]" />
+                    {/* Dark Slate & Rust Multi-Stop Radial & Linear Gradients */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a1c1a] via-[#1a1c1a]/92 to-[#2f312f]/85" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(174,42,16,0.22),transparent_60%)]" />
 
                     {/* Subtle Architectural Grid Lines */}
                     <svg
@@ -162,22 +162,22 @@ export default function AuthSplitLayout({
 
                 {/* Left Header: Brand Logo & Wordmark */}
                 <div className="relative z-10 flex items-center justify-between">
-                    <RestrlyLogo
+                    <MiseLogo
                         variant="full"
                         theme="dark"
                         size="lg"
                         withTagline={true}
-                        tagline="RESTAURANT OS"
+                        tagline="SYSTEM KERNEL"
                         href="/"
                     />
 
-                    <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-950/40 px-3 py-1 backdrop-blur-md">
+                    <div className="flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 backdrop-blur-md">
                         <span className="relative flex h-2 w-2">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
                         </span>
-                        <span className="text-[11px] font-medium tracking-wide text-emerald-200">
-                            v2.4 Production Ready
+                        <span className="text-[11px] font-mono tracking-wide text-primary-fixed">
+                            v2.4 KERNEL ACTIVE
                         </span>
                     </div>
                 </div>
@@ -185,14 +185,8 @@ export default function AuthSplitLayout({
                 {/* Left Middle: Storytelling, Headline, Features, and Floating Live Cards */}
                 <div className="relative z-10 my-auto py-8">
                     {/* Category Kicker Badge */}
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-1 text-xs font-semibold tracking-wider uppercase text-emerald-300 backdrop-blur-sm mb-6">
-                        <svg
-                            viewBox="0 0 16 16"
-                            fill="currentColor"
-                            className="h-3.5 w-3.5 text-emerald-400"
-                        >
-                            <path d="M8 2a.75.75 0 01.75.75v3.5h3.5a.75.75 0 010 1.5h-3.5v3.5a.75.75 0 01-1.5 0v-3.5h-3.5a.75.75 0 010-1.5h3.5v-3.5A.75.75 0 018 2z" />
-                        </svg>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-mono tracking-wider uppercase text-primary-fixed backdrop-blur-sm mb-6">
+                        <span className="material-symbols-outlined text-[14px] text-primary">terminal</span>
                         <span>{heroBadge}</span>
                     </div>
 
@@ -210,9 +204,9 @@ export default function AuthSplitLayout({
                         {activeFeatures.map((feat, idx) => (
                             <div
                                 key={idx}
-                                className="group flex items-start gap-3.5 rounded-xl border border-white/5 bg-white/[0.03] p-3.5 backdrop-blur-sm transition-all duration-200 hover:border-emerald-500/30 hover:bg-white/[0.06]"
+                                className="group flex items-start gap-3.5 rounded-xl border border-white/5 bg-white/[0.03] p-3.5 backdrop-blur-sm transition-all duration-200 hover:border-primary/40 hover:bg-white/[0.06]"
                             >
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20 group-hover:scale-105 transition-all">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary-fixed group-hover:bg-primary/25 group-hover:scale-105 transition-all">
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20"
@@ -241,37 +235,37 @@ export default function AuthSplitLayout({
                     {/* Floating Product Depth Micro-Cards */}
                     <div className="mt-8 grid grid-cols-2 gap-3.5 max-w-xl">
                         {/* Micro Card 1: Active Table Ticket */}
-                        <div className="rounded-xl border border-white/10 bg-[#0B271F]/80 p-3.5 backdrop-blur-md shadow-lg">
+                        <div className="rounded-xl border border-white/10 bg-[#2f312f]/80 p-3.5 backdrop-blur-md shadow-lg">
                             <div className="flex items-center justify-between">
-                                <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                                <span className="inline-flex items-center gap-1.5 rounded-md bg-primary/20 px-2 py-0.5 text-[10px] font-mono font-semibold text-primary-fixed">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                                     Table 14 • 4 Covers
                                 </span>
-                                <span className="text-[10px] text-stone-400">14m ago</span>
+                                <span className="text-[10px] text-stone-400 font-mono">14m ago</span>
                             </div>
                             <div className="mt-2 text-xs font-semibold text-white truncate">
                                 2x Duck Confit, 2x Risotto
                             </div>
-                            <div className="mt-1 flex items-center justify-between text-[11px] text-emerald-400/90 font-medium">
+                            <div className="mt-1 flex items-center justify-between text-[11px] text-primary-fixed font-medium">
                                 <span>Kitchen: Firing Mains</span>
                                 <span className="text-stone-400 font-normal">Server: Marcus</span>
                             </div>
                         </div>
 
                         {/* Micro Card 2: Service Metrics */}
-                        <div className="rounded-xl border border-white/10 bg-[#0B271F]/80 p-3.5 backdrop-blur-md shadow-lg">
+                        <div className="rounded-xl border border-white/10 bg-[#2f312f]/80 p-3.5 backdrop-blur-md shadow-lg">
                             <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-semibold tracking-wider text-stone-400 uppercase">
-                                    Tonight's Service
+                                <span className="text-[10px] font-mono font-semibold tracking-wider text-stone-400 uppercase">
+                                    Service Health
                                 </span>
-                                <span className="text-[10px] font-bold text-emerald-400">+18.4%</span>
+                                <span className="text-[10px] font-mono font-bold text-secondary-fixed">+18.4%</span>
                             </div>
                             <div className="mt-2 text-xs font-semibold text-white">
                                 99.98% POS Uptime
                             </div>
                             <div className="mt-1 flex items-center justify-between text-[11px] text-stone-400">
-                                <span>Avg turn: 42 min</span>
-                                <span className="text-emerald-400 font-medium">0 delayed</span>
+                                <span className="font-mono text-[10px]">Avg: 42 min</span>
+                                <span className="text-secondary-fixed font-medium">0 delayed</span>
                             </div>
                         </div>
                     </div>
@@ -280,7 +274,7 @@ export default function AuthSplitLayout({
                 {/* Left Bottom: Testimonial & Social Proof */}
                 <div className="relative z-10 border-t border-white/10 pt-6">
                     <div className="flex items-start gap-4">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-[#0F3D30] font-display text-sm font-bold text-white shadow-md border border-white/15">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[#8f200b] font-display text-sm font-bold text-white shadow-md border border-white/15">
                             {activeTestimonial.author
                                 .split(' ')
                                 .map((n) => n[0])
@@ -297,7 +291,7 @@ export default function AuthSplitLayout({
                                 <span className="text-stone-500">•</span>
                                 <span className="text-stone-400">
                                     {activeTestimonial.role},{' '}
-                                    <strong className="text-emerald-300 font-medium">
+                                    <strong className="text-primary-fixed font-medium">
                                         {activeTestimonial.restaurant}
                                     </strong>
                                 </span>
@@ -315,12 +309,12 @@ export default function AuthSplitLayout({
                 <div className="flex items-center justify-between gap-4">
                     {/* Mobile/Tablet Brand Logo */}
                     <div className="lg:hidden">
-                        <RestrlyLogo variant="full" theme="light" size="md" href="/" />
+                        <MiseLogo variant="full" theme="light" size="md" href="/" />
                     </div>
 
                     <div className="hidden lg:block">
-                        <span className="text-xs font-medium text-stone-500 uppercase tracking-widest">
-                            Hospitality Tech Platform
+                        <span className="text-xs font-mono font-medium text-stone-500 uppercase tracking-widest">
+                            High-Velocity Hospitality POS
                         </span>
                     </div>
 
@@ -351,7 +345,7 @@ export default function AuthSplitLayout({
                                             locale: e.target.value,
                                         })
                                     }
-                                    className="rounded-lg border border-stone-200 bg-white py-1.5 pl-8 pr-8 text-xs font-medium text-stone-700 shadow-sm hover:border-stone-300 focus:border-[#0F3D30] focus:outline-none focus:ring-2 focus:ring-[#0F3D30]/10 transition-colors cursor-pointer"
+                                    className="rounded-lg border border-stone-200 bg-white py-1.5 pl-8 pr-8 text-xs font-medium text-stone-700 shadow-sm hover:border-stone-300 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 transition-colors cursor-pointer"
                                     aria-label={t('shell.language')}
                                 >
                                     {locales.map((l) => (
@@ -373,19 +367,8 @@ export default function AuthSplitLayout({
                 {/* Footer Utilities: Security Badges & Legal */}
                 <div className="border-t border-stone-200/70 pt-6 text-center text-xs text-stone-500">
                     <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-2">
-                        <span className="inline-flex items-center gap-1.5 text-stone-500 font-medium">
-                            <svg
-                                viewBox="0 0 16 16"
-                                fill="currentColor"
-                                className="h-3.5 w-3.5 text-emerald-700"
-                            >
-                                <path
-                                    fillRule="evenodd"
-                                    d="M8.5 1.077a.75.75 0 00-.75 0l-5.25 3A.75.75 0 002 4.73v4.54a7.25 7.25 0 004.992 6.892.75.75 0 00.516 0A7.25 7.25 0 0012.5 9.27V4.73a.75.75 0 00-.5-.653l-5.25-3zM8 2.22l4 2.286v4.764c0 2.923-1.897 5.485-4 6.368-2.103-.883-4-3.445-4-6.368V4.506l4-2.286z"
-                                    clipRule="evenodd"
-                                />
-                                <path d="M10.28 6.78a.75.75 0 00-1.06-1.06L7 7.94 6.28 7.22a.75.75 0 00-1.06 1.06l1.25 1.25a.75.75 0 001.06 0l2.75-2.75z" />
-                            </svg>
+                        <span className="inline-flex items-center gap-1.5 text-stone-600 font-medium">
+                            <span className="material-symbols-outlined text-[15px] text-primary">verified_user</span>
                             256-bit SSL Encrypted
                         </span>
                         <span className="text-stone-300">•</span>
@@ -395,7 +378,7 @@ export default function AuthSplitLayout({
                     </div>
 
                     <p className="text-[11px] text-stone-400">
-                        &copy; {new Date().getFullYear()} Restrly SaaS. All rights reserved. Built for professional restaurants and hospitality groups.
+                        &copy; {new Date().getFullYear()} mise.pos. All rights reserved. High-velocity architecture for professional restaurant operations.
                     </p>
                 </div>
             </div>

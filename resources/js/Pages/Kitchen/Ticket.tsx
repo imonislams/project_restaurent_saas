@@ -91,7 +91,7 @@ export default function KitchenTicket({ ticket }: { ticket: TicketView }) {
                     <button
                         type="button"
                         onClick={() => window.print()}
-                        className="rounded-xl bg-restrly-600 px-5 py-2 text-xs font-bold text-white shadow-subtle hover:bg-restrly-700"
+                        className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-primary-foreground shadow-xs hover:bg-primary/90"
                     >
                         Print Ticket 🖨
                     </button>

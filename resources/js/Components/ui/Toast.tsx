@@ -55,7 +55,7 @@ export function ToastProvider({ children }: PropsWithChildren) {
                         <span
                             className={cn(
                                 'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white',
-                                t.tone === 'success' ? 'bg-emerald-600' : t.tone === 'error' ? 'bg-red-600' : 'bg-restrly-600',
+                                t.tone === 'success' ? 'bg-emerald-600' : t.tone === 'error' ? 'bg-destructive' : 'bg-primary',
                             )}
                         >
                             {t.tone === 'success' ? '✓' : t.tone === 'error' ? '!' : 'i'}

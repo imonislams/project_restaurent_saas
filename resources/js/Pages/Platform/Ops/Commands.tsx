@@ -1,7 +1,9 @@
 import { Badge, Button, Card, CardBody, CardHeader, ConfirmDialog, EmptyState, TextField, formatDateTime } from '@/Components/ui';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/Table';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import { Terminal, Play, AlertTriangle, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 interface Action {
     key: string;
@@ -52,17 +54,25 @@ export default function Commands({
         >
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <Card className="lg:col-span-2">
-                    <CardHeader title="Safe actions" description="Whitelisted commands" />
+                    <CardHeader title="Safe Actions" description="Curated and whitelisted maintenance commands" />
                     <CardBody>
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                             {curated.map((action) => (
                                 <button
                                     key={action.key}
+                                    type="button"
                                     onClick={() => (action.danger ? setConfirm(action) : run(action))}
-                                    className="flex flex-col rounded-lg border border-gray-200 px-3 py-2.5 text-left transition hover:border-indigo-300 hover:bg-indigo-50/40"
+                                    className="group flex flex-col justify-between rounded-lg border border-border bg-card p-3.5 text-left transition hover:border-primary/50 hover:bg-muted/40 shadow-2xs"
                                 >
-                                    <span className="text-sm font-medium text-gray-800">{action.label}</span>
-                                    <span className="mt-0.5 font-mono text-[11px] text-gray-400">{action.command}</span>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{action.label}</span>
+                                        {action.danger ? (
+                                            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+                                        ) : (
+                                            <Play className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
+                                        )}
+                                    </div>
+                                    <span className="mt-1 font-mono text-xs text-muted-foreground">{action.command}</span>
                                 </button>
                             ))}
                         </div>
@@ -70,7 +80,7 @@ export default function Commands({
                 </Card>
 
                 <Card>
-                    <CardHeader title="Advanced terminal" description={terminalReady ? 'Super admin' : 'Disabled'} />
+                    <CardHeader title="Advanced Terminal" description={terminalReady ? 'Super admin access' : 'Disabled'} />
                     <CardBody className="space-y-3">
                         {terminalReady ? (
                             <>
@@ -83,10 +93,13 @@ export default function Commands({
                                     onChange={(v) => form.setData('command', v)}
                                     onEnter={runAdvanced}
                                 />
-                                <Button size="sm" loading={form.processing} onClick={runAdvanced}>Run command</Button>
+                                <Button size="sm" loading={form.processing} onClick={runAdvanced}>
+                                    <Terminal className="mr-1.5 h-3.5 w-3.5" />
+                                    Run command
+                                </Button>
                             </>
                         ) : (
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-muted-foreground">
                                 {advanced.is_super_admin
                                     ? 'Enable “Advanced command terminal” in Feature Flags to use this.'
                                     : 'Only the SaaS super admin can run free-text commands.'}
@@ -97,36 +110,51 @@ export default function Commands({
             </div>
 
             <Card className="mt-5">
-                <CardHeader title="Recent runs" description={`${runs.length} most recent`} />
+                <CardHeader title="Recent Runs" description={`${runs.length} most recent executions`} />
                 <CardBody className="p-0">
                     {runs.length === 0 ? (
-                        <div className="p-5"><EmptyState title="No commands run yet" description="Run an action above; its output will appear here." /></div>
+                        <div className="p-6"><EmptyState title="No commands run yet" description="Run an action above; its output will appear here." /></div>
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-2">
-                            <table className="w-full text-sm">
-                                <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
-                                    <tr>
-                                        <th className="px-4 py-3">Command</th>
-                                        <th className="px-4 py-3">Result</th>
-                                        <th className="px-4 py-3">When</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {runs.map((run) => (
-                                        <tr key={run.id} onClick={() => setSelected(run)} className={'cursor-pointer hover:bg-gray-50 ' + (selected?.id === run.id ? 'bg-indigo-50/50' : '')}>
-                                            <td className="px-4 py-2.5">
-                                                <div className="font-mono text-xs text-gray-800">{run.command}</div>
-                                                <div className="text-[11px] text-gray-400">{run.user ?? 'system'} · {run.duration_ms}ms</div>
-                                            </td>
-                                            <td className="px-4 py-2.5"><Badge tone={run.status === 'completed' ? 'success' : 'danger'}>{run.exit_code}</Badge></td>
-                                            <td className="px-4 py-2.5 text-xs text-gray-500">{run.created_at ? formatDateTime(run.created_at) : '—'}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <div className="border-t border-gray-100 lg:border-l lg:border-t-0">
-                                <div className="border-b border-gray-100 bg-gray-50 px-4 py-2 font-mono text-xs text-gray-600">{selected?.command ?? 'Select a run'}</div>
-                                <pre className="max-h-80 overflow-auto whitespace-pre-wrap p-4 text-xs text-gray-700">{selected?.output ?? ''}</pre>
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Command</TableHead>
+                                            <TableHead>Result</TableHead>
+                                            <TableHead>When</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {runs.map((run) => (
+                                            <TableRow 
+                                                key={run.id} 
+                                                onClick={() => setSelected(run)} 
+                                                className={`cursor-pointer transition-colors ${selected?.id === run.id ? 'bg-muted/70 font-medium' : ''}`}
+                                            >
+                                                <TableCell className="py-2.5">
+                                                    <div className="font-mono text-xs text-foreground font-semibold">{run.command}</div>
+                                                    <div className="text-[11px] text-muted-foreground">{run.user ?? 'system'} · {run.duration_ms}ms</div>
+                                                </TableCell>
+                                                <TableCell className="py-2.5">
+                                                    <Badge tone={run.status === 'completed' ? 'success' : 'danger'}>
+                                                        Exit: {run.exit_code ?? 0}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="py-2.5 text-xs text-muted-foreground">{run.created_at ? formatDateTime(run.created_at) : '—'}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                            <div className="border-t border-border lg:border-l lg:border-t-0 flex flex-col bg-muted/10">
+                                <div className="border-b border-border bg-muted/40 px-4 py-2 font-mono text-xs font-medium text-foreground flex items-center justify-between">
+                                    <span>{selected?.command ?? 'Select a run'}</span>
+                                    {selected && <span className="text-[11px] text-muted-foreground">{selected.duration_ms}ms</span>}
+                                </div>
+                                <pre className="max-h-80 overflow-auto whitespace-pre-wrap p-4 font-mono text-xs text-foreground leading-relaxed flex-1">
+                                    {selected?.output || '(no output)'}
+                                </pre>
                             </div>
                         </div>
                     )}

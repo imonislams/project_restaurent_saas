@@ -1,8 +1,11 @@
 import { Badge, Button, Card, CardBody, CardHeader, ConfirmDialog, formatDate } from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
+import { Input } from '@/Components/ui/Input';
+import { Label } from '@/Components/ui/Label';
 import PlatformLayout from '@/Layouts/PlatformLayout';
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { ArrowLeft, RotateCcw, AlertTriangle, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 interface RestoreView {
     id: number;
@@ -40,48 +43,57 @@ export default function RestoreShow({ restore }: { restore: RestoreView }) {
         <PlatformLayout title={`Restore #${restore.id}`}>
             <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                    <div className="flex items-center gap-2">
-                        <h1 className="text-lg font-semibold text-gray-900">{restore.tenant ?? `Tenant #${restore.tenant_id}`}</h1>
+                    <div className="flex items-center gap-2.5">
+                        <Button variant="outline" size="sm" href={route('platform.restores.index')} className="h-8 px-2.5">
+                            <ArrowLeft className="mr-1 h-3.5 w-3.5" />
+                            Back
+                        </Button>
+                        <h1 className="text-xl font-semibold tracking-tight text-foreground">{restore.tenant ?? `Tenant #${restore.tenant_id}`}</h1>
                         <Badge tone={TONE[restore.status] ?? 'neutral'}>{restore.status}</Badge>
                     </div>
-                    <p className="mt-0.5 text-sm text-gray-500">Requested {formatDate(restore.created_at)} · reason: {restore.reason}</p>
+                    <p className="mt-1.5 text-sm text-muted-foreground">Requested {formatDate(restore.created_at)} · Reason: {restore.reason}</p>
                 </div>
                 <Button size="sm" variant="danger" disabled={!canExecute} onClick={() => setOpen(true)}>
+                    <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
                     Execute restore
                 </Button>
             </div>
 
-            {restore.error && <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{restore.error}</div>}
+            {restore.error && (
+                <div className="mt-4 rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive shadow-2xs">
+                    {restore.error}
+                </div>
+            )}
 
             <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <Card>
-                    <CardHeader title="Details" />
+                    <CardHeader title="Restore Details" />
                     <CardBody>
-                        <dl className="space-y-1 text-sm">
-                            <div className="flex justify-between"><dt className="text-gray-500">Source backup</dt><dd className="font-mono text-xs">{restore.backup ?? '—'}</dd></div>
-                            <div className="flex justify-between"><dt className="text-gray-500">Pre-restore checkpoint</dt><dd className="font-mono text-xs">{restore.checkpoint ?? '—'}</dd></div>
-                            <div className="flex justify-between"><dt className="text-gray-500">Requested by</dt><dd>{restore.requested_by ?? '—'}</dd></div>
-                            <div className="flex justify-between"><dt className="text-gray-500">Approved / executed by</dt><dd>{restore.approved_by ?? '—'}</dd></div>
-                            <div className="flex justify-between"><dt className="text-gray-500">Started</dt><dd>{formatDate(restore.started_at)}</dd></div>
-                            <div className="flex justify-between"><dt className="text-gray-500">Completed</dt><dd>{formatDate(restore.completed_at)}</dd></div>
+                        <dl className="divide-y divide-border/50 text-sm">
+                            <div className="flex justify-between py-2"><dt className="text-muted-foreground">Source backup</dt><dd className="font-mono text-xs text-foreground font-medium">{restore.backup ?? '—'}</dd></div>
+                            <div className="flex justify-between py-2"><dt className="text-muted-foreground">Pre-restore checkpoint</dt><dd className="font-mono text-xs text-foreground font-medium">{restore.checkpoint ?? '—'}</dd></div>
+                            <div className="flex justify-between py-2"><dt className="text-muted-foreground">Requested by</dt><dd className="font-medium text-foreground">{restore.requested_by ?? '—'}</dd></div>
+                            <div className="flex justify-between py-2"><dt className="text-muted-foreground">Approved / executed by</dt><dd className="font-medium text-foreground">{restore.approved_by ?? '—'}</dd></div>
+                            <div className="flex justify-between py-2"><dt className="text-muted-foreground">Started</dt><dd className="text-foreground">{formatDate(restore.started_at)}</dd></div>
+                            <div className="flex justify-between py-2"><dt className="text-muted-foreground">Completed</dt><dd className="text-foreground">{formatDate(restore.completed_at)}</dd></div>
                         </dl>
                     </CardBody>
                 </Card>
 
                 <Card>
-                    <CardHeader title="Post-restore verification" description="Row counts and tenant-isolation checks" />
+                    <CardHeader title="Post-restore Verification" description="Row counts and tenant-isolation validations" />
                     <CardBody>
                         {restore.verification ? (
-                            <dl className="space-y-1 text-sm">
-                                <div className="flex justify-between"><dt className="text-gray-500">Isolation</dt><dd><Badge tone={restore.verification.ok ? 'success' : 'danger'}>{restore.verification.ok ? 'passed' : 'warnings'}</Badge></dd></div>
-                                <div className="flex justify-between"><dt className="text-gray-500">Tables restored</dt><dd>{restore.verification.tables ?? '—'}</dd></div>
-                                <div className="flex justify-between"><dt className="text-gray-500">Rows restored</dt><dd>{restore.verification.rows ?? '—'}</dd></div>
+                            <dl className="divide-y divide-border/50 text-sm">
+                                <div className="flex justify-between py-2"><dt className="text-muted-foreground">Isolation check</dt><dd><Badge tone={restore.verification.ok ? 'success' : 'danger'}>{restore.verification.ok ? 'Passed' : 'Warnings'}</Badge></dd></div>
+                                <div className="flex justify-between py-2"><dt className="text-muted-foreground">Tables restored</dt><dd className="font-medium text-foreground">{restore.verification.tables ?? '—'}</dd></div>
+                                <div className="flex justify-between py-2"><dt className="text-muted-foreground">Rows restored</dt><dd className="font-medium text-foreground">{restore.verification.rows ?? '—'}</dd></div>
                                 {(restore.verification.problems ?? []).map((problem, i) => (
-                                    <div key={i} className="text-xs text-red-600">{problem}</div>
+                                    <div key={i} className="py-2 text-xs text-destructive">{problem}</div>
                                 ))}
                             </dl>
                         ) : (
-                            <p className="text-sm text-gray-500">No verification recorded yet.</p>
+                            <p className="text-sm text-muted-foreground">No verification recorded yet.</p>
                         )}
                     </CardBody>
                 </Card>
@@ -98,8 +110,15 @@ export default function RestoreShow({ restore }: { restore: RestoreView }) {
                 onConfirm={execute}
                 onClose={() => setOpen(false)}
             >
-                <label className="text-xs font-medium text-gray-500">Typed confirmation</label>
-                <input value={confirm} onChange={(e) => setConfirm(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 text-sm" placeholder={restore.tenant_slug ?? ''} />
+                <div className="space-y-1.5 pt-2">
+                    <Label htmlFor="typed-confirm" className="text-xs font-medium text-muted-foreground">Typed confirmation</Label>
+                    <Input 
+                        id="typed-confirm"
+                        value={confirm} 
+                        onChange={(e) => setConfirm(e.target.value)} 
+                        placeholder={restore.tenant_slug ?? ''} 
+                    />
+                </div>
             </ConfirmDialog>
         </PlatformLayout>
     );

@@ -3,32 +3,68 @@ import { cn } from './cn';
 
 export default function KpiCard({
     label,
+    title,
     value,
     hint,
     icon,
     tone = 'neutral',
+    trend,
+    className,
 }: {
-    label: string;
+    label?: string;
+    title?: string;
     value: ReactNode;
     hint?: string;
     icon?: ReactNode;
     tone?: 'neutral' | 'success' | 'warning' | 'danger';
+    trend?: { direction: 'up' | 'down'; label: string };
+    className?: string;
 }) {
+    const displayLabel = label ?? title ?? '';
     const valueTone = {
-        neutral: 'text-gray-900',
-        success: 'text-emerald-700',
-        warning: 'text-amber-700',
-        danger: 'text-red-700',
+        neutral: 'text-foreground',
+        success: 'text-emerald-600',
+        warning: 'text-amber-600',
+        danger: 'text-rose-600',
     }[tone];
 
     return (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-gray-300">
-            <div className="flex items-start justify-between gap-2">
-                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</div>
-                {icon && <div className="text-gray-300">{icon}</div>}
+        <div
+            className={cn(
+                'rounded-lg border border-border bg-card p-4 sm:p-5 shadow-xs transition-shadow hover:shadow-sm',
+                className
+            )}
+        >
+            <div className="flex items-center justify-between gap-3">
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">
+                    {displayLabel}
+                </span>
+                {icon && (
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
+                        {icon}
+                    </div>
+                )}
             </div>
-            <div className={cn('mt-2 text-2xl font-semibold tracking-tight tabular-nums', valueTone)}>{value}</div>
-            {hint && <div className="mt-1 text-xs text-gray-400">{hint}</div>}
+
+            <div className={cn('mt-2 text-2xl font-bold tracking-tight tabular-nums', valueTone)}>
+                {value}
+            </div>
+
+            {(hint || trend) && (
+                <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {trend && (
+                        <span
+                            className={cn(
+                                'font-semibold',
+                                trend.direction === 'up' ? 'text-emerald-600' : 'text-rose-600'
+                            )}
+                        >
+                            {trend.direction === 'up' ? '↑' : '↓'} {trend.label}
+                        </span>
+                    )}
+                    {hint && <span className="truncate">{hint}</span>}
+                </div>
+            )}
         </div>
     );
 }

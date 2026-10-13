@@ -165,14 +165,14 @@ export default function PlanForm({
                                 <TextField label="Trial days" type="number" value={String(form.data.trial_days)} error={form.errors.trial_days} onChange={(v) => form.setData('trial_days', Number(v))} />
                             </div>
 
-                            <div className="rounded-lg border border-gray-200 p-3">
+                            <div className="rounded-lg border border-border bg-card p-3.5 shadow-2xs">
                                 <div className="mb-2 flex items-center justify-between">
-                                    <span className="text-xs font-medium text-gray-600">Additional currency prices</span>
-                                    <button type="button" onClick={() => setExtraPrices((p) => [...p, { currency: currencies[0]?.value ?? 'USD', interval: 'monthly', price: '' }])} className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
+                                    <span className="text-xs font-medium text-muted-foreground">Additional currency prices</span>
+                                    <button type="button" onClick={() => setExtraPrices((p) => [...p, { currency: currencies[0]?.value ?? 'USD', interval: 'monthly', price: '' }])} className="text-xs font-medium text-primary hover:underline">
                                         + Add price
                                     </button>
                                 </div>
-                                {extraPrices.length === 0 && <p className="text-xs text-gray-400">No extra currencies. Tenants billed in a currency without a price fall back to {form.data.currency}.</p>}
+                                {extraPrices.length === 0 && <p className="text-xs text-muted-foreground">No extra currencies. Tenants billed in a currency without a price fall back to {form.data.currency}.</p>}
                                 {extraPrices.map((row, i) => (
                                     <div key={i} className="mb-2 flex flex-wrap items-end gap-2">
                                         <SelectField label="Currency" value={row.currency} options={currencies} onChange={(v) => setExtraPrices((p) => p.map((r, j) => (j === i ? { ...r, currency: v } : r)))} />
@@ -211,9 +211,17 @@ export default function PlanForm({
                             <FormSection title="Included modules" description="What this plan entitles.">
                                 <div className="grid grid-cols-1 gap-2">
                                     {feature_options.map((feature) => (
-                                        <label key={feature.value} className={'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ' + (form.data.features.includes(feature.value) ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-700')}>
-                                            <input type="checkbox" className="rounded border-gray-300 text-indigo-600" checked={form.data.features.includes(feature.value)} onChange={() => toggleFeature(feature.value)} />
-                                            {feature.label}
+                                        <label 
+                                            key={feature.value} 
+                                            className={'flex items-center gap-2.5 rounded-lg border p-3 text-sm cursor-pointer select-none transition ' + (form.data.features.includes(feature.value) ? 'border-primary/50 bg-primary/5 text-foreground font-medium' : 'border-border text-muted-foreground hover:border-border/80')}
+                                        >
+                                            <input 
+                                                type="checkbox" 
+                                                className="h-4 w-4 rounded border-input text-primary shadow-2xs focus-visible:ring-1 focus-visible:ring-ring" 
+                                                checked={form.data.features.includes(feature.value)} 
+                                                onChange={() => toggleFeature(feature.value)} 
+                                            />
+                                            <span>{feature.label}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -221,16 +229,16 @@ export default function PlanForm({
                         </Card>
 
                         {editing && (
-                            <Card className="p-4 text-sm text-gray-500">
+                            <Card className="p-4 text-sm text-muted-foreground">
                                 <div className="flex items-center justify-between">
                                     <span>Version</span>
                                     <Badge tone="neutral">v{plan.version}</Badge>
                                 </div>
                                 <div className="mt-2 flex items-center justify-between">
                                     <span>Subscribers</span>
-                                    <span className="font-medium text-gray-800">{plan.subscriptions_count}</span>
+                                    <span className="font-semibold text-foreground">{plan.subscriptions_count}</span>
                                 </div>
-                                <Link href={route('platform.subscriptions.index')} className="mt-3 inline-block text-xs font-medium text-indigo-600 hover:text-indigo-700">
+                                <Link href={route('platform.subscriptions.index')} className="mt-3 inline-block text-xs font-medium text-primary hover:underline">
                                     View subscriptions →
                                 </Link>
                             </Card>

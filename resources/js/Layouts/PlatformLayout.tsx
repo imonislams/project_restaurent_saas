@@ -2,8 +2,9 @@ import { IconName } from '@/Components/Icon';
 import { PageHeader, ToastProvider } from '@/Components/ui';
 import { useT } from '@/i18n';
 import AppShell, { NavGroup, NavItem } from '@/Layouts/AppShell';
-import { usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode } from 'react';
+import { Store } from 'lucide-react';
 
 interface NavSpec {
     label: string;
@@ -22,9 +23,7 @@ interface NavSection {
 /**
  * Platform control-center information architecture. Every item is gated by a
  * platform.* permission — filtered here for the UI and enforced on the route
- * server-side. Each destination is a distinct, real page: near-duplicates are
- * surfaced as tabs (Tenants → verification, Subscriptions → trials/cancellations)
- * rather than separate menu entries.
+ * server-side.
  */
 const NAV: NavSection[] = [
     {
@@ -172,15 +171,47 @@ export default function PlatformLayout({
             })),
     })).filter((section) => section.items.length > 0);
 
+    const page = usePage().props as Record<string, any>;
+    const locale = page.locale ?? 'en';
+    const locales: { value: string; label: string }[] = page.locales ?? [];
+
+    const topbarRight = (
+        <div className="flex items-center gap-2">
+            <Link
+                href={route('dashboard')}
+                className="flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-accent transition-colors shadow-2xs cursor-pointer"
+                title="Return to Restaurant App"
+            >
+                <Store className="h-3.5 w-3.5 text-primary" />
+                <span className="hidden sm:inline">Restaurant App</span>
+            </Link>
+            {locales.length > 1 && (
+                <select
+                    value={locale}
+                    onChange={(e) => router.post(route('locale.update'), { locale: e.target.value }, { preserveScroll: true })}
+                    className="h-8 rounded-md border border-input bg-background py-1 px-2.5 text-xs text-foreground focus:ring-1 focus:ring-ring shadow-xs cursor-pointer"
+                    aria-label={t('shell.language')}
+                >
+                    {locales.map((l) => (
+                        <option key={l.value} value={l.value}>
+                            {l.label}
+                        </option>
+                    ))}
+                </select>
+            )}
+        </div>
+    );
+
     return (
         <ToastProvider>
             <AppShell
-                dark
+                dark={false}
                 padded
                 brand={{ title: t('shell.control'), subtitle: t('shell.platform') }}
                 nav={nav}
                 header={<PageHeader title={title} description={description} actions={actions} />}
-                user={{ name: auth.user?.name ?? '', email: auth.user?.email ?? '' }}
+                topbarRight={topbarRight}
+                user={{ name: auth.user?.name ?? '', email: auth.user?.email ?? '', role: 'Platform Admin' }}
             >
                 {children}
             </AppShell>

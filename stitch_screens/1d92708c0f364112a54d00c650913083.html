@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-tint": "#b12c13", "on-background": "#1a1c1a", "primary-fixed-dim": "#ffb4a4", "tertiary-container": "#73747a", "inverse-on-surface": "#f2f1ee", "inverse-surface": "#2f312f", "primary": "#ae2a10", "surface-bright": "#faf9f6", "surface-variant": "#e3e2e0", "tertiary": "#5a5c61", "surface": "#faf9f6", "on-secondary-container": "#52695d", "on-tertiary-fixed": "#1a1c20", "on-surface": "#1a1c1a", "on-surface-variant": "#5a413c", "inverse-primary": "#ffb4a4", "tertiary-fixed": "#e2e2e8", "surface-container": "#efeeeb", "on-primary-fixed-variant": "#8d1600", "on-secondary-fixed-variant": "#354c40", "surface-container-lowest": "#ffffff", "on-tertiary-container": "#fefcff", "secondary-container": "#cfe9d9", "on-tertiary": "#ffffff", "on-secondary-fixed": "#092016", "on-secondary": "#ffffff", "error": "#ba1a1a", "on-primary": "#ffffff", "surface-dim": "#dbdad7", "primary-fixed": "#ffdad3", "outline-variant": "#e2bfb7", "surface-container-low": "#f4f3f0", "tertiary-fixed-dim": "#c6c6cc", "surface-container-highest": "#e3e2e0", "secondary-fixed": "#cfe9d9", "secondary-fixed-dim": "#b3ccbe", "on-error": "#ffffff", "primary-container": "#d04327", "background": "#faf9f6", "on-error-container": "#93000a", "on-tertiary-fixed-variant": "#45474b", "on-primary-fixed": "#3e0500", "on-primary-container": "#fffbff", "error-container": "#ffdad6", "secondary": "#4c6358", "outline": "#8e706a", "surface-container-high": "#e9e8e5" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xs": "0.25rem", "gutter-sm": "1rem", "space-2xl": "4rem", "space-md": "1rem", "margin": "3rem", "space-sm": "0.5rem", "gutter": "1.5rem", "space-xl": "2.5rem", "space-lg": "1.5rem", "space-3xl": "6rem", "margin-sm": "1.25rem" }, "fontFamily": { "display-xl": [ "Plus Jakarta Sans" ], "headline-sm": [ "Plus Jakarta Sans" ], "mono-metric": [ "Space Mono" ], "headline-lg-mobile": [ "Plus Jakarta Sans" ], "mono-ticket": [ "Space Mono" ], "label-caps": [ "Space Mono" ], "headline-lg": [ "Plus Jakarta Sans" ], "body-md": [ "Plus Jakarta Sans" ], "display-xl-mobile": [ "Plus Jakarta Sans" ], "body-lg": [ "Plus Jakarta Sans" ], "headline-md": [ "Plus Jakarta Sans" ], "body-sm": [ "Plus Jakarta Sans" ] }, "fontSize": { "display-xl": [ "64px", { "lineHeight": "70px", "letterSpacing": "-0.03em", "fontWeight": "800" } ], "headline-sm": [ "20px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "mono-metric": [ "28px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "headline-lg-mobile": [ "28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "mono-ticket": [ "13px", { "lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "400" } ], "label-caps": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" } ], "headline-lg": [ "40px", { "lineHeight": "48px", "letterSpacing": "-0.025em", "fontWeight": "700" } ], "body-md": [ "15px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" } ], "display-xl-mobile": [ "38px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "800" } ], "body-lg": [ "18px", { "lineHeight": "28px", "letterSpacing": "-0.005em", "fontWeight": "400" } ], "headline-md": [ "26px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" } ], "body-sm": [ "13px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "500" } ] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-xl border-b border-surface-container-highest shadow-[0_1px_8px_rgba(0,0,0,0.03)]"><div class="h-20 max-w-7xl mx-auto px-gutter flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-2xl"><a class="flex items-baseline gap-space-xs group" data-path="home" href="#"><span class="font-display-xl text-headline-sm font-extrabold tracking-tight text-on-surface">mise<span class="text-primary">.</span></span><span class="font-label-caps text-label-caps uppercase text-secondary bg-secondary-container px-space-xs py-0.5 rounded">pos</span></a><nav class="hidden lg:flex items-center gap-space-lg" data-active-classes="text-primary font-semibold"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="product" href="#">Product</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="features" href="#">Features</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="solutions" href="#">Solutions</a><a aria-current="page" class="transition-colors text-primary font-semibold" data-path="pricing" href="#">Pricing</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="resources" href="#">Resources</a></nav></div><div class="flex items-center gap-space-md"><a class="hidden sm:inline-flex font-body-sm text-body-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors px-space-sm py-space-xs" data-path="login" href="#">Sign In</a><a class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold px-space-lg py-space-sm rounded-lg shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]" data-path="signup" href="#">Start Free Trial</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- SECTION 1: EDITORIAL PRICING HEADER -->
+<section class="relative w-full max-w-7xl mx-auto px-gutter pt-space-2xl pb-space-xl">
+<div class="flex flex-col items-center text-center max-w-3xl mx-auto">
+<div class="inline-flex items-center gap-space-xs bg-surface-container px-space-md py-space-xs rounded-full shadow-sm mb-space-md">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant tracking-wider">Transparent, Scale-Tested Pricing</span>
+</div>
+<h1 class="font-display-xl text-display-xl text-on-surface tracking-tight mb-space-md">
+        Simple, honest plans for every hospitality stage<span class="text-primary">.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed max-w-2xl">
+        No hidden transaction penalties, no forced hardware bundles, and no surprise termination fees. Choose your tier or explore a 14-day unrestricted trial.
+      </p>
+<!-- Billing Cycle Switcher -->
+<div class="mt-space-xl inline-flex items-center p-1 bg-surface-container rounded-full shadow-sm">
+<button class="px-space-lg py-space-xs rounded-full font-body-sm text-body-sm transition-all duration-200 text-on-surface-variant hover:text-on-surface" id="btn-monthly" onclick="setBilling('monthly')" type="button">
+          Monthly Billing
+        </button>
+<button class="px-space-lg py-space-xs rounded-full font-body-sm text-body-sm font-semibold transition-all duration-200 bg-surface-container-lowest text-on-surface shadow-sm flex items-center gap-space-xs" id="btn-annual" onclick="setBilling('annual')" type="button">
+<span>Billed Annually</span>
+<span class="font-label-caps text-[10px] uppercase text-primary bg-primary-fixed px-2 py-0.5 rounded-full font-bold">Save 20%</span>
+</button>
+</div>
+</div>
+</section>
+<!-- SECTION 2: THREE-COLUMN ARCHITECTURAL TIER CARDS -->
+<section class="w-full max-w-7xl mx-auto px-gutter py-space-lg">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter items-stretch">
+<!-- Tier 1: Counter & Café -->
+<div class="flex flex-col justify-between bg-surface-container-lowest rounded-xl p-space-xl shadow-sm transition-all hover:shadow-md">
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<span class="font-label-caps text-label-caps uppercase text-tertiary tracking-wider">Tier 01 • Entry</span>
+<span class="material-symbols-outlined text-tertiary text-[20px]">local_cafe</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-space-xs">Counter &amp; Café</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant min-h-[40px] mb-space-lg">
+            Single-station cafes, artisan bakeries, coffee roasters, and high-velocity takeaway windows.
+          </p>
+<div class="py-space-md bg-surface-container-low rounded-lg px-space-md mb-space-lg flex items-baseline gap-space-xs">
+<span class="font-mono-metric text-mono-metric text-on-surface price-counter">$49</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ month</span>
+<span class="font-label-caps text-label-caps uppercase text-tertiary ml-auto billing-caption">Billed annually</span>
+</div>
+<div class="space-y-space-sm mb-space-xl">
+<span class="font-label-caps text-label-caps uppercase text-tertiary block mb-space-xs">Included Operations</span>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">1 dedicated POS Register terminal</span>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">Unlimited menu items &amp; modifier cascades</span>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">Basic ingredient inventory &amp; 86-list tracking</span>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">Staff PIN switching &amp; cash drawer audits</span>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">Standard priority email &amp; in-app chat support</span>
+</div>
+</div>
+</div>
+<div class="pt-space-md">
+<a class="w-full inline-flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface font-body-sm text-body-sm font-semibold px-space-lg py-space-sm rounded-lg transition-all" href="#">
+            Start 14-Day Free Trial
+          </a>
+<span class="font-label-caps text-center text-[10px] text-tertiary block mt-space-xs uppercase tracking-wider">No credit card required</span>
+</div>
+</div>
+<!-- Tier 2: Full-Service Restaurant (Most Popular / Highlighted) -->
+<div class="relative flex flex-col justify-between bg-surface-container-lowest rounded-xl p-space-xl shadow-md lg:-translate-y-2">
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-on-primary font-label-caps text-[10px] uppercase font-bold tracking-widest px-space-md py-1 rounded-full shadow-sm whitespace-nowrap">
+          Recommended for Dining Rooms
+        </div>
+<div>
+<div class="flex items-center justify-between mb-space-md pt-space-xs">
+<span class="font-label-caps text-label-caps uppercase text-primary font-bold tracking-wider">Tier 02 • Dining &amp; Bar</span>
+<span class="material-symbols-outlined text-primary text-[20px]">restaurant</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-space-xs">Full-Service Restaurant</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant min-h-[40px] mb-space-lg">
+            Neighborhood bistros, fine dining spaces, craft bars, and multi-station service dining rooms.
+          </p>
+<div class="py-space-md bg-secondary-container rounded-lg px-space-md mb-space-lg flex items-baseline gap-space-xs">
+<span class="font-mono-metric text-mono-metric text-on-secondary-fixed price-fullservice">$99</span>
+<span class="font-body-sm text-body-sm text-on-secondary-fixed-variant">/ month</span>
+<span class="font-label-caps text-label-caps uppercase text-secondary ml-auto billing-caption font-bold">Billed annually</span>
+</div>
+<div class="space-y-space-sm mb-space-xl">
+<span class="font-label-caps text-label-caps uppercase text-tertiary block mb-space-xs">Full Hospitality Suite</span>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">Up to 3 active POS / Handheld stations</span>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">Native Kitchen Display System (KDS) chit routing</span>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">Interactive floor map &amp; table turn timer metrics</span>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">Sub-recipe cost yields &amp; threshold stock warnings</span>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">Granular split checks, seat pacing &amp; auto-gratuity</span>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">24/7 priority emergency live phone hotline</span>
+</div>
+</div>
+</div>
+<div class="pt-space-md">
+<a class="w-full inline-flex items-center justify-center bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold px-space-lg py-space-sm rounded-lg shadow transition-all hover:scale-[1.01] active:scale-[0.99]" href="#">
+            Start 14-Day Free Trial
+          </a>
+<span class="font-label-caps text-center text-[10px] text-tertiary block mt-space-xs uppercase tracking-wider">Unrestricted access • instant setup</span>
+</div>
+</div>
+<!-- Tier 3: Enterprise & Multi-Location -->
+<div class="flex flex-col justify-between bg-surface-container-lowest rounded-xl p-space-xl shadow-sm transition-all hover:shadow-md">
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<span class="font-label-caps text-label-caps uppercase text-tertiary tracking-wider">Tier 03 • Group</span>
+<span class="material-symbols-outlined text-tertiary text-[20px]">domain</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-space-xs">Enterprise &amp; Multi-Branch</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant min-h-[40px] mb-space-lg">
+            Multi-concept hospitality groups, regional chains, and shared commissary production hubs.
+          </p>
+<div class="py-space-md bg-surface-container-low rounded-lg px-space-md mb-space-lg flex items-baseline gap-space-xs">
+<span class="font-mono-metric text-mono-metric text-on-surface price-enterprise">$199</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ mo / branch</span>
+<span class="font-label-caps text-label-caps uppercase text-tertiary ml-auto billing-caption">Billed annually</span>
+</div>
+<div class="space-y-space-sm mb-space-xl">
+<span class="font-label-caps text-label-caps uppercase text-tertiary block mb-space-xs">Enterprise Orchestration</span>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">Unlimited POS, handheld &amp; KDS stations per hub</span>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">Centralized master menu matrix &amp; regional pricing</span>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">Commissary transfer logistics &amp; combined supplier POs</span>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">Cross-unit consolidated P&amp;L and royalty tracking</span>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">Dedicated Account Director &amp; menu migration concierge</span>
+</div>
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">Custom ERP sync, custom webhooks &amp; 99.99% SLA</span>
+</div>
+</div>
+</div>
+<div class="pt-space-md">
+<a class="w-full inline-flex items-center justify-center bg-on-surface hover:bg-inverse-surface text-surface-container-lowest font-body-sm text-body-sm font-semibold px-space-lg py-space-sm rounded-lg transition-all" href="#">
+            Schedule Executive Walkthrough
+          </a>
+<span class="font-label-caps text-center text-[10px] text-tertiary block mt-space-xs uppercase tracking-wider">Volume discounts at 5+ units</span>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 3: ADD-ONS & HARDWARE AGNOSTIC PHILOSOPHY -->
+<section class="w-full max-w-7xl mx-auto px-gutter py-space-2xl">
+<div class="bg-surface-container-low rounded-xl p-space-xl lg:p-space-2xl shadow-sm">
+<div class="max-w-2xl mb-space-xl">
+<span class="font-label-caps text-label-caps uppercase text-tertiary tracking-wider block mb-space-xs">Modular Architecture</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-space-sm">Modular add-ons when you need them.</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Expand system capability on your terms. No bloated locked bundles — scale your operational stack precisely as your dining room grows.
+        </p>
+</div>
+<!-- Addon Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter mb-space-2xl">
+<div class="bg-surface-container-lowest p-space-lg rounded-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">desktop_windows</span>
+<span class="font-mono-metric text-[18px] font-bold text-on-surface">+$25<span class="text-body-sm font-normal text-on-surface-variant">/mo</span></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-space-xs">KDS Stations</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Expeditor &amp; line cook screens with real-time station timers and coursing hold toggles.
+            </p>
+</div>
+<div class="mt-space-md pt-space-xs">
+<span class="font-label-caps text-[10px] uppercase text-secondary">Per screen license</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-lg rounded-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">qr_code_scanner</span>
+<span class="font-mono-metric text-[18px] font-bold text-on-surface">+$39<span class="text-body-sm font-normal text-on-surface-variant">/mo</span></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-space-xs">Digital QR &amp; Web Order</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Direct table payment and web takeaway orders. 0% Mise commissions or marketplace fees.
+            </p>
+</div>
+<div class="mt-space-md pt-space-xs">
+<span class="font-label-caps text-[10px] uppercase text-secondary">Zero commission model</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-lg rounded-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">calculate</span>
+<span class="font-mono-metric text-[18px] font-bold text-on-surface">+$45<span class="text-body-sm font-normal text-on-surface-variant">/mo</span></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-space-xs">Recipe COGS Engine</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Yield loss calculations, plate profit margin analytics, and automatic vendor invoice scanning.
+            </p>
+</div>
+<div class="mt-space-md pt-space-xs">
+<span class="font-label-caps text-[10px] uppercase text-secondary">Live margin optimization</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-lg rounded-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">devices</span>
+<span class="font-mono-metric text-[18px] font-bold text-secondary">$0<span class="text-body-sm font-normal text-on-surface-variant">/mo</span></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-space-xs">BYO Handhelds</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Deploy server handheld terminals using standard iPhones or Android devices with zero hardware lock.
+            </p>
+</div>
+<div class="mt-space-md pt-space-xs">
+<span class="font-label-caps text-[10px] uppercase text-secondary font-bold">Unmetered BYOD</span>
+</div>
+</div>
+</div>
+<!-- Hardware Freedom Banner -->
+<div class="bg-surface-container-lowest rounded-xl p-space-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-space-lg shadow-sm">
+<div class="flex items-start gap-space-md">
+<div class="w-12 h-12 rounded-lg bg-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-secondary text-[26px]">print</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-1">Hardware Agnostic by Principle</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-2xl">
+              Use the commercial equipment you already own. Mise runs natively on iPads, Android tablets, Elo touch displays, Star Micronics &amp; Epson thermal receipt printers, and APG cash drawers.
+            </p>
+</div>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<span class="font-mono-ticket text-mono-ticket text-secondary bg-secondary-container px-space-md py-1.5 rounded-full font-bold">
+            ESC/POS • iOS • Android
+          </span>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 4: GRANULAR FEATURE COMPARISON MATRIX -->
+<section class="w-full max-w-7xl mx-auto px-gutter py-space-2xl">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-space-xl">
+<div>
+<span class="font-label-caps text-label-caps uppercase text-tertiary tracking-wider block mb-space-xs">Operational Capabilities</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Granular Feature Ledger</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-md mt-space-sm md:mt-0">
+        Every capability engineered for speed, table turnover velocity, and fiscal accountability during critical service hours.
+      </p>
+</div>
+<!-- Matrix Table Container -->
+<div class="overflow-x-auto bg-surface-container-lowest rounded-xl shadow-sm">
+<table class="w-full text-left border-collapse min-w-[700px]">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="py-space-md px-space-lg font-label-caps text-label-caps uppercase text-tertiary w-2/5">System Module</th>
+<th class="py-space-md px-space-md font-label-caps text-label-caps uppercase text-center text-on-surface w-1/5">Counter &amp; Café</th>
+<th class="py-space-md px-space-md font-label-caps text-label-caps uppercase text-center text-primary font-bold w-1/5">Full-Service</th>
+<th class="py-space-md px-space-lg font-label-caps text-label-caps uppercase text-center text-on-surface w-1/5">Enterprise</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm divide-y divide-surface-container-high">
+<!-- Category 1 -->
+<tr class="bg-surface-container-high/60">
+<td class="py-space-xs px-space-lg font-label-caps text-label-caps uppercase text-tertiary tracking-wider" colspan="4">
+              01 • Point of Sale &amp; Register Speed
+            </td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Offline payment storage &amp; continuous mode</td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Dynamic cascading modifiers &amp; combo builder</td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Sub-second biometric &amp; numeric PIN staff switching</td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Simultaneous multi-terminal split ticket checkouts</td>
+<td class="py-space-sm px-space-md text-center text-tertiary">—</td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<!-- Category 2 -->
+<tr class="bg-surface-container-high/60">
+<td class="py-space-xs px-space-lg font-label-caps text-label-caps uppercase text-tertiary tracking-wider" colspan="4">
+              02 • Kitchen Operations &amp; Dining Floor
+            </td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Floor architect with table status &amp; turnaround timers</td>
+<td class="py-space-sm px-space-md text-center text-tertiary">—</td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Coursing management (Appetizer, Entree, Dessert holds)</td>
+<td class="py-space-sm px-space-md text-center text-tertiary">—</td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Multi-station chit routing (Grill, Cold, Bar, Pass)</td>
+<td class="py-space-sm px-space-md text-center text-tertiary">—</td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Server watch notification paging &amp; ready alerts</td>
+<td class="py-space-sm px-space-md text-center text-tertiary">—</td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<!-- Category 3 -->
+<tr class="bg-surface-container-high/60">
+<td class="py-space-xs px-space-lg font-label-caps text-label-caps uppercase text-tertiary tracking-wider" colspan="4">
+              03 • Inventory, Costing &amp; Sourcing
+            </td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Unit-level raw ingredient consumption tracking</td>
+<td class="py-space-sm px-space-md text-center font-mono-ticket text-[12px] text-tertiary">Basic</td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Automated par-level purchase order generation</td>
+<td class="py-space-sm px-space-md text-center text-tertiary">—</td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Commissary transfers &amp; central supply replenishment</td>
+<td class="py-space-sm px-space-md text-center text-tertiary">—</td>
+<td class="py-space-sm px-space-md text-center text-tertiary">—</td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Daily waste log analytics &amp; variance yield accounting</td>
+<td class="py-space-sm px-space-md text-center text-tertiary">—</td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<!-- Category 4 -->
+<tr class="bg-surface-container-high/60">
+<td class="py-space-xs px-space-lg font-label-caps text-label-caps uppercase text-tertiary tracking-wider" colspan="4">
+              04 • Management, Labor &amp; Analytics
+            </td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Automated end-of-day Z-Report generation &amp; email</td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Staff time-clock &amp; live sales-to-labor % monitoring</td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Direct QuickBooks, Xero &amp; Restaurant365 ledger sync</td>
+<td class="py-space-sm px-space-md text-center text-tertiary">—</td>
+<td class="py-space-sm px-space-md text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Franchise royalty fee tracking &amp; cross-hub analytics</td>
+<td class="py-space-sm px-space-md text-center text-tertiary">—</td>
+<td class="py-space-sm px-space-md text-center text-tertiary">—</td>
+<td class="py-space-sm px-space-lg text-center"><span class="material-symbols-outlined text-secondary text-[18px]">check</span></td>
+</tr>
+<!-- Category 5 -->
+<tr class="bg-surface-container-high/60">
+<td class="py-space-xs px-space-lg font-label-caps text-label-caps uppercase text-tertiary tracking-wider" colspan="4">
+              05 • Support, SLA &amp; Concierge
+            </td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Support channel coverage</td>
+<td class="py-space-sm px-space-md text-center font-body-sm text-[12px] text-on-surface-variant">Email &amp; Chat</td>
+<td class="py-space-sm px-space-md text-center font-body-sm text-[12px] text-primary font-semibold">24/7 Priority Phone</td>
+<td class="py-space-sm px-space-lg text-center font-body-sm text-[12px] text-on-surface font-semibold">Dedicated Lead</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-lg text-on-surface">Guaranteed Uptime Service Level Agreement</td>
+<td class="py-space-sm px-space-md text-center font-mono-ticket text-[12px] text-on-surface-variant">99.9%</td>
+<td class="py-space-sm px-space-md text-center font-mono-ticket text-[12px] text-on-surface font-semibold">99.95%</td>
+<td class="py-space-sm px-space-lg text-center font-mono-ticket text-[12px] text-secondary font-bold">99.99%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- SECTION 5: TRANSPARENT PAYMENT PROCESSING BREAKDOWN & CALCULATOR -->
+<section class="w-full max-w-7xl mx-auto px-gutter py-space-2xl">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-center">
+<!-- Visual Architecture & Rate Breakdown -->
+<div class="lg:col-span-6 bg-surface-container-lowest rounded-xl p-space-xl shadow-sm">
+<div class="inline-flex items-center gap-space-xs bg-secondary-container px-space-md py-0.5 rounded-full mb-space-md">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-label-caps text-label-caps uppercase text-on-secondary-container font-semibold">Clear interchange mechanics</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mb-space-sm">Zero markup processing. Or keep your existing merchant.</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-space-lg">
+          Unlike legacy systems that lock you into predatory 3.5% credit card fees or penalize you for using external payment gateways, Mise provides radical transparency.
+        </p>
+<div class="grid grid-cols-2 gap-space-md mb-space-lg">
+<div class="p-space-md bg-surface-container-low rounded-lg">
+<span class="font-label-caps text-[10px] uppercase text-tertiary block mb-1">Mise Direct Payments</span>
+<div class="font-mono-metric text-headline-md text-primary font-bold">2.4% + 10¢</div>
+<span class="font-body-sm text-[12px] text-on-surface-variant mt-1 block">In-person tap, chip, &amp; swipe. Next-day deposits.</span>
+</div>
+<div class="p-space-md bg-surface-container-low rounded-lg">
+<span class="font-label-caps text-[10px] uppercase text-tertiary block mb-1">Bring Your Own Gateway</span>
+<div class="font-mono-metric text-headline-md text-on-surface font-bold">$0 Surcharge</div>
+<span class="font-body-sm text-[12px] text-on-surface-variant mt-1 block">Compatible with Worldpay, First Data, TSYS &amp; Stripe.</span>
+</div>
+</div>
+<div class="p-space-md bg-surface-container rounded-lg flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px] shrink-0 mt-0.5">verified</span>
+<p class="font-body-sm text-body-sm text-on-surface">
+            We never charge non-compliance fines, monthly minimum statement penalties, or early account termination surcharges.
+          </p>
+</div>
+</div>
+<!-- Transparent Simulator Tool -->
+<div class="lg:col-span-6 bg-surface-container rounded-xl p-space-xl shadow-sm">
+<div class="flex items-center justify-between mb-space-md">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Fee Transparency Calculator</h4>
+<span class="font-label-caps text-label-caps uppercase text-tertiary">Real Estimates</span>
+</div>
+<div class="space-y-space-lg">
+<div>
+<div class="flex justify-between items-center mb-space-xs font-body-sm">
+<span class="text-on-surface font-medium">Estimated Monthly Card Volume</span>
+<span class="font-mono-metric text-[18px] text-primary font-bold" id="volume-display">$60,000</span>
+</div>
+<input class="w-full accent-primary h-2 bg-surface-container-highest rounded-lg cursor-pointer" id="volume-slider" max="250000" min="15000" oninput="updateCalculator(this.value)" step="5000" type="range" value="60000"/>
+<div class="flex justify-between font-mono-ticket text-[11px] text-tertiary mt-1">
+<span>$15,000/mo</span>
+<span>$125,000/mo</span>
+<span>$250,000/mo</span>
+</div>
+</div>
+<div class="p-space-lg bg-surface-container-lowest rounded-lg shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Estimated Mise Monthly POS (Full-Service)</span>
+<span class="font-mono-ticket text-mono-ticket font-bold text-on-surface">$99.00</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Typical In-Person Card Processing (2.4% + 10¢)</span>
+<span class="font-mono-ticket text-mono-ticket font-bold text-on-surface" id="proc-fee-display">$1,560.00</span>
+</div>
+<div class="flex items-center justify-between text-secondary font-semibold pt-space-xs border-t border-surface-container-high">
+<span class="font-body-sm text-body-sm">Average Savings vs. Closed Systems (3.2%)</span>
+<span class="font-mono-ticket text-headline-sm font-bold text-secondary" id="savings-display">+$360.00/mo</span>
+</div>
+</div>
+<p class="font-mono-ticket text-[11px] text-on-surface-variant leading-relaxed">
+            *Based on an average table ticket of $45. Closed system benchmark calculates a typical 3.2% proprietary terminal bundle rate.
+          </p>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 6: FAQS FOR DECISION MAKERS -->
+<section class="w-full max-w-7xl mx-auto px-gutter py-space-2xl">
+<div class="max-w-3xl mx-auto">
+<div class="text-center mb-space-2xl">
+<span class="font-label-caps text-label-caps uppercase text-tertiary tracking-wider block mb-space-xs">Clear Policies</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Frequently Asked Questions</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs">
+          Direct, honest answers for restaurant general managers, culinary directors, and operators.
+        </p>
+</div>
+<div class="space-y-space-md">
+<!-- Q1 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<button class="w-full flex items-center justify-between text-left group" onclick="toggleFaq('faq-1')" type="button">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Is there any long-term contract or cancellation fee?</span>
+<span class="material-symbols-outlined text-tertiary group-hover:text-primary transition-transform" id="faq-1-icon">expand_more</span>
+</button>
+<div class="hidden mt-space-md text-on-surface-variant font-body-md text-body-md pt-space-sm border-t border-surface-container-low" id="faq-1">
+            Never. Mise operates on pure monthly or annual subscription terms. You can cancel, downgrade, or upgrade your plan anytime without penalty, equipment clawback fees, or legal lock-ins.
+          </div>
+</div>
+<!-- Q2 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<button class="w-full flex items-center justify-between text-left group" onclick="toggleFaq('faq-2')" type="button">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">How does the 14-day free trial work?</span>
+<span class="material-symbols-outlined text-tertiary group-hover:text-primary transition-transform" id="faq-2-icon">expand_more</span>
+</button>
+<div class="hidden mt-space-md text-on-surface-variant font-body-md text-body-md pt-space-sm border-t border-surface-container-low" id="faq-2">
+            Your 14-day trial provides 100% unrestricted access to all features. You can import your actual restaurant menu, test receipt printing on existing network hardware, and run live demo service. No credit card is required to begin.
+          </div>
+</div>
+<!-- Q3 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<button class="w-full flex items-center justify-between text-left group" onclick="toggleFaq('faq-3')" type="button">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Do I need to buy proprietary hardware to switch to Mise?</span>
+<span class="material-symbols-outlined text-tertiary group-hover:text-primary transition-transform" id="faq-3-icon">expand_more</span>
+</button>
+<div class="hidden mt-space-md text-on-surface-variant font-body-md text-body-md pt-space-sm border-t border-surface-container-low" id="faq-3">
+            In over 90% of transitions, restaurants repurpose their existing hardware. Mise is native to iPadOS, Android, and web. Standard thermal receipt printers (Epson, Star) and standard RJ12 cash drawers pair instantly without proprietary adapter fees.
+          </div>
+</div>
+<!-- Q4 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<button class="w-full flex items-center justify-between text-left group" onclick="toggleFaq('faq-4')" type="button">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">How does billing work across multiple restaurant branches?</span>
+<span class="material-symbols-outlined text-tertiary group-hover:text-primary transition-transform" id="faq-4-icon">expand_more</span>
+</button>
+<div class="hidden mt-space-md text-on-surface-variant font-body-md text-body-md pt-space-sm border-t border-surface-container-low" id="faq-4">
+            Multi-branch groups receive unified master invoicing with itemized branch summaries. Automated tiered volume discounts apply immediately once your group scales beyond 4 active dining locations.
+          </div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 7: FINAL CONVERSION & REASSURANCE RUNWAY -->
+<section class="w-full max-w-7xl mx-auto px-gutter pt-space-xl pb-space-3xl">
+<div class="relative bg-surface-container-lowest rounded-2xl p-space-xl lg:p-space-3xl shadow-sm overflow-hidden">
+<!-- Decorative Backdrop Element -->
+<div class="absolute -right-20 -bottom-20 w-80 h-80 rounded-full bg-primary/5 blur-3xl pointer-events-none"></div>
+<div class="relative z-10 max-w-3xl">
+<div class="inline-flex items-center gap-space-xs bg-secondary-container px-space-md py-space-xs rounded-full shadow-sm mb-space-md">
+<span class="material-symbols-outlined text-secondary text-[16px]">bolt</span>
+<span class="font-label-caps text-label-caps uppercase text-on-secondary-container">Average switchover time: Under 48 hours</span>
+</div>
+<h2 class="font-display-xl text-headline-lg lg:text-display-xl text-on-surface tracking-tight mb-space-md">
+          Ready to elevate your dining room operations?
+        </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-space-2xl">
+          Get started with our 14-day zero-risk trial or speak directly with a former general manager who knows restaurant mechanics inside out.
+        </p>
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-space-md">
+<a class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold px-space-xl py-space-md rounded-lg shadow transition-all hover:scale-[1.02] active:scale-[0.98]" href="#">
+            Get Started in 20 Minutes
+          </a>
+<a class="inline-flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface font-body-sm text-body-sm font-semibold px-space-xl py-space-md rounded-lg transition-all" href="#">
+            Book a 1-on-1 Consultation
+          </a>
+</div>
+<div class="mt-space-xl flex flex-wrap items-center gap-space-lg font-mono-ticket text-mono-ticket text-tertiary">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[16px]">check</span> Zero credit card required
+          </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[16px]">check</span> Free menu file onboarding
+          </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[16px]">check</span> Cancel anytime
+          </span>
+</div>
+</div>
+</div>
+</section>
+<!-- Interactive Logic Script -->
+<script>
+    function setBilling(mode) {
+      const btnMonthly = document.getElementById('btn-monthly');
+      const btnAnnual = document.getElementById('btn-annual');
+      const counterEl = document.querySelector('.price-counter');
+      const fullserviceEl = document.querySelector('.price-fullservice');
+      const enterpriseEl = document.querySelector('.price-enterprise');
+      const captions = document.querySelectorAll('.billing-caption');
+
+      if (mode === 'monthly') {
+        btnMonthly.classList.add('bg-surface-container-lowest', 'text-on-surface', 'shadow-sm', 'font-semibold');
+        btnMonthly.classList.remove('text-on-surface-variant');
+        
+        btnAnnual.classList.remove('bg-surface-container-lowest', 'text-on-surface', 'shadow-sm', 'font-semibold');
+        btnAnnual.classList.add('text-on-surface-variant');
+
+        counterEl.textContent = '$59';
+        fullserviceEl.textContent = '$119';
+        enterpriseEl.textContent = '$239';
+
+        captions.forEach(c => c.textContent = 'Billed monthly');
+      } else {
+        btnAnnual.classList.add('bg-surface-container-lowest', 'text-on-surface', 'shadow-sm', 'font-semibold');
+        btnAnnual.classList.remove('text-on-surface-variant');
+
+        btnMonthly.classList.remove('bg-surface-container-lowest', 'text-on-surface', 'shadow-sm', 'font-semibold');
+        btnMonthly.classList.add('text-on-surface-variant');
+
+        counterEl.textContent = '$49';
+        fullserviceEl.textContent = '$99';
+        enterpriseEl.textContent = '$199';
+
+        captions.forEach(c => c.textContent = 'Billed annually');
+      }
+    }
+
+    function toggleFaq(id) {
+      const target = document.getElementById(id);
+      const icon = document.getElementById(id + '-icon');
+      if (target.classList.contains('hidden')) {
+        target.classList.remove('hidden');
+        icon.textContent = 'expand_less';
+      } else {
+        target.classList.add('hidden');
+        icon.textContent = 'expand_more';
+      }
+    }
+
+    function updateCalculator(volume) {
+      const volNum = Number(volume);
+      document.getElementById('volume-display').textContent = '$' + volNum.toLocaleString();
+
+      // Approx 2.4% + 10c on average ticket of $45
+      const txCount = volNum / 45;
+      const miseProcFee = (volNum * 0.024) + (txCount * 0.10);
+      document.getElementById('proc-fee-display').textContent = '$' + Math.round(miseProcFee).toLocaleString() + '.00';
+
+      // Competitor closed bundle benchmark ~3.2% + 15c
+      const compProcFee = (volNum * 0.032) + (txCount * 0.15);
+      const monthlySavings = compProcFee - miseProcFee;
+      document.getElementById('savings-display').textContent = '+$' + Math.round(monthlySavings).toLocaleString() + '.00/mo';
+    }
+  </script>
+</div></main><footer class="w-full bg-surface-container-low border-t border-surface-container-highest"><div class="max-w-7xl mx-auto px-gutter pt-space-3xl pb-space-2xl"><div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-space-2xl pb-space-2xl border-b border-surface-container-highest"><div class="lg:col-span-4 flex flex-col justify-between pr-0 lg:pr-space-xl"><div class="space-y-space-md"><div class="flex items-baseline gap-space-xs"><span class="font-display-xl text-headline-sm font-extrabold tracking-tight text-on-surface">mise<span class="text-primary">.</span></span></div><p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm">Engineered for ambitious restaurateurs and multi-location hospitality groups. High-velocity operations meet culinary precision.</p></div><div class="mt-space-xl space-y-space-sm"><span class="font-label-caps text-label-caps uppercase text-tertiary block">Dispatch &amp; Changelog</span><form class="flex items-center max-w-md gap-space-xs"><input class="bg-surface-container-lowest border border-surface-container-highest rounded-lg px-space-md py-space-sm font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-on-surface w-full" placeholder="chef@restaurant.com" type="email"/><button class="bg-on-surface hover:bg-inverse-surface text-surface-container-lowest font-body-sm text-body-sm px-space-md py-space-sm rounded-lg font-semibold shrink-0 transition-colors" type="button">Subscribe</button></form></div></div><div class="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-gutter"><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Platform</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">POS Terminal</li><li class="hover:text-on-surface cursor-pointer transition-colors">Kitchen Display (KDS)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Inventory Ledger</li><li class="hover:text-on-surface cursor-pointer transition-colors">Multi-Branch Hub</li><li class="hover:text-on-surface cursor-pointer transition-colors">Floor Architect</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Solutions</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Artisan Cafes</li><li class="hover:text-on-surface cursor-pointer transition-colors">Full-Service Dining</li><li class="hover:text-on-surface cursor-pointer transition-colors">Quick Service (QSR)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Ghost &amp; Cloud Kitchens</li><li class="hover:text-on-surface cursor-pointer transition-colors">Hospitality Groups</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Resources</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Operator Guides</li><li class="hover:text-on-surface cursor-pointer transition-colors">Hardware Catalog</li><li class="hover:text-on-surface cursor-pointer transition-colors">API Reference</li><li class="hover:text-on-surface cursor-pointer transition-colors">Changelog</li><li class="hover:text-on-surface cursor-pointer transition-colors">Kitchen Metrics</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Company</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Manifesto</li><li class="hover:text-on-surface cursor-pointer transition-colors">Careers (Hiring)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Contact Desk</li><li class="hover:text-on-surface cursor-pointer transition-colors">Press Kit</li><li class="hover:text-on-surface cursor-pointer transition-colors">Security Protocols</li></ul></div></div></div><div class="pt-space-xl flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex flex-wrap items-center gap-space-lg font-mono-ticket text-mono-ticket text-on-surface-variant"><span>© 2025 Mise Technologies, Inc.</span><a class="hover:text-on-surface transition-colors" href="#">Privacy Policy</a><a class="hover:text-on-surface transition-colors" href="#">Terms of Service</a><a class="hover:text-on-surface transition-colors" href="#">Cookie Protocol</a></div><div class="flex items-center gap-space-xs bg-secondary-container px-space-md py-space-xs rounded-full"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="font-label-caps text-label-caps uppercase text-on-secondary-container font-semibold">All Systems Operational</span></div></div></div></footer></body></html>

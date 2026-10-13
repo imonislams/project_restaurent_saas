@@ -48,7 +48,7 @@ export default function Register() {
             headerAction={
                 <Link
                     href={route('login')}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#0F3D30] hover:text-[#0B271F] transition-colors"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-container transition-colors"
                 >
                     <span>{t('auth.signin_link')}</span>
                     <svg
@@ -71,10 +71,10 @@ export default function Register() {
             {/* Form Header */}
             <div className="mb-8">
                 <div className="inline-flex items-center gap-1.5 rounded-md bg-stone-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-stone-600 mb-3">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     <span>Restaurant Onboarding</span>
                 </div>
-                <h1 className="font-display text-2xl font-bold tracking-tight text-[#0B271F] sm:text-3xl">
+                <h1 className="font-display text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">
                     {t('auth.create_account')}
                 </h1>
                 <p className="mt-2 text-sm text-stone-500 leading-relaxed">
@@ -83,12 +83,12 @@ export default function Register() {
 
                 {/* 6-Step Onboarding Roadmap */}
                 <div className="mt-4 rounded-xl border border-stone-200 bg-stone-50/80 p-3.5">
-                    <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#10B981] mb-2">
+                    <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-primary mb-2">
                         YOUR 6-STEP PATH TO FIRST SALE:
                     </div>
                     <ol className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] text-stone-600 font-medium">
-                        <li className="flex items-center gap-1.5 font-bold text-[#0B271F]">
-                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#0B271F] text-[9px] text-white">1</span>
+                        <li className="flex items-center gap-1.5 font-bold text-primary">
+                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[9px] text-white">1</span>
                             <span>Create account</span>
                         </li>
                         <li className="flex items-center gap-1.5">
@@ -277,7 +277,7 @@ export default function Register() {
                     <span>{t('auth.already_registered')} </span>
                     <Link
                         href={route('login')}
-                        className="font-semibold text-[#0F3D30] hover:text-emerald-700 hover:underline transition-colors"
+                        className="font-semibold text-primary hover:text-primary-container hover:underline transition-colors"
                     >
                         {t('auth.signin_link')}
                     </Link>

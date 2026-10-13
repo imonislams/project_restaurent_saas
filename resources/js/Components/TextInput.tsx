@@ -5,6 +5,7 @@ import {
     useImperativeHandle,
     useRef,
 } from 'react';
+import { cn } from '@/Components/ui/cn';
 
 export default forwardRef(function TextInput(
     {
@@ -31,10 +32,10 @@ export default forwardRef(function TextInput(
         <input
             {...props}
             type={type}
-            className={
-                'rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 shadow-none transition-all duration-150 placeholder:text-stone-400 hover:border-stone-300 focus:border-[#0F3D30] focus:outline-none focus:ring-4 focus:ring-[#0F3D30]/10 ' +
+            className={cn(
+                'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
                 className
-            }
+            )}
             ref={localRef}
         />
     );

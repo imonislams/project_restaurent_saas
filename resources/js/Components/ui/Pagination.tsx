@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { cn } from './cn';
 
 export interface PageLink {
     url: string | null;
@@ -6,22 +7,31 @@ export interface PageLink {
     active: boolean;
 }
 
-export default function Pagination({ links }: { links: PageLink[] }) {
+export default function Pagination({ links, className }: { links: PageLink[]; className?: string }) {
     if (!links || links.length <= 3) return null;
 
     return (
-        <nav className="mt-4 flex flex-wrap gap-1" aria-label="Pagination">
+        <nav className={cn('flex flex-wrap items-center gap-1.5 pt-4', className)} aria-label="Pagination">
             {links.map((link, i) =>
                 link.url ? (
                     <Link
                         key={i}
                         href={link.url}
                         preserveScroll
-                        className={'rounded px-3 py-1 text-sm ' + (link.active ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100')}
+                        className={cn(
+                            'inline-flex h-8 min-w-[2rem] items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors cursor-pointer',
+                            link.active
+                                ? 'border-primary bg-primary text-primary-foreground shadow-xs'
+                                : 'border-input bg-background text-foreground/80 hover:bg-accent hover:text-accent-foreground'
+                        )}
                         dangerouslySetInnerHTML={{ __html: link.label }}
                     />
                 ) : (
-                    <span key={i} className="px-3 py-1 text-sm text-gray-400" dangerouslySetInnerHTML={{ __html: link.label }} />
+                    <span
+                        key={i}
+                        className="inline-flex h-8 min-w-[2rem] items-center justify-center rounded-md border border-transparent px-2.5 text-xs text-muted-foreground/50 select-none"
+                        dangerouslySetInnerHTML={{ __html: link.label }}
+                    />
                 ),
             )}
         </nav>

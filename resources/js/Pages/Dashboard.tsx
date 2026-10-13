@@ -3,6 +3,19 @@ import type { BadgeTone } from '@/Components/ui';
 import { useT } from '@/i18n';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
+import {
+    ArrowRight,
+    Check,
+    ChevronRight,
+    Layers,
+    ShieldCheck,
+    ShoppingCart,
+    Store,
+    UserPlus,
+    Users,
+    UtensilsCrossed,
+} from 'lucide-react';
+import { cn } from '@/Components/ui/cn';
 
 interface ChecklistItem {
     key: string;
@@ -57,8 +70,8 @@ export default function Dashboard({
                 <div className="py-12">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         <Card>
-                            <CardBody>
-                                <p className="text-sm text-gray-600">This account is not linked to a restaurant.</p>
+                            <CardBody className="py-10 text-center">
+                                <p className="text-sm text-muted-foreground">This account is not linked to an active restaurant workspace.</p>
                             </CardBody>
                         </Card>
                     </div>
@@ -74,17 +87,19 @@ export default function Dashboard({
             header={
                 <PageHeader
                     title={tenant.name}
-                    description={`${tenant.timezone ?? '—'} · ${tenant.currency ?? '—'}`}
+                    description={`${tenant.timezone ?? 'UTC'} · Default Currency: ${tenant.currency ?? 'USD'}`}
                     actions={
-                        <>
-                            {tenant.on_trial && <Badge tone="warning">Trial</Badge>}
-                            <Badge tone={STATUS_TONE[tenant.status] ?? 'neutral'}>{tenant.status}</Badge>
+                        <div className="flex items-center gap-2">
+                            {tenant.on_trial && <Badge tone="warning">Active Trial</Badge>}
+                            <Badge tone={STATUS_TONE[tenant.status] ?? 'neutral'}>
+                                {tenant.status}
+                            </Badge>
                             {!tenant.onboarding_completed && (
                                 <Button size="sm" href={route('onboarding.index')}>
                                     {t('dash.continue_setup')}
                                 </Button>
                             )}
-                        </>
+                        </div>
                     }
                 />
             }
@@ -93,16 +108,35 @@ export default function Dashboard({
 
             <div className="py-6">
                 <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
-                    {flash?.success && <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{flash.success}</div>}
+                    {flash?.success && (
+                        <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs font-medium text-emerald-800 shadow-xs">
+                            <Check className="h-4 w-4 text-emerald-600 stroke-[2.5]" />
+                            <span>{flash.success}</span>
+                        </div>
+                    )}
 
-                    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                        <KpiCard label={t('dash.branches')} value={stats.branches ?? 0} />
-                        <KpiCard label={t('dash.users')} value={stats.users ?? 0} />
-                        <KpiCard label={t('dash.plan')} value={tenant.plan ?? '—'} hint={tenant.subscription_status ?? undefined} />
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                        <KpiCard
+                            label={t('dash.branches')}
+                            value={stats.branches ?? 0}
+                            icon={<Store className="h-4 w-4" />}
+                        />
+                        <KpiCard
+                            label={t('dash.users')}
+                            value={stats.users ?? 0}
+                            icon={<Users className="h-4 w-4" />}
+                        />
+                        <KpiCard
+                            label={t('dash.plan')}
+                            value={tenant.plan ? <span className="font-mono text-xl">{tenant.plan}</span> : '—'}
+                            hint={tenant.subscription_status ?? 'No subscription'}
+                            icon={<Layers className="h-4 w-4" />}
+                        />
                         <KpiCard
                             label={t('dash.status')}
-                            value={tenant.status}
+                            value={<span className="capitalize">{tenant.status}</span>}
                             tone={tenant.status === 'active' ? 'success' : tenant.status === 'suspended' ? 'danger' : 'warning'}
+                            icon={<ShieldCheck className="h-4 w-4" />}
                         />
                     </div>
 
@@ -110,36 +144,49 @@ export default function Dashboard({
                         <Card className="lg:col-span-2">
                             <CardHeader
                                 title={t('dash.checklist')}
-                                description={progress ? `${progress.completed}/${progress.total} ${t('dash.complete')}` : undefined}
+                                description={progress ? `${progress.completed} of ${progress.total} ${t('dash.complete')}` : undefined}
                             />
-                            <CardBody>
+                            <CardBody className="p-5">
                                 {progress && (
-                                    <div className="mb-5 h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                                        <div className="h-full rounded-full bg-indigo-600 transition-all" style={{ width: `${progress.percent}%` }} />
+                                    <div className="mb-5 h-2 w-full overflow-hidden rounded-full bg-muted">
+                                        <div
+                                            className="h-full rounded-full bg-primary transition-all duration-300"
+                                            style={{ width: `${progress.percent}%` }}
+                                        />
                                     </div>
                                 )}
 
-                                <ul className="divide-y divide-gray-100">
+                                <ul className="divide-y divide-border/60">
                                     {checklist.map((item) => (
-                                        <li key={item.key} className="flex items-center justify-between gap-3 py-3">
+                                        <li key={item.key} className="flex items-center justify-between gap-3 py-3 text-xs">
                                             <div className="flex min-w-0 items-center gap-3">
                                                 <span
-                                                    className={
-                                                        'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ' +
-                                                        (item.done ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-400')
-                                                    }
+                                                    className={cn(
+                                                        'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
+                                                        item.done
+                                                            ? 'bg-emerald-600 text-white'
+                                                            : 'bg-muted text-muted-foreground'
+                                                    )}
                                                 >
-                                                    {item.done ? '✓' : '•'}
+                                                    {item.done ? <Check className="h-3 w-3 stroke-[3]" /> : '•'}
                                                 </span>
-                                                <span className={'truncate text-sm ' + (item.done ? 'text-gray-400 line-through' : 'text-gray-700')}>{item.label}</span>
+                                                <span
+                                                    className={cn(
+                                                        'truncate font-medium',
+                                                        item.done ? 'text-muted-foreground line-through' : 'text-foreground'
+                                                    )}
+                                                >
+                                                    {item.label}
+                                                </span>
                                                 {item.required && !item.done && <Badge tone="danger">{t('dash.required')}</Badge>}
                                             </div>
                                             {!item.done && item.action && (
                                                 <Link
                                                     href={item.action.href}
-                                                    className="shrink-0 rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-indigo-600 transition hover:border-indigo-300 hover:bg-indigo-50"
+                                                    className="inline-flex shrink-0 items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                                                 >
-                                                    {item.action.label} →
+                                                    <span>{item.action.label}</span>
+                                                    <ArrowRight className="h-3 w-3" />
                                                 </Link>
                                             )}
                                         </li>
@@ -150,29 +197,57 @@ export default function Dashboard({
 
                         <div className="space-y-6">
                             <Card>
-                                <CardHeader title={t('dash.next_steps')} />
-                                <CardBody className="space-y-2">
-                                    <p className="text-sm text-gray-500">{t('dash.next_steps_body')}</p>
-                                    <div className="flex flex-col gap-2 pt-1">
-                                        <Link href={route('menu.index')} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-indigo-300 hover:bg-indigo-50">
-                                            {t('dash.go_menu')} →
+                                <CardHeader title={t('dash.next_steps')} description={t('dash.next_steps_body')} />
+                                <CardBody className="space-y-2 p-4">
+                                    <div className="flex flex-col gap-2">
+                                        <Link
+                                            href={route('menu.index')}
+                                            className="group flex items-center justify-between rounded-md border border-border/80 bg-background/50 hover:bg-accent/60 p-2.5 text-xs font-semibold text-foreground transition-all shadow-2xs hover:border-border"
+                                        >
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                                    <UtensilsCrossed className="h-3.5 w-3.5" />
+                                                </div>
+                                                <span>{t('dash.go_menu')}</span>
+                                            </div>
+                                            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                                         </Link>
-                                        <Link href={route('pos.index')} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-indigo-300 hover:bg-indigo-50">
-                                            {t('dash.open_pos')} →
+                                        <Link
+                                            href={route('pos.index')}
+                                            className="group flex items-center justify-between rounded-md border border-border/80 bg-background/50 hover:bg-accent/60 p-2.5 text-xs font-semibold text-foreground transition-all shadow-2xs hover:border-border"
+                                        >
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                                    <ShoppingCart className="h-3.5 w-3.5" />
+                                                </div>
+                                                <span>{t('dash.open_pos')}</span>
+                                            </div>
+                                            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                                         </Link>
-                                        <Link href={route('staff.index')} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-indigo-300 hover:bg-indigo-50">
-                                            {t('dash.invite_staff')} →
+                                        <Link
+                                            href={route('staff.index')}
+                                            className="group flex items-center justify-between rounded-md border border-border/80 bg-background/50 hover:bg-accent/60 p-2.5 text-xs font-semibold text-foreground transition-all shadow-2xs hover:border-border"
+                                        >
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                                    <UserPlus className="h-3.5 w-3.5" />
+                                                </div>
+                                                <span>{t('dash.invite_staff')}</span>
+                                            </div>
+                                            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                                         </Link>
                                     </div>
                                 </CardBody>
                             </Card>
 
                             {remaining.length > 0 && !tenant.onboarding_completed && (
-                                <Card>
+                                <Card className="border-amber-500/20 bg-amber-500/5">
                                     <CardHeader title={t('dash.finish_banner')} />
-                                    <CardBody className="space-y-2">
-                                        <StatusDot tone="warn" label={remaining.filter((i) => i.required).length + ' required'} />
-                                        <p className="text-xs text-gray-500">{warnings.map((w) => w.label).join(', ') || '—'}</p>
+                                    <CardBody className="space-y-2 p-4 text-xs">
+                                        <StatusDot tone="warn" label={`${remaining.filter((i) => i.required).length} required step(s) pending`} />
+                                        <p className="text-muted-foreground">
+                                            {warnings.map((w) => w.label).join(', ') || 'Complete remaining profile steps'}
+                                        </p>
                                     </CardBody>
                                 </Card>
                             )}

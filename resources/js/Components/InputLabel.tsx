@@ -1,4 +1,5 @@
 import { LabelHTMLAttributes } from 'react';
+import { cn } from '@/Components/ui/cn';
 
 export default function InputLabel({
     value,
@@ -10,12 +11,13 @@ export default function InputLabel({
     return (
         <label
             {...props}
-            className={
-                `block text-sm font-medium text-stone-700 mb-1.5 ${className}`
-            }
+            className={cn(
+                'block text-xs font-semibold text-foreground mb-1.5 tracking-tight',
+                className
+            )}
         >
             {value ? value : children}
-            {required && <span className="ml-1 text-red-500">*</span>}
+            {required && <span className="ml-1 text-destructive">*</span>}
         </label>
     );
 }

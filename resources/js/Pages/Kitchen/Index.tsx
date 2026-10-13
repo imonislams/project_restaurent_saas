@@ -278,7 +278,7 @@ export default function KitchenIndex({
                         className={`h-8 rounded-lg border py-1 pl-2.5 pr-8 text-xs font-semibold cursor-pointer shadow-subtle ${
                             isDarkMode
                                 ? 'bg-gray-800 border-gray-700 text-gray-200 focus:border-amber-500'
-                                : 'bg-gray-50 border-gray-300 text-gray-800 focus:border-restrly-500'
+                                : 'bg-gray-50 border-gray-300 text-gray-800 focus:border-primary'
                         }`}
                     >
                         {branches.map((b) => (

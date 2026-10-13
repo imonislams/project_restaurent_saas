@@ -1,8 +1,10 @@
-import { Badge, Button, Card, ConfirmDialog, DataTable, FilterBar, Pagination, SelectField, TextField } from '@/Components/ui';
+import { Badge, Button, Card, ConfirmDialog, DataTable, FilterBar, Pagination, SelectField, TextField, Input } from '@/Components/ui';
 import type { BadgeTone, Column, PageLink, SortState } from '@/Components/ui';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { Download, SlidersHorizontal, Users } from 'lucide-react';
+import { cn } from '@/Components/ui/cn';
 
 interface TenantRow {
     id: number;
@@ -127,6 +129,8 @@ export default function TenantsIndex({
         );
     };
 
+    const isVerificationTab = route().current('platform.tenants.verification');
+
     const columns: Column<TenantRow>[] = [
         {
             key: 'name',
@@ -134,16 +138,19 @@ export default function TenantsIndex({
             sortable: true,
             render: (t) => (
                 <div>
-                    <Link href={route('platform.tenants.show', t.id)} className="font-medium text-indigo-600 hover:text-indigo-700">
+                    <Link
+                        href={route('platform.tenants.show', t.id)}
+                        className="font-medium text-foreground hover:text-primary hover:underline underline-offset-4 transition-colors"
+                    >
                         {t.name}
                     </Link>
-                    <div className="text-xs text-gray-400">{t.business_email}</div>
+                    <div className="text-xs text-muted-foreground">{t.business_email}</div>
                 </div>
             ),
         },
         { key: 'status', label: 'Account', sortable: true, render: (t) => <Badge tone={STATUS_TONE[t.status] ?? 'neutral'}>{t.status_label}</Badge> },
         { key: 'verified', label: 'Verification', render: (t) => <Badge tone={t.verified ? 'success' : 'warning'}>{t.verified ? 'Verified' : 'Unverified'}</Badge> },
-        { key: 'plan', label: 'Plan', render: (t) => t.plan ?? '—' },
+        { key: 'plan', label: 'Plan', render: (t) => t.plan ? <span className="font-mono text-xs">{t.plan}</span> : '—' },
         {
             key: 'subscription_status',
             label: 'Subscription',
@@ -155,35 +162,46 @@ export default function TenantsIndex({
     ];
 
     return (
-        <PlatformLayout title="Tenants" description="Every restaurant account on the platform with its account, verification and subscription state.">
-            <div className="mb-4 flex flex-wrap gap-1 border-b border-gray-200">
+        <PlatformLayout
+            title="Tenants"
+            description="Manage restaurant tenant accounts, verifications, subscriptions, and branch limits."
+            actions={
+                <Button
+                    variant="outline"
+                    size="sm"
+                    href={route('platform.tenants.export', state as unknown as Record<string, unknown>)}
+                    icon={<Download className="h-3.5 w-3.5" />}
+                >
+                    Export CSV
+                </Button>
+            }
+        >
+            <div className="mb-5 flex flex-wrap gap-1 border-b border-border/80">
                 <Link
                     href={route('platform.tenants.index')}
-                    className={
-                        '-mb-px border-b-2 px-3.5 py-2 text-sm font-medium transition ' +
-                        (route().current('platform.tenants.index') ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-700')
-                    }
+                    className={cn(
+                        '-mb-px border-b-2 px-3.5 py-2 text-xs sm:text-sm font-medium transition-colors',
+                        !isVerificationTab
+                            ? 'border-primary text-primary font-semibold'
+                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                    )}
                 >
                     All tenants
                 </Link>
                 <Link
                     href={route('platform.tenants.verification')}
-                    className={
-                        '-mb-px border-b-2 px-3.5 py-2 text-sm font-medium transition ' +
-                        (route().current('platform.tenants.verification') ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-700')
-                    }
+                    className={cn(
+                        '-mb-px border-b-2 px-3.5 py-2 text-xs sm:text-sm font-medium transition-colors',
+                        isVerificationTab
+                            ? 'border-primary text-primary font-semibold'
+                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                    )}
                 >
                     Awaiting verification
                 </Link>
             </div>
 
-            <FilterBar
-                actions={
-                    <Button variant="secondary" size="sm" href={route('platform.tenants.export', state as unknown as Record<string, unknown>)}>
-                        Export CSV
-                    </Button>
-                }
-            >
+            <FilterBar>
                 <TextField
                     label="Search"
                     value={state.search}
@@ -206,32 +224,44 @@ export default function TenantsIndex({
                     onChange={(v) => apply({ plan: v })}
                 />
                 <Button size="sm" onClick={() => apply()}>
-                    Apply
+                    Apply Filters
                 </Button>
             </FilterBar>
 
             {selected.length > 0 && (
-                <div className="mb-3 flex flex-wrap items-center gap-2 rounded-md border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm">
-                    <span className="font-medium text-indigo-800">{selected.length} selected</span>
-                    <select value={bulkAction} onChange={(e) => setBulkAction(e.target.value)} className="rounded-md border-gray-300 text-sm">
+                <div className="mb-4 flex flex-wrap items-center gap-2.5 rounded-lg border border-border bg-muted/60 p-3 text-xs shadow-xs">
+                    <span className="font-semibold text-foreground">{selected.length} tenant(s) selected</span>
+                    <select
+                        value={bulkAction}
+                        onChange={(e) => setBulkAction(e.target.value)}
+                        className="h-8 rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:ring-1 focus:ring-ring"
+                    >
                         <option value="verify">Verify</option>
                         <option value="activate">Activate</option>
                         <option value="archive">Archive</option>
                         <option value="suspend">Suspend</option>
                     </select>
                     {bulkAction === 'suspend' && (
-                        <input
+                        <Input
                             value={bulkReason}
                             onChange={(e) => setBulkReason(e.target.value)}
                             placeholder="Reason (required)"
-                            className="rounded-md border-gray-300 text-sm"
+                            className="h-8 w-48 text-xs"
                         />
                     )}
-                    <Button size="sm" variant={bulkAction === 'suspend' ? 'danger' : 'primary'} loading={processing} onClick={() => setConfirmBulk(true)}>
-                        Apply to selected
+                    <Button
+                        size="sm"
+                        variant={bulkAction === 'suspend' || bulkAction === 'archive' ? 'destructive' : 'primary'}
+                        loading={processing}
+                        onClick={() => setConfirmBulk(true)}
+                    >
+                        Apply Action
                     </Button>
-                    <button onClick={() => setSelected([])} className="text-xs text-indigo-700 hover:underline">
-                        Clear
+                    <button
+                        onClick={() => setSelected([])}
+                        className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 cursor-pointer"
+                    >
+                        Deselect all
                     </button>
                 </div>
             )}

@@ -1,6 +1,15 @@
 import { ReactNode } from 'react';
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { cn } from './cn';
 import EmptyState from './EmptyState';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from './Table';
 
 export interface Column<T> {
     key: string;
@@ -17,8 +26,7 @@ export interface SortState {
 }
 
 /**
- * Server-side data table. Rows are rendered exactly as supplied (already
- * paginated on the server) — never load an entire history into the browser.
+ * Enterprise shadcn/ui Server-side data table.
  */
 export default function DataTable<T extends Record<string, any>>({
     columns,
@@ -47,74 +55,110 @@ export default function DataTable<T extends Record<string, any>>({
 }) {
     const allSelected = selectable && rows.length > 0 && rows.every((r) => selected.includes(rowKey(r)));
 
-    const alignClass = (align?: string) => (align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left');
+    const alignClass = (align?: string) =>
+        align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
 
     return (
-        <div className="overflow-x-auto">
-            <table className="w-full min-w-full text-left text-sm">
-                <thead className="border-b border-gray-200 bg-gray-50/60">
-                    <tr>
+        <div className="rounded-md border border-border bg-card overflow-hidden">
+            <Table>
+                <TableHeader>
+                    <TableRow className="bg-muted/40 hover:bg-muted/40">
                         {selectable && (
-                            <th className="w-10 px-4 py-2.5">
-                                <input type="checkbox" checked={allSelected} onChange={onToggleAll} aria-label="Select all rows" className="rounded border-gray-300" />
-                            </th>
+                            <TableHead className="w-10 px-3 py-2.5">
+                                <input
+                                    type="checkbox"
+                                    checked={allSelected}
+                                    onChange={onToggleAll}
+                                    aria-label="Select all rows"
+                                    className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+                                />
+                            </TableHead>
                         )}
                         {columns.map((col) => (
-                            <th key={col.key} className={cn('whitespace-nowrap px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500', alignClass(col.align), col.className)}>
+                            <TableHead
+                                key={col.key}
+                                className={cn(
+                                    'whitespace-nowrap px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground',
+                                    alignClass(col.align),
+                                    col.className
+                                )}
+                            >
                                 {col.sortable && onSort ? (
-                                    <button onClick={() => onSort(col.key)} className="inline-flex items-center gap-1 transition hover:text-gray-800">
-                                        {col.label}
-                                        {sort?.key === col.key && <span aria-hidden="true">{sort.direction === 'asc' ? '↑' : '↓'}</span>}
+                                    <button
+                                        onClick={() => onSort(col.key)}
+                                        className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground group font-semibold cursor-pointer"
+                                    >
+                                        <span>{col.label}</span>
+                                        {sort?.key === col.key ? (
+                                            sort.direction === 'asc' ? (
+                                                <ArrowUp className="h-3.5 w-3.5 text-primary" />
+                                            ) : (
+                                                <ArrowDown className="h-3.5 w-3.5 text-primary" />
+                                            )
+                                        ) : (
+                                            <ArrowUpDown className="h-3 w-3 opacity-40 group-hover:opacity-100" />
+                                        )}
                                     </button>
                                 ) : (
                                     col.label
                                 )}
-                            </th>
+                            </TableHead>
                         ))}
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
                     {rows.map((row) => {
                         const id = rowKey(row);
                         const href = rowHref?.(row);
                         return (
-                            <tr key={id} className="transition hover:bg-gray-50/70">
+                            <TableRow key={id} className="transition-colors hover:bg-muted/50">
                                 {selectable && (
-                                    <td className="px-4 py-3">
+                                    <TableCell className="px-3 py-2.5">
                                         <input
                                             type="checkbox"
                                             checked={selected.includes(id)}
                                             onChange={() => onToggle?.(id)}
                                             aria-label="Select row"
-                                            className="rounded border-gray-300"
+                                            className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
                                         />
-                                    </td>
+                                    </TableCell>
                                 )}
                                 {columns.map((col, ci) => {
                                     const content = col.render ? col.render(row) : (row[col.key] as ReactNode);
-                                    const cellClass = cn('px-4 py-3 align-middle text-gray-700', alignClass(col.align), col.className);
+                                    const cellClass = cn(
+                                        'px-3 py-2.5 align-middle text-sm text-foreground/90 font-normal',
+                                        alignClass(col.align),
+                                        col.className
+                                    );
                                     if (ci === 0 && href) {
                                         return (
-                                            <td key={col.key} className={cellClass}>
-                                                <a href={href} className="font-medium text-indigo-600 hover:text-indigo-700">
+                                            <TableCell key={col.key} className={cellClass}>
+                                                <a
+                                                    href={href}
+                                                    className="font-medium text-primary hover:underline underline-offset-4"
+                                                >
                                                     {content}
                                                 </a>
-                                            </td>
+                                            </TableCell>
                                         );
                                     }
                                     return (
-                                        <td key={col.key} className={cellClass}>
+                                        <TableCell key={col.key} className={cellClass}>
                                             {content}
-                                        </td>
+                                        </TableCell>
                                     );
                                 })}
-                            </tr>
+                            </TableRow>
                         );
                     })}
-                </tbody>
-            </table>
+                </TableBody>
+            </Table>
 
-            {rows.length === 0 && (empty ?? <EmptyState title="Nothing to show" />)}
+            {rows.length === 0 && (
+                <div className="p-8">
+                    {empty ?? <EmptyState title="Nothing to show" />}
+                </div>
+            )}
         </div>
     );
 }

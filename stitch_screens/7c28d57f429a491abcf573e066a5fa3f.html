@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-tint": "#b12c13", "on-background": "#1a1c1a", "primary-fixed-dim": "#ffb4a4", "tertiary-container": "#73747a", "inverse-on-surface": "#f2f1ee", "inverse-surface": "#2f312f", "primary": "#ae2a10", "surface-bright": "#faf9f6", "surface-variant": "#e3e2e0", "tertiary": "#5a5c61", "surface": "#faf9f6", "on-secondary-container": "#52695d", "on-tertiary-fixed": "#1a1c20", "on-surface": "#1a1c1a", "on-surface-variant": "#5a413c", "inverse-primary": "#ffb4a4", "tertiary-fixed": "#e2e2e8", "surface-container": "#efeeeb", "on-primary-fixed-variant": "#8d1600", "on-secondary-fixed-variant": "#354c40", "surface-container-lowest": "#ffffff", "on-tertiary-container": "#fefcff", "secondary-container": "#cfe9d9", "on-tertiary": "#ffffff", "on-secondary-fixed": "#092016", "on-secondary": "#ffffff", "error": "#ba1a1a", "on-primary": "#ffffff", "surface-dim": "#dbdad7", "primary-fixed": "#ffdad3", "outline-variant": "#e2bfb7", "surface-container-low": "#f4f3f0", "tertiary-fixed-dim": "#c6c6cc", "surface-container-highest": "#e3e2e0", "secondary-fixed": "#cfe9d9", "secondary-fixed-dim": "#b3ccbe", "on-error": "#ffffff", "primary-container": "#d04327", "background": "#faf9f6", "on-error-container": "#93000a", "on-tertiary-fixed-variant": "#45474b", "on-primary-fixed": "#3e0500", "on-primary-container": "#fffbff", "error-container": "#ffdad6", "secondary": "#4c6358", "outline": "#8e706a", "surface-container-high": "#e9e8e5" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xs": "0.25rem", "gutter-sm": "1rem", "space-2xl": "4rem", "space-md": "1rem", "margin": "3rem", "space-sm": "0.5rem", "gutter": "1.5rem", "space-xl": "2.5rem", "space-lg": "1.5rem", "space-3xl": "6rem", "margin-sm": "1.25rem" }, "fontFamily": { "display-xl": [ "Plus Jakarta Sans" ], "headline-sm": [ "Plus Jakarta Sans" ], "mono-metric": [ "Space Mono" ], "headline-lg-mobile": [ "Plus Jakarta Sans" ], "mono-ticket": [ "Space Mono" ], "label-caps": [ "Space Mono" ], "headline-lg": [ "Plus Jakarta Sans" ], "body-md": [ "Plus Jakarta Sans" ], "display-xl-mobile": [ "Plus Jakarta Sans" ], "body-lg": [ "Plus Jakarta Sans" ], "headline-md": [ "Plus Jakarta Sans" ], "body-sm": [ "Plus Jakarta Sans" ] }, "fontSize": { "display-xl": [ "64px", { "lineHeight": "70px", "letterSpacing": "-0.03em", "fontWeight": "800" } ], "headline-sm": [ "20px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "mono-metric": [ "28px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "headline-lg-mobile": [ "28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "mono-ticket": [ "13px", { "lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "400" } ], "label-caps": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" } ], "headline-lg": [ "40px", { "lineHeight": "48px", "letterSpacing": "-0.025em", "fontWeight": "700" } ], "body-md": [ "15px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" } ], "display-xl-mobile": [ "38px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "800" } ], "body-lg": [ "18px", { "lineHeight": "28px", "letterSpacing": "-0.005em", "fontWeight": "400" } ], "headline-md": [ "26px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" } ], "body-sm": [ "13px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "500" } ] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-xl border-b border-surface-container-highest shadow-[0_1px_8px_rgba(0,0,0,0.03)]"><div class="h-20 max-w-7xl mx-auto px-gutter flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-2xl"><a class="flex items-baseline gap-space-xs group" data-path="home" href="#"><span class="font-display-xl text-headline-sm font-extrabold tracking-tight text-on-surface">mise<span class="text-primary">.</span></span><span class="font-label-caps text-label-caps uppercase text-secondary bg-secondary-container px-space-xs py-0.5 rounded">pos</span></a><nav class="hidden lg:flex items-center gap-space-lg" data-active-classes="text-primary font-semibold"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="product" href="#">Product</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="features" href="#">Features</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="solutions" href="#">Solutions</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="pricing" href="#">Pricing</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="resources" href="#">Resources</a></nav></div><div class="flex items-center gap-space-md"><a class="hidden sm:inline-flex font-body-sm text-body-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors px-space-sm py-space-xs" data-path="login" href="#">Sign In</a><a class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold px-space-lg py-space-sm rounded-lg shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]" data-path="signup" href="#">Start Free Trial</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- BREADCRUMB / METADATA HEADER -->
+<section class="w-full max-w-7xl mx-auto px-gutter pt-space-lg pb-space-sm">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs font-mono-ticket text-mono-ticket text-tertiary">
+<a class="hover:text-on-surface transition-colors" href="#">Platform</a>
+<span>/</span>
+<a class="hover:text-on-surface transition-colors" href="#">Features</a>
+<span>/</span>
+<span class="text-on-surface font-semibold">Multi-Branch Management</span>
+</div>
+<div class="inline-flex items-center gap-space-xs bg-surface-container-high px-space-md py-1 rounded-full self-start md:self-auto">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-caps text-label-caps text-on-surface tracking-wider">CENTRALIZED MENU MATRIX • COMMISSARY LOGISTICS • GROUP P&amp;L</span>
+</div>
+</div>
+</section>
+<!-- HERO SECTION -->
+<section class="w-full max-w-7xl mx-auto px-gutter pt-space-xl pb-space-2xl">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-end">
+<div class="lg:col-span-8 space-y-space-lg">
+<div class="inline-flex items-center gap-2 text-primary font-label-caps text-label-caps uppercase bg-primary-fixed/40 px-3 py-1 rounded">
+<span class="material-symbols-outlined text-[14px]">corporate_fare</span>
+          Enterprise Multi-Unit Architecture
+        </div>
+<h1 class="font-display-xl text-display-xl text-on-surface tracking-tight">
+          One culinary vision.<br/>
+          Twenty dining rooms.<br/>
+<span class="text-primary italic font-serif">Zero operational drift.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-tertiary max-w-2xl leading-relaxed">
+          Centralize your master menus, push territory-adjusted pricing, orchestrate bulk commissary yields, and reconcile consolidated multi-unit balance sheets from an authoritative single command terminal.
+        </p>
+<div class="flex flex-wrap items-center gap-space-md pt-space-xs">
+<a class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold px-space-xl py-3 rounded-lg shadow-md transition-all hover:translate-y-[-1px]" href="#trial">
+            Start 14-Day Free Trial
+          </a>
+<a class="inline-flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface font-body-sm text-body-sm font-semibold px-space-lg py-3 rounded-lg shadow-sm transition-all" href="#demo">
+            Schedule Architecture Walkthrough
+          </a>
+</div>
+<div class="flex flex-wrap items-center gap-y-2 gap-x-6 text-on-surface-variant font-mono-ticket text-mono-ticket pt-space-xs">
+<span class="inline-flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+            Instant multi-entity tax configs
+          </span>
+<span class="inline-flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+            Cross-dock inventory manifests
+          </span>
+<span class="inline-flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+            RBAC down to GM &amp; Sous Chef
+          </span>
+</div>
+</div>
+<div class="lg:col-span-4 flex flex-col justify-end space-y-space-md">
+<div class="bg-surface-container-low p-space-md rounded-xl shadow-sm space-y-space-sm">
+<div class="flex items-center justify-between text-tertiary">
+<span class="font-label-caps text-label-caps uppercase">System Architecture</span>
+<span class="font-mono-ticket text-mono-ticket text-secondary font-bold">ACTIVE CLUSTER</span>
+</div>
+<div class="space-y-1.5">
+<div class="flex justify-between items-center font-body-sm text-body-sm">
+<span class="text-on-surface">Sync Latency</span>
+<span class="font-mono-ticket text-on-surface font-semibold">&lt; 140ms Global</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[94%]"></div>
+</div>
+</div>
+<div class="space-y-1.5">
+<div class="flex justify-between items-center font-body-sm text-body-sm">
+<span class="text-on-surface">Data Redundancy</span>
+<span class="font-mono-ticket text-on-surface font-semibold">Tier-4 Dual Cloud</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[99%]"></div>
+</div>
+</div>
+<div class="pt-space-xs flex items-center justify-between font-mono-ticket text-mono-ticket text-tertiary">
+<span>EIN Separation: 7 Distinct</span>
+<span>Ledger: Encrypted ISO 27001</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- HERO MULTI-UNIT COMMAND TERMINAL MOCKUP -->
+<section class="w-full max-w-7xl mx-auto px-gutter pb-space-3xl">
+<div class="bg-[#111418] text-[#f2f1ee] rounded-2xl shadow-xl overflow-hidden">
+<!-- Terminal Bar -->
+<div class="bg-[#181d22] px-space-lg py-space-sm flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-[#e24f32]"></span>
+<span class="w-3 h-3 rounded-full bg-[#f4b400]/40"></span>
+<span class="w-3 h-3 rounded-full bg-[#34a853]/40"></span>
+</div>
+<div class="flex items-center gap-2 text-sm font-semibold tracking-wide text-neutral-300">
+<span class="font-mono-ticket text-neutral-400">COMMAND //</span>
+<span class="font-headline-sm text-headline-sm text-white">ATELIER HOSPITALITY GROUP</span>
+<span class="bg-[#242b32] text-xs font-mono-ticket px-2 py-0.5 rounded text-neutral-300">7 LOCATIONS LIVE</span>
+</div>
+</div>
+<div class="flex items-center gap-2 overflow-x-auto py-1 text-xs font-mono-ticket">
+<button class="bg-[#e24f32] text-white px-3 py-1.5 rounded font-bold">ALL BRANCHES</button>
+<button class="bg-[#242b32] hover:bg-[#2e3740] text-neutral-300 px-3 py-1.5 rounded transition">SOHO BISTRO</button>
+<button class="bg-[#242b32] hover:bg-[#2e3740] text-neutral-300 px-3 py-1.5 rounded transition">TRIBECA FLAGSHIP</button>
+<button class="bg-[#242b32] hover:bg-[#2e3740] text-neutral-300 px-3 py-1.5 rounded transition">BROOKLYN ROASTERY</button>
+<button class="bg-[#242b32] hover:bg-[#2e3740] text-neutral-300 px-3 py-1.5 rounded transition">AUSTIN OUTPOST</button>
+<button class="bg-[#242b32] hover:bg-[#2e3740] text-neutral-300 px-3 py-1.5 rounded transition">MIAMI BEACH</button>
+</div>
+</div>
+<!-- Real-Time Metrics Strip -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-[#242b32]">
+<div class="bg-[#14181c] p-space-md space-y-1">
+<div class="text-neutral-400 font-label-caps text-label-caps uppercase flex justify-between">
+<span>Group Gross Sales</span>
+<span class="text-[#34a853] font-bold">+8.4%</span>
+</div>
+<div class="font-mono-metric text-mono-metric text-white font-bold tracking-tight">$128,450.20</div>
+<div class="text-xs text-neutral-400 font-mono-ticket">vs. Prev Sat ($118,500.00)</div>
+</div>
+<div class="bg-[#14181c] p-space-md space-y-1">
+<div class="text-neutral-400 font-label-caps text-label-caps uppercase flex justify-between">
+<span>Target vs Actual Food Cost</span>
+<span class="text-[#e24f32] font-bold">+0.4% var</span>
+</div>
+<div class="font-mono-metric text-mono-metric text-white font-bold tracking-tight">28.2% <span class="text-neutral-400 text-sm font-normal">/ 27.8% tgt</span></div>
+<div class="text-xs text-neutral-400 font-mono-ticket">Commissary Yield: 98.4% Eff.</div>
+</div>
+<div class="bg-[#14181c] p-space-md space-y-1">
+<div class="text-neutral-400 font-label-caps text-label-caps uppercase flex justify-between">
+<span>Active Dining Covers</span>
+<span class="text-neutral-300">89% Cap</span>
+</div>
+<div class="font-mono-metric text-mono-metric text-white font-bold tracking-tight">1,420 <span class="text-sm font-normal text-neutral-400">seated</span></div>
+<div class="text-xs text-neutral-400 font-mono-ticket">Across 184 live floor tables</div>
+</div>
+<div class="bg-[#14181c] p-space-md space-y-1">
+<div class="text-neutral-400 font-label-caps text-label-caps uppercase flex justify-between">
+<span>Commissary Transfers</span>
+<span class="text-[#34a853] font-bold">On Schedule</span>
+</div>
+<div class="font-mono-metric text-mono-metric text-white font-bold tracking-tight">4 Dispatched</div>
+<div class="text-xs text-neutral-400 font-mono-ticket">Next dock arrival in 22 mins</div>
+</div>
+</div>
+<!-- Main Terminal Layout (Master Menu Matrix + Telemetry Feed) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-px bg-[#242b32]">
+<!-- Master Menu Matrix -->
+<div class="lg:col-span-8 bg-[#111418] p-space-lg space-y-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div>
+<span class="font-label-caps text-label-caps uppercase text-[#e24f32] block">Master Menu Configuration</span>
+<h3 class="font-headline-sm text-headline-sm text-white">Item: Dry-Aged Bone-In Ribeye 16oz (Prime Grade)</h3>
+</div>
+<div class="flex items-center gap-2">
+<span class="bg-[#1f262d] text-neutral-300 px-2 py-1 rounded text-xs font-mono-ticket">SKU #STEAK-NY-091</span>
+<span class="bg-[#1e3a2f] text-[#cfe9d9] px-2 py-1 rounded text-xs font-mono-ticket">Core Anchor</span>
+</div>
+</div>
+<!-- Comparative Table -->
+<div class="overflow-x-auto rounded-lg bg-[#161a1f]">
+<table class="w-full text-left font-body-sm text-body-sm text-neutral-300">
+<thead class="bg-[#1f262d] text-neutral-400 font-label-caps text-label-caps uppercase">
+<tr>
+<th class="py-3 px-4">Location</th>
+<th class="py-3 px-4">Base Retail</th>
+<th class="py-3 px-4">Purveyor Cost</th>
+<th class="py-3 px-4">Target Margin</th>
+<th class="py-3 px-4">KDS Routing</th>
+<th class="py-3 px-4">Sync Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#242b32]">
+<tr class="hover:bg-[#1a2026]">
+<td class="py-3 px-4 font-semibold text-white">Tribeca Flagship (NYC)</td>
+<td class="py-3 px-4 font-mono-ticket font-bold text-white">$72.00</td>
+<td class="py-3 px-4 font-mono-ticket text-neutral-400">$18.72</td>
+<td class="py-3 px-4 font-mono-ticket text-[#34a853]">74.0%</td>
+<td class="py-3 px-4 text-xs">Woodfire Hearth</td>
+<td class="py-3 px-4"><span class="inline-flex items-center gap-1 text-[#34a853] text-xs font-mono-ticket"><span class="w-1.5 h-1.5 rounded-full bg-[#34a853]"></span> Synced</span></td>
+</tr>
+<tr class="hover:bg-[#1a2026]">
+<td class="py-3 px-4 font-semibold text-white">Brooklyn Roastery</td>
+<td class="py-3 px-4 font-mono-ticket font-bold text-white">$68.00</td>
+<td class="py-3 px-4 font-mono-ticket text-neutral-400">$19.04</td>
+<td class="py-3 px-4 font-mono-ticket text-[#34a853]">72.0%</td>
+<td class="py-3 px-4 text-xs">Plancha Line</td>
+<td class="py-3 px-4"><span class="inline-flex items-center gap-1 text-[#34a853] text-xs font-mono-ticket"><span class="w-1.5 h-1.5 rounded-full bg-[#34a853]"></span> Synced</span></td>
+</tr>
+<tr class="hover:bg-[#1a2026] bg-[#221c17]">
+<td class="py-3 px-4 font-semibold text-white">Austin Outpost (TX)</td>
+<td class="py-3 px-4 font-mono-ticket font-bold text-white">$64.00</td>
+<td class="py-3 px-4 font-mono-ticket text-neutral-400">$16.64</td>
+<td class="py-3 px-4 font-mono-ticket text-[#34a853]">74.0%</td>
+<td class="py-3 px-4 text-xs">Pitmaster Station</td>
+<td class="py-3 px-4"><span class="inline-flex items-center gap-1 text-[#e24f32] text-xs font-mono-ticket"><span class="w-1.5 h-1.5 rounded-full bg-[#e24f32]"></span> Override Approved</span></td>
+</tr>
+<tr class="hover:bg-[#1a2026]">
+<td class="py-3 px-4 font-semibold text-white">Miami Beach (FL)</td>
+<td class="py-3 px-4 font-mono-ticket font-bold text-white">$76.00</td>
+<td class="py-3 px-4 font-mono-ticket text-neutral-400">$19.76</td>
+<td class="py-3 px-4 font-mono-ticket text-[#34a853]">74.0%</td>
+<td class="py-3 px-4 text-xs">Woodfire Hearth</td>
+<td class="py-3 px-4"><span class="inline-flex items-center gap-1 text-[#34a853] text-xs font-mono-ticket"><span class="w-1.5 h-1.5 rounded-full bg-[#34a853]"></span> Synced</span></td>
+</tr>
+<tr class="hover:bg-[#1a2026]">
+<td class="py-3 px-4 font-semibold text-white">Chicago Loop (IL)</td>
+<td class="py-3 px-4 font-mono-ticket font-bold text-white">$70.00</td>
+<td class="py-3 px-4 font-mono-ticket text-neutral-400">$18.90</td>
+<td class="py-3 px-4 font-mono-ticket text-[#34a853]">73.0%</td>
+<td class="py-3 px-4 text-xs">Broiler Deck</td>
+<td class="py-3 px-4"><span class="inline-flex items-center gap-1 text-[#34a853] text-xs font-mono-ticket"><span class="w-1.5 h-1.5 rounded-full bg-[#34a853]"></span> Synced</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pt-space-xs flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm bg-[#181d22] p-space-sm rounded-lg">
+<div class="text-xs text-neutral-400 font-mono-ticket flex items-center gap-2">
+<span class="material-symbols-outlined text-[#e24f32] text-[18px]">schedule</span>
+              Next Global Deployment Window: 04:00 AM EST (Local End of Shift)
+            </div>
+<button class="bg-[#e24f32] hover:bg-[#b83820] text-white text-xs font-bold font-body-sm px-4 py-2 rounded transition flex items-center gap-2 self-start sm:self-auto">
+<span class="material-symbols-outlined text-[16px]">rocket_launch</span>
+              Deploy Menu Revision v3.4 to 5 Locations
+            </button>
+</div>
+</div>
+<!-- Telemetry Feed Sidebar -->
+<div class="lg:col-span-4 bg-[#14181c] p-space-lg flex flex-col justify-between space-y-space-md">
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-neutral-400">Live Branch Telemetry</span>
+<span class="w-2 h-2 rounded-full bg-[#34a853] animate-ping"></span>
+</div>
+<!-- Feed Items -->
+<div class="space-y-space-sm">
+<div class="bg-[#1a2026] p-space-sm rounded-lg space-y-1">
+<div class="flex justify-between items-center text-xs">
+<span class="font-bold text-white">Tribeca Flagship</span>
+<span class="text-[#e24f32] font-mono-ticket bg-[#361a14] px-1.5 py-0.5 rounded text-[10px]">PEAK SERVICE</span>
+</div>
+<div class="text-xs text-neutral-300 font-mono-ticket">
+                  Velocity: <strong class="text-white">$4,120/hr</strong> • Turns: 52 min
+                </div>
+<div class="text-[11px] text-neutral-400 font-mono-ticket">Kitchen Ticket Avg: 11m 40s (Nominal)</div>
+</div>
+<div class="bg-[#1a2026] p-space-sm rounded-lg space-y-1">
+<div class="flex justify-between items-center text-xs">
+<span class="font-bold text-white">Soho Bistro</span>
+<span class="text-[#34a853] font-mono-ticket bg-[#14281e] px-1.5 py-0.5 rounded text-[10px]">STEADY VELOCITY</span>
+</div>
+<div class="text-xs text-neutral-300 font-mono-ticket">
+                  Velocity: <strong class="text-white">$2,840/hr</strong> • Turns: 44 min
+                </div>
+<div class="text-[11px] text-neutral-400 font-mono-ticket">Floor Seating: 94% Capacity</div>
+</div>
+<div class="bg-[#241716] p-space-sm rounded-lg space-y-1">
+<div class="flex justify-between items-center text-xs">
+<span class="font-bold text-white">Austin Outpost</span>
+<span class="text-[#e24f32] font-mono-ticket bg-[#4d1612] px-1.5 py-0.5 rounded text-[10px]">STOCK ALERT</span>
+</div>
+<div class="text-xs text-neutral-200">
+                  Wagyu Ribeye inventory low: <span class="text-[#e24f32] font-bold">3 portions left</span>
+</div>
+<div class="text-[11px] text-neutral-400 font-mono-ticket">Auto cross-dock PO generated for Dallas hub</div>
+</div>
+<div class="bg-[#1a2026] p-space-sm rounded-lg space-y-1">
+<div class="flex justify-between items-center text-xs">
+<span class="font-bold text-white">Brooklyn Roastery</span>
+<span class="text-neutral-400 font-mono-ticket bg-[#232a32] px-1.5 py-0.5 rounded text-[10px]">AFTERNOON FLIP</span>
+</div>
+<div class="text-xs text-neutral-300 font-mono-ticket">
+                  Dinner Menu Active • 42 Bar Seats Filled
+                </div>
+</div>
+</div>
+</div>
+<div class="bg-[#181d22] p-space-sm rounded-lg">
+<div class="text-[11px] font-mono-ticket text-neutral-400 flex items-center justify-between">
+<span>Security Hash: 8b09..9ef1</span>
+<span class="text-[#34a853]">TLS 1.3 Certified</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- FOUR CORE PILLARS GRID -->
+<section class="w-full max-w-7xl mx-auto px-gutter py-space-2xl">
+<div class="mb-space-xl space-y-space-xs max-w-3xl">
+<span class="font-label-caps text-label-caps text-primary uppercase block">Architectural Pillars</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">The four operational cornerstones of modern multi-unit scale.</h2>
+<p class="font-body-md text-body-md text-tertiary">
+        Engineered specifically to solve the coordination breakdown that occurs when hospitality groups scale past their third location.
+      </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg">
+<!-- 01 -->
+<div class="bg-surface-container-low p-space-xl rounded-2xl shadow-sm flex flex-col justify-between space-y-space-lg hover:shadow-md transition">
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<span class="font-mono-metric text-mono-metric font-bold text-outline-variant">01</span>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">menu_book</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Centralized Menu Governance</h3>
+<p class="font-body-md text-body-md text-tertiary">
+            Update recipe builds, manage dietary badges, 86 ingredients instantly, or stage seasonal multi-course rollouts across the fleet. Enforce price parity or configure precise regional margin rules without breaking kitchen station printing.
+          </p>
+</div>
+<div class="pt-space-md font-mono-ticket text-mono-ticket text-secondary space-y-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">done</span> Granular POS button grid staging
+          </div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">done</span> Regional modifier cost multipliers
+          </div>
+</div>
+</div>
+<!-- 02 -->
+<div class="bg-surface-container-low p-space-xl rounded-2xl shadow-sm flex flex-col justify-between space-y-space-lg hover:shadow-md transition">
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<span class="font-mono-metric text-mono-metric font-bold text-outline-variant">02</span>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">conveyor_belt</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Central Commissary &amp; Bulk Prep Logistics</h3>
+<p class="font-body-md text-body-md text-tertiary">
+            Convert large-batch culinary production into exact store-level fulfillment manifests. Track prep shrinkage, par-level requisitions, transit temperature verifications, and inter-company debit/credit ledgering automatically.
+          </p>
+</div>
+<div class="pt-space-md font-mono-ticket text-mono-ticket text-secondary space-y-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">done</span> Barcode-scanned cross-dock dispatch
+          </div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">done</span> Raw ingredient yield variance analytics
+          </div>
+</div>
+</div>
+<!-- 03 -->
+<div class="bg-surface-container-low p-space-xl rounded-2xl shadow-sm flex flex-col justify-between space-y-space-lg hover:shadow-md transition">
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<span class="font-mono-metric text-mono-metric font-bold text-outline-variant">03</span>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">query_stats</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Consolidated Real-Time P&amp;L Ledger</h3>
+<p class="font-body-md text-body-md text-tertiary">
+            Eradicate 10-day month-end accounting lag. Monitor live blended prime cost (COGS + real-time labor) on Saturday nights at 9:00 PM across all branches. Benchmark labor productivity and check sizes across sister concepts.
+          </p>
+</div>
+<div class="pt-space-md font-mono-ticket text-mono-ticket text-secondary space-y-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">done</span> Live OT warnings &amp; labor productivity curves
+          </div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">done</span> Automated journal entries into ERP &amp; QBO
+          </div>
+</div>
+</div>
+<!-- 04 -->
+<div class="bg-surface-container-low p-space-xl rounded-2xl shadow-sm flex flex-col justify-between space-y-space-lg hover:shadow-md transition">
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<span class="font-mono-metric text-mono-metric font-bold text-outline-variant">04</span>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Multi-Entity Legal &amp; RBAC Hierarchy</h3>
+<p class="font-body-md text-body-md text-tertiary">
+            Equip regional vice presidents, operating partners, and floor managers with pinpoint access levels. Manage separate merchant IDs, franchise payout routing, and territorial tax jurisdictions within an unified executive umbrella.
+          </p>
+</div>
+<div class="pt-space-md font-mono-ticket text-mono-ticket text-secondary space-y-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">done</span> Independent EIN and bank deposit routing
+          </div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">done</span> Single Sign-On (SSO) with Okta &amp; Google Workspace
+          </div>
+</div>
+</div>
+</div>
+</section>
+<!-- WORKFLOW SHOWCASE A: COMMISSARY & INTER-BRANCH TRANSFERS -->
+<section class="w-full max-w-7xl mx-auto px-gutter py-space-2xl">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-center">
+<div class="lg:col-span-5 space-y-space-md">
+<div class="font-label-caps text-label-caps text-primary uppercase">Deep Logistics Engine</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-tight">
+          Automate central commissary dispatch with zero paper receipts.
+        </h2>
+<p class="font-body-md text-body-md text-tertiary leading-relaxed">
+          Culinary directors formulate master sauces, sous-vide proteins, and pastry prep at the central commissary. Requisitions from outlying dining rooms generate automated picking slips, temperature-log manifests, and transfer bills.
+        </p>
+<div class="space-y-3 font-body-sm text-body-sm text-on-surface">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">inventory_2</span>
+<span>Batch yield calculations automatically deduct raw storehouse bulk ingredients.</span>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">qr_code_scanner</span>
+<span>Digital receiving handshake between delivery driver and Sous Chef with cold-chain verification.</span>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">currency_exchange</span>
+<span>Instant intra-company GL debiting against receiving branch P&amp;L ledger.</span>
+</div>
+</div>
+</div>
+<!-- Mockup Card A -->
+<div class="lg:col-span-7 bg-surface-container-lowest p-space-lg rounded-2xl shadow-md space-y-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-sm border-b border-surface-container-highest gap-2">
+<div>
+<div class="font-label-caps text-label-caps text-tertiary">TRANSFER MANIFEST</div>
+<div class="font-headline-sm text-headline-sm text-on-surface">#TM-4091 // COMMISSARY → SOHO</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-mono-ticket text-xs font-bold">DISPATCHED (IN TRANSIT)</span>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-surface-container-low p-space-sm rounded-lg text-xs font-mono-ticket">
+<div>
+<span class="text-tertiary block">Origination</span>
+<span class="text-on-surface font-bold">Central Kitchen (LIC)</span>
+</div>
+<div>
+<span class="text-tertiary block">Receiving Destination</span>
+<span class="text-on-surface font-bold">Soho Bistro (Mercer)</span>
+</div>
+<div>
+<span class="text-tertiary block">Courier / Transit Temp</span>
+<span class="text-on-surface font-bold">Van #04 // 36.4°F</span>
+</div>
+<div>
+<span class="text-tertiary block">Dep. / Exp. Arrival</span>
+<span class="text-on-surface font-bold">14:15 → 15:05 EST</span>
+</div>
+</div>
+<div class="space-y-2">
+<div class="text-xs font-label-caps uppercase text-tertiary">Manifest Bill of Lading (3 Line Items)</div>
+<div class="space-y-2">
+<div class="flex items-center justify-between bg-surface-container-low p-space-sm rounded-lg font-body-sm text-body-sm">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[20px]">soup_kitchen</span>
+<div>
+<div class="font-semibold text-on-surface">House Veal Demi-Glace 48hr Reduction</div>
+<div class="text-xs font-mono-ticket text-tertiary">Lot #DM-2025-089 • Batch Yield: 98%</div>
+</div>
+</div>
+<div class="text-right font-mono-ticket">
+<div class="font-bold text-on-surface">12.0 kg</div>
+<div class="text-xs text-secondary font-semibold">$384.00 Debit</div>
+</div>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low p-space-sm rounded-lg font-body-sm text-body-sm">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[20px]">set_meal</span>
+<div>
+<div class="font-semibold text-on-surface">Aged Black Angus Ribeye Subprimal (Portion-Ready)</div>
+<div class="text-xs font-mono-ticket text-tertiary">Lot #RIB-772 • Wet Aged 28 Days</div>
+</div>
+</div>
+<div class="text-right font-mono-ticket">
+<div class="font-bold text-on-surface">40.0 kg</div>
+<div class="text-xs text-secondary font-semibold">$1,120.00 Debit</div>
+</div>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low p-space-sm rounded-lg font-body-sm text-body-sm">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[20px]">liquor</span>
+<div>
+<div class="font-semibold text-on-surface">Black Summer Truffle Emulsion</div>
+<div class="text-xs font-mono-ticket text-tertiary">Lot #EM-019 • Sealed Canisters</div>
+</div>
+</div>
+<div class="text-right font-mono-ticket">
+<div class="font-bold text-on-surface">25.0 L</div>
+<div class="text-xs text-secondary font-semibold">$625.00 Debit</div>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-space-xs flex flex-col sm:flex-row items-center justify-between text-xs font-mono-ticket text-tertiary gap-2">
+<span>Receiver PIN Handshake: Required at delivery pass</span>
+<span class="text-on-surface font-semibold">Total Transfer Value: $2,129.00 USD</span>
+</div>
+</div>
+</div>
+</section>
+<!-- WORKFLOW SHOWCASE B: TERRITORY PRICING & CONTROLLED OVERRIDES -->
+<section class="w-full max-w-7xl mx-auto px-gutter py-space-2xl">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-center">
+<!-- Mockup Card B -->
+<div class="lg:col-span-7 order-2 lg:order-1 bg-surface-container-lowest p-space-lg rounded-2xl shadow-md space-y-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-sm border-b border-surface-container-highest gap-2">
+<div>
+<div class="font-label-caps text-label-caps text-tertiary">TERRITORY PRICING RULES</div>
+<div class="font-headline-sm text-headline-sm text-on-surface">Tier Alpha: Metropolitan Flagships</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="bg-primary-fixed text-on-primary-fixed px-3 py-1 rounded-full font-mono-ticket text-xs font-bold">ENFORCED HQ LOCK</span>
+</div>
+</div>
+<div class="space-y-space-sm">
+<div class="p-space-sm bg-surface-container-low rounded-lg space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm font-bold text-on-surface">Tribeca &amp; Miami Beach (Metro Tier 1)</span>
+<span class="text-xs font-mono-ticket text-secondary bg-secondary-container px-2 py-0.5 rounded">Margin: 74% Fixed</span>
+</div>
+<p class="text-xs text-tertiary">Formula: Base Recipe Cost x 3.85 Factor. Local GM cannot discount or override without Executive Chef approval.</p>
+<div class="flex items-center gap-4 text-xs font-mono-ticket text-on-surface-variant pt-1">
+<span>Cocktail Baseline: $21.00</span>
+<span>Entree Baseline: $68.00</span>
+<span>Wine Pours: 4.2x Bottle Markup</span>
+</div>
+</div>
+<div class="p-space-sm bg-surface-container-low rounded-lg space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm font-bold text-on-surface">Austin &amp; Chicago (Growth Market Tier 2)</span>
+<span class="text-xs font-mono-ticket text-on-surface bg-surface-container-high px-2 py-0.5 rounded">Margin: 70% ± 2% Float</span>
+</div>
+<p class="text-xs text-tertiary">Tuned for competitive territory dining economics and local livestock purveyors. Controlled GM discretion up to 5% variance.</p>
+<div class="flex items-center gap-4 text-xs font-mono-ticket text-on-surface-variant pt-1">
+<span>Cocktail Baseline: $18.00</span>
+<span>Entree Baseline: $58.00</span>
+<span>Happy Hour Exception: Permitted</span>
+</div>
+</div>
+</div>
+<div class="bg-[#1a1c1a] text-surface p-space-sm rounded-lg flex items-center justify-between text-xs font-mono-ticket">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">lock</span>
+<span>Unscheduled Branch Override Request: NONE ACTIVE</span>
+</div>
+<span class="text-secondary font-bold">100% Policy Compliant</span>
+</div>
+</div>
+<div class="lg:col-span-5 order-1 lg:order-2 space-y-space-md">
+<div class="font-label-caps text-label-caps text-primary uppercase">Margin Preservation</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-tight">
+          Territory pricing tiers with immutable corporate margin locks.
+        </h2>
+<p class="font-body-md text-body-md text-tertiary leading-relaxed">
+          Cost of living and supply chain contracts fluctuate by zip code. Mise lets group operators establish dynamic pricing tiers while guaranteeing local floor managers cannot erode margins through unmonitored comps or rogue price edits.
+        </p>
+<div class="space-y-3 font-body-sm text-body-sm text-on-surface">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">verified_user</span>
+<span>Role-governed approval workflows for seasonal promotions or happy hour programs.</span>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">calculate</span>
+<span>Automated menu engineering quadrants (Stars, Plowhorses, Puzzles, Dogs) updated nightly per branch.</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- WORKFLOW SHOWCASE C: CONSOLIDATED LABOR & SERVICE VELOCITY -->
+<section class="w-full max-w-7xl mx-auto px-gutter py-space-2xl">
+<div class="bg-surface-container-low p-space-xl rounded-2xl shadow-sm space-y-space-lg">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md">
+<div class="space-y-space-xs max-w-2xl">
+<div class="font-label-caps text-label-caps text-primary uppercase">Executive Labor Analytics</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Consolidated Live Service Velocity Ledger</h2>
+<p class="font-body-md text-body-md text-tertiary">
+            Real-time synchronization between POS check generation and staff scheduling clock-ins delivers live labor-to-sales ratios by branch during peak dining hours.
+          </p>
+</div>
+<div class="font-mono-ticket text-mono-ticket text-tertiary self-start md:self-auto">
+          Updated: <span class="text-on-surface font-semibold">Real-Time WebSocket Feed</span>
+</div>
+</div>
+<!-- Comparative Table C -->
+<div class="overflow-x-auto bg-surface-container-lowest rounded-xl shadow-sm">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead class="bg-surface-container text-tertiary font-label-caps text-label-caps uppercase border-b border-surface-container-highest">
+<tr>
+<th class="py-4 px-6">Branch Location</th>
+<th class="py-4 px-6">Active FOH/BOH Staff</th>
+<th class="py-4 px-6">Live Hourly Covers</th>
+<th class="py-4 px-6">Avg Check Size</th>
+<th class="py-4 px-6">Target Labor %</th>
+<th class="py-4 px-6">Actual Labor %</th>
+<th class="py-4 px-6">Velocity Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-highest font-mono-ticket">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-6 font-semibold text-on-surface font-body-sm">Tribeca Flagship</td>
+<td class="py-4 px-6 text-on-surface">24 Floor / 16 Kitchen</td>
+<td class="py-4 px-6 text-on-surface font-bold">142 covers/hr</td>
+<td class="py-4 px-6 text-on-surface">$128.40</td>
+<td class="py-4 px-6 text-tertiary">22.0%</td>
+<td class="py-4 px-6 text-secondary font-bold">20.8% (Optimal)</td>
+<td class="py-4 px-6"><span class="bg-secondary-container text-on-secondary-container px-2 py-1 rounded text-xs">PEAK HIGH</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-6 font-semibold text-on-surface font-body-sm">Soho Bistro</td>
+<td class="py-4 px-6 text-on-surface">14 Floor / 10 Kitchen</td>
+<td class="py-4 px-6 text-on-surface font-bold">96 covers/hr</td>
+<td class="py-4 px-6 text-on-surface">$94.20</td>
+<td class="py-4 px-6 text-tertiary">24.0%</td>
+<td class="py-4 px-6 text-secondary font-bold">23.1% (Optimal)</td>
+<td class="py-4 px-6"><span class="bg-secondary-container text-on-secondary-container px-2 py-1 rounded text-xs">BALANCED</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-6 font-semibold text-on-surface font-body-sm">Austin Outpost</td>
+<td class="py-4 px-6 text-on-surface">18 Floor / 14 Kitchen</td>
+<td class="py-4 px-6 text-on-surface font-bold">78 covers/hr</td>
+<td class="py-4 px-6 text-on-surface">$82.50</td>
+<td class="py-4 px-6 text-tertiary">23.5%</td>
+<td class="py-4 px-6 text-primary font-bold">28.4% (Over-par)</td>
+<td class="py-4 px-6"><span class="bg-primary-fixed text-on-primary-fixed px-2 py-1 rounded text-xs">CUT SCHEDULED</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-6 font-semibold text-on-surface font-body-sm">Brooklyn Roastery</td>
+<td class="py-4 px-6 text-on-surface">11 Floor / 8 Kitchen</td>
+<td class="py-4 px-6 text-on-surface font-bold">84 covers/hr</td>
+<td class="py-4 px-6 text-on-surface">$54.10</td>
+<td class="py-4 px-6 text-tertiary">21.0%</td>
+<td class="py-4 px-6 text-secondary font-bold">19.8% (Optimal)</td>
+<td class="py-4 px-6"><span class="bg-secondary-container text-on-secondary-container px-2 py-1 rounded text-xs">BALANCED</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-6 font-semibold text-on-surface font-body-sm">Miami Beach</td>
+<td class="py-4 px-6 text-on-surface">20 Floor / 15 Kitchen</td>
+<td class="py-4 px-6 text-on-surface font-bold">118 covers/hr</td>
+<td class="py-4 px-6 text-on-surface">$144.90</td>
+<td class="py-4 px-6 text-tertiary">22.5%</td>
+<td class="py-4 px-6 text-secondary font-bold">21.4% (Optimal)</td>
+<td class="py-4 px-6"><span class="bg-secondary-container text-on-secondary-container px-2 py-1 rounded text-xs">PEAK HIGH</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs font-mono-ticket text-tertiary pt-space-xs gap-2">
+<span>Labor metrics ingest from 7shifts, HotSchedules, and native biometric terminal clocks.</span>
+<span class="text-on-surface font-semibold">Group Blended Prime Cost: 54.2% (Industry Benchmark: 58-62%)</span>
+</div>
+</div>
+</section>
+<!-- ENTERPRISE HOSPITALITY STACK INTEGRATIONS -->
+<section class="w-full max-w-7xl mx-auto px-gutter py-space-2xl">
+<div class="text-center space-y-space-xs mb-space-xl">
+<span class="font-label-caps text-label-caps text-primary uppercase">Ecosystem Harmony</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Direct bilateral ERP and accounting pipelines.</h2>
+<p class="font-body-md text-body-md text-tertiary max-w-xl mx-auto">
+        Mise connects directly to your existing institutional stack without brittle middleware or CSV spreadsheet exports.
+      </p>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-space-sm">
+<div class="bg-surface-container-low p-space-md rounded-xl text-center space-y-1 hover:bg-surface-container transition">
+<div class="font-headline-sm text-headline-sm font-bold text-on-surface">R365</div>
+<div class="text-xs font-mono-ticket text-tertiary">Restaurant365</div>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-xl text-center space-y-1 hover:bg-surface-container transition">
+<div class="font-headline-sm text-headline-sm font-bold text-on-surface">SAP</div>
+<div class="text-xs font-mono-ticket text-tertiary">Business One</div>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-xl text-center space-y-1 hover:bg-surface-container transition">
+<div class="font-headline-sm text-headline-sm font-bold text-on-surface">QBO</div>
+<div class="text-xs font-mono-ticket text-tertiary">Multi-Entity</div>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-xl text-center space-y-1 hover:bg-surface-container transition">
+<div class="font-headline-sm text-headline-sm font-bold text-on-surface">7shifts</div>
+<div class="text-xs font-mono-ticket text-tertiary">Enterprise</div>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-xl text-center space-y-1 hover:bg-surface-container transition">
+<div class="font-headline-sm text-headline-sm font-bold text-on-surface">XERO</div>
+<div class="text-xs font-mono-ticket text-tertiary">Consolidated</div>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-xl text-center space-y-1 hover:bg-surface-container transition">
+<div class="font-headline-sm text-headline-sm font-bold text-on-surface">ADP</div>
+<div class="text-xs font-mono-ticket text-tertiary">Workforce Now</div>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-xl text-center space-y-1 hover:bg-surface-container transition">
+<div class="font-headline-sm text-headline-sm font-bold text-on-surface">TOAST</div>
+<div class="text-xs font-mono-ticket text-tertiary">Legacy Import API</div>
+</div>
+</div>
+</section>
+<!-- OPERATOR FAQ ACCORDION -->
+<section class="w-full max-w-4xl mx-auto px-gutter py-space-2xl">
+<div class="text-center space-y-space-xs mb-space-xl">
+<span class="font-label-caps text-label-caps text-primary uppercase">Executive Inquiries</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Multi-unit operations, answered.</h2>
+</div>
+<div class="space-y-space-md" id="faq-accordion">
+<!-- FAQ 1 -->
+<div class="bg-surface-container-low rounded-xl p-space-lg shadow-sm space-y-space-sm cursor-pointer hover:bg-surface-container transition" onclick="toggleFaq(this)">
+<div class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface">
+<span>How does Mise handle different legal entities, sales taxes, and bank payouts for each branch?</span>
+<span class="material-symbols-outlined text-primary text-[24px] transform transition-transform duration-200">expand_more</span>
+</div>
+<p class="font-body-md text-body-md text-tertiary pt-2 border-t border-surface-container-highest">
+          Each location can be assigned an isolated Merchant Account, distinct Employer Identification Number (EIN), state/municipal tax schedule, and bank routing configuration. The parent corporate entity retains global ledger visibility while each restaurant functions legally and financially as an autonomous operating subsidiary.
+        </p>
+</div>
+<!-- FAQ 2 -->
+<div class="bg-surface-container-low rounded-xl p-space-lg shadow-sm space-y-space-sm cursor-pointer hover:bg-surface-container transition" onclick="toggleFaq(this)">
+<div class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface">
+<span>Can individual branch GMs make emergency menu 86s or price adjustments without corporate approval?</span>
+<span class="material-symbols-outlined text-primary text-[24px] transform transition-transform duration-200">expand_more</span>
+</div>
+<p class="font-body-md text-body-md text-tertiary pt-2 border-t border-surface-container-highest">
+          Yes. Real-time ingredient 86ing is always enabled at the local POS terminal for service safety and guest satisfaction. Price adjustments, however, are role-permissioned: you can grant branch GMs discretionary variance bounds (e.g., ±$2.00) or enforce strict corporate approval locks that require Regional Director sign-off via push notification.
+        </p>
+</div>
+<!-- FAQ 3 -->
+<div class="bg-surface-container-low rounded-xl p-space-lg shadow-sm space-y-space-sm cursor-pointer hover:bg-surface-container transition" onclick="toggleFaq(this)">
+<div class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface">
+<span>How do central commissary prep yields reflect in each restaurant's individual P&amp;L?</span>
+<span class="material-symbols-outlined text-primary text-[24px] transform transition-transform duration-200">expand_more</span>
+</div>
+<p class="font-body-md text-body-md text-tertiary pt-2 border-t border-surface-container-highest">
+          When commissary prep batches are completed and verified through digital barcode manifests, the raw cost is tracked against the commissary ledger. Upon store-level receiving handshake, internal transfer billing debits the receiving location’s COGS at negotiated internal transfer prices and credits the commissary hub.
+        </p>
+</div>
+<!-- FAQ 4 -->
+<div class="bg-surface-container-low rounded-xl p-space-lg shadow-sm space-y-space-sm cursor-pointer hover:bg-surface-container transition" onclick="toggleFaq(this)">
+<div class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface">
+<span>Can we migrate our multi-unit portfolio from Toast, NCR Aloha, or Micros without dining room downtime?</span>
+<span class="material-symbols-outlined text-primary text-[24px] transform transition-transform duration-200">expand_more</span>
+</div>
+<p class="font-body-md text-body-md text-tertiary pt-2 border-t border-surface-container-highest">
+          Yes. Our Enterprise Culinary Solutions team executes staggered cutovers. We ingest existing menu matrices, historical sales databases, and floor layouts in a staging environment. Transition takes place post-service during normal kitchen turnover hours with zero impact on active guest dining shifts.
+        </p>
+</div>
+</div>
+</section>
+<!-- CLOSING CONVERSION BANNER (DARK ATELIER CONTAINER) -->
+<section class="w-full max-w-7xl mx-auto px-gutter pb-space-3xl pt-space-xl">
+<div class="bg-[#111418] text-[#f2f1ee] p-space-2xl rounded-3xl shadow-2xl relative overflow-hidden">
+<!-- Subtle Decorative Radial Gradient -->
+<div class="absolute -right-20 -bottom-20 w-96 h-96 rounded-full bg-primary/20 blur-3xl pointer-events-none"></div>
+<div class="relative z-10 max-w-3xl space-y-space-lg">
+<div class="inline-flex items-center gap-2 bg-[#1e252c] text-neutral-300 font-label-caps text-label-caps uppercase px-3 py-1 rounded">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+          Enterprise Culinary Group Consultation
+        </div>
+<h2 class="font-display-xl text-display-xl text-white tracking-tight leading-tight">
+          Ready to unify your multi-unit hospitality portfolio?
+        </h2>
+<p class="font-body-lg text-body-lg text-neutral-300 max-w-2xl leading-relaxed">
+          Consult directly with our Enterprise Architecture team. Custom database migration, bespoke commissary workflow engineering, and dedicated executive onboarding.
+        </p>
+<div class="flex flex-wrap items-center gap-space-md pt-space-xs">
+<a class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-white font-body-sm text-body-sm font-semibold px-space-xl py-3.5 rounded-lg shadow-lg transition-all hover:scale-[1.02]" href="#schedule">
+            Schedule Executive Walkthrough
+          </a>
+<a class="inline-flex items-center justify-center bg-[#1f262d] hover:bg-[#2b353f] text-neutral-200 font-body-sm text-body-sm font-semibold px-space-lg py-3.5 rounded-lg transition-all" href="#pricing">
+            Explore Multi-Branch Pricing Tiers
+          </a>
+</div>
+<div class="pt-space-md border-t border-neutral-800 flex flex-wrap items-center gap-x-8 gap-y-2 text-xs font-mono-ticket text-neutral-400">
+<span class="inline-flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+            Dedicated Enterprise Account Lead
+          </span>
+<span class="inline-flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+            Custom SLA &amp; 99.99% Uptime Guarantee
+          </span>
+<span class="inline-flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+            White-glove multi-branch menu digitization
+          </span>
+</div>
+</div>
+</div>
+</section>
+<!-- Interactive Accordion Script -->
+<script>
+    function toggleFaq(el) {
+      const p = el.querySelector('p');
+      const icon = el.querySelector('.material-symbols-outlined');
+      if (p.classList.contains('hidden')) {
+        p.classList.remove('hidden');
+        icon.style.transform = 'rotate(180deg)';
+      } else {
+        p.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+      }
+    }
+  </script>
+</div></main><footer class="w-full bg-surface-container-low border-t border-surface-container-highest"><div class="max-w-7xl mx-auto px-gutter pt-space-3xl pb-space-2xl"><div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-space-2xl pb-space-2xl border-b border-surface-container-highest"><div class="lg:col-span-4 flex flex-col justify-between pr-0 lg:pr-space-xl"><div class="space-y-space-md"><div class="flex items-baseline gap-space-xs"><span class="font-display-xl text-headline-sm font-extrabold tracking-tight text-on-surface">mise<span class="text-primary">.</span></span></div><p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm">Engineered for ambitious restaurateurs and multi-location hospitality groups. High-velocity operations meet culinary precision.</p></div><div class="mt-space-xl space-y-space-sm"><span class="font-label-caps text-label-caps uppercase text-tertiary block">Dispatch &amp; Changelog</span><form class="flex items-center max-w-md gap-space-xs"><input class="bg-surface-container-lowest border border-surface-container-highest rounded-lg px-space-md py-space-sm font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-on-surface w-full" placeholder="chef@restaurant.com" type="email"/><button class="bg-on-surface hover:bg-inverse-surface text-surface-container-lowest font-body-sm text-body-sm px-space-md py-space-sm rounded-lg font-semibold shrink-0 transition-colors" type="button">Subscribe</button></form></div></div><div class="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-gutter"><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Platform</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">POS Terminal</li><li class="hover:text-on-surface cursor-pointer transition-colors">Kitchen Display (KDS)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Inventory Ledger</li><li class="hover:text-on-surface cursor-pointer transition-colors">Multi-Branch Hub</li><li class="hover:text-on-surface cursor-pointer transition-colors">Floor Architect</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Solutions</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Artisan Cafes</li><li class="hover:text-on-surface cursor-pointer transition-colors">Full-Service Dining</li><li class="hover:text-on-surface cursor-pointer transition-colors">Quick Service (QSR)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Ghost &amp; Cloud Kitchens</li><li class="hover:text-on-surface cursor-pointer transition-colors">Hospitality Groups</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Resources</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Operator Guides</li><li class="hover:text-on-surface cursor-pointer transition-colors">Hardware Catalog</li><li class="hover:text-on-surface cursor-pointer transition-colors">API Reference</li><li class="hover:text-on-surface cursor-pointer transition-colors">Changelog</li><li class="hover:text-on-surface cursor-pointer transition-colors">Kitchen Metrics</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Company</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Manifesto</li><li class="hover:text-on-surface cursor-pointer transition-colors">Careers (Hiring)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Contact Desk</li><li class="hover:text-on-surface cursor-pointer transition-colors">Press Kit</li><li class="hover:text-on-surface cursor-pointer transition-colors">Security Protocols</li></ul></div></div></div><div class="pt-space-xl flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex flex-wrap items-center gap-space-lg font-mono-ticket text-mono-ticket text-on-surface-variant"><span>© 2025 Mise Technologies, Inc.</span><a class="hover:text-on-surface transition-colors" href="#">Privacy Policy</a><a class="hover:text-on-surface transition-colors" href="#">Terms of Service</a><a class="hover:text-on-surface transition-colors" href="#">Cookie Protocol</a></div><div class="flex items-center gap-space-xs bg-secondary-container px-space-md py-space-xs rounded-full"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="font-label-caps text-label-caps uppercase text-on-secondary-container font-semibold">All Systems Operational</span></div></div></div></footer></body></html>

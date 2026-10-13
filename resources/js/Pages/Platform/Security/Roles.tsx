@@ -43,10 +43,10 @@ export default function SecurityRoles({ roles, permissions }: { roles: RoleRow[]
                             <button
                                 key={role.id}
                                 onClick={() => select(role)}
-                                className={'flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm ' + (active?.id === role.id ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50')}
+                                className={'flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ' + (active?.id === role.id ? 'bg-primary/10 font-semibold text-primary' : 'text-foreground hover:bg-muted/60')}
                             >
                                 <span>{role.name}</span>
-                                <span className="text-xs text-gray-400">{role.permissions.length}</span>
+                                <span className="text-xs text-muted-foreground">{role.permissions.length}</span>
                             </button>
                         ))}
                     </CardBody>
@@ -66,12 +66,20 @@ export default function SecurityRoles({ roles, permissions }: { roles: RoleRow[]
                     />
                     <CardBody>
                         {active?.locked ? (
-                            <p className="text-sm text-gray-500">The SaaS super admin role cannot be edited.</p>
+                            <p className="text-sm text-muted-foreground">The SaaS super admin role cannot be edited.</p>
                         ) : (
-                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                                 {permissions.map((permission) => (
-                                    <label key={permission.value} className="flex items-center gap-2 text-sm text-gray-700">
-                                        <input type="checkbox" checked={selected.includes(permission.value)} onChange={() => toggle(permission.value)} className="rounded border-gray-300" />
+                                    <label 
+                                        key={permission.value} 
+                                        className={'flex items-center gap-2.5 rounded-lg border p-2.5 text-sm cursor-pointer select-none transition ' + (selected.includes(permission.value) ? 'border-primary/50 bg-primary/5 text-foreground font-medium' : 'border-border text-muted-foreground hover:border-border/80')}
+                                    >
+                                        <input 
+                                            type="checkbox" 
+                                            checked={selected.includes(permission.value)} 
+                                            onChange={() => toggle(permission.value)} 
+                                            className="h-4 w-4 rounded border-input text-primary shadow-2xs focus-visible:ring-1 focus-visible:ring-ring" 
+                                        />
                                         <span className="font-mono text-xs">{permission.label}</span>
                                     </label>
                                 ))}

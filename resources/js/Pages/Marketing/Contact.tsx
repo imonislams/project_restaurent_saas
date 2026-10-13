@@ -52,7 +52,7 @@ export default function Contact() {
 
                                 <div className="space-y-4 text-xs sm:text-sm text-stone-600">
                                     <div className="flex items-start gap-3">
-                                        <div className="rounded-lg bg-emerald-100 p-2 text-emerald-800 shrink-0">
+                                        <div className="rounded-lg bg-primary/10 p-2 text-primary shrink-0">
                                             ✉️
                                         </div>
                                         <div>
@@ -63,7 +63,7 @@ export default function Contact() {
                                     </div>
 
                                     <div className="flex items-start gap-3 pt-2 border-t border-stone-100">
-                                        <div className="rounded-lg bg-indigo-100 p-2 text-indigo-800 shrink-0">
+                                        <div className="rounded-lg bg-secondary/10 p-2 text-secondary shrink-0">
                                             ⏱️
                                         </div>
                                         <div>
@@ -82,12 +82,12 @@ export default function Contact() {
                                 <p className="text-xs text-stone-600 leading-relaxed">
                                     Check our searchable Help Center for printer setup tutorials, register float guides, and menu importing steps.
                                 </p>
-                                <div className="pt-2 flex flex-col gap-2 text-xs font-semibold text-[#0B271F]">
-                                    <Link href="/help" className="hover:text-[#10B981] flex items-center gap-1">
+                                <div className="pt-2 flex flex-col gap-2 text-xs font-semibold text-primary">
+                                    <Link href="/help" className="hover:text-primary-container flex items-center gap-1">
                                         <span>Visit the Help Center</span>
                                         <span>→</span>
                                     </Link>
-                                    <Link href="/pricing" className="hover:text-[#10B981] flex items-center gap-1">
+                                    <Link href="/pricing" className="hover:text-primary-container flex items-center gap-1">
                                         <span>Review Pricing & Plan Inclusions</span>
                                         <span>→</span>
                                     </Link>
@@ -124,7 +124,7 @@ export default function Contact() {
                                                     value={data.name}
                                                     onChange={(e) => setData('name', e.target.value)}
                                                     placeholder="Elena Rostova"
-                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-[#10B981] focus:ring-[#10B981]"
+                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-primary focus:ring-primary/20"
                                                     required
                                                 />
                                                 {errors.name && <p className="mt-1 text-xs text-rose-600">{errors.name}</p>}
@@ -139,7 +139,7 @@ export default function Contact() {
                                                     value={data.email}
                                                     onChange={(e) => setData('email', e.target.value)}
                                                     placeholder="elena@bistro.com"
-                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-[#10B981] focus:ring-[#10B981]"
+                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-primary focus:ring-primary/20"
                                                     required
                                                 />
                                                 {errors.email && <p className="mt-1 text-xs text-rose-600">{errors.email}</p>}
@@ -156,7 +156,7 @@ export default function Contact() {
                                                     value={data.restaurant_name}
                                                     onChange={(e) => setData('restaurant_name', e.target.value)}
                                                     placeholder="Copper Bistro & Bar"
-                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-[#10B981] focus:ring-[#10B981]"
+                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-primary focus:ring-primary/20"
                                                     required
                                                 />
                                                 {errors.restaurant_name && <p className="mt-1 text-xs text-rose-600">{errors.restaurant_name}</p>}
@@ -169,7 +169,7 @@ export default function Contact() {
                                                 <select
                                                     value={data.venue_type}
                                                     onChange={(e) => setData('venue_type', e.target.value)}
-                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-[#10B981] focus:ring-[#10B981] bg-white"
+                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-primary focus:ring-primary/20 bg-white"
                                                 >
                                                     <option value="restaurant">Casual or Fine Dining</option>
                                                     <option value="cafe">Café or Bakery</option>
@@ -190,7 +190,7 @@ export default function Contact() {
                                                 <select
                                                     value={data.branches_count}
                                                     onChange={(e) => setData('branches_count', e.target.value)}
-                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-[#10B981] focus:ring-[#10B981] bg-white"
+                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-primary focus:ring-primary/20 bg-white"
                                                 >
                                                     <option value="1">1 Location (Single Store)</option>
                                                     <option value="2-5">2 – 5 Locations</option>
@@ -206,7 +206,7 @@ export default function Contact() {
                                                 <select
                                                     value={data.inquiry_category}
                                                     onChange={(e) => setData('inquiry_category', e.target.value)}
-                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-[#10B981] focus:ring-[#10B981] bg-white"
+                                                    className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-primary focus:ring-primary/20 bg-white"
                                                 >
                                                     <option value="sales">Sales & Pricing Inquiry</option>
                                                     <option value="demo">Book a Guided Video Demo</option>
@@ -226,7 +226,7 @@ export default function Contact() {
                                                 value={data.message}
                                                 onChange={(e) => setData('message', e.target.value)}
                                                 placeholder="Tell us about your current setup, hardware questions, or target launch date..."
-                                                className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-[#10B981] focus:ring-[#10B981]"
+                                                className="w-full rounded-xl border-stone-300 px-3.5 py-2.5 text-xs sm:text-sm focus:border-primary focus:ring-primary/20"
                                                 required
                                             />
                                             {errors.message && <p className="mt-1 text-xs text-rose-600">{errors.message}</p>}

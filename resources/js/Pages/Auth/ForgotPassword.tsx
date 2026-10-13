@@ -36,7 +36,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
             headerAction={
                 <Link
                     href={route('login')}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#0F3D30] hover:text-[#0B271F] transition-colors"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-container transition-colors"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -59,10 +59,10 @@ export default function ForgotPassword({ status }: { status?: string }) {
             {/* Form Header */}
             <div className="mb-8">
                 <div className="inline-flex items-center gap-1.5 rounded-md bg-stone-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-stone-600 mb-3">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     <span>Password Recovery</span>
                 </div>
-                <h1 className="font-display text-2xl font-bold tracking-tight text-[#0B271F] sm:text-3xl">
+                <h1 className="font-display text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">
                     {t('auth.reset_password')}
                 </h1>
                 <p className="mt-2 text-sm text-stone-500 leading-relaxed">
@@ -123,7 +123,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
             <div className="mt-8 text-center">
                 <Link
                     href={route('login')}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F3D30] hover:text-emerald-700 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-container transition-colors"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"

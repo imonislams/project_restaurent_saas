@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-tint": "#b12c13", "on-background": "#1a1c1a", "primary-fixed-dim": "#ffb4a4", "tertiary-container": "#73747a", "inverse-on-surface": "#f2f1ee", "inverse-surface": "#2f312f", "primary": "#ae2a10", "surface-bright": "#faf9f6", "surface-variant": "#e3e2e0", "tertiary": "#5a5c61", "surface": "#faf9f6", "on-secondary-container": "#52695d", "on-tertiary-fixed": "#1a1c20", "on-surface": "#1a1c1a", "on-surface-variant": "#5a413c", "inverse-primary": "#ffb4a4", "tertiary-fixed": "#e2e2e8", "surface-container": "#efeeeb", "on-primary-fixed-variant": "#8d1600", "on-secondary-fixed-variant": "#354c40", "surface-container-lowest": "#ffffff", "on-tertiary-container": "#fefcff", "secondary-container": "#cfe9d9", "on-tertiary": "#ffffff", "on-secondary-fixed": "#092016", "on-secondary": "#ffffff", "error": "#ba1a1a", "on-primary": "#ffffff", "surface-dim": "#dbdad7", "primary-fixed": "#ffdad3", "outline-variant": "#e2bfb7", "surface-container-low": "#f4f3f0", "tertiary-fixed-dim": "#c6c6cc", "surface-container-highest": "#e3e2e0", "secondary-fixed": "#cfe9d9", "secondary-fixed-dim": "#b3ccbe", "on-error": "#ffffff", "primary-container": "#d04327", "background": "#faf9f6", "on-error-container": "#93000a", "on-tertiary-fixed-variant": "#45474b", "on-primary-fixed": "#3e0500", "on-primary-container": "#fffbff", "error-container": "#ffdad6", "secondary": "#4c6358", "outline": "#8e706a", "surface-container-high": "#e9e8e5" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xs": "0.25rem", "gutter-sm": "1rem", "space-2xl": "4rem", "space-md": "1rem", "margin": "3rem", "space-sm": "0.5rem", "gutter": "1.5rem", "space-xl": "2.5rem", "space-lg": "1.5rem", "space-3xl": "6rem", "margin-sm": "1.25rem" }, "fontFamily": { "display-xl": [ "Plus Jakarta Sans" ], "headline-sm": [ "Plus Jakarta Sans" ], "mono-metric": [ "Space Mono" ], "headline-lg-mobile": [ "Plus Jakarta Sans" ], "mono-ticket": [ "Space Mono" ], "label-caps": [ "Space Mono" ], "headline-lg": [ "Plus Jakarta Sans" ], "body-md": [ "Plus Jakarta Sans" ], "display-xl-mobile": [ "Plus Jakarta Sans" ], "body-lg": [ "Plus Jakarta Sans" ], "headline-md": [ "Plus Jakarta Sans" ], "body-sm": [ "Plus Jakarta Sans" ] }, "fontSize": { "display-xl": [ "64px", { "lineHeight": "70px", "letterSpacing": "-0.03em", "fontWeight": "800" } ], "headline-sm": [ "20px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "mono-metric": [ "28px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "headline-lg-mobile": [ "28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "mono-ticket": [ "13px", { "lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "400" } ], "label-caps": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" } ], "headline-lg": [ "40px", { "lineHeight": "48px", "letterSpacing": "-0.025em", "fontWeight": "700" } ], "body-md": [ "15px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" } ], "display-xl-mobile": [ "38px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "800" } ], "body-lg": [ "18px", { "lineHeight": "28px", "letterSpacing": "-0.005em", "fontWeight": "400" } ], "headline-md": [ "26px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" } ], "body-sm": [ "13px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "500" } ] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-xl border-b border-surface-container-highest shadow-[0_1px_8px_rgba(0,0,0,0.03)]"><div class="h-20 max-w-7xl mx-auto px-gutter flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-2xl"><a class="flex items-baseline gap-space-xs group" data-path="home" href="#"><span class="font-display-xl text-headline-sm font-extrabold tracking-tight text-on-surface">mise<span class="text-primary">.</span></span><span class="font-label-caps text-label-caps uppercase text-secondary bg-secondary-container px-space-xs py-0.5 rounded">pos</span></a><nav class="hidden lg:flex items-center gap-space-lg" data-active-classes="text-primary font-semibold"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="product" href="#">Product</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="features" href="#">Features</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="solutions" href="#">Solutions</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="pricing" href="#">Pricing</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="resources" href="#">Resources</a></nav></div><div class="flex items-center gap-space-md"><a class="hidden sm:inline-flex font-body-sm text-body-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors px-space-sm py-space-xs" data-path="login" href="#">Sign In</a><a class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold px-space-lg py-space-sm rounded-lg shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]" data-path="signup" href="#">Start Free Trial</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- SECTION 1: BREADCRUMB & METRIC TICKER BANNER -->
+<section class="w-full px-gutter pt-space-xl pb-space-lg">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-xs font-mono-ticket text-mono-ticket text-on-surface-variant">
+<span>Platform</span>
+<span class="text-tertiary">/</span>
+<span>Features</span>
+<span class="text-tertiary">/</span>
+<span class="text-on-surface font-semibold">Inventory &amp; Recipe Ledger</span>
+</div>
+<div class="inline-flex items-center gap-space-sm bg-surface-container-high px-space-md py-space-xs rounded-full shadow-sm">
+<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+<span class="font-label-caps text-label-caps uppercase text-on-surface tracking-wider">
+          PRECISION COGS &amp; THEORETICAL FOOD COST • REAL-TIME RECIPE YIELD ENGINE
+        </span>
+</div>
+</div>
+</section>
+<!-- SECTION 2: EDITORIAL HERO -->
+<section class="w-full px-gutter pt-space-lg pb-space-3xl">
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-space-2xl items-end">
+<div class="lg:col-span-8 flex flex-col gap-space-lg">
+<div class="inline-flex items-center gap-space-xs text-primary font-mono-ticket text-mono-ticket uppercase tracking-widest font-bold">
+<span>[ LEDGER ARCHITECTURE v4.2 ]</span>
+</div>
+<h1 class="font-display-xl text-display-xl text-on-surface tracking-tight max-w-3xl">
+          Know every gram.<br/>
+<span class="text-primary italic">Protect every point</span> of margin.
+        </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+          Theoretical versus actual food cost, automated ingredient-level depletion with every chit fired, and instant vendor invoice capture. Stop finding out your food cost at the end of the month.
+        </p>
+<div class="flex flex-wrap items-center gap-space-md pt-space-sm">
+<a class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold px-space-xl py-space-md rounded-lg shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]" href="#">
+            Start 14-Day Free Trial
+          </a>
+<a class="inline-flex items-center justify-center bg-surface-container-lowest hover:bg-surface-container text-on-surface font-body-sm text-body-sm font-semibold px-space-xl py-space-md rounded-lg shadow-sm transition-colors" href="#">
+            Schedule COGS Audit
+          </a>
+</div>
+<div class="flex flex-wrap items-center gap-space-md text-on-surface-variant font-mono-ticket text-mono-ticket pt-space-xs">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+            Integrates with US Foods, Sysco &amp; local purveyors
+          </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+            Sub-ounce batch yields
+          </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+            Zero manual inventory spreadsheets
+          </span>
+</div>
+</div>
+<!-- Quick Metrics Slate Box -->
+<div class="lg:col-span-4 bg-inverse-surface text-inverse-on-surface p-space-xl rounded-xl shadow-xl flex flex-col justify-between h-full min-h-[300px]">
+<div class="space-y-space-md">
+<div class="flex items-center justify-between pb-space-sm">
+<span class="font-label-caps text-label-caps uppercase text-tertiary-fixed tracking-wider">LIVE THEORETICAL SPREAD</span>
+<span class="bg-primary/20 text-inverse-primary px-space-xs py-0.5 rounded font-mono-ticket text-mono-ticket">ACTIVE SHIFT</span>
+</div>
+<div>
+<span class="font-mono-metric text-mono-metric text-surface-bright font-bold">28.4%</span>
+<span class="font-body-sm text-body-sm text-tertiary-fixed-dim ml-2">Target COGS: 28.0%</span>
+</div>
+<p class="font-body-sm text-body-sm text-tertiary-fixed-dim">
+            Inventory depletion calibrated to 942 tickets fired across Lunch &amp; Dinner pass today.
+          </p>
+</div>
+<div class="pt-space-md mt-space-md bg-inverse-surface/40 flex items-center justify-between font-mono-ticket text-mono-ticket text-tertiary-fixed">
+<span>SHRINKAGE DELTA</span>
+<span class="text-inverse-primary font-bold">-$412.30 (1.2%)</span>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 3: SIGNATURE PRODUCT UI SHOWCASE (Dark Carbon Atelier Ledger) -->
+<section class="w-full px-gutter py-space-3xl bg-surface-container-low">
+<div class="max-w-7xl mx-auto space-y-space-xl">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md">
+<div>
+<span class="font-label-caps text-label-caps uppercase text-primary font-bold tracking-widest block mb-space-xs">CRAFT ENGINE VIEW</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">The Kitchen Display &amp; Recipe Ledger</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-md">
+          Real-time dual-sink synchronization: POS ticket fires decrement raw butchery portions while Sysco electronic invoices update recipe margins within seconds.
+        </p>
+</div>
+<!-- Atelier Cockpit Terminal Interface -->
+<div class="bg-[#111418] text-[#f4f3f0] rounded-xl shadow-2xl overflow-hidden p-space-lg lg:p-space-xl space-y-space-lg">
+<!-- Cockpit Header Strip -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-space-md pb-space-lg">
+<div class="bg-[#1a1f26] p-space-md rounded-lg">
+<span class="font-label-caps text-label-caps uppercase text-tertiary-fixed-dim block mb-1">TOTAL VALUATION</span>
+<span class="font-mono-metric text-mono-metric text-surface-bright font-bold">$34,820.40</span>
+<span class="font-mono-ticket text-mono-ticket text-secondary-container block mt-1">+1.4% vs last cycle</span>
+</div>
+<div class="bg-[#1a1f26] p-space-md rounded-lg">
+<span class="font-label-caps text-label-caps uppercase text-tertiary-fixed-dim block mb-1">THEORETICAL VS ACTUAL</span>
+<div class="flex items-baseline gap-2">
+<span class="font-mono-metric text-mono-metric text-surface-bright font-bold">28.4%</span>
+<span class="font-mono-ticket text-mono-ticket text-error-container">Act: 31.2%</span>
+</div>
+<span class="font-label-caps text-label-caps uppercase text-error-container block mt-1 font-semibold">+2.8% Variance Alert</span>
+</div>
+<div class="bg-[#1a1f26] p-space-md rounded-lg">
+<span class="font-label-caps text-label-caps uppercase text-tertiary-fixed-dim block mb-1">86-RISK ITEMS</span>
+<div class="flex items-center gap-space-xs">
+<span class="font-mono-metric text-mono-metric text-primary-fixed-dim font-bold">03</span>
+<span class="font-body-sm text-body-sm text-tertiary-fixed-dim">Dishes at Threshold</span>
+</div>
+<span class="font-mono-ticket text-mono-ticket text-tertiary-fixed-dim block mt-1">Dover Sole (4 left)</span>
+</div>
+<div class="bg-[#1a1f26] p-space-md rounded-lg">
+<span class="font-label-caps text-label-caps uppercase text-tertiary-fixed-dim block mb-1">EDI PURCHASE ORDERS</span>
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary-container"></span>
+<span class="font-mono-metric text-mono-metric text-surface-bright font-bold">PO #1084</span>
+</div>
+<span class="font-mono-ticket text-mono-ticket text-secondary-container block mt-1">Queued for Morning Dairy</span>
+</div>
+</div>
+<!-- Cockpit Main Split Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+<!-- Dish Recipe Cost Detail Panel (Cols 7) -->
+<div class="lg:col-span-7 bg-[#171c22] p-space-lg rounded-xl flex flex-col justify-between space-y-space-md">
+<div>
+<div class="flex flex-wrap items-start justify-between gap-space-sm pb-space-md">
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm font-bold text-surface-bright">Woodfire Wagyu Ribeye 14oz</span>
+<span class="bg-secondary/30 text-secondary-fixed px-space-xs py-0.5 rounded font-label-caps text-label-caps uppercase">PRIME CUT</span>
+</div>
+<span class="font-mono-ticket text-mono-ticket text-tertiary-fixed-dim">PLU: #4092 • Station: Woodfire Grill • Chef De Partie: Alex R.</span>
+</div>
+<div class="text-right">
+<span class="font-mono-metric text-mono-metric text-primary-fixed-dim font-bold">$18.42</span>
+<div class="font-mono-ticket text-mono-ticket text-tertiary-fixed-dim">
+                    Menu: $68.00 • <span class="text-secondary-fixed font-bold">Cost: 27.1%</span>
+</div>
+</div>
+</div>
+<!-- Real-time Purveyor Fluctuation Banner -->
+<div class="bg-primary/20 p-space-sm rounded-lg flex items-center justify-between gap-space-sm my-space-md">
+<div class="flex items-center gap-space-xs text-primary-fixed">
+<span class="material-symbols-outlined text-[18px]">trending_up</span>
+<span class="font-mono-ticket text-mono-ticket font-bold">Sysco EDI Invoice Alert:</span>
+<span class="font-mono-ticket text-mono-ticket text-inverse-on-surface">Beef Shortloin unit cost +8.4% on Tuesday</span>
+</div>
+<span class="font-label-caps text-label-caps uppercase bg-primary text-on-primary px-space-xs py-0.5 rounded whitespace-nowrap">Margin -1.2%</span>
+</div>
+<!-- Gram-Level Ingredient Breakdown Ledger Table -->
+<div class="space-y-space-xs pt-space-xs">
+<div class="grid grid-cols-12 text-tertiary-fixed-dim font-label-caps text-label-caps uppercase pb-space-xs">
+<span class="col-span-6">Ingredient / Sub-Batch</span>
+<span class="col-span-2 text-right">Raw Yield</span>
+<span class="col-span-2 text-right">Prep Yield</span>
+<span class="col-span-2 text-right">Portion Cost</span>
+</div>
+<div class="grid grid-cols-12 items-center py-space-xs hover:bg-[#1f252e] rounded px-space-xs transition-colors">
+<div class="col-span-6">
+<span class="font-body-sm text-body-sm font-semibold text-surface-bright block">400g Australian Wagyu Striploin</span>
+<span class="font-mono-ticket text-mono-ticket text-tertiary-fixed-dim">Inv #WY-984 • Sysco Meat Locker A</span>
+</div>
+<span class="col-span-2 text-right font-mono-ticket text-mono-ticket text-surface-variant">92%</span>
+<span class="col-span-2 text-right font-mono-ticket text-mono-ticket text-surface-variant">84%</span>
+<span class="col-span-2 text-right font-mono-ticket text-mono-ticket font-bold text-surface-bright">$14.10</span>
+</div>
+<div class="grid grid-cols-12 items-center py-space-xs hover:bg-[#1f252e] rounded px-space-xs transition-colors">
+<div class="col-span-6">
+<span class="font-body-sm text-body-sm font-semibold text-surface-bright block">45g Bone Marrow Compound Butter</span>
+<span class="font-mono-ticket text-mono-ticket text-tertiary-fixed-dim">Sub-Recipe Batch #09 • Saucier</span>
+</div>
+<span class="col-span-2 text-right font-mono-ticket text-mono-ticket text-surface-variant">98%</span>
+<span class="col-span-2 text-right font-mono-ticket text-mono-ticket text-surface-variant">95%</span>
+<span class="col-span-2 text-right font-mono-ticket text-mono-ticket font-bold text-surface-bright">$1.85</span>
+</div>
+<div class="grid grid-cols-12 items-center py-space-xs hover:bg-[#1f252e] rounded px-space-xs transition-colors">
+<div class="col-span-6">
+<span class="font-body-sm text-body-sm font-semibold text-surface-bright block">120g Charred Baby Leeks</span>
+<span class="font-mono-ticket text-mono-ticket text-tertiary-fixed-dim">Baldor Farm Gate Direct</span>
+</div>
+<span class="col-span-2 text-right font-mono-ticket text-mono-ticket text-surface-variant">88%</span>
+<span class="col-span-2 text-right font-mono-ticket text-mono-ticket text-surface-variant">79%</span>
+<span class="col-span-2 text-right font-mono-ticket text-mono-ticket font-bold text-surface-bright">$1.22</span>
+</div>
+<div class="grid grid-cols-12 items-center py-space-xs hover:bg-[#1f252e] rounded px-space-xs transition-colors">
+<div class="col-span-6">
+<span class="font-body-sm text-body-sm font-semibold text-surface-bright block">15ml Truffle Jus Reduction</span>
+<span class="font-mono-ticket text-mono-ticket text-tertiary-fixed-dim">Stock Reduction Master Batch (48hr)</span>
+</div>
+<span class="col-span-2 text-right font-mono-ticket text-mono-ticket text-surface-variant">100%</span>
+<span class="col-span-2 text-right font-mono-ticket text-mono-ticket text-surface-variant">62%</span>
+<span class="col-span-2 text-right font-mono-ticket text-mono-ticket font-bold text-surface-bright">$1.25</span>
+</div>
+</div>
+</div>
+<div class="pt-space-md flex items-center justify-between font-mono-ticket text-mono-ticket text-tertiary-fixed-dim">
+<span>Dish Contribution Margin: <span class="text-secondary-fixed font-bold">$49.58 / order</span></span>
+<button class="bg-[#262c36] hover:bg-[#323946] text-surface-bright px-space-md py-space-xs rounded font-semibold text-body-sm transition-colors">
+                Simulate Menu Price Adjustment →
+              </button>
+</div>
+</div>
+<!-- Stock Depletion Stream & Auto-PO Queues (Cols 5) -->
+<div class="lg:col-span-5 bg-[#171c22] p-space-lg rounded-xl flex flex-col justify-between space-y-space-md">
+<div>
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">bolt</span>
+<span class="font-label-caps text-label-caps uppercase text-surface-bright font-bold">LIVE CHIT DEPLETION STREAM</span>
+</div>
+<span class="font-mono-ticket text-mono-ticket text-secondary-fixed">Zero-Latency POS Sync</span>
+</div>
+<!-- Stream Entries -->
+<div class="space-y-space-sm pt-space-xs">
+<div class="bg-[#1d222a] p-space-sm rounded-lg flex items-start justify-between gap-space-sm">
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="font-label-caps text-label-caps uppercase bg-primary/30 text-primary-fixed-dim px-space-xs rounded">TBL 14</span>
+<span class="font-body-sm text-body-sm font-semibold text-surface-bright">Ordered 2x Wagyu Ribeye</span>
+</div>
+<span class="font-mono-ticket text-mono-ticket text-tertiary-fixed-dim block mt-1">
+                      -800g Wagyu auto-deducted from Walk-in Cooler A
+                    </span>
+</div>
+<span class="font-mono-ticket text-mono-ticket text-tertiary-fixed-dim whitespace-nowrap">2m ago</span>
+</div>
+<div class="bg-[#1d222a] p-space-sm rounded-lg flex items-start justify-between gap-space-sm">
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="font-label-caps text-label-caps uppercase bg-secondary/30 text-secondary-fixed px-space-xs rounded">BAR 02</span>
+<span class="font-body-sm text-body-sm font-semibold text-surface-bright">Ordered 3x Negroni Classico</span>
+</div>
+<span class="font-mono-ticket text-mono-ticket text-tertiary-fixed-dim block mt-1">
+                      -135ml Campari • -135ml Sweet Vermouth • -135ml Gin
+                    </span>
+</div>
+<span class="font-mono-ticket text-mono-ticket text-tertiary-fixed-dim whitespace-nowrap">6m ago</span>
+</div>
+<div class="bg-[#1d222a] p-space-sm rounded-lg flex items-start justify-between gap-space-sm">
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="font-label-caps text-label-caps uppercase bg-tertiary-container/40 text-surface-bright px-space-xs rounded">TBL 08</span>
+<span class="font-body-sm text-body-sm font-semibold text-surface-bright">Ordered 1x Dover Sole + Side Jus</span>
+</div>
+<span class="font-mono-ticket text-mono-ticket text-tertiary-fixed-dim block mt-1">
+                      -1 Whole Fish (3 remain) • -30ml Brown Butter Lemon
+                    </span>
+</div>
+<span class="font-mono-ticket text-mono-ticket text-tertiary-fixed-dim whitespace-nowrap">11m ago</span>
+</div>
+</div>
+<!-- Automated Par Alert Box -->
+<div class="mt-space-md p-space-md bg-secondary/15 rounded-lg">
+<div class="flex items-center justify-between pb-space-xs">
+<span class="font-label-caps text-label-caps uppercase text-secondary-fixed font-bold">AUTOMATED PURVEYOR REORDER</span>
+<span class="font-mono-ticket text-mono-ticket text-secondary-container">TRIGGER MET</span>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between font-body-sm text-body-sm text-surface-bright">
+<span class="font-semibold">Heavy Whipping Cream 36%</span>
+<span class="font-mono-ticket text-mono-ticket text-error-container">3.2 / Par 8.0 gal</span>
+</div>
+<p class="font-mono-ticket text-mono-ticket text-tertiary-fixed-dim">
+                    PO #1084 queued for Morning Dairy Co delivery tomorrow 06:00 AM.
+                  </p>
+</div>
+</div>
+</div>
+<div class="pt-space-sm flex items-center justify-between font-mono-ticket text-mono-ticket text-tertiary-fixed-dim">
+<span>Connected Purveyors: 6 Active</span>
+<span class="text-secondary-fixed font-bold">Sync Active (EDI/FTP)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 4: 4 CORE OPERATIONAL PILLARS -->
+<section class="w-full px-gutter py-space-3xl">
+<div class="max-w-7xl mx-auto space-y-space-2xl">
+<div class="max-w-2xl space-y-space-xs">
+<span class="font-label-caps text-label-caps uppercase text-primary font-bold tracking-widest">FOUNDATIONS OF ATELIER MARGIN CONTROL</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Engineered for Culinary Margins.</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Built not by accountants, but with master butchers, sommeliers, and multi-unit culinary directors who demand sub-ounce fidelity.
+        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Pillar 01 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-space-md">
+<div class="space-y-space-md">
+<span class="font-mono-metric text-mono-metric text-primary font-bold">01</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Sub-Gram Recipe Depletion</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Every side substitution, allergen omission, and cocktail modifier decrements exact gram weights the microsecond the chit hits the kitchen pass.
+            </p>
+</div>
+<div class="pt-space-md font-mono-ticket text-mono-ticket text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">scale</span>
+            Zero rounding inaccuracies
+          </div>
+</div>
+<!-- Pillar 02 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-space-md">
+<div class="space-y-space-md">
+<span class="font-mono-metric text-mono-metric text-primary font-bold">02</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Real-Time Invoice AI Parse</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Snap photos of paper purveyor receipts or connect automated PDF invoices via EDI. Pack sizes, catch weights, and price changes reflect instantly.
+            </p>
+</div>
+<div class="pt-space-md font-mono-ticket text-mono-ticket text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">document_scanner</span>
+            OCR • 99.8% field accuracy
+          </div>
+</div>
+<!-- Pillar 03 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-space-md">
+<div class="space-y-space-md">
+<span class="font-mono-metric text-mono-metric text-primary font-bold">03</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Theoretical vs Actual Variance</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Compare what should have left the walk-in against physical stock counts. Instantly isolate line over-portioning from prep spoilage and shrinkage.
+            </p>
+</div>
+<div class="pt-space-md font-mono-ticket text-mono-ticket text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">query_stats</span>
+            Real-time shift attribution
+          </div>
+</div>
+<!-- Pillar 04 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-space-md">
+<div class="space-y-space-md">
+<span class="font-mono-metric text-mono-metric text-primary font-bold">04</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Dynamic Margin Protection</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Set target margin rules (e.g. 72% gross). When seasonal wholesale spikes cut contribution margin, get alerted before running dinner service.
+            </p>
+</div>
+<div class="pt-space-md font-mono-ticket text-mono-ticket text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">shield</span>
+            Threshold guardrails
+          </div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 5: DEEP OPERATIONAL DEEP-DIVES (Asymmetrical Editorial Showcases) -->
+<section class="w-full px-gutter py-space-3xl space-y-space-3xl">
+<!-- Deep Dive A: Theoretical vs Actual Variance Analysis -->
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-space-2xl items-center">
+<div class="lg:col-span-5 space-y-space-md">
+<span class="font-label-caps text-label-caps uppercase text-secondary font-bold tracking-widest block">OPERATIONAL PRECISION</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">
+          Eliminate end-of-month inventory surprises.
+        </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Traditional hospitality operations run blind for 30 days before calculating food cost percentages. Mise compares theoretical usage against physical shelf counts in real-time, locating the exact dollar amount of meat shrinkage or bartender over-pours.
+        </p>
+<div class="p-space-md bg-surface-container rounded-lg space-y-space-xs">
+<div class="flex items-center justify-between font-mono-ticket text-mono-ticket font-bold text-on-surface">
+<span>Primary Variance Target:</span>
+<span class="text-primary">&lt; 1.5% Variance Allowance</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Shift-based attribution flags whether variance occurred during prep (butchery yield delta) or line service (heavy tongs on portioning).
+          </p>
+</div>
+</div>
+<div class="lg:col-span-7 bg-surface-container-lowest p-space-lg lg:p-space-xl rounded-xl shadow-md space-y-space-md">
+<div class="flex items-center justify-between pb-space-sm">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Weekly Meat Locker Variance Audit</h4>
+<span class="font-mono-ticket text-mono-ticket text-on-surface-variant">Station: Butchery • Cycle: Oct 14 - Oct 20</span>
+</div>
+<span class="bg-secondary-container text-on-secondary-container px-space-sm py-space-xs rounded font-label-caps text-label-caps uppercase">AUDIT COMPLETED</span>
+</div>
+<!-- Inline SVG Variance Chart Comparison -->
+<div class="bg-surface-container-low p-space-md rounded-lg space-y-space-sm">
+<div class="flex items-center justify-between text-mono-ticket font-mono-ticket">
+<span class="text-on-surface-variant">Theoretical Consumption vs Physical Count</span>
+<span class="text-error font-bold">-$412.00 Unaccounted Shrinkage</span>
+</div>
+<svg class="w-full h-32" fill="none" viewbox="0 0 500 120" xmlns="http://www.w3.org/2000/svg">
+<!-- Grid Lines -->
+<line class="text-surface-variant" stroke="currentColor" stroke-dasharray="4 4" x1="0" x2="500" y1="20" y2="20"></line>
+<line class="text-surface-variant" stroke="currentColor" stroke-dasharray="4 4" x1="0" x2="500" y1="60" y2="60"></line>
+<line class="text-surface-variant" stroke="currentColor" stroke-dasharray="4 4" x1="0" x2="500" y1="100" y2="100"></line>
+<!-- Theoretical Usage Line (Dotted Gray) -->
+<path class="text-tertiary" d="M 20 80 Q 120 40, 250 50 T 480 30" fill="none" stroke="currentColor" stroke-dasharray="6 4" stroke-width="2"></path>
+<!-- Actual Count Depletion Line (Solid Primary Red) -->
+<path class="text-primary" d="M 20 80 Q 120 45, 250 68 T 480 52" fill="none" stroke="currentColor" stroke-width="3"></path>
+<!-- Shrinkage Area Indicator -->
+<circle class="fill-tertiary" cx="250" cy="50" r="4"></circle>
+<circle class="fill-primary" cx="250" cy="68" r="5"></circle>
+<line class="text-primary" stroke="currentColor" stroke-width="2" x1="250" x2="250" y1="50" y2="68"></line>
+<circle class="fill-tertiary" cx="480" cy="30" r="4"></circle>
+<circle class="fill-primary" cx="480" cy="52" r="5"></circle>
+<line class="text-primary" stroke="currentColor" stroke-width="2" x1="480" x2="480" y1="30" y2="52"></line>
+</svg>
+<div class="flex items-center justify-between text-mono-ticket font-mono-ticket text-on-surface-variant pt-space-xs">
+<span class="flex items-center gap-2">
+<span class="w-3 h-0.5 bg-tertiary inline-block"></span> Theoretical (POS Depletion)
+            </span>
+<span class="flex items-center gap-2">
+<span class="w-3 h-0.5 bg-primary inline-block"></span> Actual (Physical Scale Count)
+            </span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-space-sm pt-space-xs">
+<div class="bg-surface-container p-space-sm rounded">
+<span class="font-label-caps text-label-caps uppercase text-tertiary block">PRIME CUT COGS</span>
+<span class="font-mono-metric text-headline-sm font-bold text-on-surface">$12,480.00</span>
+</div>
+<div class="bg-surface-container p-space-sm rounded">
+<span class="font-label-caps text-label-caps uppercase text-tertiary block">THEO USAGE</span>
+<span class="font-mono-metric text-headline-sm font-bold text-on-surface">320.5 kg</span>
+</div>
+<div class="bg-surface-container p-space-sm rounded">
+<span class="font-label-caps text-label-caps uppercase text-error block">LINE VARIANCE</span>
+<span class="font-mono-metric text-headline-sm font-bold text-error">+8.4 kg missing</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Deep Dive B: Vendor Invoicing & Automated Purchase Orders -->
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-space-2xl items-center">
+<div class="lg:col-span-7 order-2 lg:order-1 bg-surface-container-lowest p-space-lg lg:p-space-xl rounded-xl shadow-md space-y-space-md">
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[28px]">receipt_long</span>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Baldor Specialty • Inv #BL-89241</h4>
+<span class="font-mono-ticket text-mono-ticket text-on-surface-variant">Ingested via EDI OCR • Matched to 14 recipes</span>
+</div>
+</div>
+<span class="bg-secondary-container text-on-secondary-container px-space-sm py-space-xs rounded font-label-caps text-label-caps uppercase">AUTO-RECONCILED</span>
+</div>
+<!-- Purveyor Item Ingestion Ledger -->
+<div class="space-y-space-xs font-mono-ticket text-mono-ticket">
+<div class="grid grid-cols-12 py-space-xs px-space-sm bg-surface-container rounded text-on-surface-variant font-bold text-label-caps uppercase">
+<span class="col-span-5">Purveyor SKU</span>
+<span class="col-span-2 text-right">Pack Qty</span>
+<span class="col-span-2 text-right">Unit Price</span>
+<span class="col-span-3 text-right">Delta / Status</span>
+</div>
+<div class="grid grid-cols-12 py-space-sm px-space-sm items-center hover:bg-surface-container-low rounded">
+<div class="col-span-5">
+<span class="font-semibold text-on-surface block">Chanterelle Mushrooms</span>
+<span class="text-tertiary">Baldor #CH-4402 (5 lb crate)</span>
+</div>
+<span class="col-span-2 text-right text-on-surface">4 crates</span>
+<span class="col-span-2 text-right font-bold text-on-surface">$124.00</span>
+<span class="col-span-3 text-right text-secondary font-bold">Unchanged</span>
+</div>
+<div class="grid grid-cols-12 py-space-sm px-space-sm items-center hover:bg-surface-container-low rounded bg-error-container/20">
+<div class="col-span-5">
+<span class="font-semibold text-on-surface block">French Fingerling Potatoes</span>
+<span class="text-tertiary">Baldor #POT-90 (50 lb sack)</span>
+</div>
+<span class="col-span-2 text-right text-on-surface">3 sacks</span>
+<span class="col-span-2 text-right font-bold text-on-surface">$46.50</span>
+<span class="col-span-3 text-right text-error font-bold">+11.2% Price Spike</span>
+</div>
+<div class="grid grid-cols-12 py-space-sm px-space-sm items-center hover:bg-surface-container-low rounded">
+<div class="col-span-5">
+<span class="font-semibold text-on-surface block">Meyer Lemons Organic</span>
+<span class="text-tertiary">Baldor #CIT-12 (Case 36ct)</span>
+</div>
+<span class="col-span-2 text-right text-on-surface">2 cases</span>
+<span class="col-span-2 text-right font-bold text-on-surface">$38.00</span>
+<span class="col-span-3 text-right text-secondary font-bold">-2.4% Discount</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-space-sm font-mono-ticket text-mono-ticket text-on-surface-variant">
+<span>Auto-PO Par Algorithm: Predictive based on 180 booked covers</span>
+<button class="bg-on-surface text-surface-container-lowest px-space-md py-space-xs rounded font-semibold text-body-sm hover:bg-inverse-surface transition-colors">
+            Approve Auto-POs (3)
+          </button>
+</div>
+</div>
+<div class="lg:col-span-5 order-1 lg:order-2 space-y-space-md">
+<span class="font-label-caps text-label-caps uppercase text-secondary font-bold tracking-widest block">SUPPLY CHAIN AUTOMATION</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">
+          Vendor Invoicing &amp; Automated Purchase Orders.
+        </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Connect directly with broadline distributors like Sysco and US Foods, or local farm purveyors. Mise reads packing slips, updates unit costs across every batch sub-recipe, and generates 1-click purchase orders based on reservations and historical consumption.
+        </p>
+<ul class="space-y-space-xs font-body-sm text-body-sm text-on-surface-variant">
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">done</span>
+            Predictive pars adjust for Friday rain or holiday buyouts.
+          </li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">done</span>
+            Zero data-entry keying errors or misplaced credit memos.
+          </li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">done</span>
+            Instant price spike notifications before margin is lost.
+          </li>
+</ul>
+</div>
+</div>
+<!-- Deep Dive C: Multi-Level Batch Prep & Sub-Recipes -->
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-space-2xl items-center">
+<div class="lg:col-span-5 space-y-space-md">
+<span class="font-label-caps text-label-caps uppercase text-secondary font-bold tracking-widest block">COMPLEX GASTRONOMY</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">
+          Batch Prep &amp; Multi-Level Sub-Recipes.
+        </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Restaurant cooking relies on nested yields: roasted veal bones become brown stock, which reduces into demi-glace, which finishes a signature sauce au poivre. Mise tracks yield shrinkage at every culinary phase, ensuring each plated dish bears its exact true cost.
+        </p>
+<div class="p-space-md bg-surface-container rounded-lg font-mono-ticket text-mono-ticket text-on-surface-variant space-y-1">
+<div class="text-on-surface font-bold">Nested Yield Example:</div>
+<div>20kg Veal Bones → 12L Stock (60% yield) → 3.5L Demi-Glace (29% yield)</div>
+<div class="text-secondary font-bold">Calculated True Cost: $0.18 per milliliter</div>
+</div>
+</div>
+<div class="lg:col-span-7 bg-surface-container-lowest p-space-lg lg:p-space-xl rounded-xl shadow-md space-y-space-md">
+<div class="flex items-center justify-between pb-space-xs">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Sub-Recipe Tree: Mother Sauce Yield Waterfall</h4>
+<span class="font-mono-ticket text-mono-ticket text-tertiary">3 Tiers Deep</span>
+</div>
+<!-- Visual Tree Diagram -->
+<div class="space-y-space-sm">
+<!-- Tier 1: Raw Prep -->
+<div class="p-space-sm bg-surface-container rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded bg-primary/20 text-primary flex items-center justify-center font-bold text-label-caps">L1</span>
+<div>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface block">Veal Stock Master Batch (40 Liters)</span>
+<span class="font-mono-ticket text-mono-ticket text-tertiary">Raw Yield: 52% • Cost: $118.40 total</span>
+</div>
+</div>
+<span class="font-mono-ticket text-mono-ticket font-bold text-on-surface">$2.96 / L</span>
+</div>
+<!-- Tree branch visual connector -->
+<div class="pl-8 -my-2 text-tertiary font-mono-ticket text-mono-ticket">↓ 70% volume reduction via Saucier station</div>
+<!-- Tier 2: Sub-Prep -->
+<div class="ml-6 p-space-sm bg-surface-container rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-label-caps">L2</span>
+<div>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface block">Classic 48hr Demi-Glace Reduction (12 Liters)</span>
+<span class="font-mono-ticket text-mono-ticket text-tertiary">Includes Mirepoix + Port Wine • Prep Yield: 30%</span>
+</div>
+</div>
+<span class="font-mono-ticket text-mono-ticket font-bold text-on-surface">$12.40 / L</span>
+</div>
+<!-- Tree branch visual connector -->
+<div class="pl-14 -my-2 text-tertiary font-mono-ticket text-mono-ticket">↓ Portioned into service sauces across 4 menu items</div>
+<!-- Tier 3: Plated Line Dishes -->
+<div class="ml-12 space-y-space-xs">
+<div class="p-space-xs bg-surface-container-high rounded flex items-center justify-between font-mono-ticket text-mono-ticket">
+<span class="text-on-surface">45ml Demi → Wagyu Ribeye 14oz</span>
+<span class="font-bold text-on-surface">$0.56 / portion</span>
+</div>
+<div class="p-space-xs bg-surface-container-high rounded flex items-center justify-between font-mono-ticket text-mono-ticket">
+<span class="text-on-surface">60ml Demi → Braised Short Rib Tagliatelle</span>
+<span class="font-bold text-on-surface">$0.74 / portion</span>
+</div>
+<div class="p-space-xs bg-surface-container-high rounded flex items-center justify-between font-mono-ticket text-mono-ticket">
+<span class="text-on-surface">30ml Demi → Roasted Duck Breast Glaze</span>
+<span class="font-bold text-on-surface">$0.37 / portion</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 6: PURVEYOR & ACCOUNTING ECOSYSTEM INTEGRATION STRIP -->
+<section class="w-full px-gutter py-space-2xl bg-surface-container-low">
+<div class="max-w-7xl mx-auto space-y-space-lg text-center">
+<div>
+<span class="font-label-caps text-label-caps uppercase text-tertiary font-bold tracking-widest block mb-space-xs">SEAMLESS SUPPLY CHAIN &amp; GENERAL LEDGER SYNC</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Engineered to integrate with your kitchen ecosystem.</h3>
+</div>
+<div class="flex flex-wrap items-center justify-center gap-space-lg font-mono-ticket text-mono-ticket text-on-surface-variant">
+<div class="bg-surface-container-lowest px-space-lg py-space-sm rounded-lg shadow-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">local_shipping</span>
+          SYSCO EDI SYNC
+        </div>
+<div class="bg-surface-container-lowest px-space-lg py-space-sm rounded-lg shadow-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">inventory_2</span>
+          US FOODS CONNECT
+        </div>
+<div class="bg-surface-container-lowest px-space-lg py-space-sm rounded-lg shadow-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">eco</span>
+          BALDOR SPECIALTY FOODS
+        </div>
+<div class="bg-surface-container-lowest px-space-lg py-space-sm rounded-lg shadow-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">sync_alt</span>
+          TOAST HISTORICAL SYNC
+        </div>
+<div class="bg-surface-container-lowest px-space-lg py-space-sm rounded-lg shadow-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">calculate</span>
+          QUICKBOOKS ONLINE
+        </div>
+<div class="bg-surface-container-lowest px-space-lg py-space-sm rounded-lg shadow-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">account_balance</span>
+          XERO / RESTAURANT365
+        </div>
+</div>
+</div>
+</section>
+<!-- SECTION 7: INVENTORY QUESTIONS FROM CHEFS & OPERATORS (ACCORDION FAQ) -->
+<section class="w-full px-gutter py-space-3xl">
+<div class="max-w-4xl mx-auto space-y-space-2xl">
+<div class="text-center space-y-space-xs">
+<span class="font-label-caps text-label-caps uppercase text-primary font-bold tracking-widest">KITCHEN REALITIES</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Frequently Asked by Executive Chefs &amp; F&amp;B Directors</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Real kitchens are chaotic, hot, and constantly shifting. Here is how Mise accounts for the reality of culinary operations.
+        </p>
+</div>
+<div class="space-y-space-md" id="inventory-faq">
+<!-- Q1 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-xs">
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-semibold flex items-center justify-between">
+<span>How does Mise handle daily yield variations on whole butchery or whole fish breakdown?</span>
+<span class="material-symbols-outlined text-tertiary">expand_more</span>
+</h4>
+<p class="font-body-md text-body-md text-on-surface-variant pt-space-xs">
+            Mise includes a dedicated Whole-Animal Butchery Ledger. When your brigade breaks down a 45kg whole Halibut or whole side of beef, you enter the raw weight and resulting yields (fillets, collar, trim for tartare, bones for stock). Mise dynamically calculates the accurate cost per portion for each yield stream based on your actual cut weights that morning, rather than a theoretical textbook ratio.
+          </p>
+</div>
+<!-- Q2 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-xs">
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-semibold flex items-center justify-between">
+<span>Can we take physical inventory counts on mobile tablets without halting service?</span>
+<span class="material-symbols-outlined text-tertiary">expand_more</span>
+</h4>
+<p class="font-body-md text-body-md text-on-surface-variant pt-space-xs">
+            Yes. Mise supports live concurrent counting on iOS and Android handhelds. Multiple sous chefs can count the walk-in, line coolers, and cellar simultaneously. Mise stamps each count timestamp against tickets fired in real-time, accurately reconciling in-flight orders without requiring kitchen shut-downs.
+          </p>
+</div>
+<!-- Q3 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-xs">
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-semibold flex items-center justify-between">
+<span>What happens when a chef substitutes an ingredient on the fly during service?</span>
+<span class="material-symbols-outlined text-tertiary">expand_more</span>
+</h4>
+<p class="font-body-md text-body-md text-on-surface-variant pt-space-xs">
+            Using the Line Lead POS quick-action panel, chefs can trigger a “Service Substitution” in two taps (e.g., “Sub Chanterelles for Morels on Risotto for remainder of service”). Mise instantly re-routes depletion from Morel bins to Chanterelle bins and recalibrates dish margin for that shift’s run.
+          </p>
+</div>
+<!-- Q4 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-xs">
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-semibold flex items-center justify-between">
+<span>Does Mise support multiple stock locations like dry storage, cellar, and walk-in?</span>
+<span class="material-symbols-outlined text-tertiary">expand_more</span>
+</h4>
+<p class="font-body-md text-body-md text-on-surface-variant pt-space-xs">
+            Yes. Every restaurant floor plan in Mise can map distinct inventory locations: Main Walk-In, Pastry Freezer, Dry Storage, Bar Cellar, Line Low-Boys, and Satellite Service Bars. Internal transfers between locations are logged with a quick tap, giving multi-room venues precise stock visibility.
+          </p>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 8: CLOSING CONVERSION BANNER (Dark Ink Carbon Editorial Accent) -->
+<section class="w-full px-gutter pb-space-3xl">
+<div class="max-w-7xl mx-auto bg-inverse-surface text-inverse-on-surface rounded-2xl p-space-xl lg:p-space-3xl shadow-2xl relative overflow-hidden">
+<!-- Decorative faint glowing background element -->
+<div class="absolute -right-20 -bottom-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="max-w-3xl space-y-space-lg relative z-10">
+<span class="font-label-caps text-label-caps uppercase text-primary-fixed-dim font-bold tracking-widest block">
+          48-HOUR ONBOARDING GUARANTEE
+        </span>
+<h2 class="font-headline-lg text-headline-lg text-surface-bright">
+          Ready to stop bleeding margin on prep and waste?
+        </h2>
+<p class="font-body-lg text-body-lg text-tertiary-fixed-dim">
+          Deploy Mise Inventory in your kitchen in under 48 hours. Send us your messy recipe spreadsheets and purveyor bills—our dedicated culinary engineering team will digitize, yield-test, and load them at zero charge.
+        </p>
+<div class="flex flex-wrap items-center gap-space-md pt-space-sm">
+<a class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold px-space-xl py-space-md rounded-lg shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]" href="#">
+            Start 14-Day Free Trial
+          </a>
+<a class="inline-flex items-center justify-center bg-transparent hover:bg-surface-container/10 text-surface-bright font-body-sm text-body-sm font-semibold px-space-xl py-space-md rounded-lg transition-colors" href="#">
+            Talk with a Culinary Operations Specialist
+          </a>
+</div>
+<div class="pt-space-md flex flex-wrap items-center gap-space-lg font-mono-ticket text-mono-ticket text-tertiary-fixed">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary-fixed text-[18px]">verified</span>
+            Zero Lock-In Contracts
+          </span>
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary-fixed text-[18px]">verified</span>
+            Free Recipe Spreadsheet Migration
+          </span>
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary-fixed text-[18px]">verified</span>
+            Dedicated Sommelier &amp; Chef Support Desk
+          </span>
+</div>
+</div>
+</div>
+</section>
+</div></main><footer class="w-full bg-surface-container-low border-t border-surface-container-highest"><div class="max-w-7xl mx-auto px-gutter pt-space-3xl pb-space-2xl"><div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-space-2xl pb-space-2xl border-b border-surface-container-highest"><div class="lg:col-span-4 flex flex-col justify-between pr-0 lg:pr-space-xl"><div class="space-y-space-md"><div class="flex items-baseline gap-space-xs"><span class="font-display-xl text-headline-sm font-extrabold tracking-tight text-on-surface">mise<span class="text-primary">.</span></span></div><p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm">Engineered for ambitious restaurateurs and multi-location hospitality groups. High-velocity operations meet culinary precision.</p></div><div class="mt-space-xl space-y-space-sm"><span class="font-label-caps text-label-caps uppercase text-tertiary block">Dispatch &amp; Changelog</span><form class="flex items-center max-w-md gap-space-xs"><input class="bg-surface-container-lowest border border-surface-container-highest rounded-lg px-space-md py-space-sm font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-on-surface w-full" placeholder="chef@restaurant.com" type="email"/><button class="bg-on-surface hover:bg-inverse-surface text-surface-container-lowest font-body-sm text-body-sm px-space-md py-space-sm rounded-lg font-semibold shrink-0 transition-colors" type="button">Subscribe</button></form></div></div><div class="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-gutter"><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Platform</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">POS Terminal</li><li class="hover:text-on-surface cursor-pointer transition-colors">Kitchen Display (KDS)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Inventory Ledger</li><li class="hover:text-on-surface cursor-pointer transition-colors">Multi-Branch Hub</li><li class="hover:text-on-surface cursor-pointer transition-colors">Floor Architect</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Solutions</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Artisan Cafes</li><li class="hover:text-on-surface cursor-pointer transition-colors">Full-Service Dining</li><li class="hover:text-on-surface cursor-pointer transition-colors">Quick Service (QSR)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Ghost &amp; Cloud Kitchens</li><li class="hover:text-on-surface cursor-pointer transition-colors">Hospitality Groups</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Resources</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Operator Guides</li><li class="hover:text-on-surface cursor-pointer transition-colors">Hardware Catalog</li><li class="hover:text-on-surface cursor-pointer transition-colors">API Reference</li><li class="hover:text-on-surface cursor-pointer transition-colors">Changelog</li><li class="hover:text-on-surface cursor-pointer transition-colors">Kitchen Metrics</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Company</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Manifesto</li><li class="hover:text-on-surface cursor-pointer transition-colors">Careers (Hiring)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Contact Desk</li><li class="hover:text-on-surface cursor-pointer transition-colors">Press Kit</li><li class="hover:text-on-surface cursor-pointer transition-colors">Security Protocols</li></ul></div></div></div><div class="pt-space-xl flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex flex-wrap items-center gap-space-lg font-mono-ticket text-mono-ticket text-on-surface-variant"><span>© 2025 Mise Technologies, Inc.</span><a class="hover:text-on-surface transition-colors" href="#">Privacy Policy</a><a class="hover:text-on-surface transition-colors" href="#">Terms of Service</a><a class="hover:text-on-surface transition-colors" href="#">Cookie Protocol</a></div><div class="flex items-center gap-space-xs bg-secondary-container px-space-md py-space-xs rounded-full"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="font-label-caps text-label-caps uppercase text-on-secondary-container font-semibold">All Systems Operational</span></div></div></div></footer></body></html>

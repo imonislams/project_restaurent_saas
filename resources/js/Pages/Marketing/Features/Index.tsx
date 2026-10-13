@@ -150,17 +150,17 @@ export default function FeaturesIndex() {
                             <Link
                                 key={feature.slug}
                                 href={`/features/${feature.slug}`}
-                                className="group flex flex-col justify-between rounded-2xl border border-stone-200/90 bg-white p-7 hover:border-[#0B271F] hover:shadow-lg transition-all"
+                                className="group flex flex-col justify-between rounded-2xl border border-stone-200/90 bg-white p-7 hover:border-primary hover:shadow-lg transition-all"
                                 onClick={() => trackConversion('feature_viewed', { feature: feature.slug })}
                             >
                                 <div>
                                     <div className="flex items-center justify-between pb-3">
-                                        <span className="text-[11px] font-mono font-bold tracking-wider text-[#10B981]">
+                                        <span className="text-[11px] font-mono font-bold tracking-wider text-secondary">
                                             {feature.badge}
                                         </span>
                                     </div>
 
-                                    <h3 className="font-display text-xl font-bold text-stone-900 group-hover:text-[#0B271F] leading-snug">
+                                    <h3 className="font-display text-xl font-bold text-stone-900 group-hover:text-primary leading-snug">
                                         {feature.title}
                                     </h3>
 
@@ -171,14 +171,14 @@ export default function FeaturesIndex() {
                                     <div className="mt-5 pt-4 border-t border-stone-100 space-y-1.5 text-xs text-stone-600">
                                         {feature.highlights.map((h, i) => (
                                             <div key={i} className="flex items-center gap-2">
-                                                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+                                                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                                                 <span>{h}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="mt-6 pt-4 border-t border-stone-100 flex items-center justify-between text-xs font-semibold text-[#0B271F] group-hover:text-[#10B981]">
+                                <div className="mt-6 pt-4 border-t border-stone-100 flex items-center justify-between text-xs font-semibold text-primary group-hover:text-primary-container">
                                     <span>Explore {feature.title}</span>
                                     <span>→</span>
                                 </div>
@@ -187,7 +187,7 @@ export default function FeaturesIndex() {
                     </div>
 
                     {/* CTA Banner */}
-                    <div className="mt-20 rounded-3xl bg-[#0B271F] p-8 sm:p-12 text-white text-center">
+                    <div className="mt-20 rounded-3xl bg-[#1a1c1a] p-8 sm:p-12 text-white text-center">
                         <h2 className="font-display text-2xl sm:text-3xl font-extrabold">
                             Test Every Module With a 14-Day Free Trial
                         </h2>

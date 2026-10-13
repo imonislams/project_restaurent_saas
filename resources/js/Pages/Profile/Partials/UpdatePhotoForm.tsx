@@ -48,7 +48,7 @@ export default function UpdatePhotoForm({ className }: { className?: string }) {
                 {shown ? (
                     <img src={shown} alt="Profile photo" className="h-16 w-16 rounded-full object-cover shadow-subtle" />
                 ) : (
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-restrly-600 text-xl font-bold text-white shadow-subtle">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground shadow-xs">
                         {(user.name ?? 'U').slice(0, 1).toUpperCase()}
                     </div>
                 )}
@@ -59,7 +59,7 @@ export default function UpdatePhotoForm({ className }: { className?: string }) {
                         type="file"
                         accept="image/png,image/jpeg,image/webp"
                         onChange={pick}
-                        className="block text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-restrly-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-restrly-700 hover:file:bg-restrly-100"
+                        className="block text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
                     />
                     <Button type="submit" size="sm" loading={form.processing} disabled={!form.data.photo}>
                         Upload

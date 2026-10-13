@@ -1,6 +1,7 @@
 import Modal from '@/Components/Modal';
 import { ReactNode, useEffect, useState } from 'react';
 import Button from './Button';
+import Input from './Input';
 
 /**
  * Confirmation dialog for destructive/sensitive actions. For high-risk actions
@@ -41,28 +42,35 @@ export default function ConfirmDialog({
 
     return (
         <Modal show={show} onClose={onClose} maxWidth="md">
-            <div className="px-5 py-4">
-                <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-                {description && <p className="mt-1 text-sm text-gray-600">{description}</p>}
-                {children && <div className="mt-3">{children}</div>}
+            <div className="p-6">
+                <h2 className="text-base font-semibold tracking-tight text-foreground">{title}</h2>
+                {description && <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">{description}</p>}
+                {children && <div className="mt-3.5">{children}</div>}
                 {requireText && (
-                    <div className="mt-4">
-                        <label className="text-xs text-gray-500">
-                            Type <span className="font-mono font-semibold text-gray-800">{requireText}</span> to confirm
+                    <div className="mt-4 space-y-1.5">
+                        <label className="text-xs text-muted-foreground">
+                            Type <span className="font-mono font-semibold text-foreground">{requireText}</span> to confirm:
                         </label>
-                        <input
+                        <Input
                             value={typed}
                             onChange={(e) => setTyped(e.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+                            placeholder={requireText}
+                            className="font-mono"
                         />
                     </div>
                 )}
             </div>
-            <div className="flex items-center justify-end gap-2 border-t border-gray-100 px-5 py-3">
-                <Button variant="secondary" onClick={onClose} disabled={processing}>
+            <div className="flex items-center justify-end gap-2 border-t border-border/60 bg-muted/20 px-6 py-3.5">
+                <Button variant="secondary" size="sm" onClick={onClose} disabled={processing}>
                     {cancelLabel}
                 </Button>
-                <Button variant={tone === 'danger' ? 'danger' : 'primary'} onClick={onConfirm} disabled={blocked} loading={processing}>
+                <Button
+                    variant={tone === 'danger' ? 'destructive' : 'primary'}
+                    size="sm"
+                    onClick={onConfirm}
+                    disabled={blocked}
+                    loading={processing}
+                >
                     {confirmLabel}
                 </Button>
             </div>

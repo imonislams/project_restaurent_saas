@@ -10,7 +10,7 @@ export interface ProductMockupProps extends PropsWithChildren {
 
 export default function ProductMockup({
     children,
-    title = 'Restrly POS — Live Register',
+    title = 'mise.pos — Live Register',
     subtitle = 'Branch 01 · Downtown Flagship',
     statusBadge,
     variant = 'browser',
@@ -28,10 +28,10 @@ export default function ProductMockup({
 
     return (
         <div
-            className={`group relative overflow-hidden rounded-2xl border border-stone-300/80 bg-[#0B271F] p-1.5 shadow-2xl shadow-stone-950/20 transition-all duration-300 sm:rounded-3xl sm:p-2.5 ${className}`}
+            className={`group relative overflow-hidden rounded-2xl border border-stone-300/80 bg-[#1a1c1a] p-1.5 shadow-2xl shadow-stone-950/20 transition-all duration-300 sm:rounded-3xl sm:p-2.5 ${className}`}
         >
             {/* Ambient backlight glow */}
-            <div className="pointer-events-none absolute -inset-1 opacity-25 blur-xl bg-gradient-to-r from-[#10B981]/20 via-[#165B47]/10 to-[#0F3D30]/20" />
+            <div className="pointer-events-none absolute -inset-1 opacity-25 blur-xl bg-gradient-to-r from-primary/25 via-secondary/20 to-primary/15" />
 
             {/* Device Hardware Top Bar */}
             <div className="relative flex items-center justify-between px-3 py-2 sm:px-4 sm:py-2.5 text-xs text-stone-300">
@@ -52,7 +52,7 @@ export default function ProductMockup({
                         statusBadge
                     ) : (
                         <div className="flex items-center gap-1.5 rounded-md bg-white/10 px-2 py-0.5 text-stone-200">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" />
+                            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                             <span>CONNECTED · REALTIME</span>
                         </div>
                     )}

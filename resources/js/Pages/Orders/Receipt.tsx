@@ -268,7 +268,7 @@ export default function Receipt({
                     <button
                         type="button"
                         onClick={() => window.print()}
-                        className="rounded-xl bg-restrly-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-card hover:bg-restrly-700 active:scale-[0.99] transition"
+                        className="rounded-xl bg-primary px-5 py-2.5 text-xs sm:text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 active:scale-[0.99] transition"
                     >
                         Print Receipt 🖨
                     </button>

@@ -547,7 +547,7 @@ export default function PosIndex({
                     </p>
                     <Link
                         href={route('dashboard')}
-                        className="mt-6 inline-flex items-center justify-center rounded-lg bg-restrly-600 px-4 py-2.5 text-sm font-semibold text-white shadow-subtle hover:bg-restrly-700"
+                        className="mt-6 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-xs hover:bg-primary/90"
                     >
                         Return to Dashboard
                     </Link>
@@ -557,22 +557,22 @@ export default function PosIndex({
     }
 
     return (
-        <div className="flex h-screen flex-col overflow-hidden bg-gray-100 font-sans select-none">
+        <div className="flex h-screen flex-col overflow-hidden bg-background font-sans select-none">
             <Head title={`POS Terminal · ${branch.name}`} />
 
             {/* --- TOP BAR --- */}
-            <header className="flex h-14 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-3 md:px-4 shadow-subtle z-20">
+            <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-3 md:px-4 shadow-xs z-20">
                 {/* Left: Brand + Branch + Shift Status */}
                 <div className="flex items-center gap-2.5 sm:gap-3">
                     <Link
                         href={route('dashboard')}
                         title="Back to Admin Dashboard"
-                        className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition mr-1"
+                        className="flex items-center gap-2 text-foreground hover:opacity-80 transition mr-1"
                     >
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-restrly-600 text-white font-bold text-sm shadow-subtle">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-xs">
                             R
                         </div>
-                        <span className="hidden sm:inline font-bold tracking-tight text-gray-900 text-sm">
+                        <span className="hidden sm:inline font-bold tracking-tight text-foreground text-sm">
                             POS
                         </span>
                     </Link>
@@ -581,7 +581,7 @@ export default function PosIndex({
                     <div className="relative">
                         <select
                             aria-label="Branch selector"
-                            className="h-8 rounded-lg border border-gray-200 bg-gray-50 py-1 pl-2.5 pr-8 text-xs font-semibold text-gray-800 shadow-subtle focus:border-restrly-500 focus:ring-1 focus:ring-restrly-500 cursor-pointer"
+                            className="h-8 rounded-md border border-input bg-background py-1 pl-2.5 pr-8 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
                             value={branch.id}
                             onChange={(e) =>
                                 router.get(route('pos.index'), { branch_id: e.target.value }, { preserveScroll: true })
@@ -675,7 +675,7 @@ export default function PosIndex({
                         type="button"
                         onClick={() => setSoundEnabled((prev) => !prev)}
                         className={`rounded-lg border border-gray-200 p-1.5 text-xs transition shadow-subtle ${
-                            soundEnabled ? 'bg-restrly-50 text-restrly-700' : 'bg-gray-50 text-gray-400'
+                            soundEnabled ? 'bg-primary/10 text-primary' : 'bg-gray-50 text-gray-400'
                         }`}
                         title={soundEnabled ? 'Audio cues enabled' : 'Audio cues muted'}
                     >
@@ -736,7 +736,7 @@ export default function PosIndex({
                         }}
                         className={`mb-1.5 flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-xs font-semibold transition ${
                             activeCategory === 'all'
-                                ? 'bg-restrly-600 text-white shadow-subtle'
+                                ? 'bg-primary text-primary-foreground shadow-xs'
                                 : 'text-gray-700 hover:bg-gray-100'
                         }`}
                     >
@@ -768,7 +768,7 @@ export default function PosIndex({
                                 }}
                                 className={`mb-1 flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold transition ${
                                     active
-                                        ? 'bg-restrly-600 text-white shadow-subtle'
+                                        ? 'bg-primary text-primary-foreground shadow-xs'
                                         : 'text-gray-700 hover:bg-gray-100'
                                 }`}
                             >
@@ -802,17 +802,17 @@ export default function PosIndex({
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     onKeyDown={handleSearchKeyDown}
-                                    className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2 pl-9 pr-8 text-xs sm:text-sm text-gray-900 shadow-subtle placeholder:text-gray-400 focus:border-restrly-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-restrly-500"
+                                    className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2 pl-9 pr-8 text-xs sm:text-sm text-gray-900 shadow-subtle placeholder:text-gray-400 focus:border-ring focus:bg-white focus:outline-none focus:ring-1 focus:ring-ring"
                                 />
                                 {search && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setSearch('')}
-                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600"
-                                    >
-                                        ✕
-                                    </button>
-                                )}
+                                     <button
+                                         type="button"
+                                         onClick={() => setSearch('')}
+                                         className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600"
+                                     >
+                                         ✕
+                                     </button>
+                                 )}
                             </div>
 
                             {/* Small-screen category selector */}
@@ -823,17 +823,17 @@ export default function PosIndex({
                                     onChange={(e) =>
                                         setActiveCategory(
                                             e.target.value === 'all' ? 'all' : Number(e.target.value),
-                                        )
-                                    }
-                                    className="h-9 rounded-xl border border-gray-200 bg-gray-50 px-2 text-xs font-semibold text-gray-800"
-                                >
-                                    <option value="all">All items ({products.length})</option>
-                                    {categories.map((c) => (
-                                        <option key={c.id} value={c.id}>
-                                            {c.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                         )
+                                     }
+                                     className="h-9 rounded-xl border border-gray-200 bg-gray-50 px-2 text-xs font-semibold text-gray-800"
+                                 >
+                                     <option value="all">All items ({products.length})</option>
+                                     {categories.map((c) => (
+                                         <option key={c.id} value={c.id}>
+                                             {c.name}
+                                         </option>
+                                     ))}
+                                 </select>
                             </div>
                         </div>
                     </div>
@@ -851,13 +851,13 @@ export default function PosIndex({
                                     key={product.id}
                                     className={`group relative flex flex-col justify-between rounded-2xl border p-3 bg-white shadow-subtle transition-all duration-150 ${
                                         product.is_available
-                                            ? 'border-gray-200 hover:border-restrly-300 hover:shadow-card cursor-pointer'
+                                            ? 'border-gray-200 hover:border-primary/50 hover:shadow-card cursor-pointer'
                                             : 'border-gray-100 bg-gray-50/70 opacity-60'
                                     }`}
                                 >
                                     {/* In-cart count badge */}
                                     {inCartCount > 0 && (
-                                        <div className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-restrly-600 px-1 text-[10px] font-bold text-white shadow-subtle">
+                                        <div className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground shadow-subtle">
                                             ×{inCartCount}
                                         </div>
                                     )}
@@ -880,7 +880,7 @@ export default function PosIndex({
                                             )}
                                         </div>
 
-                                        <div className="mt-2 line-clamp-2 min-h-[2.5rem] text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-restrly-700 transition">
+                                        <div className="mt-2 line-clamp-2 min-h-[2.5rem] text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-primary transition">
                                             {product.name}
                                         </div>
 
@@ -901,7 +901,7 @@ export default function PosIndex({
                                                         e.stopPropagation();
                                                         addOrConfigure(product, v);
                                                     }}
-                                                    className="rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-700 hover:bg-restrly-100 hover:text-restrly-800 transition disabled:opacity-50"
+                                                    className="rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-700 hover:bg-primary/10 hover:text-primary transition disabled:opacity-50"
                                                 >
                                                     {v.name}
                                                     {v.price !== null && (
@@ -949,7 +949,7 @@ export default function PosIndex({
                                         }}
                                         className={`flex flex-col items-center justify-center rounded-lg py-1.5 text-[11px] font-semibold transition ${
                                             active
-                                                ? 'bg-white text-restrly-800 shadow-subtle'
+                                                ? 'bg-card text-primary shadow-xs'
                                                 : 'text-gray-600 hover:text-gray-900'
                                         }`}
                                     >
@@ -966,7 +966,7 @@ export default function PosIndex({
                                 <div className="col-span-2">
                                     <select
                                         aria-label="Table selection"
-                                        className="w-full rounded-xl border border-gray-300 bg-white py-1.5 px-2.5 text-xs font-medium text-gray-800 shadow-subtle focus:border-restrly-500 focus:ring-1 focus:ring-restrly-500"
+                                        className="w-full rounded-xl border border-input bg-background py-1.5 px-2.5 text-xs font-medium text-foreground shadow-xs focus:border-ring focus:ring-1 focus:ring-ring"
                                         value={tableId}
                                         onChange={(e) =>
                                             setTableId(e.target.value ? Number(e.target.value) : '')
@@ -1210,7 +1210,7 @@ export default function PosIndex({
                                             onClick={() => setDiscountValue(pct)}
                                             className={`rounded-md px-2 py-0.5 text-[10px] font-bold transition ${
                                                 discountValue === pct
-                                                    ? 'bg-restrly-600 text-white'
+                                                    ? 'bg-primary text-primary-foreground'
                                                     : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100'
                                             }`}
                                         >
@@ -1228,7 +1228,7 @@ export default function PosIndex({
                                     type="checkbox"
                                     checked={serviceCharge}
                                     onChange={(e) => setServiceCharge(e.target.checked)}
-                                    className="rounded border-gray-300 text-restrly-600 focus:ring-restrly-500"
+                                    className="rounded border-input text-primary focus:ring-ring"
                                 />
                                 <span>Service charge ({serviceChargeRate}%)</span>
                             </label>
@@ -1282,7 +1282,7 @@ export default function PosIndex({
                                 playSound('tap');
                                 setShowPayment(true);
                             }}
-                            className="mt-3 flex w-full items-center justify-between rounded-xl bg-restrly-600 px-4 py-3 text-sm font-bold text-white shadow-card hover:bg-restrly-700 active:scale-[0.99] transition disabled:opacity-50 disabled:pointer-events-none"
+                            className="mt-3 flex w-full items-center justify-between rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 active:scale-[0.99] transition disabled:opacity-50 disabled:pointer-events-none"
                         >
                             <span>{t('pos.pay')} (F4)</span>
                             <span className="font-mono tracking-tight">{money(totals.total, currency)}</span>
@@ -1414,13 +1414,13 @@ export default function PosIndex({
                                                         onClick={() => toggleModifier(group, option.id)}
                                                         className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
                                                             active
-                                                                ? 'border-restrly-500 bg-restrly-50 text-restrly-800'
-                                                                : 'border-gray-200 bg-white text-gray-700 hover:border-restrly-300'
+                                                                ? 'border-primary bg-primary/10 text-primary'
+                                                                : 'border-border bg-card text-foreground hover:border-primary/50'
                                                         }`}
                                                     >
                                                         {option.name}
                                                         {option.price_delta !== 0 && (
-                                                            <span className="ml-1 font-mono text-[10px] text-gray-500">
+                                                            <span className="ml-1 font-mono text-[10px] text-muted-foreground">
                                                                 +{money(option.price_delta, currency)}
                                                             </span>
                                                         )}
@@ -1433,11 +1433,11 @@ export default function PosIndex({
                             })}
                         </div>
 
-                        <div className="flex items-center justify-end gap-2 border-t border-gray-100 px-5 py-3">
+                        <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3">
                             <button
                                 type="button"
                                 onClick={() => setConfiguring(null)}
-                                className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                                className="rounded-xl border border-input bg-background px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
                             >
                                 Cancel
                             </button>
@@ -1445,7 +1445,7 @@ export default function PosIndex({
                                 type="button"
                                 disabled={!configureValid}
                                 onClick={confirmConfigure}
-                                className="rounded-xl bg-restrly-600 px-4 py-2 text-sm font-bold text-white shadow-card hover:bg-restrly-700 disabled:opacity-50"
+                                className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 disabled:opacity-50"
                             >
                                 Add to order
                             </button>
@@ -1741,13 +1741,13 @@ function PaymentModal({
                                             }}
                                             className={`flex flex-col items-center justify-center rounded-xl border p-2.5 text-xs font-bold transition ${
                                                 active
-                                                    ? 'border-restrly-600 bg-restrly-50 text-restrly-900 ring-2 ring-restrly-500/20'
+                                                    ? 'border-primary bg-primary/10 text-primary ring-2 ring-primary/20'
                                                     : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                                             }`}
                                         >
                                             <Icon
                                                 name={m.type === 'cash' ? 'wallet' : 'credit-card'}
-                                                className={`h-5 w-5 mb-1 ${active ? 'text-restrly-600' : 'text-gray-400'}`}
+                                                className={`h-5 w-5 mb-1 ${active ? 'text-primary' : 'text-gray-400'}`}
                                             />
                                             <span>{m.name}</span>
                                         </button>
@@ -1773,7 +1773,7 @@ function PaymentModal({
                                             min={total}
                                             value={singleTendered}
                                             onChange={(e) => setSingleTendered(Number(e.target.value))}
-                                            className="w-full rounded-xl border border-gray-300 bg-white py-2 pl-8 pr-3 font-mono text-lg font-bold text-gray-900 shadow-subtle focus:border-restrly-500 focus:ring-1 focus:ring-restrly-500"
+                                            className="w-full rounded-xl border border-input bg-background py-2 pl-8 pr-3 font-mono text-lg font-bold text-foreground shadow-xs focus:border-ring focus:ring-1 focus:ring-ring"
                                         />
                                     </div>
                                 </div>
@@ -1794,7 +1794,7 @@ function PaymentModal({
                                                 }}
                                                 className={`rounded-lg px-2.5 py-1 text-xs font-mono font-bold transition ${
                                                     singleTendered === amt
-                                                        ? 'bg-restrly-600 text-white'
+                                                        ? 'bg-primary text-primary-foreground'
                                                         : 'bg-white border border-gray-300 text-gray-800 hover:bg-gray-100'
                                                 }`}
                                             >
@@ -1827,7 +1827,7 @@ function PaymentModal({
                             <button
                                 type="button"
                                 onClick={handleAddSplitRow}
-                                className="text-xs font-bold text-restrly-600 hover:text-restrly-800"
+                                className="text-xs font-bold text-primary hover:opacity-80"
                             >
                                 + Add Method
                             </button>
@@ -1917,7 +1917,7 @@ function PaymentModal({
                         type="button"
                         onClick={submit}
                         disabled={form.processing || (isSplit && Math.abs(remainingToSplit) > 0.01)}
-                        className="rounded-xl bg-restrly-600 px-5 py-2 text-xs font-bold text-white shadow-card hover:bg-restrly-700 active:scale-[0.99] transition disabled:opacity-50"
+                        className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-primary-foreground shadow-xs hover:bg-primary/90 active:scale-[0.99] transition disabled:opacity-50"
                     >
                         {form.processing ? 'Processing...' : 'Complete Sale (Enter)'}
                     </button>
@@ -2011,7 +2011,7 @@ function ShiftModal({
                                 });
                             }}
                             disabled={openForm.processing}
-                            className="rounded-xl bg-restrly-600 px-4 py-2 text-xs font-bold text-white shadow-card hover:bg-restrly-700 disabled:opacity-50"
+                            className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-xs hover:bg-primary/90 disabled:opacity-50"
                         >
                             Open Shift
                         </button>
@@ -2247,7 +2247,7 @@ function HeldOrdersDrawer({
 
                                 <Link
                                     href={route('orders.show', order.id)}
-                                    className="rounded-xl border border-restrly-300 bg-restrly-50 px-3 py-1.5 text-xs font-bold text-restrly-700 hover:bg-restrly-100 transition shadow-subtle"
+                                    className="rounded-xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition shadow-subtle"
                                 >
                                     View / Settle →
                                 </Link>
@@ -2309,7 +2309,7 @@ function ItemNoteModal({
                         placeholder="e.g. Less oil, extra sauce on side, table allergy..."
                         value={initialNote}
                         onChange={(e) => onChangeNote(e.target.value)}
-                        className="w-full rounded-xl border border-gray-300 p-2 text-xs text-gray-900 focus:border-restrly-500 focus:ring-1 focus:ring-restrly-500"
+                        className="w-full rounded-xl border border-input bg-background p-2 text-xs text-foreground focus:border-ring focus:ring-1 focus:ring-ring"
                     />
                 </div>
 
@@ -2345,7 +2345,7 @@ function ItemNoteModal({
                     <button
                         type="button"
                         onClick={onSave}
-                        className="rounded-xl bg-restrly-600 px-4 py-1.5 text-xs font-bold text-white shadow-subtle hover:bg-restrly-700"
+                        className="rounded-xl bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground shadow-xs hover:bg-primary/90"
                     >
                         Save Note
                     </button>

@@ -1,5 +1,8 @@
 import { Badge, Button, Card, CardBody, CardHeader, Drawer, formatDate, formatMoney } from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/Table';
+import { Input } from '@/Components/ui/Input';
+import { Label } from '@/Components/ui/Label';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Link, router, useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
@@ -83,36 +86,38 @@ export default function InvoiceShow({ invoice, gateways }: { invoice: InvoiceVie
             <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <Card className="lg:col-span-2">
                     <CardHeader title="Line items" />
-                    <CardBody>
-                        <table className="w-full text-left text-sm">
-                            <thead className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-                                <tr>
-                                    <th className="py-2">Description</th>
-                                    <th className="py-2 text-right">Qty</th>
-                                    <th className="py-2 text-right">Unit</th>
-                                    <th className="py-2 text-right">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
+                    <CardBody className="p-0">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead className="text-right">Qty</TableHead>
+                                    <TableHead className="text-right">Unit</TableHead>
+                                    <TableHead className="text-right">Amount</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {invoice.items.map((item, i) => (
-                                    <tr key={i}>
-                                        <td className="py-2 text-gray-700">{item.description}</td>
-                                        <td className="py-2 text-right text-gray-600">{item.quantity}</td>
-                                        <td className="py-2 text-right text-gray-600">{formatMoney(item.unit_price, invoice.currency)}</td>
-                                        <td className="py-2 text-right text-gray-700">{formatMoney(item.amount, invoice.currency)}</td>
-                                    </tr>
+                                    <TableRow key={i}>
+                                        <TableCell className="font-medium text-foreground">{item.description}</TableCell>
+                                        <TableCell className="text-right tabular-nums text-muted-foreground">{item.quantity}</TableCell>
+                                        <TableCell className="text-right tabular-nums text-muted-foreground">{formatMoney(item.unit_price, invoice.currency)}</TableCell>
+                                        <TableCell className="text-right tabular-nums font-semibold text-foreground">{formatMoney(item.amount, invoice.currency)}</TableCell>
+                                    </TableRow>
                                 ))}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
 
-                        <dl className="mt-4 ml-auto w-64 space-y-1 text-sm">
-                            <div className="flex justify-between"><dt className="text-gray-500">Subtotal</dt><dd>{formatMoney(invoice.subtotal, invoice.currency)}</dd></div>
-                            {invoice.discount_amount > 0 && (
-                                <div className="flex justify-between"><dt className="text-gray-500">Discount {invoice.coupon_code}</dt><dd>-{formatMoney(invoice.discount_amount, invoice.currency)}</dd></div>
-                            )}
-                            <div className="flex justify-between border-t border-gray-200 pt-1 font-semibold"><dt>Total</dt><dd>{formatMoney(invoice.amount, invoice.currency)}</dd></div>
-                            <div className="flex justify-between"><dt className="text-gray-500">Outstanding</dt><dd>{formatMoney(invoice.outstanding, invoice.currency)}</dd></div>
-                        </dl>
+                        <div className="p-4 border-t border-border/50">
+                            <dl className="ml-auto w-64 space-y-1.5 text-sm">
+                                <div className="flex justify-between text-muted-foreground"><dt>Subtotal</dt><dd className="tabular-nums font-medium text-foreground">{formatMoney(invoice.subtotal, invoice.currency)}</dd></div>
+                                {invoice.discount_amount > 0 && (
+                                    <div className="flex justify-between text-muted-foreground"><dt>Discount {invoice.coupon_code}</dt><dd className="tabular-nums font-medium text-destructive">-{formatMoney(invoice.discount_amount, invoice.currency)}</dd></div>
+                                )}
+                                <div className="flex justify-between border-t border-border pt-1.5 font-semibold text-foreground"><dt>Total</dt><dd className="tabular-nums">{formatMoney(invoice.amount, invoice.currency)}</dd></div>
+                                <div className="flex justify-between text-muted-foreground"><dt>Outstanding</dt><dd className="tabular-nums font-medium text-foreground">{formatMoney(invoice.outstanding, invoice.currency)}</dd></div>
+                            </dl>
+                        </div>
                     </CardBody>
                 </Card>
 
@@ -185,37 +190,58 @@ export default function InvoiceShow({ invoice, gateways }: { invoice: InvoiceVie
             </div>
 
             <Drawer show={drawer === 'credit'} onClose={() => setDrawer(null)} title="Issue credit note" footer={<Button size="sm" loading={credit.processing} onClick={submitCredit}>Issue credit note</Button>}>
-                <form onSubmit={submitCredit} className="space-y-3">
-                    <label className="block">
-                        <span className="mb-1 block text-xs font-medium text-gray-500">Amount ({invoice.currency})</span>
-                        <input value={credit.data.amount} onChange={(e) => credit.setData('amount', e.target.value)} className="block w-full rounded-md border-gray-300 text-sm" />
-                        {credit.errors.amount && <span className="text-xs text-red-600">{credit.errors.amount}</span>}
-                    </label>
-                    <label className="block">
-                        <span className="mb-1 block text-xs font-medium text-gray-500">Reason</span>
-                        <input value={credit.data.reason} onChange={(e) => credit.setData('reason', e.target.value)} className="block w-full rounded-md border-gray-300 text-sm" />
-                        {credit.errors.reason && <span className="text-xs text-red-600">{credit.errors.reason}</span>}
-                    </label>
+                <form onSubmit={submitCredit} className="space-y-4">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="credit-amount" className="text-xs font-medium text-muted-foreground">Amount ({invoice.currency})</Label>
+                        <Input 
+                            id="credit-amount"
+                            value={credit.data.amount} 
+                            onChange={(e) => credit.setData('amount', e.target.value)} 
+                        />
+                        {credit.errors.amount && <span className="text-xs text-destructive">{credit.errors.amount}</span>}
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="credit-reason" className="text-xs font-medium text-muted-foreground">Reason</Label>
+                        <Input 
+                            id="credit-reason"
+                            value={credit.data.reason} 
+                            onChange={(e) => credit.setData('reason', e.target.value)} 
+                        />
+                        {credit.errors.reason && <span className="text-xs text-destructive">{credit.errors.reason}</span>}
+                    </div>
                 </form>
             </Drawer>
 
             <Drawer show={drawer === 'adjustment'} onClose={() => setDrawer(null)} title="Record adjustment" footer={<Button size="sm" loading={adjustment.processing} onClick={submitAdjustment}>Record adjustment</Button>}>
-                <form onSubmit={submitAdjustment} className="space-y-3">
-                    <label className="block">
-                        <span className="mb-1 block text-xs font-medium text-gray-500">Type</span>
-                        <select value={adjustment.data.type} onChange={(e) => adjustment.setData('type', e.target.value)} className="block w-full rounded-md border-gray-300 text-sm">
+                <form onSubmit={submitAdjustment} className="space-y-4">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="adj-type" className="text-xs font-medium text-muted-foreground">Type</Label>
+                        <select 
+                            id="adj-type"
+                            value={adjustment.data.type} 
+                            onChange={(e) => adjustment.setData('type', e.target.value)} 
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-2xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
                             <option value="credit">Credit (reduce balance)</option>
                             <option value="debit">Debit (increase balance)</option>
                         </select>
-                    </label>
-                    <label className="block">
-                        <span className="mb-1 block text-xs font-medium text-gray-500">Amount ({invoice.currency})</span>
-                        <input value={adjustment.data.amount} onChange={(e) => adjustment.setData('amount', e.target.value)} className="block w-full rounded-md border-gray-300 text-sm" />
-                    </label>
-                    <label className="block">
-                        <span className="mb-1 block text-xs font-medium text-gray-500">Reason</span>
-                        <input value={adjustment.data.reason} onChange={(e) => adjustment.setData('reason', e.target.value)} className="block w-full rounded-md border-gray-300 text-sm" />
-                    </label>
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="adj-amount" className="text-xs font-medium text-muted-foreground">Amount ({invoice.currency})</Label>
+                        <Input 
+                            id="adj-amount"
+                            value={adjustment.data.amount} 
+                            onChange={(e) => adjustment.setData('amount', e.target.value)} 
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="adj-reason" className="text-xs font-medium text-muted-foreground">Reason</Label>
+                        <Input 
+                            id="adj-reason"
+                            value={adjustment.data.reason} 
+                            onChange={(e) => adjustment.setData('reason', e.target.value)} 
+                        />
+                    </div>
                 </form>
             </Drawer>
         </PlatformLayout>

@@ -1,15 +1,19 @@
 import { cn } from './cn';
 
 const BASE =
-    'block w-full rounded-lg border border-gray-300 bg-white text-sm text-gray-900 shadow-sm transition placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:cursor-not-allowed disabled:bg-gray-50';
+    'flex w-full rounded-md border border-input bg-background text-sm text-foreground shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50';
 
-const invalid = 'border-red-300 focus:border-red-500 focus:ring-red-500/30';
+const invalid = 'border-destructive text-destructive focus-visible:ring-destructive';
 
-function Label({ label, hint, error }: { label?: string; hint?: string; error?: string }) {
+function LabelHeader({ label, hint, error }: { label?: string; hint?: string; error?: string }) {
     return (
         <>
-            {label && <span className="mb-1.5 block text-xs font-medium text-gray-600">{label}</span>}
-            {error ? <span className="mt-1 block text-xs text-red-600">{error}</span> : hint ? <span className="mt-1 block text-xs text-gray-400">{hint}</span> : null}
+            {label && <span className="mb-1.5 block text-xs font-semibold text-foreground tracking-tight">{label}</span>}
+            {error ? (
+                <span className="mt-1 block text-xs font-medium text-destructive">{error}</span>
+            ) : hint ? (
+                <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>
+            ) : null}
         </>
     );
 }
@@ -39,7 +43,7 @@ export function TextField({
 }) {
     return (
         <label className={cn('block', className)}>
-            <Label label={label} />
+            <LabelHeader label={label} />
             <input
                 type={type}
                 value={value}
@@ -52,10 +56,10 @@ export function TextField({
                         onEnter();
                     }
                 }}
-                className={cn(BASE, 'h-9 px-3', error && invalid)}
+                className={cn(BASE, 'h-9 px-3 py-1', error && invalid)}
             />
-            {error && <span className="mt-1 block text-xs text-red-600">{error}</span>}
-            {!error && hint && <span className="mt-1 block text-xs text-gray-400">{hint}</span>}
+            {error && <span className="mt-1 block text-xs font-medium text-destructive">{error}</span>}
+            {!error && hint && <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>}
         </label>
     );
 }
@@ -84,16 +88,20 @@ export function SelectField({
 }) {
     return (
         <label className={cn('block', className)}>
-            <Label label={label} />
-            <select value={value} onChange={(e) => onChange(e.target.value)} className={cn(BASE, 'h-9 px-3 pr-8', error && invalid)}>
+            <LabelHeader label={label} />
+            <select
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className={cn(BASE, 'h-9 px-3 py-1 pr-8 cursor-pointer', error && invalid)}
+            >
                 {options.map((option) => (
                     <option key={option.value} value={option.value}>
                         {option.label}
                     </option>
                 ))}
             </select>
-            {error && <span className="mt-1 block text-xs text-red-600">{error}</span>}
-            {!error && hint && <span className="mt-1 block text-xs text-gray-400">{hint}</span>}
+            {error && <span className="mt-1 block text-xs font-medium text-destructive">{error}</span>}
+            {!error && hint && <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>}
         </label>
     );
 }
@@ -119,10 +127,16 @@ export function TextareaField({
 }) {
     return (
         <label className={cn('block', className)}>
-            <Label label={label} />
-            <textarea rows={rows} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className={cn(BASE, 'px-3 py-2', error && invalid)} />
-            {error && <span className="mt-1 block text-xs text-red-600">{error}</span>}
-            {!error && hint && <span className="mt-1 block text-xs text-gray-400">{hint}</span>}
+            <LabelHeader label={label} />
+            <textarea
+                rows={rows}
+                value={value}
+                placeholder={placeholder}
+                onChange={(e) => onChange(e.target.value)}
+                className={cn(BASE, 'px-3 py-2', error && invalid)}
+            />
+            {error && <span className="mt-1 block text-xs font-medium text-destructive">{error}</span>}
+            {!error && hint && <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>}
         </label>
     );
 }
@@ -141,11 +155,16 @@ export function CheckboxField({
     className?: string;
 }) {
     return (
-        <label className={cn('flex items-start gap-2.5', className)}>
-            <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+        <label className={cn('flex items-start gap-2.5 cursor-pointer', className)}>
+            <input
+                type="checkbox"
+                checked={checked}
+                onChange={(e) => onChange(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-input text-primary shadow-xs focus:ring-ring"
+            />
             <span>
-                <span className="block text-sm text-gray-700">{label}</span>
-                {hint && <span className="block text-xs text-gray-400">{hint}</span>}
+                <span className="block text-xs font-semibold text-foreground tracking-tight">{label}</span>
+                {hint && <span className="block text-xs text-muted-foreground">{hint}</span>}
             </span>
         </label>
     );

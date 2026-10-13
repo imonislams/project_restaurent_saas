@@ -5,14 +5,21 @@ import {
     Card,
     CardBody,
     CardHeader,
+    ConfirmDialog,
     EmptyState,
     KpiCard,
     PageHeader,
-    ConfirmDialog,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Plus, Search, X } from 'lucide-react';
 import { FormEventHandler, useMemo, useState } from 'react';
 
 interface ExpenseRow {
@@ -202,18 +209,19 @@ export default function ExpensesIndex({
                         canManage && (
                             <div className="flex flex-wrap items-center gap-2">
                                 <Button
-                                    variant="secondary"
+                                    variant="outline"
                                     size="sm"
                                     onClick={() => setCategoryModalOpen(true)}
                                 >
-                                    + Add Category
+                                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                                    Add Category
                                 </Button>
                                 <Button
-                                    variant="primary"
                                     size="sm"
                                     onClick={() => setExpenseModalOpen(true)}
                                 >
-                                    + Record Expense
+                                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                                    Record Expense
                                 </Button>
                             </div>
                         )
@@ -270,17 +278,28 @@ export default function ExpensesIndex({
                             description={`${filteredExpenses.length} of ${expenses.length} records`}
                             action={
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Search description, reference, user…"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="h-9 w-48 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:w-60"
-                                    />
+                                    <div className="relative">
+                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                                        <input
+                                            type="text"
+                                            placeholder="Search description, reference…"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="h-8 w-44 sm:w-56 rounded-md border border-input bg-background pl-8 pr-7 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                                        />
+                                        {searchQuery && (
+                                            <button
+                                                onClick={() => setSearchQuery('')}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        )}
+                                    </div>
                                     <select
                                         value={categoryFilter}
                                         onChange={(e) => setCategoryFilter(e.target.value)}
-                                        className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="h-8 rounded-md border border-input bg-background px-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                                     >
                                         <option value="all">All Categories</option>
                                         {categoryNames.map((name) => (
@@ -292,7 +311,7 @@ export default function ExpensesIndex({
                                     <select
                                         value={branchFilter}
                                         onChange={(e) => setBranchFilter(e.target.value)}
-                                        className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="h-8 rounded-md border border-input bg-background px-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                                     >
                                         <option value="all">All Branches</option>
                                         {branchNames.map((name) => (
@@ -306,15 +325,15 @@ export default function ExpensesIndex({
                         />
 
                         {/* Status Filter Chips */}
-                        <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50/50 px-6 py-2.5 text-xs">
-                            <span className="font-semibold text-gray-500">Status:</span>
+                        <div className="flex flex-wrap items-center gap-1.5 border-b border-border bg-muted/20 px-6 py-2.5 text-xs">
+                            <span className="font-medium text-muted-foreground mr-1">Status:</span>
                             <button
                                 type="button"
                                 onClick={() => setStatusFilter('all')}
-                                className={`rounded-full px-2.5 py-1 font-medium transition ${
+                                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
                                     statusFilter === 'all'
-                                        ? 'bg-gray-900 text-white'
-                                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                                        ? 'bg-foreground text-background shadow-xs font-semibold'
+                                        : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
                                 }`}
                             >
                                 All ({expenses.length})
@@ -322,10 +341,10 @@ export default function ExpensesIndex({
                             <button
                                 type="button"
                                 onClick={() => setStatusFilter('submitted')}
-                                className={`rounded-full px-2.5 py-1 font-medium transition ${
+                                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
                                     statusFilter === 'submitted'
-                                        ? 'bg-amber-600 text-white'
-                                        : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'
+                                        ? 'bg-amber-600 text-white shadow-xs font-semibold'
+                                        : 'bg-amber-500/10 text-amber-700 hover:bg-amber-500/20'
                                 }`}
                             >
                                 Pending Review ({pendingCount})
@@ -333,10 +352,10 @@ export default function ExpensesIndex({
                             <button
                                 type="button"
                                 onClick={() => setStatusFilter('approved')}
-                                className={`rounded-full px-2.5 py-1 font-medium transition ${
+                                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
                                     statusFilter === 'approved'
-                                        ? 'bg-emerald-600 text-white'
-                                        : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+                                        ? 'bg-emerald-600 text-white shadow-xs font-semibold'
+                                        : 'bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20'
                                 }`}
                             >
                                 Approved ({approvedCount})
@@ -344,10 +363,10 @@ export default function ExpensesIndex({
                             <button
                                 type="button"
                                 onClick={() => setStatusFilter('rejected')}
-                                className={`rounded-full px-2.5 py-1 font-medium transition ${
+                                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
                                     statusFilter === 'rejected'
-                                        ? 'bg-rose-600 text-white'
-                                        : 'bg-rose-50 text-rose-800 hover:bg-rose-100 border border-rose-200'
+                                        ? 'bg-destructive text-destructive-foreground shadow-xs font-semibold'
+                                        : 'bg-destructive/10 text-destructive hover:bg-destructive/20'
                                 }`}
                             >
                                 Rejected
@@ -375,90 +394,90 @@ export default function ExpensesIndex({
                                     }
                                 />
                             ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm">
-                                        <thead className="border-b border-gray-200 bg-gray-50/80 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                            <tr>
-                                                <th className="px-6 py-3.5">Expense Date</th>
-                                                <th className="px-6 py-3.5">Description</th>
-                                                <th className="px-6 py-3.5">Category</th>
-                                                <th className="px-6 py-3.5">Branch</th>
-                                                <th className="px-6 py-3.5">Paid From</th>
-                                                <th className="px-6 py-3.5 text-right">Amount</th>
-                                                <th className="px-6 py-3.5 text-center">Status</th>
-                                                <th className="px-6 py-3.5">Recorded By</th>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-28">Date</TableHead>
+                                            <TableHead>Description</TableHead>
+                                            <TableHead>Category</TableHead>
+                                            <TableHead>Branch</TableHead>
+                                            <TableHead>Paid From</TableHead>
+                                            <TableHead className="text-right">Amount</TableHead>
+                                            <TableHead className="text-center">Status</TableHead>
+                                            <TableHead>Recorded By</TableHead>
+                                            {canApprove && (
+                                                <TableHead className="text-right">Actions</TableHead>
+                                            )}
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredExpenses.map((e) => (
+                                            <TableRow key={e.id}>
+                                                <TableCell className="text-xs font-mono text-muted-foreground whitespace-nowrap">
+                                                    {e.expense_date ?? '—'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className="font-medium text-foreground">{e.description}</span>
+                                                    {e.reference && (
+                                                        <span className="block font-mono text-xs text-muted-foreground mt-0.5">
+                                                            Ref: {e.reference}
+                                                        </span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                                                        {e.category ?? 'General'}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="text-muted-foreground text-xs">
+                                                    {e.branch ?? 'Company-wide'}
+                                                </TableCell>
+                                                <TableCell className="text-muted-foreground text-xs">
+                                                    {e.account ?? 'General Account'}
+                                                </TableCell>
+                                                <TableCell className="text-right font-semibold tabular-nums text-foreground">
+                                                    ${e.amount.toFixed(2)}
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <Badge tone={STATUS_TONE[e.status] ?? 'neutral'}>
+                                                        {e.status_label}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-xs text-muted-foreground">
+                                                    {e.created_by ?? 'System'}
+                                                </TableCell>
                                                 {canApprove && (
-                                                    <th className="px-6 py-3.5 text-right">Actions</th>
-                                                )}
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100 bg-white">
-                                            {filteredExpenses.map((e) => (
-                                                <tr key={e.id} className="hover:bg-gray-50/60 transition-colors">
-                                                    <td className="px-6 py-4 text-xs font-mono text-gray-500 whitespace-nowrap">
-                                                        {e.expense_date ?? '—'}
-                                                    </td>
-                                                    <td className="px-6 py-4 font-medium text-gray-900">
-                                                        {e.description}
-                                                        {e.reference && (
-                                                            <span className="block font-mono text-xs text-gray-400 mt-0.5">
-                                                                Ref: {e.reference}
+                                                    <TableCell className="text-right">
+                                                        {e.status === 'submitted' ? (
+                                                            <div className="flex items-center justify-end gap-1.5">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                                                                    onClick={() => handleApprove(e)}
+                                                                >
+                                                                    Approve
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                                    onClick={() => handleReject(e)}
+                                                                >
+                                                                    Reject
+                                                                </Button>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs text-muted-foreground/60">
+                                                                Finalized
                                                             </span>
                                                         )}
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
-                                                            {e.category ?? 'General'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-gray-600 text-xs">
-                                                        {e.branch ?? 'Company-wide'}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-gray-600 text-xs">
-                                                        {e.account ?? 'General Account'}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right font-mono font-bold tabular-nums text-gray-900">
-                                                        ${e.amount.toFixed(2)}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-center">
-                                                        <Badge tone={STATUS_TONE[e.status] ?? 'neutral'}>
-                                                            {e.status_label}
-                                                        </Badge>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-xs text-gray-500">
-                                                        {e.created_by ?? 'System'}
-                                                    </td>
-                                                    {canApprove && (
-                                                        <td className="px-6 py-4 text-right">
-                                                            {e.status === 'submitted' ? (
-                                                                <div className="flex items-center justify-end gap-1.5">
-                                                                    <Button
-                                                                        size="xs"
-                                                                        variant="success"
-                                                                        onClick={() => handleApprove(e)}
-                                                                    >
-                                                                        Approve
-                                                                    </Button>
-                                                                    <Button
-                                                                        size="xs"
-                                                                        variant="danger"
-                                                                        onClick={() => handleReject(e)}
-                                                                    >
-                                                                        Reject
-                                                                    </Button>
-                                                                </div>
-                                                            ) : (
-                                                                <span className="text-xs text-gray-400">
-                                                                    Finalized
-                                                                </span>
-                                                            )}
-                                                        </td>
-                                                    )}
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                    </TableCell>
+                                                )}
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
                             )}
                         </CardBody>
                     </Card>

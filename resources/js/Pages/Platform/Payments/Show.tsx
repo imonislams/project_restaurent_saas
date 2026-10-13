@@ -1,5 +1,7 @@
 import { Badge, Button, Card, CardBody, CardHeader, Drawer, formatDate, formatMoney } from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
+import { Input } from '@/Components/ui/Input';
+import { Label } from '@/Components/ui/Label';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Link, router, useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
@@ -120,18 +122,26 @@ export default function PaymentShow({ payment }: { payment: PaymentView }) {
             </div>
 
             <Drawer show={open} onClose={() => setOpen(false)} title="Issue refund" footer={<Button size="sm" variant="danger" loading={refund.processing} onClick={submit}>Refund</Button>}>
-                <form onSubmit={submit} className="space-y-3">
-                    <p className="text-sm text-gray-500">Refundable balance: {formatMoney(payment.refundable, payment.currency)}</p>
-                    <label className="block">
-                        <span className="mb-1 block text-xs font-medium text-gray-500">Amount ({payment.currency})</span>
-                        <input value={refund.data.amount} onChange={(e) => refund.setData('amount', e.target.value)} className="block w-full rounded-md border-gray-300 text-sm" />
-                        {refund.errors.amount && <span className="text-xs text-red-600">{refund.errors.amount}</span>}
-                    </label>
-                    <label className="block">
-                        <span className="mb-1 block text-xs font-medium text-gray-500">Reason</span>
-                        <input value={refund.data.reason} onChange={(e) => refund.setData('reason', e.target.value)} className="block w-full rounded-md border-gray-300 text-sm" />
-                        {refund.errors.reason && <span className="text-xs text-red-600">{refund.errors.reason}</span>}
-                    </label>
+                <form onSubmit={submit} className="space-y-4">
+                    <p className="text-xs text-muted-foreground">Refundable balance: <span className="font-semibold text-foreground">{formatMoney(payment.refundable, payment.currency)}</span></p>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="refund-amount" className="text-xs font-medium text-muted-foreground">Amount ({payment.currency})</Label>
+                        <Input 
+                            id="refund-amount"
+                            value={refund.data.amount} 
+                            onChange={(e) => refund.setData('amount', e.target.value)} 
+                        />
+                        {refund.errors.amount && <span className="text-xs text-destructive">{refund.errors.amount}</span>}
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="refund-reason" className="text-xs font-medium text-muted-foreground">Reason</Label>
+                        <Input 
+                            id="refund-reason"
+                            value={refund.data.reason} 
+                            onChange={(e) => refund.setData('reason', e.target.value)} 
+                        />
+                        {refund.errors.reason && <span className="text-xs text-destructive">{refund.errors.reason}</span>}
+                    </div>
                 </form>
             </Drawer>
         </PlatformLayout>

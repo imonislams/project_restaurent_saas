@@ -1,4 +1,6 @@
 import {
+    Avatar,
+    AvatarFallback,
     Badge,
     Button,
     Card,
@@ -10,11 +12,18 @@ import {
     KpiCard,
     Money,
     PageHeader,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
     TextField,
     TextareaField,
 } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Search, X } from 'lucide-react';
 import { FormEventHandler, useMemo, useState } from 'react';
 
 interface CustomerRow {
@@ -245,13 +254,14 @@ export default function CustomersIndex({
                                 {/* Search */}
                                 <div className="flex w-full max-w-md items-center gap-2">
                                     <div className="relative flex-1">
+                                        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                                         <input
                                             type="text"
                                             placeholder="Search by name or phone number..."
                                             value={search}
                                             onChange={(e) => setSearch(e.target.value)}
                                             onKeyDown={(e) => e.key === 'Enter' && triggerSearch()}
-                                            className="w-full rounded-lg border border-gray-300 py-1.5 pl-3 pr-8 text-sm placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                            className="h-9 w-full rounded-md border border-input bg-background py-1.5 pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                                         />
                                         {search && (
                                             <button
@@ -263,9 +273,9 @@ export default function CustomersIndex({
                                                         { preserveState: true, replace: true },
                                                     );
                                                 }}
-                                                className="absolute right-2.5 top-2 text-xs text-gray-400 hover:text-gray-600"
+                                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
                                             >
-                                                ✕
+                                                <X className="h-3.5 w-3.5" />
                                             </button>
                                         )}
                                     </div>
@@ -276,33 +286,33 @@ export default function CustomersIndex({
 
                                 {/* Status Filters */}
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <div className="flex items-center rounded-lg border border-gray-200 bg-gray-100 p-0.5 text-xs font-semibold">
+                                    <div className="flex items-center rounded-md border border-border bg-muted/40 p-0.5 text-xs font-medium">
                                         <button
                                             onClick={() => setStatusFilter('all')}
-                                            className={`rounded-md px-2.5 py-1 transition ${
+                                            className={`rounded-sm px-2.5 py-1 transition cursor-pointer ${
                                                 statusFilter === 'all'
-                                                    ? 'bg-white text-gray-900 shadow-sm'
-                                                    : 'text-gray-600 hover:text-gray-900'
+                                                    ? 'bg-background text-foreground shadow-xs font-semibold'
+                                                    : 'text-muted-foreground hover:text-foreground'
                                             }`}
                                         >
                                             All Status
                                         </button>
                                         <button
                                             onClick={() => setStatusFilter('active')}
-                                            className={`rounded-md px-2.5 py-1 transition ${
+                                            className={`rounded-sm px-2.5 py-1 transition cursor-pointer ${
                                                 statusFilter === 'active'
-                                                    ? 'bg-white text-gray-900 shadow-sm'
-                                                    : 'text-gray-600 hover:text-gray-900'
+                                                    ? 'bg-background text-foreground shadow-xs font-semibold'
+                                                    : 'text-muted-foreground hover:text-foreground'
                                             }`}
                                         >
                                             Active
                                         </button>
                                         <button
                                             onClick={() => setStatusFilter('inactive')}
-                                            className={`rounded-md px-2.5 py-1 transition ${
+                                            className={`rounded-sm px-2.5 py-1 transition cursor-pointer ${
                                                 statusFilter === 'inactive'
-                                                    ? 'bg-white text-gray-900 shadow-sm'
-                                                    : 'text-gray-600 hover:text-gray-900'
+                                                    ? 'bg-background text-foreground shadow-xs font-semibold'
+                                                    : 'text-muted-foreground hover:text-foreground'
                                             }`}
                                         >
                                             Inactive
@@ -310,23 +320,23 @@ export default function CustomersIndex({
                                     </div>
 
                                     {loyaltyEnabled && (
-                                        <div className="flex items-center rounded-lg border border-gray-200 bg-gray-100 p-0.5 text-xs font-semibold">
+                                        <div className="flex items-center rounded-md border border-border bg-muted/40 p-0.5 text-xs font-medium">
                                             <button
                                                 onClick={() => setPointsFilter('all')}
-                                                className={`rounded-md px-2.5 py-1 transition ${
+                                                className={`rounded-sm px-2.5 py-1 transition cursor-pointer ${
                                                     pointsFilter === 'all'
-                                                        ? 'bg-white text-gray-900 shadow-sm'
-                                                        : 'text-gray-600 hover:text-gray-900'
+                                                    ? 'bg-background text-foreground shadow-xs font-semibold'
+                                                    : 'text-muted-foreground hover:text-foreground'
                                                 }`}
                                             >
                                                 All Points
                                             </button>
                                             <button
                                                 onClick={() => setPointsFilter('has_points')}
-                                                className={`rounded-md px-2.5 py-1 transition ${
+                                                className={`rounded-sm px-2.5 py-1 transition cursor-pointer ${
                                                     pointsFilter === 'has_points'
-                                                        ? 'bg-white text-gray-900 shadow-sm'
-                                                        : 'text-gray-600 hover:text-gray-900'
+                                                    ? 'bg-background text-foreground shadow-xs font-semibold'
+                                                    : 'text-muted-foreground hover:text-foreground'
                                                 }`}
                                             >
                                                 Has Balance
@@ -363,18 +373,18 @@ export default function CustomersIndex({
                                 />
                             ) : (
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm">
-                                        <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                            <tr>
-                                                <th className="px-5 py-3.5">Customer Profile</th>
-                                                <th className="px-5 py-3.5">Contact Details</th>
-                                                <th className="px-5 py-3.5 text-center">Visits & Spend</th>
-                                                <th className="px-5 py-3.5 text-right">Loyalty Points</th>
-                                                <th className="px-5 py-3.5 text-center">Status</th>
-                                                {canManage && <th className="px-5 py-3.5 text-right">Actions</th>}
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100 bg-white">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="hover:bg-transparent">
+                                                <TableHead className="px-5 py-3">Customer Profile</TableHead>
+                                                <TableHead className="px-5 py-3">Contact Details</TableHead>
+                                                <TableHead className="px-5 py-3 text-center">Visits & Spend</TableHead>
+                                                <TableHead className="px-5 py-3 text-right">Loyalty Points</TableHead>
+                                                <TableHead className="px-5 py-3 text-center">Status</TableHead>
+                                                {canManage && <TableHead className="px-5 py-3 text-right">Actions</TableHead>}
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
                                             {filteredCustomers.map((customer) => {
                                                 const initials = customer.name
                                                     .split(' ')
@@ -384,99 +394,101 @@ export default function CustomersIndex({
                                                     .toUpperCase();
 
                                                 return (
-                                                    <tr key={customer.id} className="hover:bg-gray-50/80">
+                                                    <TableRow key={customer.id} className="hover:bg-muted/30 transition-colors">
                                                         {/* Profile */}
-                                                        <td className="px-5 py-3.5">
+                                                        <TableCell className="px-5 py-3.5">
                                                             <div className="flex items-center gap-3">
-                                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 font-bold text-indigo-700">
-                                                                    {initials || 'C'}
-                                                                </div>
+                                                                <Avatar className="h-8 w-8 rounded-full border border-border">
+                                                                    <AvatarFallback className="bg-primary/10 font-semibold text-primary text-xs">
+                                                                        {initials || 'C'}
+                                                                    </AvatarFallback>
+                                                                </Avatar>
                                                                 <div>
-                                                                    <div className="font-bold text-gray-900">
+                                                                    <div className="font-semibold text-foreground">
                                                                         {customer.name}
                                                                     </div>
                                                                     {customer.notes ? (
-                                                                        <div className="max-w-xs truncate text-xs text-gray-500">
+                                                                        <div className="max-w-xs truncate text-xs text-muted-foreground">
                                                                             {customer.notes}
                                                                         </div>
                                                                     ) : (
-                                                                        <div className="text-xs text-gray-400">
+                                                                        <div className="text-xs text-muted-foreground/60">
                                                                             Guest ID #{customer.id}
                                                                         </div>
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                        </td>
+                                                        </TableCell>
 
                                                         {/* Contact */}
-                                                        <td className="px-5 py-3.5">
+                                                        <TableCell className="px-5 py-3.5">
                                                             <div className="space-y-0.5 text-xs">
                                                                 {customer.phone ? (
-                                                                    <div className="text-gray-700">
+                                                                    <div className="text-foreground">
                                                                         {customer.phone}
                                                                     </div>
                                                                 ) : (
-                                                                    <span className="text-gray-400">No phone</span>
+                                                                    <span className="text-muted-foreground">No phone</span>
                                                                 )}
                                                                 {customer.email && (
-                                                                    <div className="text-gray-500">
+                                                                    <div className="text-muted-foreground">
                                                                         {customer.email}
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                        </td>
+                                                        </TableCell>
 
                                                         {/* Visits & Spend */}
-                                                        <td className="px-5 py-3.5 text-center">
+                                                        <TableCell className="px-5 py-3.5 text-center">
                                                             <div className="text-xs">
-                                                                <span className="font-semibold text-gray-900">
+                                                                <span className="font-semibold text-foreground">
                                                                     {customer.orders_count ?? 0} visit
                                                                     {(customer.orders_count ?? 0) === 1 ? '' : 's'}
                                                                 </span>
-                                                                <div className="text-gray-500">
+                                                                <div className="text-muted-foreground">
                                                                     <Money amount={customer.orders_sum_total ?? 0} />
                                                                 </div>
                                                             </div>
-                                                        </td>
+                                                        </TableCell>
 
                                                         {/* Loyalty Points */}
-                                                        <td className="px-5 py-3.5 text-right">
+                                                        <TableCell className="px-5 py-3.5 text-right">
                                                             {loyaltyEnabled ? (
                                                                 <div className="flex items-center justify-end gap-1.5">
-                                                                    <span className="font-bold tabular-nums text-gray-900">
+                                                                    <span className="font-semibold tabular-nums text-foreground">
                                                                         {customer.points.toLocaleString()}
                                                                     </span>
-                                                                    <span className="text-xs text-gray-500">pts</span>
+                                                                    <span className="text-xs text-muted-foreground">pts</span>
                                                                 </div>
                                                             ) : (
-                                                                <span className="text-xs text-gray-400">—</span>
+                                                                <span className="text-xs text-muted-foreground">—</span>
                                                             )}
-                                                        </td>
+                                                        </TableCell>
 
                                                         {/* Status */}
-                                                        <td className="px-5 py-3.5 text-center">
+                                                        <TableCell className="px-5 py-3.5 text-center">
                                                             <Badge tone={customer.is_active ? 'success' : 'neutral'}>
                                                                 {customer.is_active ? 'Active' : 'Inactive'}
                                                             </Badge>
-                                                        </td>
+                                                        </TableCell>
 
                                                         {/* Actions */}
                                                         {canManage && (
-                                                            <td className="px-5 py-3.5 text-right">
+                                                            <TableCell className="px-5 py-3.5 text-right">
                                                                 <div className="flex items-center justify-end gap-1.5">
                                                                     {loyaltyEnabled && (
                                                                         <Button
                                                                             size="xs"
                                                                             variant="ghost"
                                                                             onClick={() => openPointsDrawer(customer)}
-                                                                            className="text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                                                                            className="text-amber-700 hover:bg-amber-500/10 hover:text-amber-800"
                                                                         >
                                                                             Points
                                                                         </Button>
                                                                     )}
                                                                     <Button
                                                                         size="xs"
-                                                                        variant="ghost"
+                                                                        variant="outline"
                                                                         onClick={() => openEditDrawer(customer)}
                                                                     >
                                                                         Edit
@@ -490,13 +502,13 @@ export default function CustomersIndex({
                                                                         Delete
                                                                     </Button>
                                                                 </div>
-                                                            </td>
+                                                            </TableCell>
                                                         )}
-                                                    </tr>
+                                                    </TableRow>
                                                 );
                                             })}
-                                        </tbody>
-                                    </table>
+                                        </TableBody>
+                                    </Table>
                                 </div>
                             )}
                         </CardBody>

@@ -17,17 +17,17 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
     primary:
-        'bg-[#0B271F] text-[#FBFBF9] hover:bg-[#134A38] active:bg-[#071F18] border border-[#0B271F] shadow-sm shadow-[#0B271F]/15 transition-all duration-200',
+        'bg-primary text-on-primary hover:bg-primary-container active:bg-[#8f200b] border border-primary shadow-sm shadow-primary/20 transition-all duration-200',
     secondary:
-        'bg-[#F6F5F0] text-[#111827] hover:bg-[#ECE9E1] active:bg-[#E2DFD6] border border-[#ECE9E1] shadow-none transition-all duration-200',
+        'bg-surface-container text-on-surface hover:bg-surface-container-high active:bg-[#dfdedb] border border-surface-container-high shadow-none transition-all duration-200',
     accent:
-        'bg-[#10B981] text-white hover:bg-[#059669] active:bg-[#047857] border border-[#10B981] shadow-sm shadow-[#10B981]/25 transition-all duration-200',
+        'bg-secondary text-white hover:bg-[#3d5147] active:bg-[#314239] border border-secondary shadow-sm shadow-secondary/20 transition-all duration-200',
     outline:
-        'bg-transparent text-[#0B271F] hover:bg-[#0B271F]/5 active:bg-[#0B271F]/10 border border-[#0B271F]/20 hover:border-[#0B271F]/40 transition-all duration-200',
+        'bg-transparent text-primary hover:bg-primary/5 active:bg-primary/10 border border-primary/30 hover:border-primary/60 transition-all duration-200',
     ghost:
-        'bg-transparent text-[#111827] hover:bg-black/5 active:bg-black/10 border border-transparent transition-all duration-200',
+        'bg-transparent text-on-surface hover:bg-on-surface/5 active:bg-on-surface/10 border border-transparent transition-all duration-200',
     dark:
-        'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-black border border-zinc-800 transition-all duration-200',
+        'bg-[#1a1c1a] text-surface hover:bg-[#2f312f] active:bg-black border border-[#2f312f] transition-all duration-200',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -49,7 +49,7 @@ export default function Button({
     type = 'button',
     ...props
 }: ButtonProps) {
-    const combinedClasses = `inline-flex items-center justify-center font-medium tracking-tight select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#10B981] focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer ${variantStyles[variant]} ${sizeStyles[size]} ${className}`;
+    const combinedClasses = `inline-flex items-center justify-center font-medium tracking-tight select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer ${variantStyles[variant]} ${sizeStyles[size]} ${className}`;
 
     const content = (
         <>

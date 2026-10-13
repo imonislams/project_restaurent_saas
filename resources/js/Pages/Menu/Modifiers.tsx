@@ -9,6 +9,7 @@ import { CheckboxField, SelectField, TextField } from '@/Components/ui/Field';
 import PageHeader from '@/Components/ui/PageHeader';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, usePage } from '@inertiajs/react';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
 interface ModifierOption {
@@ -153,7 +154,8 @@ export default function ModifiersIndex({
                     description="Reusable option groups — sizes, extras, cooking preferences — attached to products and priced per order line."
                     actions={
                         canManage ? (
-                            <Button onClick={openCreate} icon={<Icon name="plus" className="h-4 w-4" />}>
+                            <Button size="sm" onClick={openCreate}>
+                                <Plus className="mr-1.5 h-3.5 w-3.5" />
                                 New group
                             </Button>
                         ) : undefined
@@ -193,28 +195,28 @@ export default function ModifiersIndex({
                                     />
                                     <CardBody className="space-y-3">
                                         <div>
-                                            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-400">
+                                            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                                                 Options ({group.options.length})
                                             </p>
-                                            <ul className="space-y-1 text-sm text-gray-700">
+                                            <ul className="space-y-1 text-sm text-foreground">
                                                 {group.options.map((option) => (
                                                     <li key={option.id} className="flex items-center justify-between gap-2">
                                                         <span className="truncate">{option.name}</span>
-                                                        <span className="tabular-nums text-xs text-gray-500">
+                                                        <span className="tabular-nums text-xs text-muted-foreground">
                                                             {Number(option.price_delta) === 0 ? 'Free' : money(option.price_delta)}
                                                         </span>
                                                     </li>
                                                 ))}
                                                 {group.options.length === 0 && (
-                                                    <li className="text-xs text-gray-400">No options yet.</li>
+                                                    <li className="text-xs text-muted-foreground">No options yet.</li>
                                                 )}
                                             </ul>
                                         </div>
                                         <div>
-                                            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-400">
+                                            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                                                 Products
                                             </p>
-                                            <p className="text-xs text-gray-500">
+                                            <p className="text-xs text-muted-foreground">
                                                 {group.product_ids.length === 0
                                                     ? 'Not attached to any product.'
                                                     : `${group.product_ids.length} product(s)`}
@@ -222,11 +224,16 @@ export default function ModifiersIndex({
                                         </div>
                                     </CardBody>
                                     {canManage && (
-                                        <div className="flex items-center justify-end gap-2 border-t border-gray-100 px-5 py-3">
+                                        <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3">
                                             <Button variant="secondary" size="sm" onClick={() => openEdit(group)}>
                                                 Edit
                                             </Button>
-                                            <Button variant="ghost" size="sm" onClick={() => setPendingDelete(group)}>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                onClick={() => setPendingDelete(group)}
+                                            >
                                                 Delete
                                             </Button>
                                         </div>

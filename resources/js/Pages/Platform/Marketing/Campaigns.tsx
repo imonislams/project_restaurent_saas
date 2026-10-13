@@ -1,4 +1,23 @@
-import { Badge, Button, Card, CardBody, CardHeader, ConfirmDialog, Drawer, EmptyState, SelectField, TextField, TextareaField, formatDateTime } from '@/Components/ui';
+import {
+    Badge,
+    Button,
+    Card,
+    CardBody,
+    CardHeader,
+    ConfirmDialog,
+    Drawer,
+    EmptyState,
+    SelectField,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+    TextField,
+    TextareaField,
+    formatDateTime,
+} from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { router, useForm } from '@inertiajs/react';
@@ -77,42 +96,42 @@ export default function Campaigns({ campaigns, options }: { campaigns: { data: R
                             <EmptyState title="No campaigns yet" description="Create your first campaign to email a segment of tenants." action={<Button onClick={openCreate}>New campaign</Button>} />
                         </div>
                     ) : (
-                        <table className="w-full text-sm">
-                            <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
-                                <tr>
-                                    <th className="px-5 py-3">Name</th>
-                                    <th className="px-5 py-3">Audience</th>
-                                    <th className="px-5 py-3">Status</th>
-                                    <th className="px-5 py-3">Recipients</th>
-                                    <th className="px-5 py-3">Sent</th>
-                                    <th className="px-5 py-3" />
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Campaign Name & Subject</TableHead>
+                                    <TableHead>Target Audience</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Recipients</TableHead>
+                                    <TableHead>Sent At</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {campaigns.data.map((row) => (
-                                    <tr key={row.id} className="hover:bg-gray-50">
-                                        <td className="px-5 py-3">
-                                            <div className="font-medium text-gray-900">{row.name}</div>
-                                            <div className="text-xs text-gray-400">{row.subject}</div>
-                                        </td>
-                                        <td className="px-5 py-3 text-gray-600">
+                                    <TableRow key={row.id}>
+                                        <TableCell>
+                                            <div className="font-semibold text-foreground text-xs">{row.name}</div>
+                                            <div className="text-xs text-muted-foreground">{row.subject}</div>
+                                        </TableCell>
+                                        <TableCell className="text-xs text-muted-foreground">
                                             {[row.audience?.status, row.audience?.plan].filter(Boolean).join(' · ') || 'All tenants'}
-                                            <span className="ml-2 text-xs text-gray-400">≈{row.audience_size}</span>
-                                        </td>
-                                        <td className="px-5 py-3"><Badge tone={tone(row.status)}>{row.status}</Badge></td>
-                                        <td className="px-5 py-3 text-gray-600">{row.recipients_count}</td>
-                                        <td className="px-5 py-3 text-gray-500">{row.sent_at ? formatDateTime(row.sent_at) : '—'}</td>
-                                        <td className="px-5 py-3">
-                                            <div className="flex justify-end gap-2">
+                                            <span className="ml-1.5 font-mono text-[11px] text-muted-foreground/80">≈{row.audience_size}</span>
+                                        </TableCell>
+                                        <TableCell><Badge tone={tone(row.status)}>{row.status}</Badge></TableCell>
+                                        <TableCell className="text-right tabular-nums text-xs font-semibold text-foreground">{row.recipients_count}</TableCell>
+                                        <TableCell className="text-xs text-muted-foreground">{row.sent_at ? formatDateTime(row.sent_at) : '—'}</TableCell>
+                                        <TableCell className="text-right whitespace-nowrap">
+                                            <div className="flex justify-end gap-1">
                                                 <Button size="xs" variant="ghost" onClick={() => openEdit(row)}>Edit</Button>
-                                                {row.status !== 'sent' && <Button size="xs" variant="secondary" onClick={() => setConfirmSend(row)}>Send</Button>}
-                                                <Button size="xs" variant="ghost" onClick={() => router.delete(route('platform.marketing.campaigns.destroy', row.id), { preserveScroll: true })}>Delete</Button>
+                                                {row.status !== 'sent' && <Button size="xs" variant="outline" onClick={() => setConfirmSend(row)}>Send</Button>}
+                                                <Button size="xs" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => router.delete(route('platform.marketing.campaigns.destroy', row.id), { preserveScroll: true })}>Delete</Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     )}
                 </CardBody>
             </Card>

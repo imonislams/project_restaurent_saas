@@ -101,16 +101,16 @@ export default function CommandPalette({
                                         onMouseEnter={() => setSelectedIndex(idx)}
                                         className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs transition ${
                                             isSelected
-                                                ? 'bg-restrly-50 text-restrly-900'
-                                                : 'text-gray-700 hover:bg-gray-50'
+                                                ? 'bg-primary/10 text-primary'
+                                                : 'text-foreground hover:bg-muted'
                                         }`}
                                     >
                                         <div className="flex items-center gap-3 min-w-0">
                                             <div
                                                 className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${
                                                     isSelected
-                                                        ? 'bg-restrly-600 text-white'
-                                                        : 'bg-gray-100 text-gray-600'
+                                                        ? 'bg-primary text-primary-foreground'
+                                                        : 'bg-muted text-muted-foreground'
                                                 }`}
                                             >
                                                 <Icon name={item.icon} className="h-4 w-4" />
@@ -118,9 +118,9 @@ export default function CommandPalette({
                                             <span className="truncate font-medium">{item.label}</span>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
-                                            <span className="text-[11px] text-gray-400">{item.category}</span>
+                                            <span className="text-[11px] text-muted-foreground">{item.category}</span>
                                             {isSelected && (
-                                                <span className="text-[10px] font-semibold text-restrly-600">↵ Jump</span>
+                                                <span className="text-[10px] font-semibold text-primary">↵ Jump</span>
                                             )}
                                         </div>
                                     </button>

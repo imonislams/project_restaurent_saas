@@ -30,18 +30,18 @@ export default function SectionHeading({
                 <div
                     className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-[11px] font-mono uppercase tracking-widest font-semibold mb-4 ${
                         isDark
-                            ? 'bg-[#165B47]/30 text-[#10B981] border border-[#165B47]/60'
-                            : 'bg-[#0B271F]/5 text-[#0B271F] border border-[#0B271F]/10'
+                            ? 'bg-primary/20 text-primary-fixed border border-primary/30'
+                            : 'bg-primary/10 text-primary border border-primary/20'
                     }`}
                 >
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     <span>{badge}</span>
                 </div>
             )}
 
             <h2
                 className={`font-display text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl leading-[1.12] ${
-                    isDark ? 'text-[#FBFBF9]' : 'text-[#0B271F]'
+                    isDark ? 'text-surface' : 'text-on-surface'
                 }`}
             >
                 {title}

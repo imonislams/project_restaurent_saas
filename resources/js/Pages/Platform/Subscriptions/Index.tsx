@@ -1,8 +1,10 @@
-import { Badge, Button, Card, DataTable, Drawer, FilterBar, Pagination, SelectField, TextField, formatMoney } from '@/Components/ui';
+import { Badge, Button, Card, DataTable, Drawer, FilterBar, Pagination, SelectField, TextField, Input, formatMoney } from '@/Components/ui';
 import type { BadgeTone, Column, PageLink } from '@/Components/ui';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { RotateCw, ShieldAlert, Tag } from 'lucide-react';
+import { cn } from '@/Components/ui/cn';
 
 interface Row {
     id: number;
@@ -78,44 +80,73 @@ export default function SubscriptionsIndex({
             label: 'Tenant',
             render: (r) =>
                 r.tenant ? (
-                    <Link href={route('platform.tenants.show', r.tenant_id)} className="font-medium text-indigo-600 hover:text-indigo-700">
+                    <Link
+                        href={route('platform.tenants.show', r.tenant_id)}
+                        className="font-medium text-foreground hover:text-primary hover:underline underline-offset-4 transition-colors"
+                    >
                         {r.tenant}
                     </Link>
                 ) : (
                     '—'
                 ),
         },
-        { key: 'plan', label: 'Plan', render: (r) => r.plan ?? '—' },
+        {
+            key: 'plan',
+            label: 'Plan',
+            render: (r) => (r.plan ? <span className="font-mono text-xs">{r.plan}</span> : '—'),
+        },
         { key: 'status', label: 'Status', render: (r) => <Badge tone={STATUS_TONE[r.status] ?? 'neutral'}>{r.status_label}</Badge> },
-        { key: 'billing_cycle', label: 'Cycle' },
-        { key: 'mrr', label: 'MRR', align: 'right', render: (r) => formatMoney(r.mrr, r.currency) },
-        { key: 'coupon_code', label: 'Coupon', render: (r) => r.coupon_code ?? '—' },
+        { key: 'billing_cycle', label: 'Cycle', render: (r) => <span className="capitalize text-xs text-muted-foreground">{r.billing_cycle}</span> },
+        { key: 'mrr', label: 'MRR', align: 'right', render: (r) => <span className="font-semibold tabular-nums">{formatMoney(r.mrr, r.currency)}</span> },
+        { key: 'coupon_code', label: 'Coupon', render: (r) => r.coupon_code ? <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px]">{r.coupon_code}</span> : '—' },
         {
             key: 'period',
-            label: 'Renews / ends',
-            render: (r) => (r.current_period_end ? new Date(r.current_period_end).toLocaleDateString() : '—'),
+            label: 'Renews / Ends',
+            render: (r) => (
+                <span className="text-xs text-muted-foreground">
+                    {r.current_period_end ? new Date(r.current_period_end).toLocaleDateString() : '—'}
+                </span>
+            ),
         },
         {
             key: 'actions',
             label: '',
             align: 'right',
             render: (r) => (
-                <div className="flex justify-end gap-2 text-xs">
+                <div className="flex justify-end gap-1.5 text-xs">
                     {r.status === 'past_due' || r.status === 'grace_period' ? (
-                        <button onClick={() => post('platform.subscriptions.retry', r)} className="font-medium text-indigo-600 hover:text-indigo-700">
+                        <Button
+                            variant="destructive"
+                            size="xs"
+                            onClick={() => post('platform.subscriptions.retry', r)}
+                        >
                             Retry
-                        </button>
+                        </Button>
                     ) : (
-                        <button onClick={() => post('platform.subscriptions.renew', r)} className="font-medium text-gray-600 hover:text-gray-800">
+                        <Button
+                            variant="outline"
+                            size="xs"
+                            onClick={() => post('platform.subscriptions.renew', r)}
+                        >
                             Renew
-                        </button>
+                        </Button>
                     )}
-                    <button onClick={() => toggle(r)} className="font-medium text-amber-600 hover:text-amber-700">
+                    <Button
+                        variant={r.status === 'suspended' ? 'outline' : 'ghost'}
+                        size="xs"
+                        className={r.status === 'suspended' ? 'text-primary' : 'text-amber-600 hover:text-amber-700 hover:bg-amber-50'}
+                        onClick={() => toggle(r)}
+                    >
                         {r.status === 'suspended' ? 'Reactivate' : 'Suspend'}
-                    </button>
-                    <button onClick={() => setCouponFor(r)} className="font-medium text-gray-600 hover:text-gray-800">
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => setCouponFor(r)}
+                        icon={<Tag className="h-3 w-3" />}
+                    >
                         Coupon
-                    </button>
+                    </Button>
                 </div>
             ),
         },
@@ -144,46 +175,95 @@ export default function SubscriptionsIndex({
     ];
 
     return (
-        <PlatformLayout title="Subscriptions" description="Every tenant subscription with lifecycle actions. Use the tabs to focus on trials, failed renewals or cancellations.">
-            <div className="mb-4 flex flex-wrap gap-1 border-b border-gray-200">
-                {tabs.map((tab) => (
-                    <Link
-                        key={tab.route}
-                        href={route(tab.route)}
-                        className={
-                            '-mb-px border-b-2 px-3.5 py-2 text-sm font-medium transition ' +
-                            (route().current(tab.pattern) ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-700')
-                        }
-                    >
-                        {tab.label}
-                    </Link>
-                ))}
+        <PlatformLayout
+            title="Subscriptions"
+            description="Manage lifecycle events, billing cycles, renewals, coupons, and MRR across tenant plans."
+        >
+            <div className="mb-5 flex flex-wrap gap-1 border-b border-border/80">
+                {tabs.map((tab) => {
+                    const active = route().current(tab.pattern);
+                    return (
+                        <Link
+                            key={tab.route}
+                            href={route(tab.route)}
+                            className={cn(
+                                '-mb-px border-b-2 px-3.5 py-2 text-xs sm:text-sm font-medium transition-colors',
+                                active
+                                    ? 'border-primary text-primary font-semibold'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                            )}
+                        >
+                            {tab.label}
+                        </Link>
+                    );
+                })}
             </div>
 
             <FilterBar>
-                <TextField label="Search" value={state.search} placeholder="Tenant name" onChange={(v) => setState((s) => ({ ...s, search: v }))} onEnter={() => apply()} />
-                <SelectField label="Status" value={state.status} options={[{ value: '', label: 'Any status' }, ...options.statuses]} onChange={(v) => apply({ status: v })} />
-                <SelectField label="Plan" value={state.plan} options={[{ value: '', label: 'Any plan' }, ...options.plans]} onChange={(v) => apply({ plan: v })} />
+                <TextField
+                    label="Search"
+                    value={state.search}
+                    placeholder="Tenant name"
+                    onChange={(v) => setState((s) => ({ ...s, search: v }))}
+                    onEnter={() => apply()}
+                />
+                <SelectField
+                    label="Status"
+                    value={state.status}
+                    options={[{ value: '', label: 'Any status' }, ...options.statuses]}
+                    onChange={(v) => apply({ status: v })}
+                />
+                <SelectField
+                    label="Plan"
+                    value={state.plan}
+                    options={[{ value: '', label: 'Any plan' }, ...options.plans]}
+                    onChange={(v) => apply({ plan: v })}
+                />
                 <Button size="sm" onClick={() => apply()}>
-                    Apply
+                    Apply Filters
                 </Button>
             </FilterBar>
 
             <Card>
                 <DataTable columns={columns} rows={subscriptions.data} rowKey={(r) => r.id} />
             </Card>
+
             <Pagination links={subscriptions.links} />
 
-            <Drawer show={couponFor !== null} onClose={() => setCouponFor(null)} title={`Apply coupon${couponFor ? ` — ${couponFor.tenant ?? ''}` : ''}`} footer={<Button size="sm" onClick={applyCoupon}>Apply coupon</Button>}>
-                <label className="block">
-                    <span className="mb-1 block text-xs font-medium text-gray-500">Coupon code</span>
-                    <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} className="block w-full rounded-md border-gray-300 text-sm" />
-                </label>
-                {couponFor?.coupon_code && (
-                    <button onClick={() => router.delete(route('platform.subscriptions.coupon.remove', couponFor.id), { preserveScroll: true, onSuccess: () => setCouponFor(null) })} className="mt-3 text-xs font-medium text-red-600 hover:text-red-700">
-                        Remove current coupon ({couponFor.coupon_code})
-                    </button>
-                )}
+            <Drawer
+                show={couponFor !== null}
+                onClose={() => setCouponFor(null)}
+                title={`Apply coupon${couponFor ? ` — ${couponFor.tenant ?? ''}` : ''}`}
+                footer={
+                    <Button size="sm" onClick={applyCoupon}>
+                        Apply coupon
+                    </Button>
+                }
+            >
+                <div className="space-y-3">
+                    <label className="block space-y-1.5">
+                        <span className="block text-xs font-semibold text-foreground tracking-tight">Coupon code</span>
+                        <Input
+                            value={code}
+                            onChange={(e) => setCode(e.target.value.toUpperCase())}
+                            placeholder="e.g. PROMO2026"
+                            className="font-mono uppercase"
+                        />
+                    </label>
+                    {couponFor?.coupon_code && (
+                        <button
+                            onClick={() =>
+                                router.delete(route('platform.subscriptions.coupon.remove', couponFor.id), {
+                                    preserveScroll: true,
+                                    onSuccess: () => setCouponFor(null),
+                                })
+                            }
+                            className="mt-2 text-xs font-medium text-destructive hover:underline cursor-pointer"
+                        >
+                            Remove current coupon ({couponFor.coupon_code})
+                        </button>
+                    )}
+                </div>
             </Drawer>
         </PlatformLayout>
     );

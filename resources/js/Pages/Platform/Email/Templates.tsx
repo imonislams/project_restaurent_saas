@@ -50,7 +50,7 @@ export default function EmailTemplates({
     };
 
     const tabClass = (active: boolean) =>
-        'rounded-md px-3 py-1.5 text-sm font-medium transition ' + (active ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700');
+        'rounded-md px-3 py-1 text-xs font-medium transition ' + (active ? 'bg-card text-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground');
 
     return (
         <PlatformLayout
@@ -67,7 +67,7 @@ export default function EmailTemplates({
                                 href={route('platform.email.templates', { template: template.key })}
                                 className={
                                     'flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm transition ' +
-                                    (template.key === selected_key ? 'bg-indigo-50 font-semibold text-indigo-700' : 'text-gray-700 hover:bg-gray-50')
+                                    (template.key === selected_key ? 'bg-primary/10 font-semibold text-primary' : 'text-foreground hover:bg-muted/60')
                                 }
                             >
                                 <span className="truncate">{template.name}</span>
@@ -83,7 +83,7 @@ export default function EmailTemplates({
                         description={selected ? `Key: ${selected.key}${selected.updated_at ? ` · updated ${formatDateTime(selected.updated_at)}` : ''}` : undefined}
                         action={
                             <div className="flex gap-2">
-                                <div className="inline-flex rounded-lg bg-gray-100 p-0.5">
+                                <div className="inline-flex rounded-lg bg-muted p-0.5">
                                     <button type="button" onClick={() => setTab('preview')} className={tabClass(tab === 'preview')}>Preview</button>
                                     <button type="button" onClick={() => setTab('edit')} className={tabClass(tab === 'edit')}>Edit</button>
                                 </div>
@@ -95,20 +95,20 @@ export default function EmailTemplates({
                     <CardBody>
                         {tab === 'preview' ? (
                             <>
-                                <div className="mb-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm">
-                                    <span className="text-gray-400">Subject:</span> <span className="font-medium text-gray-800">{preview?.subject ?? '—'}</span>
+                                <div className="mb-3 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+                                    <span className="text-muted-foreground">Subject:</span> <span className="font-medium text-foreground">{preview?.subject ?? '—'}</span>
                                 </div>
                                 <div className="mb-3 flex items-center justify-between">
-                                    <p className="text-xs text-gray-400">Preview uses sample data and reflects the saved template.</p>
-                                    <div className="inline-flex rounded-lg border border-gray-200 p-0.5">
+                                    <p className="text-xs text-muted-foreground">Preview uses sample data and reflects the saved template.</p>
+                                    <div className="inline-flex rounded-lg border border-border p-0.5">
                                         <button type="button" onClick={() => setPreviewWidth('full')} className={tabClass(previewWidth === 'full')}>Desktop</button>
                                         <button type="button" onClick={() => setPreviewWidth('mobile')} className={tabClass(previewWidth === 'mobile')}>Mobile</button>
                                     </div>
                                 </div>
-                                <div className="flex justify-center rounded-lg bg-gray-100 p-3">
+                                <div className="flex justify-center rounded-lg bg-muted/30 p-3">
                                     <iframe
                                         title="Email preview"
-                                        className="h-[560px] rounded-lg border border-gray-200 bg-white transition-all"
+                                        className="h-[560px] rounded-lg border border-border bg-background transition-all"
                                         style={{ width: previewWidth === 'mobile' ? 375 : '100%', maxWidth: '100%' }}
                                         srcDoc={preview?.body ?? ''}
                                     />
@@ -123,8 +123,8 @@ export default function EmailTemplates({
 
                                 <div>
                                     <div className="mb-1.5 flex items-center justify-between">
-                                        <span className="text-xs font-medium text-gray-600">Email content</span>
-                                        <button type="button" onClick={() => setShowSource((v) => !v)} className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
+                                        <span className="text-xs font-medium text-muted-foreground">Email content</span>
+                                        <button type="button" onClick={() => setShowSource((v) => !v)} className="text-xs font-medium text-primary hover:underline">
                                             {showSource ? 'Use rich editor' : 'Edit HTML source'}
                                         </button>
                                     </div>
@@ -133,13 +133,13 @@ export default function EmailTemplates({
                                             rows={16}
                                             value={form.data.body}
                                             onChange={(e) => form.setData('body', e.target.value)}
-                                            className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-xs text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                                            className="block w-full rounded-lg border border-input bg-background px-3 py-2 font-mono text-xs text-foreground shadow-2xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                         />
                                     ) : (
                                         <RichTextEditor value={form.data.body} variables={selected?.variables ?? []} onChange={(html) => form.setData('body', html)} />
                                     )}
-                                    {form.errors.body && <span className="mt-1 block text-xs text-red-600">{form.errors.body}</span>}
-                                    <p className="mt-1 text-xs text-gray-400">
+                                    {form.errors.body && <span className="mt-1 block text-xs text-destructive">{form.errors.body}</span>}
+                                    <p className="mt-1 text-xs text-muted-foreground">
                                         Formatting is saved as inline styles so it renders in every email client.
                                     </p>
                                 </div>

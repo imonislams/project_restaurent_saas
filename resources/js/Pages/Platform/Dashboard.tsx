@@ -15,6 +15,18 @@ import {
 import type { BadgeTone, StatusTone } from '@/Components/ui';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Link } from '@inertiajs/react';
+import {
+    Activity,
+    ArrowUpRight,
+    Building2,
+    CheckCircle2,
+    DollarSign,
+    Layers,
+    Server,
+    ShieldAlert,
+    Store,
+    Users,
+} from 'lucide-react';
 
 interface Kpi {
     key: string;
@@ -78,22 +90,41 @@ export default function PlatformDashboard({
         return count(kpi.value ?? 0);
     };
 
-    const healthStateTone: BadgeTone = healthSummary.state === 'error' ? 'danger' : healthSummary.state === 'warn' ? 'warning' : 'success';
+    const healthStateTone: BadgeTone =
+        healthSummary.state === 'error' ? 'danger' : healthSummary.state === 'warn' ? 'warning' : 'success';
+
+    const kpiIcon = (kpi: Kpi) => {
+        const k = kpi.key.toLowerCase();
+        if (k.includes('mrr') || k.includes('revenue') || k.includes('collected') || kpi.format === 'money') {
+            return <DollarSign className="h-4 w-4" />;
+        }
+        if (k.includes('tenant') || k.includes('restaurant')) {
+            return <Store className="h-4 w-4" />;
+        }
+        if (k.includes('subscription') || k.includes('plan')) {
+            return <Layers className="h-4 w-4" />;
+        }
+        if (k.includes('user') || k.includes('admin')) {
+            return <Users className="h-4 w-4" />;
+        }
+        if (k.includes('health') || k.includes('server') || k.includes('system')) {
+            return <Server className="h-4 w-4" />;
+        }
+        return <Activity className="h-4 w-4" />;
+    };
 
     return (
-        <PlatformLayout title="Overview">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm text-gray-500">
-                    Reporting period: <span className="font-medium text-gray-700">{period.label}</span> · {period.from} → {period.to} · figures in {currency}
-                </p>
+        <PlatformLayout
+            title="Overview"
+            description={`Reporting period: ${period.label} · ${period.from} to ${period.to}`}
+            actions={
                 <div className="flex items-center gap-2">
-                    <Badge tone={healthStateTone}>System {healthSummary.state}</Badge>
-                    <span className="text-xs text-gray-400">
-                        {healthSummary.counts.ok ?? 0} ok · {healthSummary.counts.warn ?? 0} attention · {healthSummary.counts.unavailable ?? 0} not monitored
-                    </span>
+                    <Badge tone={healthStateTone}>
+                        System {healthSummary.state}
+                    </Badge>
                 </div>
-            </div>
-
+            }
+        >
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                 {kpis.map((kpi) => (
                     <KpiCard
@@ -102,27 +133,45 @@ export default function PlatformDashboard({
                         value={kpiValue(kpi)}
                         hint={kpi.available === false ? kpi.reason : kpi.hint}
                         tone={kpi.tone ?? 'neutral'}
+                        icon={kpiIcon(kpi)}
                     />
                 ))}
             </div>
 
             <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <Card className="lg:col-span-2">
-                    <CardHeader title="Collected revenue" description={`Paid subscription invoices · ${period.label}`} />
+                    <CardHeader
+                        title="Collected Revenue"
+                        description={`Paid subscription invoices · ${period.label}`}
+                    />
                     <CardBody>
                         {charts.revenue_trend.length ? (
-                            <AreaChart data={charts.revenue_trend} xKey="month" series={[{ key: 'collected', name: 'Collected' }]} valueFormat={money} />
+                            <AreaChart
+                                data={charts.revenue_trend}
+                                xKey="month"
+                                series={[{ key: 'collected', name: 'Collected' }]}
+                                valueFormat={money}
+                            />
                         ) : (
-                            <EmptyState title="No revenue recorded" description="Paid subscription invoices will appear here." />
+                            <EmptyState
+                                title="No revenue recorded"
+                                description="Paid subscription invoices will appear here."
+                            />
                         )}
                     </CardBody>
                 </Card>
 
                 <Card>
-                    <CardHeader title="Subscriptions by status" />
+                    <CardHeader title="Subscriptions by Status" description="Current active distribution" />
                     <CardBody>
                         {charts.subscriptions_by_status.length ? (
-                            <BarChart data={charts.subscriptions_by_status} xKey="status" series={[{ key: 'count', name: 'Subscriptions' }]} valueFormat={count} height={260} />
+                            <BarChart
+                                data={charts.subscriptions_by_status}
+                                xKey="status"
+                                series={[{ key: 'count', name: 'Subscriptions' }]}
+                                valueFormat={count}
+                                height={260}
+                            />
                         ) : (
                             <EmptyState title="No subscriptions yet" />
                         )}
@@ -130,7 +179,7 @@ export default function PlatformDashboard({
                 </Card>
 
                 <Card>
-                    <CardHeader title="New vs cancelled" description="Subscriptions per month" />
+                    <CardHeader title="New vs Cancelled" description="Subscription velocity per month" />
                     <CardBody>
                         <BarChart
                             data={charts.subscription_movement}
@@ -145,7 +194,7 @@ export default function PlatformDashboard({
                 </Card>
 
                 <Card>
-                    <CardHeader title="Tenant growth" description="New and cumulative" />
+                    <CardHeader title="Tenant Growth" description="New and cumulative tenants" />
                     <CardBody>
                         <LineChart
                             data={charts.tenant_growth}
@@ -160,10 +209,15 @@ export default function PlatformDashboard({
                 </Card>
 
                 <Card>
-                    <CardHeader title="Revenue by plan" description={`Collected · ${period.label}`} />
+                    <CardHeader title="Revenue by Plan" description={`Collected by tier · ${period.label}`} />
                     <CardBody>
                         {charts.revenue_by_plan.length ? (
-                            <BarChart data={charts.revenue_by_plan} xKey="plan" series={[{ key: 'collected', name: 'Collected' }]} valueFormat={money} />
+                            <BarChart
+                                data={charts.revenue_by_plan}
+                                xKey="plan"
+                                series={[{ key: 'collected', name: 'Collected' }]}
+                                valueFormat={money}
+                            />
                         ) : (
                             <EmptyState title="No plan revenue in this period" />
                         )}
@@ -173,17 +227,22 @@ export default function PlatformDashboard({
 
             <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <Card>
-                    <CardHeader title="System health" description={`${healthSummary.counts.unavailable ?? 0} indicator(s) not monitored yet`} />
+                    <CardHeader
+                        title="System Health"
+                        description={`${healthSummary.counts.unavailable ?? 0} indicator(s) not monitored yet`}
+                    />
                     <CardBody className="space-y-3">
                         {health.map((indicator) => (
-                            <div key={indicator.key} className="flex items-start justify-between gap-3">
+                            <div key={indicator.key} className="flex items-start justify-between gap-3 text-xs">
                                 <div className="min-w-0">
-                                    <div className="text-sm font-medium text-gray-800">{indicator.label}</div>
-                                    <div className="truncate text-xs text-gray-500">{indicator.detail}</div>
+                                    <div className="font-medium text-foreground">{indicator.label}</div>
+                                    <div className="truncate text-muted-foreground">{indicator.detail}</div>
                                 </div>
                                 <div className="flex shrink-0 items-center gap-2">
                                     {indicator.status === 'unavailable' ? (
-                                        <Badge tone="neutral">{STATUS_LABEL.unavailable}</Badge>
+                                        <Badge tone="neutral" dot={false}>
+                                            {STATUS_LABEL.unavailable}
+                                        </Badge>
                                     ) : (
                                         <StatusDot tone={STATUS_TONE[indicator.status]} label={STATUS_LABEL[indicator.status]} />
                                     )}
@@ -194,13 +253,13 @@ export default function PlatformDashboard({
                 </Card>
 
                 <Card>
-                    <CardHeader title="Recent activity" description="Audited platform events" />
-                    <CardBody className="space-y-2.5">
+                    <CardHeader title="Recent Activity" description="Audited platform events" />
+                    <CardBody className="space-y-3">
                         {activity.map((event) => (
-                            <div key={event.id} className="flex items-start justify-between gap-3 text-sm">
+                            <div key={event.id} className="flex items-start justify-between gap-3 text-xs">
                                 <ActivityBadge action={event.action} showIcon />
-                                <div className="shrink-0 text-right text-xs text-gray-400">
-                                    <div>{event.actor ?? 'System'}</div>
+                                <div className="shrink-0 text-right text-muted-foreground">
+                                    <div className="font-medium text-foreground">{event.actor ?? 'System'}</div>
                                     <div>
                                         {event.tenant_id ? `tenant #${event.tenant_id} · ` : ''}
                                         {event.created_at ? formatDate(event.created_at) : ''}
@@ -208,37 +267,49 @@ export default function PlatformDashboard({
                                 </div>
                             </div>
                         ))}
-                        {activity.length === 0 && <p className="text-sm text-gray-500">No activity recorded yet.</p>}
+                        {activity.length === 0 && <p className="text-xs text-muted-foreground">No activity recorded yet.</p>}
                     </CardBody>
                 </Card>
 
                 <Card>
                     <CardHeader
-                        title="Recent tenants"
+                        title="Recent Tenants"
                         action={
-                            <Link href={route('platform.tenants.index')} className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
-                                View all
+                            <Link
+                                href={route('platform.tenants.index')}
+                                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline underline-offset-4"
+                            >
+                                <span>View all</span>
+                                <ArrowUpRight className="h-3 w-3" />
                             </Link>
                         }
                     />
-                    <CardBody className="space-y-2.5">
+                    <CardBody className="space-y-3">
                         {recentTenants.map((tenant) => (
-                            <div key={tenant.id} className="flex items-center justify-between gap-3 text-sm">
-                                <Link href={route('platform.tenants.show', tenant.id)} className="truncate font-medium text-indigo-600 hover:text-indigo-700">
+                            <div key={tenant.id} className="flex items-center justify-between gap-3 text-xs">
+                                <Link
+                                    href={route('platform.tenants.show', tenant.id)}
+                                    className="truncate font-medium text-foreground hover:text-primary transition-colors"
+                                >
                                     {tenant.name}
                                 </Link>
-                                <span className="shrink-0 text-xs text-gray-500">{tenant.plan ?? '—'}</span>
+                                <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                                    {tenant.plan ?? 'No plan'}
+                                </span>
                             </div>
                         ))}
-                        {recentTenants.length === 0 && <p className="text-sm text-gray-500">No tenants yet.</p>}
+                        {recentTenants.length === 0 && <p className="text-xs text-muted-foreground">No tenants yet.</p>}
                     </CardBody>
                 </Card>
             </div>
 
-            <Card className="mt-6">
-                <CardHeader title="How these figures are calculated" description="Metric definitions — read before acting on financial numbers" />
+            <Card className="mt-6 border-dashed">
+                <CardHeader
+                    title="Calculation Methodology"
+                    description="Metric definitions and accounting principles for financial numbers"
+                />
                 <CardBody>
-                    <ul className="list-disc space-y-1.5 pl-5 text-sm text-gray-600">
+                    <ul className="list-disc space-y-1 pl-4 text-xs text-muted-foreground">
                         {methodology.map((line, i) => (
                             <li key={i}>{line}</li>
                         ))}

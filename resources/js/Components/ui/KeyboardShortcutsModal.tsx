@@ -39,7 +39,7 @@ export default function KeyboardShortcutsModal({
             <div className="p-6">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                     <div className="flex items-center gap-2.5">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-restrly-50 text-restrly-700">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                             <Icon name="terminal" className="h-5 w-5" />
                         </div>
                         <div>

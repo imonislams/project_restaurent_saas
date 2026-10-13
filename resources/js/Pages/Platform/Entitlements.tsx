@@ -1,5 +1,7 @@
 import { Badge, Card, CardBody, CardHeader, formatNumber } from '@/Components/ui';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/Table';
 import PlatformLayout from '@/Layouts/PlatformLayout';
+import { Check, Minus } from 'lucide-react';
 
 interface PlanRow {
     id: number;
@@ -24,82 +26,88 @@ export default function Entitlements({
     return (
         <PlatformLayout title="Entitlements" description="Which modules and limits each plan grants. Feature access is enforced on the backend by the plan entitlement gate.">
             <Card className="mb-5">
-                <CardHeader title="Feature matrix" description="A tick means the plan grants the module" />
-                <CardBody>
+                <CardHeader title="Feature Matrix" description="Module entitlements granted per tier" />
+                <CardBody className="p-0">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="border-b border-gray-200 bg-gray-50/60">
-                                <tr>
-                                    <th className="sticky left-0 bg-gray-50/60 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Feature</th>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-56 sticky left-0 bg-background/95 backdrop-blur-xs font-semibold">Feature</TableHead>
                                     {plans.map((plan) => (
-                                        <th key={plan.id} className="px-4 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                                        <TableHead key={plan.id} className="text-center font-semibold">
                                             {plan.name}
-                                        </th>
+                                        </TableHead>
                                     ))}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {features.map((feature) => (
-                                    <tr key={feature} className="hover:bg-gray-50/70">
-                                        <td className="sticky left-0 bg-white px-4 py-3 font-medium capitalize text-gray-700">{feature}</td>
+                                    <TableRow key={feature}>
+                                        <TableCell className="sticky left-0 bg-background/95 backdrop-blur-xs font-medium capitalize text-foreground">
+                                            {feature.replace(/_/g, ' ')}
+                                        </TableCell>
                                         {plans.map((plan) => (
-                                            <td key={plan.id} className="px-4 py-3 text-center">
+                                            <TableCell key={plan.id} className="text-center">
                                                 {plan.features.includes(feature) ? (
-                                                    <span className="font-semibold text-emerald-600">✓</span>
+                                                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                                                        <Check className="h-3.5 w-3.5" />
+                                                    </span>
                                                 ) : (
-                                                    <span className="text-gray-300">—</span>
+                                                    <span className="text-muted-foreground/40">
+                                                        <Minus className="h-3.5 w-3.5 inline" />
+                                                    </span>
                                                 )}
-                                            </td>
+                                            </TableCell>
                                         ))}
-                                    </tr>
+                                    </TableRow>
                                 ))}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </CardBody>
             </Card>
 
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <Card>
-                    <CardHeader title="Plan limits" description="Blank or ∞ means unlimited" />
-                    <CardBody>
+                    <CardHeader title="Plan Limits" description="Blank or ∞ denotes uncapped capacity" />
+                    <CardBody className="p-0">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead>
-                                    <tr className="border-b border-gray-200 text-[11px] uppercase tracking-wide text-gray-500">
-                                        <th className="px-3 py-2">Plan</th>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Plan</TableHead>
                                         {limit_keys.map((key) => (
-                                            <th key={key} className="px-3 py-2 text-right capitalize">{key.replace(/_/g, ' ')}</th>
+                                            <TableHead key={key} className="text-right capitalize">{key.replace(/_/g, ' ')}</TableHead>
                                         ))}
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
                                     {plans.map((plan) => (
-                                        <tr key={plan.id}>
-                                            <td className="px-3 py-2.5 font-medium text-gray-800">
-                                                {plan.name} <span className="ml-1 text-xs text-gray-400">v{plan.version}</span>
-                                            </td>
+                                        <TableRow key={plan.id}>
+                                            <TableCell className="font-medium text-foreground">
+                                                {plan.name} <span className="ml-1 text-xs text-muted-foreground">v{plan.version}</span>
+                                            </TableCell>
                                             {limit_keys.map((key) => (
-                                                <td key={key} className="px-3 py-2.5 text-right text-gray-600">
+                                                <TableCell key={key} className="text-right tabular-nums text-muted-foreground font-medium">
                                                     {plan.limits[key] === null || plan.limits[key] === undefined ? '∞' : formatNumber(plan.limits[key] as number)}
-                                                </td>
+                                                </TableCell>
                                             ))}
-                                        </tr>
+                                        </TableRow>
                                     ))}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
                     </CardBody>
                 </Card>
 
                 <Card>
-                    <CardHeader title="Plans" description="Status and adoption" />
+                    <CardHeader title="Plans Adoption" description="Status and tenant allocation summary" />
                     <CardBody className="space-y-3">
                         {plans.map((plan) => (
-                            <div key={plan.id} className="flex items-center justify-between gap-3">
+                            <div key={plan.id} className="flex items-center justify-between gap-3 border-b border-border/50 pb-2.5 last:border-b-0 last:pb-0">
                                 <div>
-                                    <div className="text-sm font-medium text-gray-800">{plan.name}</div>
-                                    <div className="text-xs text-gray-400">{plan.subscriptions_count} subscription(s)</div>
+                                    <div className="text-sm font-semibold text-foreground">{plan.name}</div>
+                                    <div className="text-xs text-muted-foreground">{plan.subscriptions_count} active subscription(s)</div>
                                 </div>
                                 <Badge tone={plan.archived ? 'neutral' : plan.is_active ? 'success' : 'warning'}>{plan.archived ? 'Archived' : plan.is_active ? 'Active' : 'Inactive'}</Badge>
                             </div>

@@ -1,4 +1,6 @@
 import {
+    Avatar,
+    AvatarFallback,
     Badge,
     Button,
     Card,
@@ -9,10 +11,17 @@ import {
     EmptyState,
     KpiCard,
     PageHeader,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
     TextField,
 } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Search, X } from 'lucide-react';
 import { FormEventHandler, useMemo, useState } from 'react';
 
 interface StaffMember {
@@ -55,13 +64,13 @@ function MultiCheck({
                     key={opt.value}
                     className={`flex cursor-pointer items-center gap-2 rounded-lg border p-2.5 text-xs font-medium transition ${
                         selected.includes(opt.value)
-                            ? 'border-indigo-600 bg-indigo-50/60 text-indigo-900 shadow-xs'
-                            : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                            ? 'border-primary bg-primary/10 text-primary shadow-xs'
+                            : 'border-border bg-card text-foreground hover:bg-muted'
                     }`}
                 >
                     <input
                         type="checkbox"
-                        className="rounded border-gray-300 text-indigo-600 shadow-xs focus:ring-indigo-500"
+                        className="rounded border-input text-primary shadow-xs focus:ring-ring"
                         checked={selected.includes(opt.value)}
                         onChange={() => onToggle(opt.value)}
                     />
@@ -237,79 +246,77 @@ export default function StaffIndex({
                                 description="Team members invited who have not yet claimed their account."
                             />
                             <CardBody className="p-0">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm">
-                                        <thead className="bg-amber-50/50 text-xs font-semibold uppercase tracking-wider text-amber-800">
-                                            <tr>
-                                                <th className="px-5 py-3">Invitee Email</th>
-                                                <th className="px-5 py-3">Designated Roles</th>
-                                                <th className="px-5 py-3">Invitation Expires</th>
-                                                {canManage && <th className="px-5 py-3 text-right">Actions</th>}
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100 bg-white">
-                                            {invitations.map((inv) => (
-                                                <tr key={inv.id} className="hover:bg-gray-50/60">
-                                                    <td className="px-5 py-3 font-medium text-gray-800">
-                                                        {inv.email}
-                                                        {inv.name && (
-                                                            <span className="ml-2 text-xs text-gray-500">
-                                                                ({inv.name})
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-5 py-3 text-gray-600">
-                                                        <div className="flex flex-wrap gap-1">
-                                                            {inv.roles.map((r) => (
-                                                                <span
-                                                                    key={r}
-                                                                    className="rounded bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700"
-                                                                >
-                                                                    {r}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-5 py-3 text-xs text-gray-500">
-                                                        {new Date(inv.expires_at).toLocaleDateString()}
-                                                    </td>
-                                                    {canManage && (
-                                                        <td className="px-5 py-3 text-right">
-                                                            <div className="flex justify-end gap-2 text-xs">
-                                                                <Button
-                                                                    size="xs"
-                                                                    variant="ghost"
-                                                                    onClick={() =>
-                                                                        router.post(
-                                                                            route('staff.invitations.resend', inv.id),
-                                                                            {},
-                                                                            { preserveScroll: true },
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    Resend Email
-                                                                </Button>
-                                                                <Button
-                                                                    size="xs"
-                                                                    variant="ghost"
-                                                                    onClick={() =>
-                                                                        router.delete(
-                                                                            route('staff.invitations.destroy', inv.id),
-                                                                            { preserveScroll: true },
-                                                                        )
-                                                                    }
-                                                                    className="text-rose-600 hover:text-rose-700"
-                                                                >
-                                                                    Revoke
-                                                                </Button>
-                                                            </div>
-                                                        </td>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="bg-amber-50/50 hover:bg-amber-50/50">
+                                            <TableHead className="text-amber-900 font-semibold">Invitee Email</TableHead>
+                                            <TableHead className="text-amber-900 font-semibold">Designated Roles</TableHead>
+                                            <TableHead className="text-amber-900 font-semibold">Invitation Expires</TableHead>
+                                            {canManage && <TableHead className="text-right text-amber-900 font-semibold">Actions</TableHead>}
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {invitations.map((inv) => (
+                                            <TableRow key={inv.id}>
+                                                <TableCell className="font-medium text-foreground">
+                                                    {inv.email}
+                                                    {inv.name && (
+                                                        <span className="ml-2 text-xs text-muted-foreground">
+                                                            ({inv.name})
+                                                        </span>
                                                     )}
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {inv.roles.map((r) => (
+                                                            <span
+                                                                key={r}
+                                                                className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                                                            >
+                                                                {r}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-xs text-muted-foreground">
+                                                    {new Date(inv.expires_at).toLocaleDateString()}
+                                                </TableCell>
+                                                {canManage && (
+                                                    <TableCell className="text-right">
+                                                        <div className="flex justify-end gap-2 text-xs">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                onClick={() =>
+                                                                    router.post(
+                                                                        route('staff.invitations.resend', inv.id),
+                                                                        {},
+                                                                        { preserveScroll: true },
+                                                                    )
+                                                                }
+                                                            >
+                                                                Resend Email
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                onClick={() =>
+                                                                    router.delete(
+                                                                        route('staff.invitations.destroy', inv.id),
+                                                                        { preserveScroll: true },
+                                                                    )
+                                                                }
+                                                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                            >
+                                                                Revoke
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                )}
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
                             </CardBody>
                         </Card>
                     )}
@@ -319,50 +326,51 @@ export default function StaffIndex({
                         <CardBody className="p-4">
                             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                 <div className="relative w-full max-w-sm">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                                     <input
                                         type="text"
                                         placeholder="Search by name, email, or role..."
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        className="w-full rounded-lg border border-gray-300 py-1.5 pl-3 pr-8 text-sm placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                        className="w-full rounded-md border border-input bg-background py-1.5 pl-9 pr-8 text-sm placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                                     />
                                     {search && (
                                         <button
                                             onClick={() => setSearch('')}
-                                            className="absolute right-2.5 top-2 text-xs text-gray-400 hover:text-gray-600"
+                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground hover:text-foreground rounded-sm"
                                         >
-                                            ✕
+                                            <X className="h-3.5 w-3.5" />
                                         </button>
                                     )}
                                 </div>
 
-                                <div className="flex items-center rounded-lg border border-gray-200 bg-gray-100 p-0.5 text-xs font-semibold">
+                                <div className="inline-flex items-center rounded-lg border border-border bg-muted/40 p-1 text-xs font-medium">
                                     <button
                                         onClick={() => setStatusFilter('all')}
-                                        className={`rounded-md px-3 py-1 transition ${
+                                        className={`rounded-md px-3 py-1 transition-all ${
                                             statusFilter === 'all'
-                                                ? 'bg-white text-gray-900 shadow-sm'
-                                                : 'text-gray-600 hover:text-gray-900'
+                                                ? 'bg-background text-foreground shadow-sm font-semibold'
+                                                : 'text-muted-foreground hover:text-foreground'
                                         }`}
                                     >
                                         All Team ({staff.length})
                                     </button>
                                     <button
                                         onClick={() => setStatusFilter('active')}
-                                        className={`rounded-md px-3 py-1 transition ${
+                                        className={`rounded-md px-3 py-1 transition-all ${
                                             statusFilter === 'active'
-                                                ? 'bg-white text-gray-900 shadow-sm'
-                                                : 'text-gray-600 hover:text-gray-900'
+                                                ? 'bg-background text-foreground shadow-sm font-semibold'
+                                                : 'text-muted-foreground hover:text-foreground'
                                         }`}
                                     >
                                         Active ({staff.filter((s) => s.is_active).length})
                                     </button>
                                     <button
                                         onClick={() => setStatusFilter('deactivated')}
-                                        className={`rounded-md px-3 py-1 transition ${
+                                        className={`rounded-md px-3 py-1 transition-all ${
                                             statusFilter === 'deactivated'
-                                                ? 'bg-white text-gray-900 shadow-sm'
-                                                : 'text-gray-600 hover:text-gray-900'
+                                                ? 'bg-background text-foreground shadow-sm font-semibold'
+                                                : 'text-muted-foreground hover:text-foreground'
                                         }`}
                                     >
                                         Deactivated ({staff.filter((s) => !s.is_active).length})
@@ -385,153 +393,153 @@ export default function StaffIndex({
                                     description="No team members matched your search criteria."
                                 />
                             ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm">
-                                        <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                            <tr>
-                                                <th className="px-5 py-3.5">Member Name</th>
-                                                <th className="px-5 py-3.5">Assigned Roles</th>
-                                                <th className="px-5 py-3.5">Branch Coverage</th>
-                                                <th className="px-5 py-3.5 text-center">Status</th>
-                                                <th className="px-5 py-3.5">Last Login</th>
-                                                {canManage && <th className="px-5 py-3.5 text-right">Actions</th>}
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100 bg-white">
-                                            {filteredStaff.map((member) => {
-                                                const initials = member.name
-                                                    .split(' ')
-                                                    .map((n) => n[0])
-                                                    .slice(0, 2)
-                                                    .join('')
-                                                    .toUpperCase();
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[30%]">Member Name</TableHead>
+                                            <TableHead>Assigned Roles</TableHead>
+                                            <TableHead>Branch Coverage</TableHead>
+                                            <TableHead className="text-center">Status</TableHead>
+                                            <TableHead>Last Login</TableHead>
+                                            {canManage && <TableHead className="text-right">Actions</TableHead>}
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredStaff.map((member) => {
+                                            const initials = member.name
+                                                .split(' ')
+                                                .map((n) => n[0])
+                                                .slice(0, 2)
+                                                .join('')
+                                                .toUpperCase();
 
-                                                return (
-                                                    <tr key={member.id} className="hover:bg-gray-50/80">
-                                                        <td className="px-5 py-3.5">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 font-bold text-indigo-700">
+                                            return (
+                                                <TableRow key={member.id}>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-3">
+                                                            <Avatar className="h-9 w-9 bg-primary/10 border border-primary/20">
+                                                                <AvatarFallback className="font-semibold text-xs text-primary bg-primary/10">
                                                                     {initials || 'U'}
-                                                                </div>
-                                                                <div>
-                                                                    <div className="flex items-center gap-2 font-bold text-gray-900">
-                                                                        {member.name}
-                                                                        {member.is_self && (
-                                                                            <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-600">
-                                                                                You
-                                                                            </span>
-                                                                        )}
-                                                                        {member.has_pin && (
-                                                                            <span
-                                                                                title="Manager PIN configured"
-                                                                                className="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700"
-                                                                            >
-                                                                                PIN
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="text-xs text-gray-500">
-                                                                        {member.email}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-
-                                                        <td className="px-5 py-3.5">
-                                                            <div className="flex flex-wrap gap-1">
-                                                                {member.role_labels.length > 0 ? (
-                                                                    member.role_labels.map((rl) => (
-                                                                        <span
-                                                                            key={rl}
-                                                                            className="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
-                                                                        >
-                                                                            {rl}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <div>
+                                                                <div className="flex items-center gap-2 font-medium text-foreground">
+                                                                    <span>{member.name}</span>
+                                                                    {member.is_self && (
+                                                                        <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                                                                            You
                                                                         </span>
-                                                                    ))
-                                                                ) : (
-                                                                    <span className="text-xs text-gray-400">—</span>
-                                                                )}
+                                                                    )}
+                                                                    {member.has_pin && (
+                                                                        <span
+                                                                            title="Manager PIN configured"
+                                                                            className="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700"
+                                                                        >
+                                                                            PIN
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="text-xs text-muted-foreground">
+                                                                    {member.email}
+                                                                </div>
                                                             </div>
-                                                        </td>
+                                                        </div>
+                                                    </TableCell>
 
-                                                        <td className="px-5 py-3.5 text-xs text-gray-600">
-                                                            {member.branch_names.length > 0 ? (
-                                                                member.branch_names.join(', ')
-                                                            ) : (
-                                                                <span className="font-medium text-indigo-600">
-                                                                    All Branches
-                                                                </span>
-                                                            )}
-                                                        </td>
-
-                                                        <td className="px-5 py-3.5 text-center">
-                                                            <Badge tone={member.is_active ? 'success' : 'neutral'}>
-                                                                {member.is_active ? 'Active' : 'Deactivated'}
-                                                            </Badge>
-                                                        </td>
-
-                                                        <td className="px-5 py-3.5 text-xs text-gray-500">
-                                                            {member.last_login_at
-                                                                ? new Date(member.last_login_at).toLocaleDateString()
-                                                                : 'Never logged in'}
-                                                        </td>
-
-                                                        {canManage && (
-                                                            <td className="px-5 py-3.5 text-right">
-                                                                <div className="flex items-center justify-end gap-1.5 text-xs">
-                                                                    <Button
-                                                                        size="xs"
-                                                                        variant="ghost"
-                                                                        onClick={() => openEdit(member)}
+                                                    <TableCell>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {member.role_labels.length > 0 ? (
+                                                                member.role_labels.map((rl) => (
+                                                                    <span
+                                                                        key={rl}
+                                                                        className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
                                                                     >
-                                                                        Edit Access
-                                                                    </Button>
+                                                                        {rl}
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-xs text-muted-foreground">—</span>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
 
-                                                                    {member.is_active ? (
-                                                                        !member.is_self && (
-                                                                            <Button
-                                                                                size="xs"
-                                                                                variant="ghost"
-                                                                                onClick={() =>
-                                                                                    setConfirmDeactivate(member)
-                                                                                }
-                                                                                className="text-rose-600 hover:text-rose-700"
-                                                                            >
-                                                                                Deactivate
-                                                                            </Button>
-                                                                        )
-                                                                    ) : (
+                                                    <TableCell className="text-xs text-muted-foreground">
+                                                        {member.branch_names.length > 0 ? (
+                                                            member.branch_names.join(', ')
+                                                        ) : (
+                                                            <span className="font-medium text-primary">
+                                                                All Branches
+                                                            </span>
+                                                        )}
+                                                    </TableCell>
+
+                                                    <TableCell className="text-center">
+                                                        <Badge tone={member.is_active ? 'success' : 'neutral'}>
+                                                            {member.is_active ? 'Active' : 'Deactivated'}
+                                                        </Badge>
+                                                    </TableCell>
+
+                                                    <TableCell className="text-xs text-muted-foreground">
+                                                        {member.last_login_at
+                                                            ? new Date(member.last_login_at).toLocaleDateString()
+                                                            : 'Never logged in'}
+                                                    </TableCell>
+
+                                                    {canManage && (
+                                                        <TableCell className="text-right">
+                                                            <div className="flex items-center justify-end gap-1.5 text-xs">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    onClick={() => openEdit(member)}
+                                                                >
+                                                                    Edit Access
+                                                                </Button>
+
+                                                                {member.is_active ? (
+                                                                    !member.is_self && (
                                                                         <Button
-                                                                            size="xs"
+                                                                            size="sm"
                                                                             variant="ghost"
                                                                             onClick={() =>
-                                                                                postAction('staff.reactivate', member)
+                                                                                setConfirmDeactivate(member)
                                                                             }
-                                                                            className="text-emerald-600 hover:text-emerald-700"
+                                                                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                                                         >
-                                                                            Reactivate
+                                                                            Deactivate
                                                                         </Button>
-                                                                    )}
-
+                                                                    )
+                                                                ) : (
                                                                     <Button
-                                                                        size="xs"
+                                                                        size="sm"
                                                                         variant="ghost"
                                                                         onClick={() =>
-                                                                            postAction('staff.revoke-sessions', member)
+                                                                            postAction('staff.reactivate', member)
                                                                         }
-                                                                        title="Revoke active sessions"
+                                                                        className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
                                                                     >
-                                                                        Revoke Sessions
+                                                                        Reactivate
                                                                     </Button>
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                                )}
+
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    onClick={() =>
+                                                                        postAction('staff.revoke-sessions', member)
+                                                                    }
+                                                                    title="Revoke active sessions"
+                                                                >
+                                                                    Revoke Sessions
+                                                                </Button>
+                                                            </div>
+                                                        </TableCell>
+                                                    )}
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
                             )}
                         </CardBody>
                     </Card>
@@ -600,13 +608,13 @@ export default function StaffIndex({
                                         key={b.id}
                                         className={`flex cursor-pointer items-center gap-2 rounded-lg border p-2.5 text-xs font-medium transition ${
                                             inviteForm.data.branch_ids.includes(b.id)
-                                                ? 'border-indigo-600 bg-indigo-50/60 text-indigo-900 shadow-xs'
-                                                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                                ? 'border-primary bg-primary/10 text-primary shadow-xs'
+                                                : 'border-border bg-card text-foreground hover:bg-muted'
                                         }`}
                                     >
                                         <input
                                             type="checkbox"
-                                            className="rounded border-gray-300 text-indigo-600 shadow-xs focus:ring-indigo-500"
+                                            className="rounded border-input text-primary shadow-xs focus:ring-ring"
                                             checked={inviteForm.data.branch_ids.includes(b.id)}
                                             onChange={() =>
                                                 toggleBranch(inviteForm.data.branch_ids, b.id, (ids) =>
@@ -666,13 +674,13 @@ export default function StaffIndex({
                                         key={b.id}
                                         className={`flex cursor-pointer items-center gap-2 rounded-lg border p-2.5 text-xs font-medium transition ${
                                             editForm.data.branch_ids.includes(b.id)
-                                                ? 'border-indigo-600 bg-indigo-50/60 text-indigo-900 shadow-xs'
-                                                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                                ? 'border-primary bg-primary/10 text-primary shadow-xs'
+                                                : 'border-border bg-card text-foreground hover:bg-muted'
                                         }`}
                                     >
                                         <input
                                             type="checkbox"
-                                            className="rounded border-gray-300 text-indigo-600 shadow-xs focus:ring-indigo-500"
+                                            className="rounded border-input text-primary shadow-xs focus:ring-ring"
                                             checked={editForm.data.branch_ids.includes(b.id)}
                                             onChange={() =>
                                                 toggleBranch(editForm.data.branch_ids, b.id, (ids) =>

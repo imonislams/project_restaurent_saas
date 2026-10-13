@@ -1,3 +1,112 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 210 20% 98%;
+        --foreground: 222.2 84% 4.9%;
+
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
+
+        --primary: 12 76% 40%;
+        --primary-foreground: 0 0% 100%;
+
+        --secondary: 210 20% 96%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+
+        --muted: 210 20% 95%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+
+        --accent: 210 20% 95%;
+        --accent-foreground: 222.2 47.4% 11.2%;
+
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 12 76% 40%;
+
+        --radius: 0.5rem;
+
+        /* Sidebar tokens */
+        --sidebar-background: 0 0% 100%;
+        --sidebar-foreground: 222.2 47.4% 11.2%;
+        --sidebar-primary: 12 76% 40%;
+        --sidebar-primary-foreground: 0 0% 100%;
+        --sidebar-accent: 210 20% 96%;
+        --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+        --sidebar-border: 214.3 31.8% 91.4%;
+        --sidebar-ring: 12 76% 40%;
+
+        /* Legacy palette mapped to refined neutrals */
+        --color-primary: #b53014;
+        --color-primary-container: #c83d20;
+        --color-on-primary: #ffffff;
+        --color-secondary: #334155;
+        --color-secondary-container: #f1f5f9;
+        --color-on-secondary: #ffffff;
+        --color-background: #f8fafc;
+        --color-surface: #ffffff;
+        --color-surface-container: #f1f5f9;
+        --color-on-surface: #0f172a;
+        --color-on-surface-variant: #64748b;
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #f8fafc;
+        color: #0f172a;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+        overscroll-behavior: none;
+    }
+
+    /* Selection highlight */
+    ::selection {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+}
+
+/* Custom scrollbars for clean dashboards */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined', sans-serif;
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+}

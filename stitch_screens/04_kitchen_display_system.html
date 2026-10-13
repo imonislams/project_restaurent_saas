@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-tint": "#b12c13", "on-background": "#1a1c1a", "primary-fixed-dim": "#ffb4a4", "tertiary-container": "#73747a", "inverse-on-surface": "#f2f1ee", "inverse-surface": "#2f312f", "primary": "#ae2a10", "surface-bright": "#faf9f6", "surface-variant": "#e3e2e0", "tertiary": "#5a5c61", "surface": "#faf9f6", "on-secondary-container": "#52695d", "on-tertiary-fixed": "#1a1c20", "on-surface": "#1a1c1a", "on-surface-variant": "#5a413c", "inverse-primary": "#ffb4a4", "tertiary-fixed": "#e2e2e8", "surface-container": "#efeeeb", "on-primary-fixed-variant": "#8d1600", "on-secondary-fixed-variant": "#354c40", "surface-container-lowest": "#ffffff", "on-tertiary-container": "#fefcff", "secondary-container": "#cfe9d9", "on-tertiary": "#ffffff", "on-secondary-fixed": "#092016", "on-secondary": "#ffffff", "error": "#ba1a1a", "on-primary": "#ffffff", "surface-dim": "#dbdad7", "primary-fixed": "#ffdad3", "outline-variant": "#e2bfb7", "surface-container-low": "#f4f3f0", "tertiary-fixed-dim": "#c6c6cc", "surface-container-highest": "#e3e2e0", "secondary-fixed": "#cfe9d9", "secondary-fixed-dim": "#b3ccbe", "on-error": "#ffffff", "primary-container": "#d04327", "background": "#faf9f6", "on-error-container": "#93000a", "on-tertiary-fixed-variant": "#45474b", "on-primary-fixed": "#3e0500", "on-primary-container": "#fffbff", "error-container": "#ffdad6", "secondary": "#4c6358", "outline": "#8e706a", "surface-container-high": "#e9e8e5" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xs": "0.25rem", "gutter-sm": "1rem", "space-2xl": "4rem", "space-md": "1rem", "margin": "3rem", "space-sm": "0.5rem", "gutter": "1.5rem", "space-xl": "2.5rem", "space-lg": "1.5rem", "space-3xl": "6rem", "margin-sm": "1.25rem" }, "fontFamily": { "display-xl": [ "Plus Jakarta Sans" ], "headline-sm": [ "Plus Jakarta Sans" ], "mono-metric": [ "Space Mono" ], "headline-lg-mobile": [ "Plus Jakarta Sans" ], "mono-ticket": [ "Space Mono" ], "label-caps": [ "Space Mono" ], "headline-lg": [ "Plus Jakarta Sans" ], "body-md": [ "Plus Jakarta Sans" ], "display-xl-mobile": [ "Plus Jakarta Sans" ], "body-lg": [ "Plus Jakarta Sans" ], "headline-md": [ "Plus Jakarta Sans" ], "body-sm": [ "Plus Jakarta Sans" ] }, "fontSize": { "display-xl": [ "64px", { "lineHeight": "70px", "letterSpacing": "-0.03em", "fontWeight": "800" } ], "headline-sm": [ "20px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "mono-metric": [ "28px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "headline-lg-mobile": [ "28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "mono-ticket": [ "13px", { "lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "400" } ], "label-caps": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" } ], "headline-lg": [ "40px", { "lineHeight": "48px", "letterSpacing": "-0.025em", "fontWeight": "700" } ], "body-md": [ "15px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" } ], "display-xl-mobile": [ "38px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "800" } ], "body-lg": [ "18px", { "lineHeight": "28px", "letterSpacing": "-0.005em", "fontWeight": "400" } ], "headline-md": [ "26px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" } ], "body-sm": [ "13px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "500" } ] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-xl border-b border-surface-container-highest shadow-[0_1px_8px_rgba(0,0,0,0.03)]"><div class="h-20 max-w-7xl mx-auto px-gutter flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-2xl"><a class="flex items-baseline gap-space-xs group" data-path="home" href="#"><span class="font-display-xl text-headline-sm font-extrabold tracking-tight text-on-surface">mise<span class="text-primary">.</span></span><span class="font-label-caps text-label-caps uppercase text-secondary bg-secondary-container px-space-xs py-0.5 rounded">pos</span></a><nav class="hidden lg:flex items-center gap-space-lg" data-active-classes="text-primary font-semibold"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="product" href="#">Product</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="features" href="#">Features</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="solutions" href="#">Solutions</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="pricing" href="#">Pricing</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="resources" href="#">Resources</a></nav></div><div class="flex items-center gap-space-md"><a class="hidden sm:inline-flex font-body-sm text-body-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors px-space-sm py-space-xs" data-path="login" href="#">Sign In</a><a class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold px-space-lg py-space-sm rounded-lg shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]" data-path="signup" href="#">Start Free Trial</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- Section 0: Breadcrumb & Context Header -->
+<section class="max-w-7xl mx-auto w-full px-gutter pt-space-xl pb-space-md">
+<div class="flex flex-wrap items-center justify-between gap-space-sm pb-space-sm">
+<nav class="flex items-center gap-space-xs font-mono-ticket text-mono-ticket text-tertiary">
+<a class="hover:text-on-surface transition-colors" href="#">Platform</a>
+<span class="text-tertiary-container">/</span>
+<a class="hover:text-on-surface transition-colors" href="#">Features</a>
+<span class="text-tertiary-container">/</span>
+<span class="text-primary font-semibold">Kitchen Display System (KDS)</span>
+</nav>
+<div class="inline-flex items-center gap-space-xs bg-secondary-container px-space-sm py-1 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-label-caps text-label-caps uppercase text-on-secondary-fixed-variant tracking-wider">Line Expeditor Engine • Real-Time Ticket Dispatch</span>
+</div>
+</div>
+</section>
+<!-- Section 1: Editorial Hero -->
+<section class="max-w-7xl mx-auto w-full px-gutter pb-space-3xl">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-end">
+<div class="lg:col-span-8 space-y-space-md">
+<h1 class="font-display-xl text-display-xl text-on-surface tracking-tight">
+          Calm the kitchen pass. <span class="text-primary">Zero lost chits.</span> Precision line pacing.
+        </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl leading-relaxed">
+          A rugged, real-time KDS built for grueling heat, grease, and dinner rush volume. Dynamic station routing, course-fired countdown timers, and bi-directional expo controls designed for Michelin-star precision and high-turnover bistros alike.
+        </p>
+</div>
+<div class="lg:col-span-4 flex flex-col gap-space-md lg:items-end justify-end">
+<div class="flex flex-col sm:flex-row lg:flex-col gap-space-sm w-full max-w-xs">
+<a class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold px-space-lg py-3 rounded-lg shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99] text-center" href="#">
+            Start 14-Day Free Trial
+          </a>
+<button class="inline-flex items-center justify-center bg-surface-container-low hover:bg-surface-container-high text-on-surface font-body-sm text-body-sm font-semibold px-space-lg py-3 rounded-lg transition-colors text-center gap-space-xs shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">play_circle</span>
+            Watch 3-Min Line Walkthrough
+          </button>
+</div>
+<p class="font-label-caps text-label-caps uppercase text-tertiary text-left lg:text-right max-w-xs">
+          Mount on commercial touchscreens or iPad • Offline mesh fallback • 0ms ticket lag
+        </p>
+</div>
+</div>
+</section>
+<!-- Section 2: Interactive High-Fidelity Kitchen Display System (KDS) Terminal -->
+<section class="w-full bg-[#0f1115] text-[#f4f3f0] py-space-2xl px-gutter shadow-2xl relative">
+<div class="max-w-7xl mx-auto space-y-space-md">
+<!-- Terminal Status Ribbon -->
+<div class="bg-[#161a20] rounded-lg p-space-md flex flex-wrap items-center justify-between gap-space-md shadow-md">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="inline-block w-2.5 h-2.5 rounded-full bg-[#10b981] animate-pulse"></span>
+<span class="font-mono-metric text-headline-sm text-white tracking-tight uppercase">LINE 1: MAIN EXPO PASS</span>
+</div>
+<span class="hidden md:inline font-mono-ticket text-mono-ticket text-[#8e9096] bg-[#20252e] px-space-sm py-0.5 rounded">STATION_ID: EXPO_01_SOUTH</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-lg font-mono-ticket text-mono-ticket text-[#b6b8bf]">
+<div class="flex items-center gap-space-xs">
+<span class="text-[#73767e]">Active Tickets:</span>
+<span class="text-white font-bold text-body-md">8</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="text-[#73767e]">Avg Ticket Time:</span>
+<span class="text-[#38bdf8] font-bold text-body-md">11m 40s</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="text-[#73767e]">Velocity:</span>
+<span class="text-[#f59e0b] font-bold text-body-md">142 covers/hr</span>
+</div>
+<div class="hidden sm:flex items-center gap-space-xs bg-[#20252e] px-space-xs py-1 rounded">
+<span class="material-symbols-outlined text-[16px] text-[#10b981]">volume_up</span>
+<span class="text-white text-label-caps">Dual Beep</span>
+</div>
+<div class="flex items-center gap-space-xs bg-[#1a2f23] text-[#4ade80] px-space-xs py-1 rounded text-label-caps">
+<span class="w-1.5 h-1.5 rounded-full bg-[#4ade80]"></span>
+            Mesh 0.02s
+          </div>
+</div>
+</div>
+<!-- Station Filter Navigation -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pb-space-xs">
+<div class="flex items-center gap-space-xs bg-[#161a20] p-1 rounded-lg">
+<button class="bg-[#e24f32] text-white font-label-caps text-label-caps uppercase px-space-md py-2 rounded font-bold shadow-sm transition-transform active:scale-95">Expo Master (8)</button>
+<button class="text-[#9fa2aa] hover:text-white font-label-caps text-label-caps uppercase px-space-md py-2 rounded transition-colors">Grill &amp; Saute (4)</button>
+<button class="text-[#9fa2aa] hover:text-white font-label-caps text-label-caps uppercase px-space-md py-2 rounded transition-colors">Cold Bar &amp; Raw (2)</button>
+<button class="text-[#9fa2aa] hover:text-white font-label-caps text-label-caps uppercase px-space-md py-2 rounded transition-colors">Pastry &amp; Dessert (2)</button>
+</div>
+<div class="flex items-center gap-space-xs font-mono-ticket text-mono-ticket text-[#8e9096]">
+<span class="material-symbols-outlined text-[18px]">touch_app</span>
+<span>BUMP BAR KEY SHORTCUTS: [F1-F4] DISPATCH • [SPACE] HOLD</span>
+</div>
+</div>
+<!-- Live KDS Chit Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-md">
+<!-- Chit 1: Standard Paced (Normal / Green) -->
+<div class="bg-[#1a1e26] rounded-xl flex flex-col justify-between shadow-lg overflow-hidden border-t-4 border-[#10b981]">
+<div class="p-space-md space-y-space-sm">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-caps text-label-caps text-[#8e9096] uppercase block">Dine-In • Svr: Marcus B.</span>
+<span class="font-mono-metric text-headline-sm text-white font-bold">TBL 14</span>
+</div>
+<div class="text-right">
+<span class="font-mono-metric text-headline-sm text-[#10b981] font-bold block">04:12</span>
+<span class="font-label-caps text-label-caps text-[#8e9096]">4 GUESTS</span>
+</div>
+</div>
+<div class="bg-[#242933] px-space-xs py-1 rounded flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-[#38bdf8] uppercase">COURSE 1 : APPETIZERS</span>
+<span class="bg-[#10b981]/20 text-[#34d399] font-label-caps text-label-caps px-1 rounded">FIRED</span>
+</div>
+<div class="space-y-space-sm pt-space-xs">
+<div class="space-y-1">
+<div class="flex items-baseline justify-between text-body-md font-semibold text-white">
+<span>2× Hamachi Crudo</span>
+<span class="font-mono-ticket text-mono-ticket text-[#73767e]">RAW</span>
+</div>
+<div class="pl-space-sm">
+<span class="bg-[#ca8a04]/20 text-[#facc15] font-label-caps text-label-caps px-1.5 py-0.5 rounded uppercase font-semibold">GF: Tamari Substitution</span>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex items-baseline justify-between text-body-md font-semibold text-white">
+<span>1× Charred Baby Leeks</span>
+<span class="font-mono-ticket text-mono-ticket text-[#73767e]">GRILL</span>
+</div>
+<div class="pl-space-sm">
+<span class="bg-[#dc2626]/20 text-[#f87171] font-label-caps text-label-caps px-1.5 py-0.5 rounded uppercase font-semibold">ALLERGY: NO HAZELNUT</span>
+</div>
+</div>
+</div>
+</div>
+<div class="p-space-md pt-0">
+<div class="pt-space-sm grid grid-cols-2 gap-space-xs">
+<button class="bg-[#2a303c] hover:bg-[#343b49] text-[#c9cbd1] font-body-sm text-body-sm py-2 rounded font-semibold text-center transition-colors">Hold Mains</button>
+<button class="bg-[#10b981] hover:bg-[#059669] text-white font-body-sm text-body-sm py-2 rounded font-semibold text-center transition-colors shadow-sm">Bump C1</button>
+</div>
+</div>
+</div>
+<!-- Chit 2: Mains Fired (Amber / Approaching Target) -->
+<div class="bg-[#1a1e26] rounded-xl flex flex-col justify-between shadow-lg overflow-hidden border-t-4 border-[#f59e0b]">
+<div class="p-space-md space-y-space-sm">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-caps text-label-caps text-[#8e9096] uppercase block">Dine-In • Svr: Chloe S.</span>
+<span class="font-mono-metric text-headline-sm text-white font-bold">TBL 18</span>
+</div>
+<div class="text-right">
+<span class="font-mono-metric text-headline-sm text-[#f59e0b] font-bold block animate-pulse">14:38</span>
+<span class="font-label-caps text-label-caps text-[#8e9096]">6 GUESTS</span>
+</div>
+</div>
+<div class="bg-[#ef4444] text-white px-space-xs py-1 rounded flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px]">priority_high</span>
+<span class="font-label-caps text-label-caps uppercase font-bold">Seat 3: CELIAC PROTOCOL • Dedicated Pan</span>
+</div>
+<div class="space-y-space-sm pt-space-xs">
+<div class="space-y-0.5">
+<div class="flex items-baseline justify-between text-body-md font-semibold text-white">
+<span>1× 45-Day Porterhouse (Shared)</span>
+<span class="font-mono-ticket text-mono-ticket text-[#73767e]">GRILL</span>
+</div>
+<div class="pl-space-sm text-body-sm text-[#b6b8bf]">
+<span>• Temp: Medium-Rare</span>
+<span class="block">• Chimichurri on side</span>
+</div>
+</div>
+<div class="space-y-0.5">
+<div class="flex items-baseline justify-between text-body-md font-semibold text-white">
+<span>2× Heritage Pork Chop</span>
+<span class="font-mono-ticket text-mono-ticket text-[#73767e]">SAUTE</span>
+</div>
+<div class="pl-space-sm text-body-sm text-[#b6b8bf]">
+<span>• Temp: Well Done (Split Plates)</span>
+</div>
+</div>
+<div class="space-y-0.5">
+<div class="flex items-baseline justify-between text-body-md font-semibold text-white">
+<span>1× Line-Caught Black Cod</span>
+<span class="font-mono-ticket text-mono-ticket text-[#73767e]">FISH</span>
+</div>
+<div class="pl-space-sm text-body-sm text-[#b6b8bf]">
+<span>• Extra Skin Crisp • Seat 3 Clean Surface</span>
+</div>
+</div>
+</div>
+</div>
+<div class="p-space-md pt-0">
+<div class="pt-space-sm grid grid-cols-2 gap-space-xs">
+<button class="bg-[#2a303c] hover:bg-[#343b49] text-[#c9cbd1] font-body-sm text-body-sm py-2 rounded font-semibold text-center transition-colors">Recall Chit</button>
+<button class="bg-[#e24f32] hover:bg-[#c93f25] text-white font-body-sm text-body-sm py-2 rounded font-semibold text-center transition-colors shadow-sm">Bump to Pass</button>
+</div>
+</div>
+</div>
+<!-- Chit 3: Overdue Critical (Red Alert) -->
+<div class="bg-[#1f191b] rounded-xl flex flex-col justify-between shadow-lg overflow-hidden border-t-4 border-[#ef4444]">
+<div class="p-space-md space-y-space-sm">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-caps text-label-caps text-[#ef4444] uppercase block font-bold">LATE • Svr: Alex V.</span>
+<span class="font-mono-metric text-headline-sm text-white font-bold">BAR 02</span>
+</div>
+<div class="text-right">
+<span class="font-mono-metric text-headline-sm text-[#ef4444] font-bold block">21:05</span>
+<span class="bg-[#ef4444]/20 text-[#fca5a5] font-label-caps text-label-caps px-1 py-0.5 rounded uppercase font-bold">+3m past target</span>
+</div>
+</div>
+<div class="bg-[#2e1d21] px-space-xs py-1 rounded flex items-center justify-between text-[#fca5a5]">
+<span class="font-label-caps text-label-caps uppercase">COURSE 1 : DIRECT FIRE</span>
+<span class="material-symbols-outlined text-[16px] animate-pulse">timer</span>
+</div>
+<div class="space-y-space-sm pt-space-xs">
+<div class="space-y-0.5">
+<div class="flex items-baseline justify-between text-body-md font-semibold text-white">
+<span>2× Woodfire Bone Marrow</span>
+<span class="font-mono-ticket text-mono-ticket text-[#73767e]">OVEN</span>
+</div>
+<div class="pl-space-sm text-body-sm text-[#fca5a5]">
+<span>• Extra Grilled Sourdough Crostini</span>
+</div>
+</div>
+<div class="space-y-0.5">
+<div class="flex items-baseline justify-between text-body-md font-semibold text-white">
+<span>1× Dry-Aged Butcher Burger</span>
+<span class="font-mono-ticket text-mono-ticket text-[#73767e]">GRILL</span>
+</div>
+<div class="pl-space-sm text-body-sm text-[#d1d5db]">
+<span>• Med • Gruyere • NO ONION</span>
+</div>
+</div>
+</div>
+</div>
+<div class="p-space-md pt-0">
+<div class="pt-space-sm grid grid-cols-2 gap-space-xs">
+<button class="bg-[#451e24] hover:bg-[#5c242c] text-[#fca5a5] font-body-sm text-body-sm py-2 rounded font-semibold text-center transition-colors">Priority Fire</button>
+<button class="bg-[#ef4444] hover:bg-[#dc2626] text-white font-body-sm text-body-sm py-2 rounded font-semibold text-center transition-colors shadow-sm">Bump (F3)</button>
+</div>
+</div>
+</div>
+<!-- Chit 4: Online Takeaway Dispatch (Blue Channel) -->
+<div class="bg-[#1a1e26] rounded-xl flex flex-col justify-between shadow-lg overflow-hidden border-t-4 border-[#38bdf8]">
+<div class="p-space-md space-y-space-sm">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-caps text-label-caps text-[#38bdf8] uppercase block font-bold">UberEats Direct #882</span>
+<span class="font-mono-metric text-headline-sm text-white font-bold">TAKEOUT</span>
+</div>
+<div class="text-right">
+<span class="font-mono-metric text-headline-sm text-[#38bdf8] font-bold block">06:15</span>
+<span class="font-label-caps text-label-caps text-[#8e9096]">DRIVER IN 8M</span>
+</div>
+</div>
+<div class="bg-[#1e2a38] px-space-xs py-1 rounded flex items-center justify-between text-[#7dd3fc]">
+<span class="font-label-caps text-label-caps uppercase">BAG SEAL &amp; EXPEDITE</span>
+<span class="material-symbols-outlined text-[16px]">delivery_dining</span>
+</div>
+<div class="space-y-space-sm pt-space-xs">
+<div class="space-y-0.5">
+<div class="flex items-baseline justify-between text-body-md font-semibold text-white">
+<span>1× Roasted Poulet Rouge</span>
+<span class="font-mono-ticket text-mono-ticket text-[#73767e]">ROTISSERIE</span>
+</div>
+<div class="pl-space-sm text-body-sm text-[#b6b8bf]">
+<span>• Carved for Two • Jus on Side</span>
+</div>
+</div>
+<div class="space-y-0.5">
+<div class="flex items-baseline justify-between text-body-md font-semibold text-white">
+<span>2× Truffle Pomme Frites</span>
+<span class="font-mono-ticket text-mono-ticket text-[#73767e]">FRY</span>
+</div>
+<div class="pl-space-sm text-body-sm text-[#b6b8bf]">
+<span>• Separate Aioli Dips</span>
+</div>
+</div>
+</div>
+</div>
+<div class="p-space-md pt-0">
+<div class="pt-space-sm grid grid-cols-2 gap-space-xs">
+<button class="bg-[#2a303c] hover:bg-[#343b49] text-[#c9cbd1] font-body-sm text-body-sm py-2 rounded font-semibold text-center transition-colors">Bag Label</button>
+<button class="bg-[#0284c7] hover:bg-[#0369a1] text-white font-body-sm text-body-sm py-2 rounded font-semibold text-center transition-colors shadow-sm">Ready Dispatch</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Status & Recall Buffer Bar -->
+<div class="bg-[#161a20] rounded-lg p-space-md flex flex-col md:flex-row items-center justify-between gap-space-md font-mono-ticket text-mono-ticket text-[#8e9096]">
+<div class="flex flex-wrap items-center gap-space-lg">
+<div class="flex items-center gap-space-xs">
+<span class="text-[#73767e]">Tickets Completed:</span>
+<span class="text-white font-bold">84</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="text-[#73767e]">Pass Throughput:</span>
+<span class="text-[#10b981] font-bold">96.4% On-Time</span>
+</div>
+<div class="hidden lg:flex items-center gap-space-xs">
+<span class="text-[#73767e]">Station Latency:</span>
+<span class="text-white">12ms local sync</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-caps text-label-caps uppercase text-[#d1d5db]">Expo Recall Buffer:</span>
+<button class="bg-[#242933] hover:bg-[#2e3542] text-white px-space-sm py-1 rounded text-body-sm transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">undo</span>
+            TBL 12 (1m ago)
+          </button>
+<button class="bg-[#242933] hover:bg-[#2e3542] text-white px-space-sm py-1 rounded text-body-sm transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">undo</span>
+            TBL 07 (3m ago)
+          </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Key Architectural Benchmarks (4-Card Metric Grid) -->
+<section class="max-w-7xl mx-auto w-full px-gutter py-space-3xl">
+<div class="space-y-space-xs pb-space-xl">
+<span class="font-label-caps text-label-caps uppercase text-primary">Engineered For Zero Operational Failure</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Precision architecture for high-velocity dinner rushes.</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-lg">
+<!-- Benchmark 1 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between space-y-space-md">
+<div class="space-y-space-sm">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">receipt_long</span>
+</div>
+<span class="font-mono-metric text-mono-metric text-on-surface block">100%</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Zero Lost Tickets</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Full IP65 bump-bar support with automatic physical failover. If a station loses power, chits immediately divert to the nearest live screen and silent thermal backup.
+          </p>
+</div>
+<div class="pt-space-sm font-label-caps text-label-caps uppercase text-secondary">
+          Mesh Redundancy Active
+        </div>
+</div>
+<!-- Benchmark 2 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between space-y-space-md">
+<div class="space-y-space-sm">
+<div class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">call_split</span>
+</div>
+<span class="font-mono-metric text-mono-metric text-on-surface block">Sub-Item</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Intelligent Routing</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Steaks route to Grill, raw oysters to Garde Manger, and Grand Marnier soufflés to Pastry—automatically disentangled from unified multi-guest guest checks.
+          </p>
+</div>
+<div class="pt-space-sm font-label-caps text-label-caps uppercase text-secondary">
+          Microsecond Splitting
+        </div>
+</div>
+<!-- Benchmark 3 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between space-y-space-md">
+<div class="space-y-space-sm">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">timelapse</span>
+</div>
+<span class="font-mono-metric text-mono-metric text-on-surface block">Auto-Fire</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Synchronized Coursing</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Hold entrees on the cook view until appetizers register as 'Cleared' on server handhelds, or fire automatically based on chef-defined dining pace rhythms.
+          </p>
+</div>
+<div class="pt-space-sm font-label-caps text-label-caps uppercase text-secondary">
+          Tableside Pacing Sync
+        </div>
+</div>
+<!-- Benchmark 4 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between space-y-space-md">
+<div class="space-y-space-sm">
+<div class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">sync_alt</span>
+</div>
+<span class="font-mono-metric text-mono-metric text-on-surface block">120ms</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Bi-Directional 86ing</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            When line cooks long-press '86 Wagyu Ribeye' on their station screen, POS terminals, server handhelds, and online delivery storefronts lock instantaneously.
+          </p>
+</div>
+<div class="pt-space-sm font-label-caps text-label-caps uppercase text-secondary">
+          Zero Double-Orders
+        </div>
+</div>
+</div>
+</section>
+<!-- Section 4: Deep Operational Workflows (Asymmetric 2-Column Split Rows) -->
+<section class="max-w-7xl mx-auto w-full px-gutter pb-space-3xl space-y-space-3xl">
+<!-- Row 1: Smart Station Splitting & Cook-Time Balancing -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-center">
+<div class="lg:col-span-6 space-y-space-md">
+<span class="font-label-caps text-label-caps uppercase text-primary">Cook Time Harmonization</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-tight">
+          Everything arrives at the pass at the exact same second.
+        </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+          In high-volume kitchens, uncoordinated stations lead to cold fish or wilted sides. Mise KDS introduces automated prep lag counters: 24-minute items like Whole Roasted Turbot fire first, while 6-minute Seared Dayboat Scallops stay staged until the perfect window.
+        </p>
+<ul class="space-y-space-xs font-body-md text-body-md text-on-surface">
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]">check_circle</span>
+            Dynamic offset timers keyed to individual station cook times
+          </li>
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]">check_circle</span>
+            Visual countdown rings visible from 8 feet across stainless stations
+          </li>
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]">check_circle</span>
+            Audio chimes announce staging triggers so line cooks never miss a fire call
+          </li>
+</ul>
+</div>
+<div class="lg:col-span-6">
+<div class="bg-surface-container-low p-space-lg rounded-2xl shadow-sm space-y-space-md">
+<div class="flex items-center justify-between pb-space-xs">
+<span class="font-label-caps text-label-caps uppercase text-tertiary">TABLE 09 • MAINS SYNCHRONIZATION</span>
+<span class="font-mono-ticket text-mono-ticket text-primary font-bold">TARGET EXPO: 19:45</span>
+</div>
+<!-- Staggered Timeline Visual -->
+<div class="space-y-space-md">
+<!-- Long item -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg shadow-sm space-y-space-xs">
+<div class="flex justify-between items-baseline">
+<span class="font-body-sm text-body-sm font-bold text-on-surface">Whole Roasted Turbot (24m prep)</span>
+<span class="font-mono-ticket text-mono-ticket text-secondary font-bold">COOKING • 18m left</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 25%"></div>
+</div>
+<span class="font-label-caps text-label-caps text-tertiary">Station: Fish &amp; Roast • Fired at 00:00</span>
+</div>
+<!-- Medium item -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg shadow-sm space-y-space-xs">
+<div class="flex justify-between items-baseline">
+<span class="font-body-sm text-body-sm font-bold text-on-surface">Dry-Aged Duck Breast (14m prep)</span>
+<span class="font-mono-ticket text-mono-ticket text-primary font-bold">FIRED • 14m left</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 5%"></div>
+</div>
+<span class="font-label-caps text-label-caps text-tertiary">Station: Saute &amp; Searing • Fired at +10:00</span>
+</div>
+<!-- Short item held -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg shadow-sm space-y-space-xs opacity-75">
+<div class="flex justify-between items-baseline">
+<span class="font-body-sm text-body-sm font-bold text-on-surface">Pan-Seared Scallops (6m prep)</span>
+<span class="font-mono-ticket text-mono-ticket text-tertiary">STAGED • Fires in 08:00</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+<div class="bg-surface-container-highest h-full rounded-full" style="width: 0%"></div>
+</div>
+<span class="font-label-caps text-label-caps text-tertiary">Station: Fish &amp; Roast • Auto-dispatch countdown active</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Row 2: Allergen & Modification Isolation -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-center">
+<div class="lg:col-span-6 order-2 lg:order-1">
+<div class="bg-surface-container-lowest p-space-lg rounded-2xl shadow-sm space-y-space-md">
+<div class="flex items-center gap-space-xs text-error font-label-caps text-label-caps uppercase font-bold">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+            High Severity Cross-Contact Flag
+          </div>
+<div class="bg-error/10 p-space-md rounded-lg space-y-space-xs">
+<div class="flex justify-between items-center">
+<span class="font-mono-metric text-headline-sm text-error font-bold">SEAT 4: SEVERE CELIAC</span>
+<span class="bg-error text-on-error font-label-caps text-label-caps px-2 py-0.5 rounded font-bold">MUST CONFIRM</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface">
+              Guest strictly sensitized. Use sterilized iron pan, new utensils, and fresh butter block. Do not finish on shared grill grate.
+            </p>
+</div>
+<div class="space-y-space-xs">
+<span class="font-label-caps text-label-caps uppercase text-tertiary">Station Check-Off Required</span>
+<div class="grid grid-cols-2 gap-space-xs">
+<div class="bg-surface-container-low p-space-sm rounded flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[18px]">check_box</span>
+<span class="font-body-sm text-body-sm font-medium">Pan Sanitized</span>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[18px]">check_box</span>
+<span class="font-body-sm text-body-sm font-medium">Gluten Free Tamari</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-6 order-1 lg:order-2 space-y-space-md">
+<span class="font-label-caps text-label-caps uppercase text-primary">Zero-Error Kitchen Safety</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-tight">
+          Allergies that can't be missed in the thick of service.
+        </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+          Paper tickets get grease-splattered and handwriting gets misread. Mise KDS flags critical dietary requirements and severe food allergies with high-contrast, station-specific warnings that require cook acknowledgment before bumping.
+        </p>
+<div class="grid grid-cols-2 gap-space-md pt-space-xs">
+<div>
+<span class="font-mono-metric text-mono-metric text-primary block">0</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Allergen oversights across 1.4M covers served</span>
+</div>
+<div>
+<span class="font-mono-metric text-mono-metric text-on-surface block">100%</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Line cook acknowledgment audit trails logged</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Row 3: Line Expeditor Control & Recall Buffer -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-center">
+<div class="lg:col-span-6 space-y-space-md">
+<span class="font-label-caps text-label-caps uppercase text-primary">Master Line Coordination</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-tight">
+          Total expo command. Complete undo buffer for accidental bumps.
+        </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+          Empower your Head Chef or Expeditor with lightning-fast routing tools. Drag and prioritize urgent VIP tickets, split complex courses across stations, or recall an accidentally bumped chit with a single tap of the mechanical bump bar.
+        </p>
+<div class="space-y-space-xs pt-space-xs">
+<div class="p-space-sm bg-surface-container-lowest rounded-lg shadow-sm flex items-center justify-between">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Expeditor Chit Prioritization</span>
+<span class="font-mono-ticket text-mono-ticket text-secondary">Drag &amp; Drop Instant Re-Order</span>
+</div>
+<div class="p-space-sm bg-surface-container-lowest rounded-lg shadow-sm flex items-center justify-between">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">5-Minute Deep Recall Tray</span>
+<span class="font-mono-ticket text-mono-ticket text-secondary">Zero Lost Orders</span>
+</div>
+</div>
+</div>
+<div class="lg:col-span-6">
+<div class="relative bg-surface-container-lowest p-space-xl rounded-2xl shadow-sm">
+<img class="w-full h-80 object-cover rounded-xl shadow-md" data-alt="An expeditor chef in a crisp apron standing at the stainless steel pass of a busy restaurant kitchen, using a durable commercial touch monitor showing Mise kitchen display tickets while reviewing plated dishes under warm pass lamps." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhzQsWJq76FxLRm_a32iPffKiBt7ngd2tDOMpmYuoDmcsWn9PzhB-vtiTg6HdDec2RZNE3QcSJ5pFir2R2eVa09IReT-6Du4JWxo2vnMDpY2167hlAxKwdbMW8c4VedwG19Hp4BbPcQdk6GZp98Jp8ln4eTk5KJ05Q_Z4-p26a1rYwRTVwmWyuGU-umG05l3MJCGURdXAIjvZQj94urHj6U1PRFEBGkD9hoMbgHTp7ZQdgKEnkgY3z"/>
+<div class="absolute bottom-6 left-6 right-6 bg-[#0f1115]/90 backdrop-blur-md p-space-md rounded-lg text-white flex items-center justify-between">
+<div>
+<span class="font-label-caps text-label-caps uppercase text-[#38bdf8] block">Live Pass Telemetry</span>
+<span class="font-mono-ticket text-mono-ticket text-white">Expo Pass 1: 4.2 min avg window clear time</span>
+</div>
+<span class="material-symbols-outlined text-[#10b981]">verified</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 5: Rugged Hardware & Kitchen Durability -->
+<section class="w-full bg-surface-container-low py-space-3xl px-gutter">
+<div class="max-w-7xl mx-auto space-y-space-2xl">
+<div class="text-center max-w-3xl mx-auto space-y-space-xs">
+<span class="font-label-caps text-label-caps uppercase text-primary">Tested Under Steam, Grease, And Flour</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Hardware that thrives where normal tech dies.</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Mise runs natively on industry-standard commercial touchscreen hardware, waterproof mechanical bump bars, and sealed enterprise tablets.
+        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-lg">
+<!-- Hardware 1 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm space-y-space-md">
+<div class="h-40 rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Heavy-duty commercial Elo touchscreen monitor mounted with a VESA bracket above a commercial stainless steel kitchen cookline with steam rising in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDltvz0NzN0LTfP4A3KnYfdtwzoCucMSywyordEqXO1SeIkD_MjTyVf4n3lBjfWABNLPGcnW3G4VKTbWiXirMNxS1MBeBx5gy-PF3lYeN4sBEppcZP8OSXfAKacsOx5_2R3i3ne3noHalD_McbpyWccRT11JPcK80Jz4xfV9_vxApGH6LLJk--R_ogKTMiqnYARH_M9asq3nnE47RT9lYOGviyZyiea7MKnQ2COE32qiOAxkTQkIsld"/>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Commercial Monitors</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Elo I-Series, MicroTouch &amp; ViewSonic. Sealed against grease, steam, and high ambient station temperatures.
+            </p>
+</div>
+</div>
+<!-- Hardware 2 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm space-y-space-md">
+<div class="h-40 rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Waterproof mechanical bump bar keypad with rubber tactile switches sitting on a stainless steel restaurant counter, covered with light kitchen dust and ready for high-speed operation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHzm4buAGbsPZt6bckYoMSg3h9MhrChuCAkDU3CW4aAso4z2V9QVMRa9IfOnj1MnP1n76K1BBYBkolp3Q1L2UVqDYaaKLGlQUpmaqJViufwD7Z6-FWK8R6xlHM4aIOcDwnZ30dxujR9NO0hNl2_76xgizvKSYxnn0jn-kwNUD6smJ64c8oZHQ6jh7rDltKT2gi-obx8RhfnBqeuWzaVf4gdxYOXzBgig5F49CiZL07hJCH9OzECGBE"/>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Mechanical Bump Bars</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Logic Controls &amp; Bematech KB1700. IP68 waterproof ratings for cooks wearing gloves or handling wet pans.
+            </p>
+</div>
+</div>
+<!-- Hardware 3 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm space-y-space-md">
+<div class="h-40 rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Apple iPad secured in a rugged matte black industrial rubber case mounted on an articulated arm near a restaurant pastry pass." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdZpFjiF3BNyxUA1Xp8MmZ3rHRPhK8x9ajKhclPtT2XBMUKpnpUOhE-FbxJKYMdsxwv1srwZw3VDzluH_fmHkN6evEDG7c8mezwfVavoaFsJUc2JqRM-mGD3Z5HpDOpQAgupkABdXvuLuF2JL8fS86xYiKkd6yP2NjWMXvKOk4fh_rSre_KGlKkXla2F0JaU0OJJDLH4NH2ASI9e7a3W4zmi0FY_tdxfIjm9QkZnop8TXESwFEKpiK"/>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Ruggedized Tablets</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              iPad Pro and Samsung Galaxy Active in military-spec silicone drop enclosures. Perfect for compact prep bars and food trucks.
+            </p>
+</div>
+</div>
+<!-- Hardware 4 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm space-y-space-md">
+<div class="h-40 rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="High decibel industrial kitchen alarm speaker and buzzer mounted in a professional culinary environment to alert chefs over dishwasher and hood vent noise." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCxwKq8osGjEWJ_GELdierqtYXB4UZ-Z7hTVq3BnUs_EpGFSzaeyvesCMsvVXLCYE8ZLH3RebDtaDmP7ddRHAwxpAnyf3xO0NBDKJknx5xWSZH7j_jL5YL83ob40d0ZM6pRDsra-BMFN2NHwlM4k3QiB3mjIlY85Zsp_NtPjf8b6Ve-Y5X9C7J4e9a2wY6wd0wQHLOEiheeun_NBuvVHOI55VbDlwPKqhuohSJZdPZQxn6dEyZntSJ"/>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Line Chimes &amp; Audio</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              High-decibel dual-tone pass speakers engineered to pierce through hood vents, sizzling fryers, and dish pit clatter.
+            </p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 6: Operator Questions & Floor FAQs (Accordion style) -->
+<section class="max-w-4xl mx-auto w-full px-gutter py-space-3xl space-y-space-xl">
+<div class="space-y-space-xs text-center">
+<span class="font-label-caps text-label-caps uppercase text-primary">Floor Truths</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Questions from the line.</h2>
+</div>
+<div class="space-y-space-sm" id="faq-container">
+<!-- FAQ 1 -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<button class="w-full px-space-lg py-space-md text-left flex items-center justify-between font-headline-sm text-headline-sm text-on-surface hover:text-primary transition-colors faq-toggle" type="button">
+<span>Can line cooks operate screens with wet, greasy, or gloved hands?</span>
+<span class="material-symbols-outlined transition-transform duration-200">expand_more</span>
+</button>
+<div class="px-space-lg pb-space-md text-on-surface-variant font-body-md text-body-md">
+          Yes. Mise supports capacitive wet-finger touch algorithms as well as physical USB/RS232 bump bars. Cooks can operate the display using rubberized mechanical pushbuttons without ever touching the glass screen.
+        </div>
+</div>
+<!-- FAQ 2 -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<button class="w-full px-space-lg py-space-md text-left flex items-center justify-between font-headline-sm text-headline-sm text-on-surface hover:text-primary transition-colors faq-toggle" type="button">
+<span>What happens if a cook bumps a ticket by accident during rush hour?</span>
+<span class="material-symbols-outlined transition-transform duration-200">expand_more</span>
+</button>
+<div class="px-space-lg pb-space-md text-on-surface-variant font-body-md text-body-md">
+          Every station features a dedicated 5-order 'Recall Tray'. Tapping the undo button on screen or hitting the dedicated Bump Bar key restores the chit to its exact previous timer state and station slot in under a second.
+        </div>
+</div>
+<!-- FAQ 3 -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<button class="w-full px-space-lg py-space-md text-left flex items-center justify-between font-headline-sm text-headline-sm text-on-surface hover:text-primary transition-colors faq-toggle" type="button">
+<span>Can Mise KDS coordinate coursing across multiple prep stations?</span>
+<span class="material-symbols-outlined transition-transform duration-200">expand_more</span>
+</button>
+<div class="px-space-lg pb-space-md text-on-surface-variant font-body-md text-body-md">
+          Yes. Mise supports full multi-station sync. When Course 1 is cleared at the pass or tableside by a server handheld, Mise fires Course 2 across Grill, Saute, and Raw stations with custom station-specific cook-time delays automatically applied.
+        </div>
+</div>
+<!-- FAQ 4 -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<button class="w-full px-space-lg py-space-md text-left flex items-center justify-between font-headline-sm text-headline-sm text-on-surface hover:text-primary transition-colors faq-toggle" type="button">
+<span>Does Mise KDS work alongside physical paper tickets if chefs prefer paper?</span>
+<span class="material-symbols-outlined transition-transform duration-200">expand_more</span>
+</button>
+<div class="px-space-lg pb-space-md text-on-surface-variant font-body-md text-body-md">
+          Absolutely. Many Michelin-grade dining rooms use Mise in hybrid mode: physical paper chits are printed at the pass rail for the expeditor, while cooks at the line execute off silent, synchronized digital KDS screens.
+        </div>
+</div>
+</div>
+</section>
+<!-- Section 7: High-Impact Conversion CTA Banner -->
+<section class="max-w-7xl mx-auto w-full px-gutter pb-space-3xl">
+<div class="bg-[#111317] rounded-3xl p-space-2xl md:p-space-3xl text-center space-y-space-xl relative overflow-hidden shadow-2xl">
+<!-- Ambient Kitchen Glow -->
+<div class="absolute -top-32 -left-32 w-80 h-80 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-32 -right-32 w-80 h-80 bg-secondary/20 rounded-full blur-3xl pointer-events-none"></div>
+<div class="max-w-2xl mx-auto space-y-space-md relative z-10">
+<span class="font-label-caps text-label-caps uppercase text-[#ffdad3] bg-[#ae2a10]/40 px-space-sm py-1 rounded-full inline-block">Instant Line Upgrade</span>
+<h2 class="font-display-xl text-display-xl text-white tracking-tight leading-tight">
+          Ready to silence the dinner rush chaos?
+        </h2>
+<p class="font-body-lg text-body-lg text-[#b6b8bf]">
+          Deploy Mise KDS in under 30 minutes on hardware you already own. Free line trial with zero credit card required.
+        </p>
+</div>
+<div class="flex flex-col sm:flex-row items-center justify-center gap-space-md relative z-10">
+<a class="w-full sm:w-auto inline-flex items-center justify-center bg-primary hover:bg-primary-container text-on-primary font-body-md text-body-md font-semibold px-space-xl py-3.5 rounded-lg shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]" href="#">
+          Start 14-Day Free Trial
+        </a>
+<a class="w-full sm:w-auto inline-flex items-center justify-center bg-[#20252e] hover:bg-[#2b313d] text-white font-body-md text-body-md font-semibold px-space-xl py-3.5 rounded-lg transition-colors" href="#">
+          Speak with an Ex-Chef Specialist
+        </a>
+</div>
+<div class="pt-space-md flex flex-wrap items-center justify-center gap-space-lg font-mono-ticket text-mono-ticket text-[#8e9096] relative z-10">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-[#10b981]">check_circle</span>
+<span>Zero Hardware Lock-In</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-[#10b981]">check_circle</span>
+<span>Offline Pass Protocol</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-[#10b981]">check_circle</span>
+<span>24/7 Culinary Operations Desk</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Interactive Micro-Interactions Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // FAQ Accordion Toggle Interaction
+      const faqButtons = document.querySelectorAll('.faq-toggle');
+      faqButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const content = button.nextElementSibling;
+          const icon = button.querySelector('.material-symbols-outlined');
+          if (content.style.display === 'none') {
+            content.style.display = 'block';
+            icon.style.transform = 'rotate(180deg)';
+          } else {
+            content.style.display = 'none';
+            icon.style.transform = 'rotate(0deg)';
+          }
+        });
+      });
+    });
+  </script>
+</div></main><footer class="w-full bg-surface-container-low border-t border-surface-container-highest"><div class="max-w-7xl mx-auto px-gutter pt-space-3xl pb-space-2xl"><div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-space-2xl pb-space-2xl border-b border-surface-container-highest"><div class="lg:col-span-4 flex flex-col justify-between pr-0 lg:pr-space-xl"><div class="space-y-space-md"><div class="flex items-baseline gap-space-xs"><span class="font-display-xl text-headline-sm font-extrabold tracking-tight text-on-surface">mise<span class="text-primary">.</span></span></div><p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm">Engineered for ambitious restaurateurs and multi-location hospitality groups. High-velocity operations meet culinary precision.</p></div><div class="mt-space-xl space-y-space-sm"><span class="font-label-caps text-label-caps uppercase text-tertiary block">Dispatch &amp; Changelog</span><form class="flex items-center max-w-md gap-space-xs"><input class="bg-surface-container-lowest border border-surface-container-highest rounded-lg px-space-md py-space-sm font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-on-surface w-full" placeholder="chef@restaurant.com" type="email"/><button class="bg-on-surface hover:bg-inverse-surface text-surface-container-lowest font-body-sm text-body-sm px-space-md py-space-sm rounded-lg font-semibold shrink-0 transition-colors" type="button">Subscribe</button></form></div></div><div class="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-gutter"><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Platform</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">POS Terminal</li><li class="hover:text-on-surface cursor-pointer transition-colors">Kitchen Display (KDS)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Inventory Ledger</li><li class="hover:text-on-surface cursor-pointer transition-colors">Multi-Branch Hub</li><li class="hover:text-on-surface cursor-pointer transition-colors">Floor Architect</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Solutions</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Artisan Cafes</li><li class="hover:text-on-surface cursor-pointer transition-colors">Full-Service Dining</li><li class="hover:text-on-surface cursor-pointer transition-colors">Quick Service (QSR)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Ghost &amp; Cloud Kitchens</li><li class="hover:text-on-surface cursor-pointer transition-colors">Hospitality Groups</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Resources</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Operator Guides</li><li class="hover:text-on-surface cursor-pointer transition-colors">Hardware Catalog</li><li class="hover:text-on-surface cursor-pointer transition-colors">API Reference</li><li class="hover:text-on-surface cursor-pointer transition-colors">Changelog</li><li class="hover:text-on-surface cursor-pointer transition-colors">Kitchen Metrics</li></ul></div><div class="flex flex-col gap-space-md"><span class="font-label-caps text-label-caps uppercase text-tertiary">Company</span><ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-on-surface cursor-pointer transition-colors">Manifesto</li><li class="hover:text-on-surface cursor-pointer transition-colors">Careers (Hiring)</li><li class="hover:text-on-surface cursor-pointer transition-colors">Contact Desk</li><li class="hover:text-on-surface cursor-pointer transition-colors">Press Kit</li><li class="hover:text-on-surface cursor-pointer transition-colors">Security Protocols</li></ul></div></div></div><div class="pt-space-xl flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex flex-wrap items-center gap-space-lg font-mono-ticket text-mono-ticket text-on-surface-variant"><span>© 2025 Mise Technologies, Inc.</span><a class="hover:text-on-surface transition-colors" href="#">Privacy Policy</a><a class="hover:text-on-surface transition-colors" href="#">Terms of Service</a><a class="hover:text-on-surface transition-colors" href="#">Cookie Protocol</a></div><div class="flex items-center gap-space-xs bg-secondary-container px-space-md py-space-xs rounded-full"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="font-label-caps text-label-caps uppercase text-on-secondary-container font-semibold">All Systems Operational</span></div></div></div></footer></body></html>

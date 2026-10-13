@@ -48,7 +48,7 @@ export default function Login({
             headerAction={
                 <Link
                     href={route('register')}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#0F3D30] hover:text-[#0B271F] transition-colors"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-container transition-colors"
                 >
                     <span>{t('auth.create_one')}</span>
                     <svg
@@ -71,10 +71,10 @@ export default function Login({
             {/* Form Header */}
             <div className="mb-8">
                 <div className="inline-flex items-center gap-1.5 rounded-md bg-stone-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-stone-600 mb-3">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     <span>Workspace Access</span>
                 </div>
-                <h1 className="font-display text-2xl font-bold tracking-tight text-[#0B271F] sm:text-3xl">
+                <h1 className="font-display text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">
                     {t('auth.welcome_back')}
                 </h1>
                 <p className="mt-2 text-sm text-stone-500 leading-relaxed">
@@ -136,7 +136,7 @@ export default function Login({
                         {canResetPassword && (
                             <Link
                                 href={route('password.request')}
-                                className="text-xs font-medium text-[#0F3D30] hover:text-emerald-700 hover:underline transition-colors focus:outline-none focus:underline"
+                                className="text-xs font-medium text-primary hover:text-primary-container hover:underline transition-colors focus:outline-none focus:underline"
                             >
                                 {t('auth.forgot')}
                             </Link>
@@ -207,7 +207,7 @@ export default function Login({
                     <span>{t('auth.new_to_restrly')} </span>
                     <Link
                         href={route('register')}
-                        className="font-semibold text-[#0F3D30] hover:text-emerald-700 hover:underline transition-colors"
+                        className="font-semibold text-primary hover:text-primary-container hover:underline transition-colors"
                     >
                         {t('auth.create_one')}
                     </Link>

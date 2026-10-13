@@ -56,19 +56,19 @@ export default function OpsQueue({
                     />
                     <CardBody className="space-y-3">
                         {failed.data.map((job) => (
-                            <div key={job.id} className="rounded-md border border-gray-200 px-3 py-2">
+                            <div key={job.id} className="rounded-lg border border-border bg-card p-3 shadow-2xs">
                                 <div className="flex items-center justify-between gap-2">
-                                    <span className="text-xs font-medium text-gray-700">{job.queue}</span>
-                                    <div className="flex gap-2 text-xs">
-                                        <button onClick={() => router.post(route('platform.ops.failed-jobs.retry', job.id), {}, { preserveScroll: true })} className="font-medium text-indigo-600 hover:text-indigo-700">
+                                    <span className="text-xs font-semibold text-foreground">{job.queue}</span>
+                                    <div className="flex gap-2.5 text-xs">
+                                        <button onClick={() => router.post(route('platform.ops.failed-jobs.retry', job.id), {}, { preserveScroll: true })} className="font-medium text-primary hover:underline">
                                             Retry
                                         </button>
-                                        <button onClick={() => router.delete(route('platform.ops.failed-jobs.destroy', job.id), { preserveScroll: true })} className="font-medium text-red-600 hover:text-red-700">
+                                        <button onClick={() => router.delete(route('platform.ops.failed-jobs.destroy', job.id), { preserveScroll: true })} className="font-medium text-destructive hover:underline">
                                             Forget
                                         </button>
                                     </div>
                                 </div>
-                                <p className="mt-1 line-clamp-2 text-xs text-gray-500">{job.exception}</p>
+                                <p className="mt-1.5 line-clamp-2 font-mono text-[11px] text-muted-foreground">{job.exception}</p>
                             </div>
                         ))}
                         {failed.data.length === 0 && <EmptyState title="No failed jobs" description="Nothing needs attention right now." />}
@@ -77,7 +77,7 @@ export default function OpsQueue({
             </div>
 
             <Pagination links={failed.links} />
-            <p className="mt-2 text-xs text-gray-400">
+            <p className="mt-2 text-xs text-muted-foreground">
                 Retrying a job re-queues it as-is. Financial, email and webhook jobs are idempotent, so a retry cannot double-apply a charge.
             </p>
         </PlatformLayout>

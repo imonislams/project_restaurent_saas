@@ -11,10 +11,17 @@ import {
     Money,
     PageHeader,
     SelectField,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
     TextField,
 } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { LayoutGrid, List, Pencil, Plus, Search, Trash2, Users, X } from 'lucide-react';
 import { FormEventHandler, useMemo, useState } from 'react';
 
 interface OpenOrder {
@@ -277,7 +284,7 @@ export default function TablesIndex({
                         <div className="flex flex-wrap items-center gap-2.5">
                             {branches.length > 1 && (
                                 <select
-                                    className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    className="h-8 rounded-md border border-input bg-background px-2.5 text-xs font-medium text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
                                     value={branchId ?? ''}
                                     onChange={(e) =>
                                         router.get(
@@ -295,38 +302,35 @@ export default function TablesIndex({
                                 </select>
                             )}
 
-                            <div className="flex items-center rounded-lg border border-gray-200 bg-gray-100 p-0.5">
+                            <div className="flex items-center rounded-lg border border-border bg-muted/40 p-0.5">
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+                                    className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition ${
                                         viewMode === 'grid'
-                                            ? 'bg-white text-gray-900 shadow-sm'
-                                            : 'text-gray-600 hover:text-gray-900'
+                                            ? 'bg-background text-foreground shadow-xs font-semibold'
+                                            : 'text-muted-foreground hover:text-foreground'
                                     }`}
                                 >
-                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                                    </svg>
+                                    <LayoutGrid className="h-3.5 w-3.5" />
                                     Floor Grid
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+                                    className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition ${
                                         viewMode === 'list'
-                                            ? 'bg-white text-gray-900 shadow-sm'
-                                            : 'text-gray-600 hover:text-gray-900'
+                                            ? 'bg-background text-foreground shadow-xs font-semibold'
+                                            : 'text-muted-foreground hover:text-foreground'
                                     }`}
                                 >
-                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                                    </svg>
+                                    <List className="h-3.5 w-3.5" />
                                     List View
                                 </button>
                             </div>
 
                             {canManage && (
                                 <Button size="sm" onClick={openCreateDrawer}>
-                                    + Add Table
+                                    <Plus className="mr-1 h-3.5 w-3.5" />
+                                    Add Table
                                 </Button>
                             )}
                         </div>
@@ -389,19 +393,20 @@ export default function TablesIndex({
                             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                 {/* Search */}
                                 <div className="relative w-full max-w-xs">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                                     <input
                                         type="text"
                                         placeholder="Search tables or areas..."
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        className="w-full rounded-lg border border-gray-300 py-1.5 pl-3 pr-8 text-sm placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                        className="w-full rounded-md border border-input bg-background py-1.5 pl-9 pr-8 text-sm placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                                     />
                                     {search && (
                                         <button
                                             onClick={() => setSearch('')}
-                                            className="absolute right-2.5 top-2 text-xs text-gray-400 hover:text-gray-600"
+                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground hover:text-foreground rounded-sm"
                                         >
-                                            ✕
+                                            <X className="h-3.5 w-3.5" />
                                         </button>
                                     )}
                                 </div>
@@ -410,10 +415,10 @@ export default function TablesIndex({
                                 <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto py-0.5">
                                     <button
                                         onClick={() => setSelectedArea('all')}
-                                        className={`rounded-md px-3 py-1 text-xs font-semibold transition ${
+                                        className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
                                             selectedArea === 'all'
-                                                ? 'bg-gray-900 text-white'
-                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                ? 'bg-foreground text-background shadow-xs font-semibold'
+                                                : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted'
                                         }`}
                                     >
                                         All Areas ({tables.length})
@@ -424,10 +429,10 @@ export default function TablesIndex({
                                             <button
                                                 key={area.id}
                                                 onClick={() => setSelectedArea(area.name)}
-                                                className={`rounded-md px-3 py-1 text-xs font-semibold transition ${
+                                                className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
                                                     selectedArea === area.name
-                                                        ? 'bg-gray-900 text-white'
-                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                        ? 'bg-foreground text-background shadow-xs font-semibold'
+                                                        : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted'
                                                 }`}
                                             >
                                                 {area.name} ({count})
@@ -437,13 +442,13 @@ export default function TablesIndex({
                                 </div>
 
                                 {/* Status Filter Pills */}
-                                <div className="flex flex-wrap items-center gap-1.5">
+                                <div className="inline-flex items-center rounded-lg border border-border bg-muted/40 p-0.5 text-xs">
                                     <button
                                         onClick={() => setSelectedStatus('all')}
-                                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
+                                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
                                             selectedStatus === 'all'
-                                                ? 'bg-indigo-600 text-white'
-                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                ? 'bg-background text-foreground shadow-xs font-semibold'
+                                                : 'text-muted-foreground hover:text-foreground'
                                         }`}
                                     >
                                         All
@@ -454,10 +459,10 @@ export default function TablesIndex({
                                             <button
                                                 key={s.value}
                                                 onClick={() => setSelectedStatus(s.value)}
-                                                className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
+                                                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
                                                     selectedStatus === s.value
-                                                        ? 'bg-indigo-600 text-white'
-                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                        ? 'bg-background text-foreground shadow-xs font-semibold'
+                                                        : 'text-muted-foreground hover:text-foreground'
                                                 }`}
                                             >
                                                 {s.label} ({count})
@@ -524,7 +529,7 @@ export default function TablesIndex({
                                                 return (
                                                     <div
                                                         key={table.id}
-                                                        className={`group relative flex flex-col justify-between rounded-xl border-2 p-4 shadow-sm transition hover:shadow-md ${config.border} ${config.bg}`}
+                                                        className={`group relative flex flex-col justify-between rounded-lg border p-4 shadow-xs transition hover:shadow-sm ${config.border} ${config.bg}`}
                                                     >
                                                         <div>
                                                             {/* Table Card Top */}
@@ -532,12 +537,13 @@ export default function TablesIndex({
                                                                 <div>
                                                                     <button
                                                                         onClick={() => setActiveTable(table)}
-                                                                        className="text-left font-bold text-gray-900 hover:text-indigo-600"
+                                                                        className="text-left font-semibold text-foreground hover:text-primary transition-colors"
                                                                     >
-                                                                        <span className="text-lg">{table.name}</span>
+                                                                        <span className="text-base">{table.name}</span>
                                                                     </button>
-                                                                    <div className="mt-0.5 flex items-center gap-1 text-xs text-gray-500">
-                                                                        <span>{table.seats} seats</span>
+                                                                    <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                                        <Users className="h-3 w-3" />
+                                                                        <span className="tabular-nums">{table.seats} seats</span>
                                                                     </div>
                                                                 </div>
                                                                 <Badge tone={config.badgeTone}>{config.label}</Badge>
@@ -545,10 +551,10 @@ export default function TablesIndex({
 
                                                             {/* Active Open Orders Section */}
                                                             {table.open_orders.length > 0 ? (
-                                                                <div className="mt-3.5 space-y-1.5 rounded-lg border border-rose-200/60 bg-white/80 p-2.5 shadow-xs">
+                                                                <div className="mt-3.5 space-y-1.5 rounded-md border border-rose-200/60 bg-background/80 p-2.5">
                                                                     <div className="flex items-center justify-between text-xs font-semibold text-rose-900">
                                                                         <span>Active Tab</span>
-                                                                        <span className="font-bold tabular-nums">
+                                                                        <span className="font-semibold tabular-nums">
                                                                             <Money amount={totalBalance} />
                                                                         </span>
                                                                     </div>
@@ -556,7 +562,7 @@ export default function TablesIndex({
                                                                         {table.open_orders.map((order) => (
                                                                             <div
                                                                                 key={order.id}
-                                                                                className="flex items-center justify-between text-xs text-gray-600"
+                                                                                className="flex items-center justify-between text-xs text-muted-foreground"
                                                                             >
                                                                                 <button
                                                                                     onClick={() =>
@@ -567,11 +573,11 @@ export default function TablesIndex({
                                                                                             ),
                                                                                         )
                                                                                     }
-                                                                                    className="font-medium text-indigo-600 hover:text-indigo-800 hover:underline"
+                                                                                    className="font-medium text-primary hover:underline"
                                                                                 >
                                                                                     {order.order_number}
                                                                                 </button>
-                                                                                <span className="tabular-nums font-medium text-gray-700">
+                                                                                <span className="tabular-nums font-medium text-foreground">
                                                                                     <Money amount={order.total} />
                                                                                 </span>
                                                                             </div>
@@ -579,17 +585,17 @@ export default function TablesIndex({
                                                                     </div>
                                                                 </div>
                                                             ) : (
-                                                                <div className="mt-3.5 flex items-center gap-1.5 rounded-lg border border-dashed border-gray-200 p-2 text-xs text-gray-400">
+                                                                <div className="mt-3.5 flex items-center gap-1.5 rounded-md border border-dashed border-border p-2 text-xs text-muted-foreground">
                                                                     <span>No active orders</span>
                                                                 </div>
                                                             )}
                                                         </div>
 
                                                         {/* Table Card Bottom Actions */}
-                                                        <div className="mt-4 flex items-center justify-between border-t border-gray-200/50 pt-3">
+                                                        <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-2.5">
                                                             <button
                                                                 onClick={() => setActiveTable(table)}
-                                                                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+                                                                className="text-xs font-medium text-primary hover:underline"
                                                             >
                                                                 Details & Status
                                                             </button>
@@ -599,21 +605,17 @@ export default function TablesIndex({
                                                                     <button
                                                                         onClick={() => openEditDrawer(table)}
                                                                         title="Edit Table"
-                                                                        className="rounded p-1 text-gray-400 hover:bg-white hover:text-gray-700"
+                                                                        className="rounded p-1 text-muted-foreground hover:bg-background hover:text-foreground transition-colors"
                                                                     >
-                                                                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                                                        </svg>
+                                                                        <Pencil className="h-3.5 w-3.5" />
                                                                     </button>
                                                                     {table.open_orders.length === 0 && (
                                                                         <button
                                                                             onClick={() => setPendingDelete(table)}
                                                                             title="Remove Table"
-                                                                            className="rounded p-1 text-gray-400 hover:bg-rose-50 hover:text-rose-600"
+                                                                            className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                                                                         >
-                                                                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                            </svg>
+                                                                            <Trash2 className="h-3.5 w-3.5" />
                                                                         </button>
                                                                     )}
                                                                 </div>
@@ -643,103 +645,101 @@ export default function TablesIndex({
                                         description="No tables match your selected criteria."
                                     />
                                 ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left text-sm">
-                                            <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                                <tr>
-                                                    <th className="px-5 py-3.5">Table Name</th>
-                                                    <th className="px-5 py-3.5">Dining Area</th>
-                                                    <th className="px-5 py-3.5 text-center">Capacity</th>
-                                                    <th className="px-5 py-3.5">Status</th>
-                                                    <th className="px-5 py-3.5">Active Tab</th>
-                                                    {canManage && (
-                                                        <th className="px-5 py-3.5 text-right">Actions</th>
-                                                    )}
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-100 bg-white">
-                                                {filteredTables.map((table) => {
-                                                    const config =
-                                                        STATUS_CONFIG[table.status] || STATUS_CONFIG.available;
-                                                    const totalBalance = table.open_orders.reduce(
-                                                        (acc, o) => acc + o.total,
-                                                        0,
-                                                    );
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Table Name</TableHead>
+                                                <TableHead>Dining Area</TableHead>
+                                                <TableHead className="text-center">Capacity</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead>Active Tab</TableHead>
+                                                {canManage && (
+                                                    <TableHead className="text-right">Actions</TableHead>
+                                                )}
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {filteredTables.map((table) => {
+                                                const config =
+                                                    STATUS_CONFIG[table.status] || STATUS_CONFIG.available;
+                                                const totalBalance = table.open_orders.reduce(
+                                                    (acc, o) => acc + o.total,
+                                                    0,
+                                                );
 
-                                                    return (
-                                                        <tr key={table.id} className="hover:bg-gray-50/80">
-                                                            <td className="px-5 py-3.5">
-                                                                <button
-                                                                    onClick={() => setActiveTable(table)}
-                                                                    className="font-bold text-gray-900 hover:text-indigo-600"
-                                                                >
-                                                                    {table.name}
-                                                                </button>
-                                                            </td>
-                                                            <td className="px-5 py-3.5 text-gray-600">
-                                                                {table.dining_area || (
-                                                                    <span className="text-gray-400">
-                                                                        General Floor
+                                                return (
+                                                    <TableRow key={table.id}>
+                                                        <TableCell>
+                                                            <button
+                                                                onClick={() => setActiveTable(table)}
+                                                                className="font-medium text-foreground hover:text-primary transition-colors text-left"
+                                                            >
+                                                                {table.name}
+                                                            </button>
+                                                        </TableCell>
+                                                        <TableCell className="text-muted-foreground">
+                                                            {table.dining_area || (
+                                                                <span className="text-muted-foreground/60">
+                                                                    General Floor
+                                                                </span>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-center tabular-nums text-foreground">
+                                                            {table.seats} seats
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge tone={config.badgeTone}>{config.label}</Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {table.open_orders.length > 0 ? (
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="rounded bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700 tabular-nums">
+                                                                        <Money amount={totalBalance} />
                                                                     </span>
-                                                                )}
-                                                            </td>
-                                                            <td className="px-5 py-3.5 text-center tabular-nums text-gray-700">
-                                                                {table.seats} seats
-                                                            </td>
-                                                            <td className="px-5 py-3.5">
-                                                                <Badge tone={config.badgeTone}>{config.label}</Badge>
-                                                            </td>
-                                                            <td className="px-5 py-3.5">
-                                                                {table.open_orders.length > 0 ? (
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="rounded bg-rose-50 px-2 py-0.5 text-xs font-bold text-rose-700 tabular-nums">
-                                                                            <Money amount={totalBalance} />
-                                                                        </span>
-                                                                        <span className="text-xs text-gray-500">
-                                                                            ({table.open_orders.length} order
-                                                                            {table.open_orders.length > 1 ? 's' : ''})
-                                                                        </span>
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-xs text-gray-400">—</span>
-                                                                )}
-                                                            </td>
-                                                            {canManage && (
-                                                                <td className="px-5 py-3.5 text-right">
-                                                                    <div className="flex items-center justify-end gap-1.5">
+                                                                    <span className="text-xs text-muted-foreground">
+                                                                        ({table.open_orders.length} order
+                                                                        {table.open_orders.length > 1 ? 's' : ''})
+                                                                    </span>
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-xs text-muted-foreground/60">—</span>
+                                                            )}
+                                                        </TableCell>
+                                                        {canManage && (
+                                                            <TableCell className="text-right">
+                                                                <div className="flex items-center justify-end gap-1.5">
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        onClick={() => setActiveTable(table)}
+                                                                    >
+                                                                        Manage
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        onClick={() => openEditDrawer(table)}
+                                                                    >
+                                                                        Edit
+                                                                    </Button>
+                                                                    {table.open_orders.length === 0 && (
                                                                         <Button
-                                                                            size="xs"
-                                                                            variant="ghost"
-                                                                            onClick={() => setActiveTable(table)}
-                                                                        >
-                                                                            Manage
-                                                                        </Button>
-                                                                        <Button
-                                                                            size="xs"
-                                                                            variant="ghost"
-                                                                            onClick={() => openEditDrawer(table)}
-                                                                        >
-                                                                            Edit
-                                                                        </Button>
-                                                                        {table.open_orders.length === 0 && (
-                                                                            <Button
-                                                                            size="xs"
+                                                                            size="sm"
                                                                             variant="ghost"
                                                                             onClick={() => setPendingDelete(table)}
-                                                                            className="text-rose-600 hover:text-rose-700"
+                                                                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                                                         >
                                                                             Delete
                                                                         </Button>
-                                                                        )}
-                                                                    </div>
-                                                                </td>
-                                                            )}
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                                                    )}
+                                                                </div>
+                                                            </TableCell>
+                                                        )}
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
                                 )}
                             </CardBody>
                         </Card>

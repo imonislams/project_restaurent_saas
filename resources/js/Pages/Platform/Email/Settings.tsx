@@ -1,7 +1,10 @@
 import { Button, Card, CardBody, CardHeader } from '@/Components/ui';
+import { Input } from '@/Components/ui/Input';
+import { Label } from '@/Components/ui/Label';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
+import { Mail, Send, Save, KeyRound } from 'lucide-react';
 
 interface Settings {
     mailer: string;
@@ -13,8 +16,6 @@ interface Settings {
     from_name: string;
     has_password: boolean;
 }
-
-const input = 'block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-400 focus:ring-indigo-400';
 
 export default function EmailSettings({ settings, mailers }: { settings: Settings; mailers: string[] }) {
     const form = useForm({
@@ -44,69 +45,126 @@ export default function EmailSettings({ settings, mailers }: { settings: Setting
         <PlatformLayout title="Email Provider">
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <Card className="lg:col-span-2">
-                    <CardHeader title="Provider configuration" description="Saved to the platform settings store; the password is encrypted at rest." />
+                    <CardHeader title="Provider Configuration" description="Saved to the platform settings store; password is encrypted at rest." />
                     <CardBody>
-                        <form onSubmit={submit} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <label className="block">
-                                <span className="text-xs text-gray-500">Mailer</span>
-                                <select className={input} value={form.data.mailer} onChange={(e) => form.setData('mailer', e.target.value)}>
+                        <form onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="mailer" className="text-xs font-medium text-muted-foreground">Mailer</Label>
+                                <select 
+                                    id="mailer"
+                                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-2xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" 
+                                    value={form.data.mailer} 
+                                    onChange={(e) => form.setData('mailer', e.target.value)}
+                                >
                                     {mailers.map((m) => (
                                         <option key={m} value={m}>{m}</option>
                                     ))}
                                 </select>
-                            </label>
-                            <label className="block">
-                                <span className="text-xs text-gray-500">Encryption</span>
-                                <select className={input} value={form.data.encryption} onChange={(e) => form.setData('encryption', e.target.value)}>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label htmlFor="encryption" className="text-xs font-medium text-muted-foreground">Encryption</Label>
+                                <select 
+                                    id="encryption"
+                                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-2xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" 
+                                    value={form.data.encryption} 
+                                    onChange={(e) => form.setData('encryption', e.target.value)}
+                                >
                                     <option value="">None</option>
-                                    <option value="tls">tls</option>
-                                    <option value="ssl">ssl</option>
+                                    <option value="tls">TLS</option>
+                                    <option value="ssl">SSL</option>
                                 </select>
-                            </label>
-                            <label className="block">
-                                <span className="text-xs text-gray-500">Host</span>
-                                <input className={input} value={form.data.host} onChange={(e) => form.setData('host', e.target.value)} />
-                            </label>
-                            <label className="block">
-                                <span className="text-xs text-gray-500">Port</span>
-                                <input className={input} value={form.data.port} onChange={(e) => form.setData('port', e.target.value)} />
-                            </label>
-                            <label className="block">
-                                <span className="text-xs text-gray-500">Username</span>
-                                <input className={input} value={form.data.username} onChange={(e) => form.setData('username', e.target.value)} />
-                            </label>
-                            <label className="block">
-                                <span className="text-xs text-gray-500">Password</span>
-                                <input type="password" className={input} placeholder={settings.has_password ? '•••••• stored' : 'Not set'} value={form.data.password} onChange={(e) => form.setData('password', e.target.value)} />
-                            </label>
-                            <label className="block">
-                                <span className="text-xs text-gray-500">From address</span>
-                                <input className={input} value={form.data.from_address} onChange={(e) => form.setData('from_address', e.target.value)} />
-                            </label>
-                            <label className="block">
-                                <span className="text-xs text-gray-500">From name</span>
-                                <input className={input} value={form.data.from_name} onChange={(e) => form.setData('from_name', e.target.value)} />
-                            </label>
-                            <div className="sm:col-span-2">
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label htmlFor="host" className="text-xs font-medium text-muted-foreground">Host</Label>
+                                <Input 
+                                    id="host"
+                                    value={form.data.host} 
+                                    placeholder="smtp.example.com"
+                                    onChange={(e) => form.setData('host', e.target.value)} 
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label htmlFor="port" className="text-xs font-medium text-muted-foreground">Port</Label>
+                                <Input 
+                                    id="port"
+                                    value={form.data.port} 
+                                    placeholder="587"
+                                    onChange={(e) => form.setData('port', e.target.value)} 
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label htmlFor="username" className="text-xs font-medium text-muted-foreground">Username</Label>
+                                <Input 
+                                    id="username"
+                                    value={form.data.username} 
+                                    placeholder="user@example.com"
+                                    onChange={(e) => form.setData('username', e.target.value)} 
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label htmlFor="password" className="text-xs font-medium text-muted-foreground">Password</Label>
+                                <Input 
+                                    id="password"
+                                    type="password" 
+                                    placeholder={settings.has_password ? '•••••• stored' : 'Enter password'} 
+                                    value={form.data.password} 
+                                    onChange={(e) => form.setData('password', e.target.value)} 
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label htmlFor="from_address" className="text-xs font-medium text-muted-foreground">From Address</Label>
+                                <Input 
+                                    id="from_address"
+                                    value={form.data.from_address} 
+                                    placeholder="noreply@restrly.com"
+                                    onChange={(e) => form.setData('from_address', e.target.value)} 
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label htmlFor="from_name" className="text-xs font-medium text-muted-foreground">From Name</Label>
+                                <Input 
+                                    id="from_name"
+                                    value={form.data.from_name} 
+                                    placeholder="Restrly Platform"
+                                    onChange={(e) => form.setData('from_name', e.target.value)} 
+                                />
+                            </div>
+
+                            <div className="sm:col-span-2 pt-2 flex items-center">
                                 <Button type="submit" size="sm" loading={form.processing}>
+                                    <Save className="mr-1.5 h-3.5 w-3.5" />
                                     Save settings
                                 </Button>
-                                {Object.values(form.errors)[0] && <span className="ml-3 text-sm text-red-600">{Object.values(form.errors)[0]}</span>}
+                                {Object.values(form.errors)[0] && <span className="ml-3 text-xs text-destructive">{Object.values(form.errors)[0]}</span>}
                             </div>
                         </form>
                     </CardBody>
                 </Card>
 
                 <Card>
-                    <CardHeader title="Send a test email" description="Confirms the configured transport works" />
+                    <CardHeader title="Send a Test Email" description="Confirms the configured mail transport operates correctly" />
                     <CardBody>
-                        <form onSubmit={sendTest} className="space-y-3">
-                            <label className="block">
-                                <span className="mb-1 block text-xs font-medium text-gray-500">Recipient</span>
-                                <input className={input} value={test.data.email} onChange={(e) => test.setData('email', e.target.value)} />
-                                {test.errors.email && <span className="text-xs text-red-600">{test.errors.email}</span>}
-                            </label>
-                            <Button type="submit" size="sm" variant="secondary" loading={test.processing}>
+                        <form onSubmit={sendTest} className="space-y-3.5">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="test-recipient" className="text-xs font-medium text-muted-foreground">Recipient Email</Label>
+                                <Input 
+                                    id="test-recipient"
+                                    type="email"
+                                    value={test.data.email} 
+                                    placeholder="admin@example.com"
+                                    onChange={(e) => test.setData('email', e.target.value)} 
+                                />
+                                {test.errors.email && <span className="text-xs text-destructive">{test.errors.email}</span>}
+                            </div>
+                            <Button type="submit" size="sm" variant="secondary" loading={test.processing} className="w-full">
+                                <Send className="mr-1.5 h-3.5 w-3.5" />
                                 Send test email
                             </Button>
                         </form>

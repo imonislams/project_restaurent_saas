@@ -23,15 +23,15 @@ export default function Product() {
             <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="max-w-3xl">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-[#0B271F]/15 bg-white px-3.5 py-1 text-xs font-mono font-semibold uppercase tracking-wider text-[#0B271F] mb-6">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+                        <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-mono font-semibold uppercase tracking-wider text-primary mb-6">
+                            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                             <span>PLATFORM BLUEPRINT</span>
                         </div>
 
-                        <h1 className="font-display text-4xl font-extrabold tracking-tight text-[#0B271F] sm:text-6xl leading-[1.1]">
+                        <h1 className="font-display text-4xl font-extrabold tracking-tight text-on-surface sm:text-6xl leading-[1.1]">
                             One Operating System.
                             <br />
-                            <span className="text-[#10B981]">Every Station Connected.</span>
+                            <span className="text-primary">Every Station Connected.</span>
                         </h1>
 
                         <p className="mt-6 text-base sm:text-xl text-stone-600 leading-relaxed">
@@ -70,10 +70,10 @@ export default function Product() {
 
                         {/* Interactive Event Diagram */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-mono">
-                            <div className="rounded-2xl border-2 border-[#0B271F] bg-stone-50 p-5 space-y-3">
-                                <div className="flex justify-between items-center text-[#0B271F] font-bold">
+                            <div className="rounded-2xl border-2 border-primary bg-primary-fixed/20 p-5 space-y-3">
+                                <div className="flex justify-between items-center text-primary font-bold">
                                     <span>01 / TRIGGER</span>
-                                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                                    <span className="h-2 w-2 rounded-full bg-primary animate-ping" />
                                 </div>
                                 <div className="font-bold text-stone-900 text-sm font-sans">
                                     Order Settled at POS
@@ -145,7 +145,7 @@ export default function Product() {
                                 onClick={() => setActiveEngine(engine.key as any)}
                                 className={`rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
                                     activeEngine === engine.key
-                                        ? 'bg-[#0B271F] text-white shadow-xs'
+                                        ? 'bg-primary text-on-primary shadow-xs'
                                         : 'text-stone-600 hover:text-stone-900'
                                 }`}
                             >
@@ -175,7 +175,7 @@ export default function Product() {
                                         </div>
                                     </div>
                                     <div className="pt-2">
-                                        <Link href="/features/restaurant-pos" className="text-sm font-bold text-[#0B271F] hover:text-[#10B981]">
+                                        <Link href="/features/restaurant-pos" className="text-sm font-bold text-primary hover:text-primary-container">
                                             View POS capabilities →
                                         </Link>
                                     </div>
@@ -223,7 +223,7 @@ export default function Product() {
                                         </div>
                                     </div>
                                     <div className="pt-2">
-                                        <Link href="/features/kitchen-display" className="text-sm font-bold text-[#0B271F] hover:text-[#10B981]">
+                                        <Link href="/features/kitchen-display" className="text-sm font-bold text-primary hover:text-primary-container">
                                             View KDS capabilities →
                                         </Link>
                                     </div>
@@ -267,7 +267,7 @@ export default function Product() {
                                         </div>
                                     </div>
                                     <div className="pt-2">
-                                        <Link href="/features/inventory-management" className="text-sm font-bold text-[#0B271F] hover:text-[#10B981]">
+                                        <Link href="/features/inventory-management" className="text-sm font-bold text-primary hover:text-primary-container">
                                             View inventory capabilities →
                                         </Link>
                                     </div>
@@ -311,7 +311,7 @@ export default function Product() {
                                         </div>
                                     </div>
                                     <div className="pt-2">
-                                        <Link href="/features/cash-management" className="text-sm font-bold text-[#0B271F] hover:text-[#10B981]">
+                                        <Link href="/features/cash-management" className="text-sm font-bold text-primary hover:text-primary-container">
                                             View cash shift capabilities →
                                         </Link>
                                     </div>
@@ -337,7 +337,7 @@ export default function Product() {
             </section>
 
             {/* Final Product CTA */}
-            <section className="bg-[#0B271F] py-16 text-white text-center">
+            <section className="bg-[#1a1c1a] py-16 text-white text-center">
                 <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-6">
                     <h2 className="font-display text-3xl sm:text-4xl font-extrabold">
                         Ready to Connect Your Whole Restaurant?

@@ -1,8 +1,25 @@
 import { ActivityBadge, Badge, Button, Card, CardBody, CardHeader, ConfirmDialog, Tabs, formatDate, formatMoney } from '@/Components/ui';
 import type { BadgeTone, TabItem } from '@/Components/ui';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/Table';
+import { Input } from '@/Components/ui/Input';
+import { Textarea } from '@/Components/ui/Textarea';
+import { Label } from '@/Components/ui/Label';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Link, router } from '@inertiajs/react';
 import { ReactNode, useState } from 'react';
+import { 
+    GitFork, 
+    Users, 
+    ShoppingBag, 
+    ShieldCheck, 
+    ShieldAlert, 
+    UserCheck, 
+    RefreshCw, 
+    Archive, 
+    UserX, 
+    ArrowRight,
+    ExternalLink
+} from 'lucide-react';
 
 interface TenantHeader {
     id: number;
@@ -86,9 +103,9 @@ const TABS: TabItem[] = [
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
     return (
-        <div className="flex justify-between gap-4 py-1 text-sm">
-            <dt className="text-gray-500">{label}</dt>
-            <dd className="text-right text-gray-800">{children}</dd>
+        <div className="flex justify-between gap-4 border-b border-border/50 py-2 text-sm last:border-b-0">
+            <dt className="text-muted-foreground">{label}</dt>
+            <dd className="text-right font-medium text-foreground">{children}</dd>
         </div>
     );
 }
@@ -136,53 +153,73 @@ export default function TenantShow({ tenant, tabs, plans }: { tenant: TenantHead
         <PlatformLayout title={tenant.name}>
             <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                    <div className="flex items-center gap-2">
-                        <h1 className="text-lg font-semibold text-gray-900">{tenant.name}</h1>
+                    <div className="flex items-center gap-2.5">
+                        <h1 className="text-xl font-semibold tracking-tight text-foreground">{tenant.name}</h1>
                         <Badge tone={STATUS_TONE[tenant.status] ?? 'neutral'}>{tenant.status_label}</Badge>
                         <Badge tone={tenant.verified ? 'success' : 'warning'}>{tenant.verified ? 'Verified' : 'Unverified'}</Badge>
                     </div>
-                    <p className="mt-0.5 text-sm text-gray-500">
-                        {tenant.slug} · {tenant.business_email} · created {formatDate(tenant.created_at)}
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        <span className="font-mono text-xs">{tenant.slug}</span> · {tenant.business_email} · Created {formatDate(tenant.created_at)}
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                     {!tenant.verified && (
                         <Button size="sm" variant="secondary" loading={processing} onClick={() => post('platform.tenants.verify')}>
+                            <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
                             Verify
                         </Button>
                     )}
                     {tenant.status === 'suspended' ? (
                         <Button size="sm" loading={processing} onClick={() => post('platform.tenants.activate')}>
+                            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
                             Reactivate
                         </Button>
                     ) : (
                         <Button size="sm" variant="danger" onClick={() => setDialog('suspend')}>
+                            <ShieldAlert className="mr-1.5 h-3.5 w-3.5" />
                             Suspend
                         </Button>
                     )}
                     {tenant.status !== 'archived' && (
                         <Button size="sm" variant="ghost" onClick={() => setDialog('archive')}>
+                            <Archive className="mr-1.5 h-3.5 w-3.5" />
                             Archive
                         </Button>
                     )}
-                    <Button size="sm" variant="ghost" onClick={() => setDialog('impersonate')}>
+                    <Button size="sm" variant="outline" onClick={() => setDialog('impersonate')}>
+                        <UserCheck className="mr-1.5 h-3.5 w-3.5" />
                         Impersonate
                     </Button>
                 </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-3 lg:w-1/2">
-                <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-                    <div className="text-xs text-gray-500">Branches</div>
-                    <div className="text-lg font-semibold text-gray-900">{tenant.counts.branches}</div>
+            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:max-w-xl">
+                <div className="flex items-center gap-3.5 rounded-lg border border-border bg-card p-3.5 shadow-2xs">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                        <GitFork className="h-4 w-4" />
+                    </div>
+                    <div>
+                        <div className="text-xs font-medium text-muted-foreground">Branches</div>
+                        <div className="text-lg font-semibold tracking-tight text-foreground">{tenant.counts.branches}</div>
+                    </div>
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-                    <div className="text-xs text-gray-500">Users</div>
-                    <div className="text-lg font-semibold text-gray-900">{tenant.counts.users}</div>
+                <div className="flex items-center gap-3.5 rounded-lg border border-border bg-card p-3.5 shadow-2xs">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                        <Users className="h-4 w-4" />
+                    </div>
+                    <div>
+                        <div className="text-xs font-medium text-muted-foreground">Users</div>
+                        <div className="text-lg font-semibold tracking-tight text-foreground">{tenant.counts.users}</div>
+                    </div>
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-                    <div className="text-xs text-gray-500">Orders</div>
-                    <div className="text-lg font-semibold text-gray-900">{tenant.counts.orders}</div>
+                <div className="flex items-center gap-3.5 rounded-lg border border-border bg-card p-3.5 shadow-2xs">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                        <ShoppingBag className="h-4 w-4" />
+                    </div>
+                    <div>
+                        <div className="text-xs font-medium text-muted-foreground">Orders</div>
+                        <div className="text-lg font-semibold tracking-tight text-foreground">{tenant.counts.orders}</div>
+                    </div>
                 </div>
             </div>
 
@@ -268,7 +305,7 @@ export default function TenantShow({ tenant, tabs, plans }: { tenant: TenantHead
                             <CardBody>
                                 <div className="flex flex-wrap items-end gap-2">
                                     <select
-                                        className="rounded-md border-gray-300 text-sm"
+                                        className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-2xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                         value={tenant.subscription?.plan_id ?? plans[0]?.id}
                                         onChange={(e) => tenant.subscription && changePlan(Number(e.target.value), tenant.subscription.billing_cycle)}
                                     >
@@ -283,8 +320,8 @@ export default function TenantShow({ tenant, tabs, plans }: { tenant: TenantHead
                                     </Button>
                                 </div>
 
-                                <h3 className="mt-5 mb-2 text-sm font-semibold text-gray-700">Plan limits</h3>
-                                <dl className="divide-y divide-gray-50">
+                                <h3 className="mt-5 mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Plan limits</h3>
+                                <dl className="divide-y divide-border/50">
                                     {Object.entries(tabs.subscription.limits).map(([metric, limit]) => (
                                         <Row key={metric} label={metric.replace(/_/g, ' ')}>
                                             {limit ?? '∞'}
@@ -294,8 +331,8 @@ export default function TenantShow({ tenant, tabs, plans }: { tenant: TenantHead
 
                                 {tabs.subscription.history.length > 0 && (
                                     <>
-                                        <h3 className="mt-5 mb-2 text-sm font-semibold text-gray-700">Lifecycle history</h3>
-                                        <ul className="space-y-1 text-xs text-gray-500">
+                                        <h3 className="mt-5 mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Lifecycle history</h3>
+                                        <ul className="space-y-1.5 text-xs text-muted-foreground">
                                             {tabs.subscription.history.map((h, i) => (
                                                 <li key={i} className="flex items-center gap-2">
                                                     <ActivityBadge action={h.action} />
@@ -315,7 +352,7 @@ export default function TenantShow({ tenant, tabs, plans }: { tenant: TenantHead
                         <Card>
                             <CardHeader title="Balances" />
                             <CardBody>
-                                <dl className="divide-y divide-gray-50">
+                                <dl className="divide-y divide-border/50">
                                     <Row label="Outstanding">{formatMoney(tabs.billing.outstanding, currency)}</Row>
                                     <Row label="Collected (all time)">{formatMoney(tabs.billing.collected, currency)}</Row>
                                     <Row label="Billing contact">{tabs.billing.billing_contact.email ?? '—'}</Row>
@@ -326,28 +363,32 @@ export default function TenantShow({ tenant, tabs, plans }: { tenant: TenantHead
                             <CardHeader title="Invoices" description="Platform invoices issued to this tenant" />
                             <CardBody>
                                 {tabs.billing.invoices.length ? (
-                                    <table className="w-full text-left text-sm">
-                                        <thead className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-                                            <tr>
-                                                <th className="py-2">Number</th>
-                                                <th className="py-2">Status</th>
-                                                <th className="py-2 text-right">Amount</th>
-                                                <th className="py-2">Paid</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Number</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead className="text-right">Amount</TableHead>
+                                                <TableHead>Paid</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
                                             {tabs.billing.invoices.map((invoice) => (
-                                                <tr key={invoice.id}>
-                                                    <td className="py-2 font-medium text-gray-700">{invoice.number}</td>
-                                                    <td className="py-2 text-gray-600">{invoice.status}</td>
-                                                    <td className="py-2 text-right tabular-nums text-gray-700">{formatMoney(invoice.amount, invoice.currency)}</td>
-                                                    <td className="py-2 text-gray-500">{invoice.paid_at ? formatDate(invoice.paid_at) : '—'}</td>
-                                                </tr>
+                                                <TableRow key={invoice.id}>
+                                                    <TableCell className="font-medium">{invoice.number}</TableCell>
+                                                    <TableCell>
+                                                        <Badge tone={invoice.status === 'paid' ? 'success' : invoice.status === 'open' ? 'info' : 'warning'}>
+                                                            {invoice.status}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right tabular-nums font-semibold">{formatMoney(invoice.amount, invoice.currency)}</TableCell>
+                                                    <TableCell className="text-muted-foreground">{invoice.paid_at ? formatDate(invoice.paid_at) : '—'}</TableCell>
+                                                </TableRow>
                                             ))}
-                                        </tbody>
-                                    </table>
+                                        </TableBody>
+                                    </Table>
                                 ) : (
-                                    <p className="text-sm text-gray-500">No invoices yet.</p>
+                                    <p className="text-sm text-muted-foreground">No invoices yet.</p>
                                 )}
                             </CardBody>
                         </Card>
@@ -361,9 +402,9 @@ export default function TenantShow({ tenant, tabs, plans }: { tenant: TenantHead
                             <CardBody>
                                 <ul className="space-y-2 text-sm">
                                     {Object.entries(tabs.usage.metrics).map(([metric, value]) => (
-                                        <li key={metric} className="flex justify-between">
-                                            <span className="capitalize text-gray-500">{metric.replace(/_/g, ' ')}</span>
-                                            <span className={limits[metric] !== null && value >= (limits[metric] as number) ? 'font-medium text-red-600' : 'text-gray-800'}>
+                                        <li key={metric} className="flex justify-between border-b border-border/50 py-1.5 last:border-b-0">
+                                            <span className="capitalize text-muted-foreground">{metric.replace(/_/g, ' ')}</span>
+                                            <span className={limits[metric] !== null && value >= (limits[metric] as number) ? 'font-medium text-destructive' : 'font-medium text-foreground'}>
                                                 {value} {limits[metric] !== null ? `/ ${limits[metric]}` : '/ ∞'}
                                             </span>
                                         </li>
@@ -375,9 +416,9 @@ export default function TenantShow({ tenant, tabs, plans }: { tenant: TenantHead
                             <CardHeader title="Usage history" description="Scheduled snapshots" />
                             <CardBody>
                                 {tabs.usage.history.length ? (
-                                    <ul className="space-y-1 text-xs text-gray-500">
+                                    <ul className="space-y-1.5 text-xs text-muted-foreground">
                                         {tabs.usage.history.map((h, i) => (
-                                            <li key={i} className="flex justify-between">
+                                            <li key={i} className="flex justify-between border-b border-border/50 py-1 last:border-b-0">
                                                 <span>
                                                     {h.metric} = {h.value}
                                                 </span>
@@ -386,7 +427,7 @@ export default function TenantShow({ tenant, tabs, plans }: { tenant: TenantHead
                                         ))}
                                     </ul>
                                 ) : (
-                                    <p className="text-sm text-gray-500">No usage snapshots recorded yet.</p>
+                                    <p className="text-sm text-muted-foreground">No usage snapshots recorded yet.</p>
                                 )}
                             </CardBody>
                         </Card>
@@ -398,27 +439,27 @@ export default function TenantShow({ tenant, tabs, plans }: { tenant: TenantHead
                         <Card>
                             <CardHeader title="Users & sessions" description={`${tabs.security.active_sessions} active session(s)`} />
                             <CardBody>
-                                <table className="w-full text-left text-sm">
-                                    <thead className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-                                        <tr>
-                                            <th className="py-2">User</th>
-                                            <th className="py-2">Status</th>
-                                            <th className="py-2">Last login</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>User</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead>Last login</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
                                         {tabs.security.users.map((user) => (
-                                            <tr key={user.id}>
-                                                <td className="py-2">
-                                                    <div className="text-gray-700">{user.name}</div>
-                                                    <div className="text-xs text-gray-400">{user.email}</div>
-                                                </td>
-                                                <td className="py-2 text-gray-600">{user.status ?? '—'}</td>
-                                                <td className="py-2 text-gray-500">{user.last_login_at ? formatDate(user.last_login_at) : '—'}</td>
-                                            </tr>
+                                            <TableRow key={user.id}>
+                                                <TableCell>
+                                                    <div className="font-medium text-foreground">{user.name}</div>
+                                                    <div className="text-xs text-muted-foreground">{user.email}</div>
+                                                </TableCell>
+                                                <TableCell className="text-muted-foreground">{user.status ?? '—'}</TableCell>
+                                                <TableCell className="text-muted-foreground">{user.last_login_at ? formatDate(user.last_login_at) : '—'}</TableCell>
+                                            </TableRow>
                                         ))}
-                                    </tbody>
-                                </table>
+                                    </TableBody>
+                                </Table>
                             </CardBody>
                         </Card>
                         <Card>
@@ -531,8 +572,16 @@ export default function TenantShow({ tenant, tabs, plans }: { tenant: TenantHead
                 onConfirm={() => post('platform.tenants.suspend', { reason })}
                 onClose={() => setDialog(null)}
             >
-                <label className="text-xs font-medium text-gray-500">Reason (required)</label>
-                <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} className="mt-1 block w-full rounded-md border-gray-300 text-sm" />
+                <div className="space-y-1.5 pt-2">
+                    <Label htmlFor="suspend-reason" className="text-xs font-medium text-muted-foreground">Reason (required)</Label>
+                    <Textarea 
+                        id="suspend-reason"
+                        value={reason} 
+                        onChange={(e) => setReason(e.target.value)} 
+                        rows={3} 
+                        placeholder="State reason for tenant suspension..."
+                    />
+                </div>
             </ConfirmDialog>
 
             <ConfirmDialog
@@ -556,8 +605,15 @@ export default function TenantShow({ tenant, tabs, plans }: { tenant: TenantHead
                 onConfirm={() => post('platform.impersonate.start', { reason })}
                 onClose={() => setDialog(null)}
             >
-                <label className="text-xs font-medium text-gray-500">Reason (required)</label>
-                <input value={reason} onChange={(e) => setReason(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 text-sm" />
+                <div className="space-y-1.5 pt-2">
+                    <Label htmlFor="impersonate-reason" className="text-xs font-medium text-muted-foreground">Reason (required)</Label>
+                    <Input 
+                        id="impersonate-reason"
+                        value={reason} 
+                        onChange={(e) => setReason(e.target.value)} 
+                        placeholder="e.g., Debugging POS printing issue per ticket #123"
+                    />
+                </div>
             </ConfirmDialog>
 
             <ConfirmDialog

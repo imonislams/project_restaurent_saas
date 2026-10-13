@@ -118,7 +118,7 @@ export default function Help() {
                                 placeholder="Search guides (e.g. blind till, thermal printer, recipe BOM, manager PIN)..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full rounded-2xl border-stone-300 py-4 pl-12 pr-4 text-xs sm:text-sm shadow-xs focus:border-[#10B981] focus:ring-[#10B981]"
+                                className="w-full rounded-2xl border-stone-300 py-4 pl-12 pr-4 text-xs sm:text-sm shadow-xs focus:border-primary focus:ring-primary/20"
                             />
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-lg">
                                 🔍
@@ -143,7 +143,7 @@ export default function Help() {
                                 onClick={() => setSelectedCategory(cat.key as any)}
                                 className={`rounded-xl px-4 py-2 text-xs font-semibold whitespace-nowrap transition-all ${
                                     selectedCategory === cat.key
-                                        ? 'bg-[#0B271F] text-white'
+                                        ? 'bg-primary text-on-primary'
                                         : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                                 }`}
                             >
@@ -162,10 +162,10 @@ export default function Help() {
                                 <button
                                     type="button"
                                     onClick={() => setExpandedDoc(expandedDoc === doc.id ? null : doc.id)}
-                                    className="flex w-full items-center justify-between p-5 sm:p-6 text-left font-display font-bold text-stone-900 text-sm sm:text-base hover:text-[#0B271F]"
+                                    className="flex w-full items-center justify-between p-5 sm:p-6 text-left font-display font-bold text-stone-900 text-sm sm:text-base hover:text-primary"
                                 >
                                     <div>
-                                        <div className="text-[10px] font-mono font-bold text-[#10B981] uppercase mb-1">
+                                        <div className="text-[10px] font-mono font-bold text-primary uppercase mb-1">
                                             {doc.categoryLabel}
                                         </div>
                                         <span>{doc.title}</span>
