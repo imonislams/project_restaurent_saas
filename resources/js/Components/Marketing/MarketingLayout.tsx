@@ -13,10 +13,10 @@ export default function MarketingLayout({
     className = '',
 }: MarketingLayoutProps) {
     return (
-        <div className={`min-h-screen flex flex-col bg-background font-body-md text-on-surface antialiased selection:bg-primary selection:text-on-primary ${className}`}>
+        <div className={`min-h-screen flex flex-col bg-white font-sans text-stone-900 antialiased selection:bg-[#B53014] selection:text-white ${className}`}>
             {/* Optional Announcement Banner */}
             {announcement && (
-                <div className="bg-[#0B271F] px-4 py-2 text-center text-xs font-medium text-stone-200 border-b border-white/10">
+                <div className="bg-stone-900 px-4 py-2 text-center text-xs font-medium text-stone-200 border-b border-stone-800">
                     {announcement}
                 </div>
             )}

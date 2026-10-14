@@ -95,15 +95,15 @@ export default function SolutionsIndex() {
                             <Link
                                 key={sol.slug}
                                 href={`/solutions/${sol.slug}`}
-                                className="group flex flex-col justify-between rounded-2xl border border-stone-200/90 bg-white p-8 hover:border-[#0B271F] hover:shadow-lg transition-all"
+                                className="group flex flex-col justify-between rounded-2xl border border-stone-200 bg-white p-8 hover:border-[#B53014] hover:shadow-md transition-all"
                                 onClick={() => trackConversion('solution_viewed', { solution: sol.slug })}
                             >
                                 <div>
-                                    <div className="text-[11px] font-mono font-bold tracking-wider text-[#10B981] mb-3">
+                                    <div className="text-[11px] font-mono font-bold tracking-wider text-[#B53014] mb-3">
                                         {sol.badge}
                                     </div>
 
-                                    <h3 className="font-display text-xl font-bold text-stone-900 group-hover:text-[#0B271F]">
+                                    <h3 className="font-display text-xl font-bold text-stone-900 group-hover:text-[#B53014]">
                                         {sol.title}
                                     </h3>
 
@@ -118,14 +118,14 @@ export default function SolutionsIndex() {
                                     <div className="mt-6 pt-4 border-t border-stone-100 space-y-2 text-xs text-stone-600">
                                         {sol.tailoredFeatures.map((f, i) => (
                                             <div key={i} className="flex items-center gap-2">
-                                                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+                                                <span className="h-1.5 w-1.5 rounded-full bg-[#B53014]" />
                                                 <span>{f}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="mt-8 pt-4 border-t border-stone-100 flex items-center justify-between text-xs font-semibold text-[#0B271F] group-hover:text-[#10B981]">
+                                <div className="mt-8 pt-4 border-t border-stone-100 flex items-center justify-between text-xs font-semibold text-[#B53014] group-hover:underline">
                                     <span>Explore {sol.title}</span>
                                     <span>→</span>
                                 </div>
@@ -134,7 +134,7 @@ export default function SolutionsIndex() {
                     </div>
 
                     {/* Bottom Trial Banner */}
-                    <div className="mt-20 rounded-3xl bg-[#0B271F] p-8 sm:p-12 text-white text-center">
+                    <div className="mt-20 rounded-3xl bg-stone-900 p-8 sm:p-12 text-white text-center">
                         <h2 className="font-display text-2xl sm:text-3xl font-extrabold">
                             Start Your 14-Day Free Trial
                         </h2>

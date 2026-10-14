@@ -18,7 +18,10 @@ class CustomerRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:50'],
             'email' => ['nullable', 'email', 'max:255'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'tags' => ['nullable', 'array'],
+            'tags.*' => ['string', 'max:40'],
             'is_active' => ['boolean'],
+            'is_marketing_opt_in' => ['boolean'],
         ];
     }
 }

@@ -69,7 +69,7 @@ const FEATURE_DATA: Record<string, FeatureDetail> = {
                 </div>
                 <div className="flex justify-between items-center text-xs font-bold pt-2 border-t border-stone-200">
                     <span>TOTAL BALANCE (TAX INCL.)</span>
-                    <span className="text-base text-[#0B271F]">$39.00</span>
+                    <span className="text-base text-stone-900">$39.00</span>
                 </div>
             </div>
         ),
@@ -518,7 +518,7 @@ const FEATURE_DATA: Record<string, FeatureDetail> = {
                 </div>
                 <div className="flex justify-between p-2 rounded bg-white border border-stone-200">
                     <span className="font-bold">Role: Store Manager</span>
-                    <span className="text-[#10B981] font-bold">All Permissions + PIN Approval</span>
+                    <span className="text-emerald-700 font-bold">All Permissions + PIN Approval</span>
                 </div>
             </div>
         ),
@@ -722,7 +722,7 @@ const FEATURE_DATA: Record<string, FeatureDetail> = {
             <div className="p-6 bg-stone-50 text-xs font-mono space-y-2">
                 <div className="flex justify-between font-bold text-stone-800">
                     <span>ELENA ROSTOVA · VIP DINER</span>
-                    <span className="text-[#10B981]">340 POINTS</span>
+                    <span className="text-[#B53014]">340 POINTS</span>
                 </div>
                 <div className="rounded bg-white p-2.5 border border-stone-200 text-stone-600">
                     <div>Total Orders: 18 · Lifetime Spend: $840.00</div>
@@ -764,12 +764,12 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
             <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="max-w-3xl">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-[#0B271F]/15 bg-white px-3.5 py-1 text-xs font-mono font-semibold uppercase tracking-wider text-[#0B271F] mb-6">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+                        <div className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3.5 py-1 text-xs font-mono font-semibold uppercase tracking-wider text-[#B53014] mb-6">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#B53014]" />
                             <span>{feature.badge}</span>
                         </div>
 
-                        <h1 className="font-display text-4xl font-extrabold tracking-tight text-[#0B271F] sm:text-6xl leading-[1.1]">
+                        <h1 className="font-display text-4xl font-extrabold tracking-tight text-stone-900 sm:text-6xl leading-[1.1]">
                             {feature.heroHeadline}
                         </h1>
 
@@ -856,7 +856,7 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
                                 key={idx}
                                 className="rounded-2xl border border-stone-200/90 bg-white p-8 space-y-3 shadow-xs"
                             >
-                                <div className="text-xs font-mono font-bold text-[#10B981]">
+                                <div className="text-xs font-mono font-bold text-[#B53014]">
                                     STEP {step.step}
                                 </div>
                                 <h3 className="font-display text-xl font-bold text-stone-900">
@@ -887,7 +887,7 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
                                 className="rounded-2xl border border-stone-200/80 bg-stone-50/60 p-7 space-y-2 hover:border-stone-300 transition-all"
                             >
                                 <h3 className="font-display text-lg font-bold text-stone-900 flex items-center gap-2">
-                                    <span className="h-2 w-2 rounded-full bg-[#10B981]" />
+                                    <span className="h-2 w-2 rounded-full bg-[#B53014]" />
                                     <span>{b.title}</span>
                                 </h3>
                                 <p className="text-xs sm:text-sm text-stone-600 leading-relaxed pl-4">
@@ -911,7 +911,7 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
                                 {feature.title} operates seamlessly alongside other Restrly modules.
                             </p>
                         </div>
-                        <Link href="/features" className="text-xs font-semibold text-[#0B271F] hover:text-[#10B981]">
+                        <Link href="/features" className="text-xs font-semibold text-[#B53014] hover:underline">
                             View all 13 modules →
                         </Link>
                     </div>
@@ -921,12 +921,12 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
                             <Link
                                 key={r.slug}
                                 href={`/features/${r.slug}`}
-                                className="group block rounded-xl border border-stone-200 bg-white p-5 hover:border-[#0B271F] transition-all"
+                                className="group block rounded-xl border border-stone-200 bg-white p-5 hover:border-[#B53014] transition-all"
                             >
-                                <div className="font-display font-bold text-stone-900 text-sm group-hover:text-[#0B271F]">
+                                <div className="font-display font-bold text-stone-900 text-sm group-hover:text-[#B53014]">
                                     {r.title}
                                 </div>
-                                <div className="mt-1 text-xs text-stone-500 flex items-center gap-1 group-hover:text-[#10B981]">
+                                <div className="mt-1 text-xs text-stone-500 flex items-center gap-1 group-hover:text-[#B53014]">
                                     <span>Explore module</span>
                                     <span>→</span>
                                 </div>
@@ -954,7 +954,7 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
                                 <button
                                     type="button"
                                     onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                                    className="flex w-full items-center justify-between p-5 text-left font-display font-bold text-stone-900 text-sm sm:text-base hover:text-[#0B271F]"
+                                    className="flex w-full items-center justify-between p-5 text-left font-display font-bold text-stone-900 text-sm sm:text-base hover:text-[#B53014]"
                                 >
                                     <span>{faq.q}</span>
                                     <span className="ml-4 font-mono text-stone-400">
@@ -973,7 +973,7 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
             </section>
 
             {/* Contextual Bottom CTA */}
-            <section className="bg-[#0B271F] py-20 text-white text-center">
+            <section className="bg-stone-900 py-20 text-white text-center">
                 <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-6">
                     <h2 className="font-display text-3xl sm:text-4xl font-extrabold">
                         Ready to Experience {feature.title}?

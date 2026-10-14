@@ -29,10 +29,18 @@ interface TrackedOrder {
     items: { name: string; quantity: number; line_total: number; modifiers: string[] }[];
 }
 
+interface PaymentOption {
+    provider: string;
+    label: string;
+    is_cash: boolean;
+    is_default: boolean;
+}
+
 interface TrackingPayload {
     session: { id: number; status: string; billing_mode: string };
     orders: TrackedOrder[];
     totals: { outstanding: number; paid: number; currency: string };
+    payment_options: PaymentOption[];
     bill: { requestable: boolean; request_open: boolean; request_status: string | null; requested_at: string | null };
     live_tracking: boolean;
     updated_at: string;
@@ -57,6 +65,8 @@ export default function QrTracking({ token, restaurant, table, participant_token
     const lastSync = useRef<number>(Date.now());
 
     const money = (n: number, currency = data.totals.currency) => `${currency} ${Number(n || 0).toFixed(2)}`;
+
+    const onlineOptions = data.payment_options.filter((option) => !option.is_cash);
 
     useEffect(() => {
         if (!data.live_tracking) return;
@@ -101,14 +111,23 @@ export default function QrTracking({ token, restaurant, table, participant_token
         }
     };
 
-    const payNow = async (order: TrackedOrder) => {
+    const payNow = async (order: TrackedOrder, provider: string) => {
         setPayingId(order.id);
         try {
-            await window.axios.post(
+            const { data: res } = await window.axios.post(
                 route('qr.payment.start', { token }),
-                { order_id: order.id, idempotency_key: `pay-${order.id}-${Date.now()}` },
+                { order_id: order.id, provider, idempotency_key: `pay-${order.id}-${provider}-${Date.now()}` },
                 { headers: { 'X-Dining-Participant': participant_token ?? '' } },
             );
+
+            // Hosted gateways (Stripe / SSLCommerz / bKash) return a checkout URL
+            // the customer must complete; confirmation happens server-side.
+            const redirect = res?.payment?.redirect_url;
+            if (redirect) {
+                window.location.href = redirect;
+                return;
+            }
+
             const { data: fresh } = await window.axios.get(route('qr.status', { token }), {
                 headers: { 'X-Dining-Participant': participant_token ?? '' },
             });
@@ -199,18 +218,29 @@ export default function QrTracking({ token, restaurant, table, participant_token
                         </ul>
 
                         {order.total - order.paid_total > 0.001 && order.status_value !== 'voided' && !order.status.is_terminal && (
-                            <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
-                                <span className="text-xs text-gray-500">
-                                    Outstanding {money(order.total - order.paid_total, order.currency)}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => payNow(order)}
-                                    disabled={payingId === order.id}
-                                    className="rounded-xl bg-gray-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
-                                >
-                                    {payingId === order.id ? 'Processing…' : 'Pay now'}
-                                </button>
+                            <div className="mt-3 border-t border-gray-100 pt-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">
+                                        Outstanding {money(order.total - order.paid_total, order.currency)}
+                                    </span>
+                                </div>
+                                {onlineOptions.length > 0 ? (
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        {onlineOptions.map((option) => (
+                                            <button
+                                                key={option.provider}
+                                                type="button"
+                                                onClick={() => payNow(order, option.provider)}
+                                                disabled={payingId === order.id}
+                                                className="rounded-xl bg-gray-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                                            >
+                                                {payingId === order.id ? 'Processing…' : `Pay with ${option.label}`}
+                                            </button>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="mt-1 text-[11px] text-gray-400">This restaurant collects payment at the counter.</p>
+                                )}
                             </div>
                         )}
                     </div>
@@ -235,7 +265,7 @@ export default function QrTracking({ token, restaurant, table, participant_token
                             disabled={billBusy || data.totals.outstanding <= 0}
                             className="mt-3 h-11 w-full rounded-xl bg-gray-900 text-sm font-bold text-white disabled:opacity-50"
                         >
-                            {billBusy ? 'Requesting…' : 'Request the bill'}
+                            {billBusy ? 'Requesting…' : 'Pay at the counter — request the bill'}
                         </button>
                     ) : null}
                 </div>

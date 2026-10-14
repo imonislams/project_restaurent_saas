@@ -1,6 +1,47 @@
 import { MarketingLayout } from '@/Components/Marketing';
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from '@/Components/ui/accordion';
+import { Badge } from '@/Components/ui/Badge';
+import { Button } from '@/Components/ui/Button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/Components/ui/Card';
 import { Head, Link } from '@inertiajs/react';
-import { useState } from 'react';
+import {
+    ArrowRight,
+    BarChart3,
+    Boxes,
+    Building2,
+    Calendar,
+    Check,
+    CheckCircle2,
+    ChefHat,
+    ChevronRight,
+    Clock,
+    CreditCard,
+    DollarSign,
+    Flame,
+    HelpCircle,
+    Layers,
+    LayoutGrid,
+    Minus,
+    Monitor,
+    Plus,
+    Printer,
+    Receipt,
+    RefreshCw,
+    Shield,
+    Sparkles,
+    Trash2,
+    Users,
+    Utensils,
+    UtensilsCrossed,
+    Wine,
+    Zap,
+} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 
 interface Plan {
     id: number;
@@ -40,15 +81,15 @@ const MENU_ITEMS: MenuItem[] = [
     {
         id: 'ribeye',
         name: 'Prime Ribeye 45-Day Dry Aged',
-        desc: 'Bone marrow jus, charred shallot',
+        desc: 'Bone marrow jus, charred shallot, smoked salt',
         price: 68.0,
-        tags: ['Med Rare', 'Woodfire'],
+        tags: ['Woodfire', 'Med Rare'],
         category: 'mains',
     },
     {
         id: 'cod',
         name: 'Line-Caught Black Cod',
-        desc: 'White miso, charred gai lan',
+        desc: 'White miso emulsion, charred gai lan, sesame',
         price: 54.0,
         tags: ['Gluten Free'],
         category: 'mains',
@@ -56,49 +97,49 @@ const MENU_ITEMS: MenuItem[] = [
     {
         id: 'pasta',
         name: 'Morel Mushroom Tagliolini',
-        desc: 'Aged parmigiano, cultured butter',
+        desc: 'Aged parmigiano-reggiano, cultured thyme butter',
         price: 38.0,
-        tags: ['Hand Rolled'],
+        tags: ['Handmade Pasta'],
         category: 'mains',
     },
     {
         id: 'pork',
-        name: 'Kurobuta Pork Chop',
-        desc: 'Smoked apple butter, mustard greens',
+        name: 'Heritage Pork Chop',
+        desc: 'Smoked apple gastrique, braised mustard greens',
         price: 46.0,
-        tags: ['Heritage'],
+        tags: ['Heritage Breed'],
         category: 'mains',
     },
     {
         id: 'burrata',
         name: 'Burrata & Charred Peaches',
-        desc: 'Wild thyme, 25-yr balsamico',
+        desc: 'Wild mountain thyme, 25-yr Modena balsamico',
         price: 24.0,
-        tags: ['Organic'],
+        tags: ['Vegetarian'],
         category: 'small_plates',
     },
     {
         id: 'tartare',
         name: 'Hand-Cut Wagyu Tartare',
-        desc: 'Cured egg yolk, grilled sourdough',
+        desc: 'Confit egg yolk, caperberry, grilled sourdough',
         price: 26.0,
-        tags: ['Chef Signature'],
+        tags: ['Signature'],
         category: 'small_plates',
     },
     {
         id: 'barolo',
         name: '2018 Barolo Serralunga d’Alba',
-        desc: 'Piedmont, Nebbiolo 750ml',
+        desc: 'Piedmont, Nebbiolo 750ml, cellar temperature',
         price: 145.0,
         tags: ['Cellar Reserve'],
         category: 'cellar',
     },
     {
         id: 'fashion',
-        name: 'Smoked Old Fashioned',
-        desc: 'Small batch rye, orange peel, angostura',
+        name: 'Smoked Cherry Old Fashioned',
+        desc: 'Small batch rye, charred cherry bitters, orange twist',
         price: 19.0,
-        tags: ['House Smoked'],
+        tags: ['Cocktail'],
         category: 'cocktails',
     },
 ];
@@ -109,7 +150,7 @@ interface TableData {
     guests: number;
     location: string;
     status: 'Active' | 'Course 2' | 'Holding' | 'Seated';
-    badgeColor: string;
+    badgeVariant: 'default' | 'secondary' | 'outline';
     total: number;
 }
 
@@ -118,9 +159,9 @@ const DEMO_TABLES: TableData[] = [
         id: 'tbl_14',
         label: 'TBL 14',
         guests: 3,
-        location: 'Patio',
+        location: 'Patio Terrace',
         status: 'Active',
-        badgeColor: 'bg-primary-fixed text-on-primary-fixed',
+        badgeVariant: 'default',
         total: 184.5,
     },
     {
@@ -129,7 +170,7 @@ const DEMO_TABLES: TableData[] = [
         guests: 4,
         location: 'Main Salon',
         status: 'Course 2',
-        badgeColor: 'bg-secondary-container text-on-secondary-fixed-variant',
+        badgeVariant: 'secondary',
         total: 310.0,
     },
     {
@@ -138,1465 +179,1126 @@ const DEMO_TABLES: TableData[] = [
         guests: 2,
         location: 'Lounge Rail',
         status: 'Holding',
-        badgeColor: 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
+        badgeVariant: 'outline',
         total: 64.0,
     },
     {
         id: 'patio_03',
         label: 'PATIO 03',
         guests: 5,
-        location: 'Terrace Garden',
+        location: 'Garden Pergola',
         status: 'Seated',
-        badgeColor: 'bg-surface-container-high text-on-surface',
-        total: 142.0,
+        badgeVariant: 'secondary',
+        total: 0.0,
     },
 ];
 
 export default function Welcome({
+    canLogin = true,
+    canRegister = true,
     plans = [],
     platformCurrency = 'USD',
 }: WelcomeProps) {
-    // POS Terminal Simulator State
+    // POS Terminal Interactive State
     const [selectedTable, setSelectedTable] = useState<TableData>(DEMO_TABLES[0]);
-    const [selectedCategory, setSelectedCategory] = useState<'mains' | 'small_plates' | 'cellar' | 'cocktails'>('mains');
-    const [ticketItems, setTicketItems] = useState<Array<{ name: string; mod: string; price: number; qty: number }>>([
-        { name: '1x Prime Dry-Aged Ribeye', mod: 'Temp: Med Rare, Extra Char', price: 68.0, qty: 1 },
-        { name: '1x Line-Caught Black Cod', mod: 'Allergen Safe: Zero Allium', price: 54.0, qty: 1 },
-        { name: '2x Smoked Old Fashioned', mod: 'Rye Bourbon, Orange Peel', price: 38.0, qty: 2 },
-        { name: '1x Morel Tagliolini', mod: 'Shaved Black Truffle Add-on', price: 24.5, qty: 1 },
+    const [selectedCategory, setSelectedCategory] = useState<
+        'all' | 'mains' | 'small_plates' | 'cellar' | 'cocktails'
+    >('all');
+    const [cart, setCart] = useState<{ item: MenuItem; count: number }[]>([
+        { item: MENU_ITEMS[0], count: 2 },
+        { item: MENU_ITEMS[4], count: 1 },
+        { item: MENU_ITEMS[7], count: 2 },
     ]);
-    const [splitMode, setSplitMode] = useState<'even' | 'seat' | 'custom'>('even');
-    const [paymentFired, setPaymentFired] = useState(false);
-
-    // Interactive Flow Stage Switcher
+    const [orderFired, setOrderFired] = useState(false);
     const [activeStage, setActiveStage] = useState<number>(1);
+    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
 
-    // FAQ Accordion State
-    const [openFaq, setOpenFaq] = useState<number | null>(0);
+    const handleAddToCart = (item: MenuItem) => {
+        setCart((prev) => {
+            const exists = prev.find((entry) => entry.item.id === item.id);
+            if (exists) {
+                return prev.map((entry) =>
+                    entry.item.id === item.id ? { ...entry, count: entry.count + 1 } : entry
+                );
+            }
+            return [...prev, { item, count: 1 }];
+        });
+        setOrderFired(false);
+    };
 
-    // Calculations
-    const subtotal = ticketItems.reduce((acc, item) => acc + item.price, 0);
+    const handleUpdateQuantity = (itemId: string, delta: number) => {
+        setCart((prev) => {
+            return prev
+                .map((entry) => {
+                    if (entry.item.id === itemId) {
+                        const newCount = entry.count + delta;
+                        return newCount > 0 ? { ...entry, count: newCount } : null;
+                    }
+                    return entry;
+                })
+                .filter(Boolean) as { item: MenuItem; count: number }[];
+        });
+        setOrderFired(false);
+    };
+
+    const subtotal = useMemo(() => {
+        return cart.reduce((acc, entry) => acc + entry.item.price * entry.count, 0);
+    }, [cart]);
+
     const tax = subtotal * 0.08875;
-    const dueTotal = subtotal + tax;
-    const splitCount = selectedTable.guests || 3;
-    const perGuest = dueTotal / splitCount;
+    const total = subtotal + tax;
 
-    const addItemToTicket = (item: MenuItem) => {
-        setTicketItems((prev) => [
-            ...prev,
-            {
-                name: `1x ${item.name}`,
-                mod: item.tags[0] || 'Standard Prep',
-                price: item.price,
-                qty: 1,
-            },
-        ]);
+    const filteredMenu = useMemo(() => {
+        if (selectedCategory === 'all') return MENU_ITEMS;
+        return MENU_ITEMS.filter((i) => i.category === selectedCategory);
+    }, [selectedCategory]);
+
+    const handleFireTicket = () => {
+        if (cart.length === 0) return;
+        setOrderFired(true);
+        setTimeout(() => setOrderFired(false), 4500);
     };
-
-    const handleFireCheck = () => {
-        setPaymentFired(true);
-        setTimeout(() => setPaymentFired(false), 3000);
-    };
-
-    const filteredMenuItems = MENU_ITEMS.filter((item) => item.category === selectedCategory);
 
     return (
         <MarketingLayout>
             <Head>
-                <title>Mise Restaurant POS - Redefining Restaurant Velocity</title>
+                <title>Restrly — Complete Restaurant Management Software & POS</title>
                 <meta
                     name="description"
-                    content="Manage live floor tables, sub-second terminal orders, recipe-level gram inventory, and multi-location revenue in one uncompromising platform. Built for hospitality perfectionists."
+                    content="Restrly is the modern restaurant management system built for high-velocity operations: sub-second POS, kitchen display system, table management, and inventory."
                 />
             </Head>
 
             <div className="flex flex-col w-full">
                 {/* 1. HERO SECTION */}
-                <section className="relative w-full px-gutter pt-space-xl pb-space-3xl overflow-hidden bg-surface">
-                    <div className="max-w-7xl mx-auto flex flex-col items-center text-center">
-                        {/* Editorial Eyebrow */}
-                        <div className="inline-flex items-center gap-space-xs px-space-md py-1 rounded-full bg-surface-container-high text-on-surface mb-space-lg shadow-xs">
-                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                            <span className="font-label-caps text-label-caps tracking-widest uppercase text-tertiary">
-                                Mise OS 3.0 • Redefining Restaurant Velocity
+                <section className="relative w-full px-4 sm:px-6 lg:px-8 pt-14 pb-20 lg:pt-20 lg:pb-28 overflow-hidden bg-white">
+                    <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
+                        {/* Refined Eyebrow */}
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-stone-100 border border-stone-200 text-stone-800 mb-6">
+                            <span className="w-2 h-2 rounded-full bg-[#B53014] animate-pulse" />
+                            <span className="text-xs font-semibold tracking-wide uppercase text-stone-700">
+                                Restrly OS &bull; Built for High-Performing Hospitality
                             </span>
                         </div>
 
                         {/* Main Headline */}
-                        <h1 className="font-display-xl text-4xl sm:text-6xl lg:text-display-xl tracking-tight text-on-surface max-w-5xl text-balance font-extrabold">
-                            Run your restaurant.
-                            <br className="hidden sm:inline" />
-                            Not your chaos<span className="text-primary">.</span>
+                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-stone-900 max-w-4xl leading-[1.12]">
+                            Run your restaurant with{' '}
+                            <span className="text-[#B53014]">complete clarity &amp; speed</span>.
                         </h1>
 
                         {/* Subtitle */}
-                        <p className="font-body-lg text-lg sm:text-body-lg text-on-surface-variant max-w-2xl mt-space-md mb-space-xl text-balance">
-                            Manage live floor tables, sub-second terminal orders, recipe-level gram
-                            inventory, and multi-location revenue in one uncompromising platform. Built
-                            for hospitality perfectionists.
+                        <p className="text-lg sm:text-xl text-stone-600 max-w-2xl mt-5 mb-8 leading-relaxed">
+                            Sub-second POS terminals, live kitchen display routing, interactive floor tables, and recipe-level inventory control in one unified platform.
                         </p>
 
                         {/* Action Row */}
-                        <div className="flex flex-col sm:flex-row items-center gap-space-md w-full justify-center">
+                        <div className="flex flex-col sm:flex-row items-center gap-3.5 w-full justify-center">
                             <Link
                                 href="/register"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold px-space-xl py-space-md rounded-lg shadow-md transition-all hover:scale-[1.01] active:scale-[0.98]"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#B53014] hover:bg-[#9E2A11] active:bg-[#85230E] text-white text-sm font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors"
                             >
-                                <span>Start Free Trial</span>
-                                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                                <span>Start 14-Day Free Trial</span>
+                                <ArrowRight className="w-4 h-4" />
                             </Link>
                             <a
-                                href="#interactive-flow"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs bg-surface-container-lowest hover:bg-surface-container text-on-surface font-body-sm text-body-sm font-semibold px-space-lg py-space-md rounded-lg shadow-xs transition-colors"
+                                href="#terminal-demo"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white hover:bg-stone-50 text-stone-800 text-sm font-semibold px-6 py-3 rounded-lg border border-stone-300 shadow-xs transition-colors"
                             >
-                                <span className="material-symbols-outlined text-[18px] text-primary">play_circle</span>
-                                <span>Explore Live Demo</span>
+                                <Zap className="w-4 h-4 text-[#B53014]" />
+                                <span>Try Interactive Register</span>
                             </a>
                         </div>
 
-                        {/* Microcopy Reassurance */}
-                        <div className="flex flex-wrap items-center justify-center gap-x-space-lg gap-y-1 mt-space-md text-on-surface-variant font-mono-ticket text-mono-ticket">
-                            <span className="inline-flex items-center gap-1">
-                                <span className="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
+                        {/* Factual Trust Indicators */}
+                        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 mt-8 text-xs text-stone-500 font-medium">
+                            <span className="inline-flex items-center gap-1.5">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                                 14-day zero-risk trial
                             </span>
-                            <span className="inline-flex items-center gap-1">
-                                <span className="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
-                                No hardware lock-in
+                            <span className="inline-flex items-center gap-1.5">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                No proprietary hardware lock-in
                             </span>
-                            <span className="inline-flex items-center gap-1">
-                                <span className="material-symbols-outlined text-secondary text-[16px]">check_circle</span>
-                                20-min concierge onboarding
+                            <span className="inline-flex items-center gap-1.5">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                Fast menu import &amp; onboarding
                             </span>
                         </div>
 
-                        {/* LIVE POS ORCHESTRATION TERMINAL INTERFACE */}
-                        <div className="w-full mt-space-2xl bg-surface-container-lowest rounded-xl shadow-xl overflow-hidden text-left border border-surface-container-highest">
-                            {/* Terminal Master Bar */}
-                            <div className="bg-inverse-surface text-inverse-on-surface px-space-lg py-space-sm flex flex-wrap items-center justify-between gap-space-sm">
-                                <div className="flex items-center gap-space-md">
-                                    <span className="font-label-caps text-label-caps uppercase bg-primary text-on-primary px-space-xs py-0.5 rounded font-bold">
-                                        Terminal 01
-                                    </span>
-                                    <span className="font-body-sm text-body-sm font-semibold text-inverse-on-surface">
-                                        Service: Dinner Rush • Station: Expediter Central
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-space-lg font-mono-ticket text-mono-ticket text-surface-dim">
-                                    <span>
-                                        SYNC: <strong className="text-secondary-fixed">LIVE 0.12ms</strong>
-                                    </span>
-                                    <span>
-                                        DRAWER: <strong className="text-surface-container-lowest">$1,450.00</strong>
-                                    </span>
-                                    <span>
-                                        SERVER: <strong className="text-surface-container-lowest">MARCUS B.</strong>
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Terminal Operational Pulse */}
-                            <div className="bg-surface-container-low px-space-lg py-2 flex flex-wrap items-center justify-between gap-space-sm text-on-surface-variant font-mono-ticket text-mono-ticket border-b border-surface-container-high">
-                                <div className="flex items-center gap-space-md">
-                                    <span>
-                                        Shift Gross:{' '}
-                                        <strong className="text-on-surface font-bold">$4,820.00</strong>
-                                    </span>
-                                    <span className="text-tertiary">•</span>
-                                    <span>
-                                        Table Turn Velocity:{' '}
-                                        <strong className="text-secondary font-bold">98.4%</strong>
-                                    </span>
-                                    <span className="text-tertiary">•</span>
-                                    <span>
-                                        Kitchen Prep Latency:{' '}
-                                        <strong className="text-on-surface font-bold">11m 40s</strong>
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-space-sm">
-                                    <span className="w-2 h-2 rounded-full bg-secondary" />
-                                    <span className="font-label-caps text-label-caps uppercase text-secondary font-bold">
-                                        KDS Line Clear
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Main Workspace (3-column layout) */}
-                            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-surface-container-high min-h-[520px]">
-                                {/* Col 1: Active Tables (3 cols) */}
-                                <div className="lg:col-span-3 bg-surface-container-lowest p-space-md flex flex-col justify-between">
-                                    <div>
-                                        <div className="flex items-center justify-between mb-space-md pb-space-xs border-b border-surface-container">
-                                            <span className="font-label-caps text-label-caps uppercase text-tertiary font-bold tracking-wider">
-                                                Active Tables
-                                            </span>
-                                            <span className="font-mono-ticket text-mono-ticket text-primary font-bold">
-                                                4 Open
-                                            </span>
-                                        </div>
-
-                                        <div className="space-y-space-xs">
-                                            {DEMO_TABLES.map((table) => {
-                                                const isSelected = selectedTable.id === table.id;
-                                                return (
-                                                    <div
-                                                        key={table.id}
-                                                        onClick={() => setSelectedTable(table)}
-                                                        className={`p-space-sm rounded-lg cursor-pointer transition-all ${
-                                                            isSelected
-                                                                ? 'bg-surface-container-high shadow-xs'
-                                                                : 'bg-surface-container-low hover:bg-surface-container'
-                                                        }`}
-                                                    >
-                                                        <div className="flex items-center justify-between">
-                                                            <span className="font-headline-sm text-headline-sm font-bold text-on-surface">
-                                                                {table.label}
-                                                            </span>
-                                                            <span
-                                                                className={`font-label-caps text-label-caps uppercase px-space-xs py-0.5 rounded font-bold ${table.badgeColor}`}
-                                                            >
-                                                                {table.status}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center justify-between mt-1 text-on-surface-variant font-body-sm text-body-sm">
-                                                            <span>
-                                                                {table.guests} Guests • {table.location}
-                                                            </span>
-                                                            <span className="font-mono-ticket text-mono-ticket text-on-surface font-bold">
-                                                                ${table.total.toFixed(2)}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
+                        {/* REALISTIC APPLICATION PREVIEW MOCKUP */}
+                        <div className="w-full mt-14 rounded-2xl border border-stone-200 bg-stone-900 p-2 sm:p-3 shadow-xl">
+                            {/* Device Frame Bar */}
+                            <div className="flex items-center justify-between px-3 py-2 text-xs text-stone-400 border-b border-stone-800 mb-2">
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-stone-700" />
+                                        <span className="w-2.5 h-2.5 rounded-full bg-stone-700" />
+                                        <span className="w-2.5 h-2.5 rounded-full bg-stone-700" />
                                     </div>
+                                    <span className="text-stone-300 font-mono text-[11px] ml-2">
+                                        Restrly POS Terminal &bull; Downtown Branch #01
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-4 text-[11px] font-mono">
+                                    <span className="inline-flex items-center gap-1 text-emerald-400">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                        CLOUD SYNC ACTIVE
+                                    </span>
+                                    <span className="text-stone-400 hidden sm:inline">DRAWER: $1,840.00</span>
+                                </div>
+                            </div>
 
-                                    {/* Station Shortcuts */}
-                                    <div className="mt-space-md pt-space-sm bg-surface-container-low p-space-sm rounded-lg">
-                                        <span className="font-label-caps text-label-caps uppercase text-tertiary block mb-1">
-                                            Station Shortcuts
+                            {/* Inner Application Screen */}
+                            <div className="bg-white rounded-xl p-4 sm:p-6 text-left grid grid-cols-1 lg:grid-cols-12 gap-6">
+                                {/* Left: Active Floor Tables Overview */}
+                                <div className="lg:col-span-4 border-r-0 lg:border-r border-stone-200 pr-0 lg:pr-6 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
+                                            Active Dining Room
                                         </span>
-                                        <div className="grid grid-cols-2 gap-space-xs">
-                                            <button
-                                                type="button"
-                                                className="bg-surface-container-lowest text-on-surface text-center py-1.5 rounded font-body-sm text-body-sm font-semibold hover:bg-surface-container-high transition-colors shadow-xs"
-                                            >
-                                                Course Hold
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="bg-surface-container-lowest text-on-surface text-center py-1.5 rounded font-body-sm text-body-sm font-semibold hover:bg-surface-container-high transition-colors shadow-xs"
-                                            >
-                                                Transfer Tab
-                                            </button>
-                                        </div>
+                                        <span className="text-xs font-medium text-stone-700 bg-stone-100 px-2 py-0.5 rounded">
+                                            18 / 24 Seated
+                                        </span>
                                     </div>
-                                </div>
 
-                                {/* Col 2: Live Menu Category & Item Tiles (5 cols) */}
-                                <div className="lg:col-span-5 bg-surface-container-low p-space-md flex flex-col justify-between">
-                                    <div>
-                                        {/* Culinary Category Tabs */}
-                                        <div className="flex items-center gap-space-xs overflow-x-auto pb-space-xs mb-space-md">
-                                            <button
-                                                type="button"
-                                                onClick={() => setSelectedCategory('mains')}
-                                                className={`px-space-md py-1.5 rounded-lg font-body-sm text-body-sm font-semibold whitespace-nowrap transition-colors ${
-                                                    selectedCategory === 'mains'
-                                                        ? 'bg-inverse-surface text-inverse-on-surface'
-                                                        : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container-high'
+                                    <div className="grid grid-cols-2 gap-2.5">
+                                        {DEMO_TABLES.map((t) => (
+                                            <div
+                                                key={t.id}
+                                                className={`p-3 rounded-lg border transition-all text-xs ${
+                                                    selectedTable.id === t.id
+                                                        ? 'border-[#B53014] bg-[#B53014]/5 shadow-xs'
+                                                        : 'border-stone-200 bg-stone-50 hover:bg-stone-100'
                                                 }`}
                                             >
-                                                Woodfire Mains
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setSelectedCategory('small_plates')}
-                                                className={`px-space-md py-1.5 rounded-lg font-body-sm text-body-sm font-semibold whitespace-nowrap transition-colors ${
-                                                    selectedCategory === 'small_plates'
-                                                        ? 'bg-inverse-surface text-inverse-on-surface'
-                                                        : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container-high'
-                                                }`}
-                                            >
-                                                Small Plates
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setSelectedCategory('cellar')}
-                                                className={`px-space-md py-1.5 rounded-lg font-body-sm text-body-sm font-semibold whitespace-nowrap transition-colors ${
-                                                    selectedCategory === 'cellar'
-                                                        ? 'bg-inverse-surface text-inverse-on-surface'
-                                                        : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container-high'
-                                                }`}
-                                            >
-                                                Cellar Reserve
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setSelectedCategory('cocktails')}
-                                                className={`px-space-md py-1.5 rounded-lg font-body-sm text-body-sm font-semibold whitespace-nowrap transition-colors ${
-                                                    selectedCategory === 'cocktails'
-                                                        ? 'bg-inverse-surface text-inverse-on-surface'
-                                                        : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container-high'
-                                                }`}
-                                            >
-                                                Cocktails
-                                            </button>
-                                        </div>
-
-                                        {/* Item Tiles */}
-                                        <div className="grid grid-cols-2 gap-space-sm">
-                                            {filteredMenuItems.map((item) => (
-                                                <div
-                                                    key={item.id}
-                                                    onClick={() => addItemToTicket(item)}
-                                                    className="bg-surface-container-lowest p-space-sm rounded-lg shadow-xs flex flex-col justify-between hover:scale-[1.01] hover:border-primary border border-transparent transition-all cursor-pointer group"
-                                                    title="Click to add item to ticket"
-                                                >
-                                                    <div>
-                                                        <div className="flex justify-between items-start">
-                                                            <h4 className="font-body-sm text-body-sm font-bold text-on-surface group-hover:text-primary transition-colors">
-                                                                {item.name}
-                                                            </h4>
-                                                            <span className="font-mono-ticket text-mono-ticket font-bold text-primary shrink-0 ml-1">
-                                                                ${item.price.toFixed(0)}
-                                                            </span>
-                                                        </div>
-                                                        <p className="font-body-sm text-[12px] text-on-surface-variant mt-1 line-clamp-1">
-                                                            {item.desc}
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex gap-1 mt-space-sm flex-wrap">
-                                                        {item.tags.map((tag, i) => (
-                                                            <span
-                                                                key={i}
-                                                                className="font-label-caps text-label-caps uppercase bg-surface-container-high text-on-surface px-1.5 py-0.5 rounded"
-                                                            >
-                                                                {tag}
-                                                            </span>
-                                                        ))}
-                                                    </div>
+                                                <div className="flex items-center justify-between font-semibold text-stone-900">
+                                                    <span>{t.label}</span>
+                                                    <span className="text-[10px] text-stone-500">{t.guests}p</span>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Allergy Alert Strip */}
-                                    <div className="mt-space-md p-space-sm bg-primary-fixed rounded-lg flex items-center justify-between">
-                                        <div className="flex items-center gap-space-xs">
-                                            <span className="material-symbols-outlined text-primary text-[20px]">
-                                                warning
-                                            </span>
-                                            <span className="font-body-sm text-body-sm font-bold text-on-primary-fixed">
-                                                Guest Flag: Shellfish &amp; Celiac Protocol
-                                            </span>
-                                        </div>
-                                        <span className="font-label-caps text-label-caps uppercase bg-primary text-on-primary px-2 py-0.5 rounded font-bold">
-                                            Kitchen Alert Fired
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Col 3: Active Ticket & Settlement (4 cols) */}
-                                <div className="lg:col-span-4 bg-surface-container-lowest p-space-md flex flex-col justify-between">
-                                    <div>
-                                        <div className="flex items-center justify-between pb-space-sm border-b border-surface-container">
-                                            <div>
-                                                <span className="font-headline-sm text-headline-sm font-bold text-on-surface">
-                                                    Ticket #1042
-                                                </span>
-                                                <span className="block font-mono-ticket text-mono-ticket text-tertiary">
-                                                    {selectedTable.label} • Round 2 of 3
-                                                </span>
-                                            </div>
-                                            <span className="font-label-caps text-label-caps uppercase bg-surface-container text-on-surface px-space-xs py-1 rounded font-bold">
-                                                Order Live
-                                            </span>
-                                        </div>
-
-                                        {/* Ticket Items List */}
-                                        <div className="space-y-space-sm py-space-sm max-h-[220px] overflow-y-auto">
-                                            {ticketItems.map((item, idx) => (
-                                                <div
-                                                    key={idx}
-                                                    className="flex justify-between items-start text-body-sm border-b border-surface-container-low pb-1.5"
-                                                >
-                                                    <div>
-                                                        <span className="font-bold text-on-surface">{item.name}</span>
-                                                        <span className="block font-mono-ticket text-mono-ticket text-tertiary pl-space-sm">
-                                                            → {item.mod}
-                                                        </span>
-                                                    </div>
-                                                    <span className="font-mono-ticket text-mono-ticket font-bold text-on-surface">
-                                                        ${item.price.toFixed(2)}
+                                                <div className="mt-2 flex items-center justify-between text-[11px]">
+                                                    <span className="text-stone-500">{t.status}</span>
+                                                    <span className="font-semibold text-stone-900">
+                                                        ${t.total.toFixed(2)}
                                                     </span>
                                                 </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="pt-2 border-t border-stone-100 text-xs text-stone-500 space-y-2">
+                                        <div className="flex justify-between">
+                                            <span>Shift Volume:</span>
+                                            <span className="font-semibold text-stone-900">84 Checks</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span>Average Ticket:</span>
+                                            <span className="font-semibold text-stone-900">$57.40</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span>Avg Table Turn:</span>
+                                            <span className="font-semibold text-stone-900">42 mins</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Center: Live Order Tickets & Coursing */}
+                                <div className="lg:col-span-5 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
+                                            Live Kitchen Expediter (KDS)
+                                        </span>
+                                        <span className="text-xs text-emerald-700 font-medium flex items-center gap-1">
+                                            <Clock className="w-3.5 h-3.5" /> 3 Tickets in Prep
+                                        </span>
+                                    </div>
+
+                                    <div className="space-y-2.5">
+                                        <div className="p-3 rounded-lg border border-stone-200 bg-white shadow-xs">
+                                            <div className="flex justify-between items-center text-xs pb-2 border-b border-stone-100">
+                                                <span className="font-bold text-stone-900">#104 &bull; TBL 14</span>
+                                                <span className="text-[#B53014] font-semibold flex items-center gap-1">
+                                                    <Flame className="w-3 h-3" /> Firing &bull; 4m
+                                                </span>
+                                            </div>
+                                            <div className="mt-2 text-xs space-y-1 text-stone-700">
+                                                <div className="flex justify-between">
+                                                    <span>2x Prime Ribeye (Med-Rare)</span>
+                                                    <span className="font-mono text-stone-500">GRILL</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span>1x Morel Mushroom Tagliolini</span>
+                                                    <span className="font-mono text-stone-500">PASTA</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-3 rounded-lg border border-stone-200 bg-white shadow-xs">
+                                            <div className="flex justify-between items-center text-xs pb-2 border-b border-stone-100">
+                                                <span className="font-bold text-stone-900">#102 &bull; TBL 08</span>
+                                                <span className="text-amber-700 font-semibold flex items-center gap-1">
+                                                    <Clock className="w-3 h-3" /> Course 2 &bull; 11m
+                                                </span>
+                                            </div>
+                                            <div className="mt-2 text-xs space-y-1 text-stone-700">
+                                                <div className="flex justify-between">
+                                                    <span>1x Line-Caught Black Cod</span>
+                                                    <span className="font-mono text-stone-500">FISH</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span>1x Heritage Pork Chop</span>
+                                                    <span className="font-mono text-stone-500">GRILL</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Right: Shift Sales & Real-Time Performance */}
+                                <div className="lg:col-span-3 border-l-0 lg:border-l border-stone-200 pl-0 lg:pl-6 space-y-4">
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-stone-500 block">
+                                        Shift Summary
+                                    </span>
+                                    <div className="p-3.5 rounded-lg bg-stone-50 border border-stone-200 space-y-1">
+                                        <span className="text-xs text-stone-500">Gross Sales Today</span>
+                                        <div className="text-2xl font-extrabold text-stone-900">
+                                            $4,820.50
+                                        </div>
+                                        <span className="text-[11px] text-emerald-600 font-medium">
+                                            &uarr; 14% vs. last Friday
+                                        </span>
+                                    </div>
+
+                                    <div className="space-y-2 text-xs">
+                                        <div className="flex items-center justify-between text-stone-600">
+                                            <span>Card Payments</span>
+                                            <span className="font-semibold text-stone-900">$4,310.00</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-stone-600">
+                                            <span>Cash Drawer</span>
+                                            <span className="font-semibold text-stone-900">$510.50</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-stone-600">
+                                            <span>Tax Collected</span>
+                                            <span className="font-semibold text-stone-900">$428.14</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2">
+                                        <Link
+                                            href="/register"
+                                            className="w-full text-center block text-xs font-semibold bg-stone-900 hover:bg-stone-800 text-white py-2 rounded-lg transition-colors"
+                                        >
+                                            Explore Platform
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 2. CORE CAPABILITIES (SHADCN CARD GRID) */}
+                <section className="w-full px-4 sm:px-6 lg:px-8 py-20 bg-stone-50 border-y border-stone-200">
+                    <div className="max-w-6xl mx-auto">
+                        <div className="text-center max-w-2xl mx-auto mb-14">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#B53014] block mb-2">
+                                Complete Architecture
+                            </span>
+                            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">
+                                Every restaurant station in harmony
+                            </h2>
+                            <p className="text-stone-600 mt-3 text-base">
+                                Eliminate disjointed point solutions. Restrly coordinates orders, kitchen stations, floor layouts, and multi-branch inventory.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {/* Card 1: POS */}
+                            <Card className="bg-white border-stone-200 hover:border-stone-300 transition-shadow hover:shadow-sm">
+                                <CardHeader className="pb-3">
+                                    <div className="w-10 h-10 rounded-lg bg-[#B53014]/10 text-[#B53014] flex items-center justify-center mb-2">
+                                        <Monitor className="w-5 h-5" />
+                                    </div>
+                                    <CardTitle className="text-lg font-bold text-stone-900">
+                                        Point of Sale (POS)
+                                    </CardTitle>
+                                    <CardDescription className="text-stone-600 text-xs">
+                                        Fast touch register with offline resilience
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="text-sm text-stone-600 leading-relaxed">
+                                    Process high-volume shifts with customizable quick-keys, modifier groupings, barcode scanning, and instant receipt printing. Works even if your internet goes offline.
+                                </CardContent>
+                                <CardFooter className="pt-0">
+                                    <Link
+                                        href="/features/restaurant-pos"
+                                        className="text-xs font-semibold text-[#B53014] hover:underline flex items-center gap-1"
+                                    >
+                                        POS features &rarr;
+                                    </Link>
+                                </CardFooter>
+                            </Card>
+
+                            {/* Card 2: KDS */}
+                            <Card className="bg-white border-stone-200 hover:border-stone-300 transition-shadow hover:shadow-sm">
+                                <CardHeader className="pb-3">
+                                    <div className="w-10 h-10 rounded-lg bg-[#B53014]/10 text-[#B53014] flex items-center justify-center mb-2">
+                                        <ChefHat className="w-5 h-5" />
+                                    </div>
+                                    <CardTitle className="text-lg font-bold text-stone-900">
+                                        Kitchen Display System (KDS)
+                                    </CardTitle>
+                                    <CardDescription className="text-stone-600 text-xs">
+                                        Paperless station routing &amp; pacing
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="text-sm text-stone-600 leading-relaxed">
+                                    Route appetizers, mains, and desserts to distinct prep stations. Monitor ticket elapsed times with automatic visual alerts and coursing pacing.
+                                </CardContent>
+                                <CardFooter className="pt-0">
+                                    <Link
+                                        href="/features/kitchen-display"
+                                        className="text-xs font-semibold text-[#B53014] hover:underline flex items-center gap-1"
+                                    >
+                                        KDS features &rarr;
+                                    </Link>
+                                </CardFooter>
+                            </Card>
+
+                            {/* Card 3: Floor & Tables */}
+                            <Card className="bg-white border-stone-200 hover:border-stone-300 transition-shadow hover:shadow-sm">
+                                <CardHeader className="pb-3">
+                                    <div className="w-10 h-10 rounded-lg bg-[#B53014]/10 text-[#B53014] flex items-center justify-center mb-2">
+                                        <LayoutGrid className="w-5 h-5" />
+                                    </div>
+                                    <CardTitle className="text-lg font-bold text-stone-900">
+                                        Table &amp; Floor Management
+                                    </CardTitle>
+                                    <CardDescription className="text-stone-600 text-xs">
+                                        Live visual dining room status
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="text-sm text-stone-600 leading-relaxed">
+                                    Design multi-zone floor maps matching your dining room, patio, and bar. Track occupancy, server section assignments, and turn countdowns in real time.
+                                </CardContent>
+                                <CardFooter className="pt-0">
+                                    <Link
+                                        href="/features/table-management"
+                                        className="text-xs font-semibold text-[#B53014] hover:underline flex items-center gap-1"
+                                    >
+                                        Floor management &rarr;
+                                    </Link>
+                                </CardFooter>
+                            </Card>
+
+                            {/* Card 4: Menu & Modifiers */}
+                            <Card className="bg-white border-stone-200 hover:border-stone-300 transition-shadow hover:shadow-sm">
+                                <CardHeader className="pb-3">
+                                    <div className="w-10 h-10 rounded-lg bg-[#B53014]/10 text-[#B53014] flex items-center justify-center mb-2">
+                                        <UtensilsCrossed className="w-5 h-5" />
+                                    </div>
+                                    <CardTitle className="text-lg font-bold text-stone-900">
+                                        Menu &amp; Modifier Controls
+                                    </CardTitle>
+                                    <CardDescription className="text-stone-600 text-xs">
+                                        Dynamic pricing &amp; 86 management
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="text-sm text-stone-600 leading-relaxed">
+                                    Configure nested modifiers, temperature specs, and allergy warnings. 86 sold-out ingredients with one click across all terminals and QR dining menus.
+                                </CardContent>
+                                <CardFooter className="pt-0">
+                                    <Link
+                                        href="/features"
+                                        className="text-xs font-semibold text-[#B53014] hover:underline flex items-center gap-1"
+                                    >
+                                        Menu management &rarr;
+                                    </Link>
+                                </CardFooter>
+                            </Card>
+
+                            {/* Card 5: Inventory */}
+                            <Card className="bg-white border-stone-200 hover:border-stone-300 transition-shadow hover:shadow-sm">
+                                <CardHeader className="pb-3">
+                                    <div className="w-10 h-10 rounded-lg bg-[#B53014]/10 text-[#B53014] flex items-center justify-center mb-2">
+                                        <Boxes className="w-5 h-5" />
+                                    </div>
+                                    <CardTitle className="text-lg font-bold text-stone-900">
+                                        Recipe &amp; Stock Ledger
+                                    </CardTitle>
+                                    <CardDescription className="text-stone-600 text-xs">
+                                        Automated ingredient depletion
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="text-sm text-stone-600 leading-relaxed">
+                                    Link menu items directly to raw ingredient batches. Every order automatically deducts stock, triggers low-stock reorder thresholds, and calculates food cost margins.
+                                </CardContent>
+                                <CardFooter className="pt-0">
+                                    <Link
+                                        href="/features/inventory-management"
+                                        className="text-xs font-semibold text-[#B53014] hover:underline flex items-center gap-1"
+                                    >
+                                        Inventory controls &rarr;
+                                    </Link>
+                                </CardFooter>
+                            </Card>
+
+                            {/* Card 6: Multi-Branch Analytics */}
+                            <Card className="bg-white border-stone-200 hover:border-stone-300 transition-shadow hover:shadow-sm">
+                                <CardHeader className="pb-3">
+                                    <div className="w-10 h-10 rounded-lg bg-[#B53014]/10 text-[#B53014] flex items-center justify-center mb-2">
+                                        <Building2 className="w-5 h-5" />
+                                    </div>
+                                    <CardTitle className="text-lg font-bold text-stone-900">
+                                        Multi-Location Intelligence
+                                    </CardTitle>
+                                    <CardDescription className="text-stone-600 text-xs">
+                                        Centralized branch management
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="text-sm text-stone-600 leading-relaxed">
+                                    Manage multiple restaurant locations from a single dashboard. Compare branch performance, sync standard menus, and aggregate purchasing power effortlessly.
+                                </CardContent>
+                                <CardFooter className="pt-0">
+                                    <Link
+                                        href="/features/multi-branch-management"
+                                        className="text-xs font-semibold text-[#B53014] hover:underline flex items-center gap-1"
+                                    >
+                                        Multi-branch hub &rarr;
+                                    </Link>
+                                </CardFooter>
+                            </Card>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 3. HOW IT WORKS / OPERATIONAL FLOW */}
+                <section className="w-full px-4 sm:px-6 lg:px-8 py-20 bg-white">
+                    <div className="max-w-6xl mx-auto">
+                        <div className="text-center max-w-2xl mx-auto mb-14">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#B53014] block mb-2">
+                                Operational Flow
+                            </span>
+                            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">
+                                How hospitality moves through Restrly
+                            </h2>
+                            <p className="text-stone-600 mt-3 text-base">
+                                From guest seating to kitchen pacing and end-of-day reconciliation.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            {/* Step 1 */}
+                            <div className="p-6 rounded-xl border border-stone-200 bg-stone-50/50 space-y-3 relative">
+                                <div className="w-8 h-8 rounded-full bg-[#B53014] text-white flex items-center justify-center font-bold text-xs">
+                                    01
+                                </div>
+                                <h3 className="text-base font-bold text-stone-900">
+                                    Seating &amp; Order Intake
+                                </h3>
+                                <p className="text-xs text-stone-600 leading-relaxed">
+                                    Servers select tables on interactive floor plans, take orders with customizable modifier prompts, or guests order directly via table QR codes.
+                                </p>
+                            </div>
+
+                            {/* Step 2 */}
+                            <div className="p-6 rounded-xl border border-stone-200 bg-stone-50/50 space-y-3 relative">
+                                <div className="w-8 h-8 rounded-full bg-stone-900 text-white flex items-center justify-center font-bold text-xs">
+                                    02
+                                </div>
+                                <h3 className="text-base font-bold text-stone-900">
+                                    Instant Kitchen Routing
+                                </h3>
+                                <p className="text-xs text-stone-600 leading-relaxed">
+                                    Orders route to individual station screens (Grill, Saute, Bar) in milliseconds. Automated timers pace appetizers and entrees to prevent rush bottlenecking.
+                                </p>
+                            </div>
+
+                            {/* Step 3 */}
+                            <div className="p-6 rounded-xl border border-stone-200 bg-stone-50/50 space-y-3 relative">
+                                <div className="w-8 h-8 rounded-full bg-stone-900 text-white flex items-center justify-center font-bold text-xs">
+                                    03
+                                </div>
+                                <h3 className="text-base font-bold text-stone-900">
+                                    Split-by-Guest Settlement
+                                </h3>
+                                <p className="text-xs text-stone-600 leading-relaxed">
+                                    Tender payments table-side or at counter stations. Split checks by seat, item, or custom amount without holding up table turnover.
+                                </p>
+                            </div>
+
+                            {/* Step 4 */}
+                            <div className="p-6 rounded-xl border border-stone-200 bg-stone-50/50 space-y-3 relative">
+                                <div className="w-8 h-8 rounded-full bg-stone-900 text-white flex items-center justify-center font-bold text-xs">
+                                    04
+                                </div>
+                                <h3 className="text-base font-bold text-stone-900">
+                                    Auto Stock &amp; Reports
+                                </h3>
+                                <p className="text-xs text-stone-600 leading-relaxed">
+                                    Every settled ticket deducts ingredient inventory in grams. End-of-shift reports reconcile cash drawers, staff tips, and export to accounting systems.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 4. INTERACTIVE POS SANDBOX TERMINAL */}
+                <section
+                    className="w-full px-4 sm:px-6 lg:px-8 py-20 bg-stone-50 border-t border-stone-200"
+                    id="terminal-demo"
+                >
+                    <div className="max-w-6xl mx-auto">
+                        <div className="text-center max-w-2xl mx-auto mb-12">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#B53014] block mb-2">
+                                Hands-On Sandbox
+                            </span>
+                            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">
+                                Test the live register interface
+                            </h2>
+                            <p className="text-stone-600 mt-3 text-base">
+                                Click menu items below to build a check, select a table, and fire a ticket to the virtual kitchen display.
+                            </p>
+                        </div>
+
+                        {/* Interactive Register Frame */}
+                        <div className="bg-white rounded-2xl border border-stone-200 shadow-md overflow-hidden">
+                            {/* Terminal Header */}
+                            <div className="bg-stone-900 text-stone-200 px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+                                <div className="flex items-center gap-3">
+                                    <span className="bg-[#B53014] text-white px-2 py-0.5 rounded font-mono font-bold text-[11px]">
+                                        REGISTER #01
+                                    </span>
+                                    <span className="font-semibold text-white">
+                                        Active Order &bull; Table: {selectedTable.label} ({selectedTable.guests} guests)
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-4 text-stone-400 font-mono text-[11px]">
+                                    <span>DRAWER: $1,450.00</span>
+                                    <span className="text-emerald-400">&bull; SYSTEM READY</span>
+                                </div>
+                            </div>
+
+                            {/* Main Register Body */}
+                            <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[500px]">
+                                {/* Left Side: Category tabs & Item buttons (7 cols) */}
+                                <div className="lg:col-span-7 p-6 border-r border-stone-200 space-y-6">
+                                    {/* Table Selector Pills */}
+                                    <div className="space-y-2">
+                                        <div className="text-xs font-semibold uppercase tracking-wider text-stone-500">
+                                            Select Active Table:
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {DEMO_TABLES.map((table) => (
+                                                <button
+                                                    key={table.id}
+                                                    type="button"
+                                                    onClick={() => setSelectedTable(table)}
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                                                        selectedTable.id === table.id
+                                                            ? 'bg-[#B53014] text-white border-[#B53014]'
+                                                            : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
+                                                    }`}
+                                                >
+                                                    {table.label} ({table.guests}p)
+                                                </button>
                                             ))}
                                         </div>
                                     </div>
 
-                                    {/* Bill Settlement Zone */}
-                                    <div className="pt-space-sm bg-surface-container-low p-space-sm rounded-lg mt-space-sm">
-                                        {/* Split Bill Toggles */}
-                                        <div className="grid grid-cols-3 gap-1 mb-space-sm p-0.5 bg-surface-container rounded-lg">
+                                    {/* Category Filter */}
+                                    <div className="flex flex-wrap gap-2 border-b border-stone-200 pb-4">
+                                        {[
+                                            { id: 'all', label: 'All Items' },
+                                            { id: 'mains', label: 'Mains' },
+                                            { id: 'small_plates', label: 'Small Plates' },
+                                            { id: 'cellar', label: 'Wine & Cellar' },
+                                            { id: 'cocktails', label: 'Cocktails' },
+                                        ].map((cat) => (
                                             <button
+                                                key={cat.id}
                                                 type="button"
-                                                onClick={() => setSplitMode('even')}
-                                                className={`font-body-sm text-body-sm font-bold py-1 rounded transition-colors text-center ${
-                                                    splitMode === 'even'
-                                                        ? 'bg-surface-container-lowest text-on-surface shadow-xs'
-                                                        : 'text-on-surface-variant hover:text-on-surface'
+                                                onClick={() => setSelectedCategory(cat.id as any)}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                                                    selectedCategory === cat.id
+                                                        ? 'bg-stone-900 text-white'
+                                                        : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                                                 }`}
                                             >
-                                                Even ({splitCount})
+                                                {cat.label}
                                             </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Item Grid */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto pr-1">
+                                        {filteredMenu.map((item) => (
                                             <button
+                                                key={item.id}
                                                 type="button"
-                                                onClick={() => setSplitMode('seat')}
-                                                className={`font-body-sm text-body-sm font-semibold py-1 rounded transition-colors text-center ${
-                                                    splitMode === 'seat'
-                                                        ? 'bg-surface-container-lowest text-on-surface shadow-xs'
-                                                        : 'text-on-surface-variant hover:text-on-surface'
-                                                }`}
+                                                onClick={() => handleAddToCart(item)}
+                                                className="group p-3.5 rounded-xl border border-stone-200 bg-stone-50/50 hover:bg-white hover:border-[#B53014] text-left transition-all hover:shadow-xs flex flex-col justify-between"
                                             >
-                                                By Seat
+                                                <div>
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <span className="font-semibold text-stone-900 text-sm group-hover:text-[#B53014]">
+                                                            {item.name}
+                                                        </span>
+                                                        <span className="font-mono text-sm font-bold text-stone-900 shrink-0">
+                                                            ${item.price.toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-stone-500 mt-1 line-clamp-1">
+                                                        {item.desc}
+                                                    </p>
+                                                </div>
+
+                                                <div className="flex items-center gap-1.5 mt-3">
+                                                    {item.tags.map((t) => (
+                                                        <span
+                                                            key={t}
+                                                            className="text-[10px] bg-stone-200/70 text-stone-700 px-1.5 py-0.5 rounded"
+                                                        >
+                                                            {t}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setSplitMode('custom')}
-                                                className={`font-body-sm text-body-sm font-semibold py-1 rounded transition-colors text-center ${
-                                                    splitMode === 'custom'
-                                                        ? 'bg-surface-container-lowest text-on-surface shadow-xs'
-                                                        : 'text-on-surface-variant hover:text-on-surface'
-                                                }`}
-                                            >
-                                                Custom
-                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Right Side: Current Ticket Summary (5 cols) */}
+                                <div className="lg:col-span-5 p-6 bg-stone-50 flex flex-col justify-between">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+                                            <div>
+                                                <span className="text-xs font-bold text-stone-900 block">
+                                                    Current Check: {selectedTable.label}
+                                                </span>
+                                                <span className="text-[11px] text-stone-500">
+                                                    Server: Staff ID #04 &bull; Dine-In
+                                                </span>
+                                            </div>
+                                            {cart.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCart([])}
+                                                    className="text-xs text-stone-500 hover:text-rose-600 flex items-center gap-1 transition-colors"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" /> Clear
+                                                </button>
+                                            )}
                                         </div>
 
-                                        {/* Calculation Rows */}
-                                        <div className="space-y-1 font-mono-ticket text-mono-ticket text-on-surface-variant">
+                                        {/* Cart Items List */}
+                                        <div className="space-y-2.5 max-h-[260px] overflow-y-auto pr-1">
+                                            {cart.length === 0 ? (
+                                                <div className="text-center py-10 text-stone-400 text-xs">
+                                                    <Utensils className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                                                    No items added yet. Click menu items to begin.
+                                                </div>
+                                            ) : (
+                                                cart.map((entry) => (
+                                                    <div
+                                                        key={entry.item.id}
+                                                        className="p-2.5 rounded-lg bg-white border border-stone-200 flex items-center justify-between gap-3 text-xs"
+                                                    >
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="font-semibold text-stone-900 truncate">
+                                                                {entry.item.name}
+                                                            </div>
+                                                            <div className="text-stone-500 text-[11px] font-mono">
+                                                                ${entry.item.price.toFixed(2)} each
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-1.5 shrink-0">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    handleUpdateQuantity(entry.item.id, -1)
+                                                                }
+                                                                className="w-6 h-6 rounded bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center transition-colors"
+                                                            >
+                                                                <Minus className="w-3 h-3" />
+                                                            </button>
+                                                            <span className="w-6 text-center font-bold text-stone-900 font-mono">
+                                                                {entry.count}
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    handleUpdateQuantity(entry.item.id, 1)
+                                                                }
+                                                                className="w-6 h-6 rounded bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center transition-colors"
+                                                            >
+                                                                <Plus className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="font-mono font-bold text-stone-900 w-16 text-right">
+                                                            ${(entry.item.price * entry.count).toFixed(2)}
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Financial Calculation & Action */}
+                                    <div className="pt-4 border-t border-stone-200 space-y-3 mt-4">
+                                        <div className="space-y-1.5 text-xs text-stone-600">
                                             <div className="flex justify-between">
                                                 <span>Subtotal:</span>
-                                                <span className="text-on-surface font-semibold">
+                                                <span className="font-mono font-semibold text-stone-900">
                                                     ${subtotal.toFixed(2)}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span>Tax (8.875%):</span>
-                                                <span className="text-on-surface font-semibold">
+                                                <span className="font-mono font-semibold text-stone-900">
                                                     ${tax.toFixed(2)}
                                                 </span>
                                             </div>
-                                            <div className="flex justify-between text-on-surface font-bold text-body-md pt-1 border-t border-surface-container-high">
-                                                <span>Due Total:</span>
-                                                <span className="font-mono-metric text-headline-sm text-primary">
-                                                    ${dueTotal.toFixed(2)}
+                                            <div className="flex justify-between text-sm font-bold text-stone-900 pt-1.5 border-t border-stone-200">
+                                                <span>Total Due:</span>
+                                                <span className="font-mono text-base text-[#B53014]">
+                                                    ${total.toFixed(2)}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        {/* Fire Payment Action */}
-                                        <button
-                                            type="button"
-                                            onClick={handleFireCheck}
-                                            className={`w-full mt-space-sm py-space-sm rounded-lg font-body-sm text-body-sm font-bold flex items-center justify-center gap-space-xs shadow-md transition-all ${
-                                                paymentFired
-                                                    ? 'bg-secondary text-on-secondary'
-                                                    : 'bg-primary hover:bg-primary-container text-on-primary'
-                                            }`}
-                                        >
-                                            <span className="material-symbols-outlined text-[18px]">
-                                                {paymentFired ? 'check_circle' : 'contactless'}
-                                            </span>
-                                            <span>
-                                                {paymentFired
-                                                    ? 'Check Fired & Thermal Printed!'
-                                                    : `Tap to Fire Check / $${perGuest.toFixed(2)} per guest`}
-                                            </span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* 2. THE ARCHITECTURE GAP / OPERATIONAL FRICTION SECTION */}
-                <section className="w-full px-gutter py-space-3xl bg-surface-container-low">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-space-2xl gap-space-md">
-                            <div>
-                                <span className="font-label-caps text-label-caps uppercase text-primary font-bold tracking-widest block mb-space-xs">
-                                    The Architecture Gap
-                                </span>
-                                <h2 className="font-headline-lg text-3xl sm:text-headline-lg text-on-surface tracking-tight max-w-xl font-bold">
-                                    Fragmented tech stacks bleed dining room margins.
-                                </h2>
-                            </div>
-                            <p className="font-body-md text-body-md text-on-surface-variant max-w-md">
-                                Most restaurants juggle three disparate tablets, disconnected inventory
-                                spreadsheets, and legacy POS terminals that freeze on Friday night at 8 PM.
-                            </p>
-                        </div>
-
-                        {/* Asymmetric Contrast Grid */}
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-lg mb-space-3xl">
-                            {/* Fragmented Stack */}
-                            <div className="lg:col-span-5 bg-surface-container-high p-space-xl rounded-xl flex flex-col justify-between">
-                                <div>
-                                    <div className="inline-flex items-center gap-space-xs bg-error-container text-on-error-container px-space-sm py-1 rounded-full mb-space-lg font-label-caps text-label-caps uppercase font-bold">
-                                        <span className="material-symbols-outlined text-[16px]">close</span>
-                                        The Fragmented Legacy Stack
-                                    </div>
-                                    <h3 className="font-headline-md text-headline-md text-on-surface mb-space-md font-bold">
-                                        Paper chokeholds &amp; modifier drops
-                                    </h3>
-                                    <ul className="space-y-space-md font-body-md text-body-md text-on-surface-variant">
-                                        <li className="flex items-start gap-space-sm">
-                                            <span className="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">
-                                                cancel
-                                            </span>
-                                            <span>Delivery apps on standalone iPads requiring double re-entry by hostesses.</span>
-                                        </li>
-                                        <li className="flex items-start gap-space-sm">
-                                            <span className="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">
-                                                cancel
-                                            </span>
-                                            <span>Inventory is a Monday morning guess, resulting in 86’d high-margin ribeyes mid-service.</span>
-                                        </li>
-                                        <li className="flex items-start gap-space-sm">
-                                            <span className="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">
-                                                cancel
-                                            </span>
-                                            <span>Proprietary hardware leases costing upwards of $4,000 per terminal with locked processing.</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div className="mt-space-xl pt-space-md bg-surface-container-highest p-space-md rounded-lg">
-                                    <span className="font-mono-ticket text-mono-ticket text-on-surface-variant block font-bold">
-                                        Estimated Cost of Stack Chaos:
-                                    </span>
-                                    <span className="font-mono-metric text-mono-metric text-error font-bold block mt-1">
-                                        -$2,850 / month
-                                    </span>
-                                    <span className="font-body-sm text-body-sm text-on-surface-variant">
-                                        in comps, lost kitchen tickets, and food waste
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Unified Mise OS */}
-                            <div className="lg:col-span-7 bg-surface-container-lowest p-space-xl rounded-xl shadow-md flex flex-col justify-between">
-                                <div>
-                                    <div className="inline-flex items-center gap-space-xs bg-secondary-container text-on-secondary-fixed-variant px-space-sm py-1 rounded-full mb-space-lg font-label-caps text-label-caps uppercase font-bold">
-                                        <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                                        The Unified Mise Operating System
-                                    </div>
-                                    <h3 className="font-headline-md text-headline-md text-on-surface mb-space-md font-bold">
-                                        Total synchronization from pass to ledger
-                                    </h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md text-body-md">
-                                        <div className="bg-surface-container-low p-space-md rounded-lg">
-                                            <span className="font-headline-sm text-headline-sm font-bold text-on-surface block mb-1">
-                                                0.12s Sync
-                                            </span>
-                                            <p className="text-on-surface-variant font-body-sm text-body-sm">
-                                                Offline local mesh network keeps kitchen tickets firing even if fiber internet goes down.
-                                            </p>
-                                        </div>
-                                        <div className="bg-surface-container-low p-space-md rounded-lg">
-                                            <span className="font-headline-sm text-headline-sm font-bold text-on-surface block mb-1">
-                                                Zero Aggregator iPads
-                                            </span>
-                                            <p className="text-on-surface-variant font-body-sm text-body-sm">
-                                                UberEats, DoorDash, and online orders route directly to the designated hot line station.
-                                            </p>
-                                        </div>
-                                        <div className="bg-surface-container-low p-space-md rounded-lg">
-                                            <span className="font-headline-sm text-headline-sm font-bold text-on-surface block mb-1">
-                                                Gram Precision
-                                            </span>
-                                            <p className="text-on-surface-variant font-body-sm text-body-sm">
-                                                Each fire deducts 220g wagyu and 40ml truffle glaze, updating commissary stock dynamically.
-                                            </p>
-                                        </div>
-                                        <div className="bg-surface-container-low p-space-md rounded-lg">
-                                            <span className="font-headline-sm text-headline-sm font-bold text-on-surface block mb-1">
-                                                Open Hardware
-                                            </span>
-                                            <p className="text-on-surface-variant font-body-sm text-body-sm">
-                                                Runs on consumer iPads, industrial Sunmi terminals, and standard Epson thermal printers.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="mt-space-xl pt-space-md bg-secondary-container p-space-md rounded-lg text-on-secondary-fixed-variant flex items-center justify-between">
-                                    <div>
-                                        <span className="font-mono-ticket text-mono-ticket block font-bold">
-                                            Average Margin Recovery:
-                                        </span>
-                                        <span className="font-mono-metric text-mono-metric font-bold text-on-secondary-fixed mt-1">
-                                            +4.2% Net Margin
-                                        </span>
-                                    </div>
-                                    <span className="material-symbols-outlined text-secondary text-[36px]">
-                                        trending_up
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 4 Architectural Pillars */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
-                            <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs hover:shadow-md transition-shadow">
-                                <span className="font-mono-metric text-headline-sm text-primary font-bold block mb-space-sm">
-                                    01
-                                </span>
-                                <h4 className="font-headline-sm text-headline-sm text-on-surface font-bold mb-space-xs">
-                                    Sub-Second Checkout
-                                </h4>
-                                <p className="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
-                                    Single-tap split bills by seat, quick-fire modifier flows, and seamless EMV tap payments with tip balancing under 3 seconds.
-                                </p>
-                                <div className="font-mono-ticket text-mono-ticket text-secondary font-bold inline-flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[16px]">bolt</span> Sub-second response
-                                </div>
-                            </div>
-
-                            <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs hover:shadow-md transition-shadow">
-                                <span className="font-mono-metric text-headline-sm text-primary font-bold block mb-space-sm">
-                                    02
-                                </span>
-                                <h4 className="font-headline-sm text-headline-sm text-on-surface font-bold mb-space-xs">
-                                    Live KDS Routing
-                                </h4>
-                                <p className="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
-                                    Pacing tickets across saute, grill, and pastry stations. Built-in allergen shield alerts the chef pass before the ticket is struck.
-                                </p>
-                                <div className="font-mono-ticket text-mono-ticket text-secondary font-bold inline-flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[16px]">timer</span> Pacing automation
-                                </div>
-                            </div>
-
-                            <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs hover:shadow-md transition-shadow">
-                                <span className="font-mono-metric text-headline-sm text-primary font-bold block mb-space-sm">
-                                    03
-                                </span>
-                                <h4 className="font-headline-sm text-headline-sm text-on-surface font-bold mb-space-xs">
-                                    Recipe-to-Gram Ledger
-                                </h4>
-                                <p className="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
-                                    Theoretical vs. actual inventory tracking. Automated supplier purchase orders triggered when dry-age inventory drops below par.
-                                </p>
-                                <div className="font-mono-ticket text-mono-ticket text-secondary font-bold inline-flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[16px]">scale</span> Automatic PO trigger
-                                </div>
-                            </div>
-
-                            <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs hover:shadow-md transition-shadow">
-                                <span className="font-mono-metric text-headline-sm text-primary font-bold block mb-space-sm">
-                                    04
-                                </span>
-                                <h4 className="font-headline-sm text-headline-sm text-on-surface font-bold mb-space-xs">
-                                    Multi-Unit P&amp;L Clarity
-                                </h4>
-                                <p className="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
-                                    Consolidated operator dashboards. Track real-time labor cost against hourly sales velocity across 1 to 50 branch locations.
-                                </p>
-                                <div className="font-mono-ticket text-mono-ticket text-secondary font-bold inline-flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[16px]">hub</span> Group telemetry
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* 3. INTERACTIVE SERVICE CHOREOGRAPHY FLOW */}
-                <section className="w-full px-gutter py-space-3xl bg-surface" id="interactive-flow">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="text-center max-w-3xl mx-auto mb-space-2xl">
-                            <span className="font-label-caps text-label-caps uppercase text-primary font-bold tracking-widest block mb-space-xs">
-                                Service Choreography
-                            </span>
-                            <h2 className="font-headline-lg text-3xl sm:text-headline-lg text-on-surface tracking-tight font-bold">
-                                How hospitality flows with Mise
-                            </h2>
-                            <p className="font-body-lg text-body-lg text-on-surface-variant mt-space-sm">
-                                A continuous, low-friction loop engineered for both front-of-house grace and
-                                back-of-house culinary tempo.
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-center">
-                            {/* Step Selectors Left (5 cols) */}
-                            <div className="lg:col-span-5 space-y-space-md">
-                                <div
-                                    onClick={() => setActiveStage(1)}
-                                    className={`p-space-lg rounded-xl cursor-pointer transition-all ${
-                                        activeStage === 1
-                                            ? 'bg-surface-container-lowest shadow-md'
-                                            : 'bg-surface-container-low hover:bg-surface-container-lowest'
-                                    }`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <span
-                                            className={`font-mono-ticket text-mono-ticket font-bold ${
-                                                activeStage === 1 ? 'text-primary' : 'text-tertiary'
-                                            }`}
-                                        >
-                                            STAGE 01
-                                        </span>
-                                        <span
-                                            className={`material-symbols-outlined text-[20px] ${
-                                                activeStage === 1 ? 'text-primary' : 'text-tertiary'
-                                            }`}
-                                        >
-                                            table_restaurant
-                                        </span>
-                                    </div>
-                                    <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold mt-1">
-                                        Floor &amp; Order Intake
-                                    </h3>
-                                    <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-                                        Visual floor architect with live turn countdowns, quick party resizing, and server section locks.
-                                    </p>
-                                </div>
-
-                                <div
-                                    onClick={() => setActiveStage(2)}
-                                    className={`p-space-lg rounded-xl cursor-pointer transition-all ${
-                                        activeStage === 2
-                                            ? 'bg-surface-container-lowest shadow-md'
-                                            : 'bg-surface-container-low hover:bg-surface-container-lowest'
-                                    }`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <span
-                                            className={`font-mono-ticket text-mono-ticket font-bold ${
-                                                activeStage === 2 ? 'text-primary' : 'text-tertiary'
-                                            }`}
-                                        >
-                                            STAGE 02
-                                        </span>
-                                        <span
-                                            className={`material-symbols-outlined text-[20px] ${
-                                                activeStage === 2 ? 'text-primary' : 'text-tertiary'
-                                            }`}
-                                        >
-                                            soup_kitchen
-                                        </span>
-                                    </div>
-                                    <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold mt-1">
-                                        Kitchen Firing &amp; Line Pacing
-                                    </h3>
-                                    <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-                                        Color-coded ticket pacing with automated delay timers so appetizers and entrees hit the pass together.
-                                    </p>
-                                </div>
-
-                                <div
-                                    onClick={() => setActiveStage(3)}
-                                    className={`p-space-lg rounded-xl cursor-pointer transition-all ${
-                                        activeStage === 3
-                                            ? 'bg-surface-container-lowest shadow-md'
-                                            : 'bg-surface-container-low hover:bg-surface-container-lowest'
-                                    }`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <span
-                                            className={`font-mono-ticket text-mono-ticket font-bold ${
-                                                activeStage === 3 ? 'text-primary' : 'text-tertiary'
-                                            }`}
-                                        >
-                                            STAGE 03
-                                        </span>
-                                        <span
-                                            className={`material-symbols-outlined text-[20px] ${
-                                                activeStage === 3 ? 'text-primary' : 'text-tertiary'
-                                            }`}
-                                        >
-                                            contactless
-                                        </span>
-                                    </div>
-                                    <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold mt-1">
-                                        Split-by-Guest Table Payment
-                                    </h3>
-                                    <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-                                        Mobile handheld settlement. Split bottles across 4 cards or tender individual item lines in seconds.
-                                    </p>
-                                </div>
-
-                                <div
-                                    onClick={() => setActiveStage(4)}
-                                    className={`p-space-lg rounded-xl cursor-pointer transition-all ${
-                                        activeStage === 4
-                                            ? 'bg-surface-container-lowest shadow-md'
-                                            : 'bg-surface-container-low hover:bg-surface-container-lowest'
-                                    }`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <span
-                                            className={`font-mono-ticket text-mono-ticket font-bold ${
-                                                activeStage === 4 ? 'text-primary' : 'text-tertiary'
-                                            }`}
-                                        >
-                                            STAGE 04
-                                        </span>
-                                        <span
-                                            className={`material-symbols-outlined text-[20px] ${
-                                                activeStage === 4 ? 'text-primary' : 'text-tertiary'
-                                            }`}
-                                        >
-                                            receipt_long
-                                        </span>
-                                    </div>
-                                    <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold mt-1">
-                                        Midnight Close &amp; Auto-Ledger
-                                    </h3>
-                                    <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-                                        Blind cash drops, tip pool distributions, and automated journal exports direct to QuickBooks and Xero.
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Dynamic Visual Stage Mockup Right (7 cols) */}
-                            <div className="lg:col-span-7 bg-surface-container-lowest p-space-xl rounded-xl shadow-lg border border-surface-container-highest min-h-[460px] flex flex-col justify-center">
-                                {activeStage === 1 && (
-                                    <div className="space-y-space-md">
-                                        <div className="flex items-center justify-between border-b border-surface-container-high pb-space-sm">
-                                            <span className="font-label-caps text-label-caps uppercase text-secondary font-bold">
-                                                Floor Map: Dining Room East
-                                            </span>
-                                            <span className="font-mono-ticket text-mono-ticket text-on-surface-variant">
-                                                Capacity: 74% Seated
-                                            </span>
-                                        </div>
-                                        <div className="grid grid-cols-3 gap-space-md py-space-sm">
-                                            <div className="p-space-md bg-secondary-container rounded-lg flex flex-col justify-between">
-                                                <span className="font-headline-sm text-headline-sm font-bold text-on-secondary-fixed">
-                                                    T-01 • 4p
-                                                </span>
-                                                <span className="font-mono-ticket text-mono-ticket text-on-secondary-fixed-variant">
-                                                    Appetizers (14m)
-                                                </span>
+                                        {orderFired ? (
+                                            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-semibold flex items-center justify-center gap-2">
+                                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                                <span>Ticket fired to Kitchen KDS &bull; Stock auto-deducted</span>
                                             </div>
-                                            <div className="p-space-md bg-primary-fixed rounded-lg flex flex-col justify-between">
-                                                <span className="font-headline-sm text-headline-sm font-bold text-on-primary-fixed">
-                                                    T-02 • 2p
-                                                </span>
-                                                <span className="font-mono-ticket text-mono-ticket text-on-primary-fixed-variant">
-                                                    Payment Ready
-                                                </span>
-                                            </div>
-                                            <div className="p-space-md bg-surface-container-high rounded-lg flex flex-col justify-between">
-                                                <span className="font-headline-sm text-headline-sm font-bold text-on-surface">
-                                                    T-03 • 6p
-                                                </span>
-                                                <span className="font-mono-ticket text-mono-ticket text-tertiary">
-                                                    Available • Clean
-                                                </span>
-                                            </div>
-                                            <div className="p-space-md bg-secondary-container rounded-lg flex flex-col justify-between">
-                                                <span className="font-headline-sm text-headline-sm font-bold text-on-secondary-fixed">
-                                                    T-04 • 2p
-                                                </span>
-                                                <span className="font-mono-ticket text-mono-ticket text-on-secondary-fixed-variant">
-                                                    Dessert Fired
-                                                </span>
-                                            </div>
-                                            <div className="p-space-md bg-secondary-container rounded-lg flex flex-col justify-between">
-                                                <span className="font-headline-sm text-headline-sm font-bold text-on-secondary-fixed">
-                                                    T-05 • 4p
-                                                </span>
-                                                <span className="font-mono-ticket text-mono-ticket text-on-secondary-fixed-variant">
-                                                    Mains Seated
-                                                </span>
-                                            </div>
-                                            <div className="p-space-md bg-primary-fixed rounded-lg flex flex-col justify-between">
-                                                <span className="font-headline-sm text-headline-sm font-bold text-on-primary-fixed">
-                                                    T-06 • 8p VIP
-                                                </span>
-                                                <span className="font-mono-ticket text-mono-ticket text-on-primary-fixed-variant">
-                                                    Sommelier Pour
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="bg-surface-container-low p-space-sm rounded-lg flex items-center justify-between text-body-sm">
-                                            <span className="font-body-sm text-body-sm text-on-surface">
-                                                Turnover optimization active: Average table turnover down 8 minutes.
-                                            </span>
-                                            <span className="font-mono-ticket text-mono-ticket font-bold text-primary">
-                                                +12 Covers/Night
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {activeStage === 2 && (
-                                    <div className="space-y-space-md">
-                                        <div className="flex items-center justify-between border-b border-surface-container-high pb-space-sm">
-                                            <span className="font-label-caps text-label-caps uppercase text-primary font-bold">
-                                                Live Kitchen Display (KDS 02 - Sauté Station)
-                                            </span>
-                                            <span className="font-mono-ticket text-mono-ticket text-error font-bold">
-                                                RUSH TIME: 08m 12s
-                                            </span>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-space-md">
-                                            <div className="bg-surface-container-low p-space-md rounded-lg shadow-xs">
-                                                <div className="flex justify-between items-center mb-1">
-                                                    <span className="font-headline-sm text-headline-sm font-bold text-on-surface">
-                                                        Ticket #1043 • TBL 04
-                                                    </span>
-                                                    <span className="font-mono-ticket text-mono-ticket text-primary font-bold">
-                                                        FIRE C-2
-                                                    </span>
-                                                </div>
-                                                <div className="space-y-1 text-body-sm text-on-surface-variant font-mono-ticket">
-                                                    <div>• 2x Crispy Duck Breast (Med)</div>
-                                                    <div>• 1x Wild Chashu Broth</div>
-                                                    <div className="text-primary font-bold">
-                                                        • ALLERGY: Pine Nut Severe
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="bg-surface-container-low p-space-md rounded-lg shadow-xs">
-                                                <div className="flex justify-between items-center mb-1">
-                                                    <span className="font-headline-sm text-headline-sm font-bold text-on-surface">
-                                                        Ticket #1044 • BAR 01
-                                                    </span>
-                                                    <span className="font-mono-ticket text-mono-ticket text-secondary font-bold">
-                                                        HOLD C-2
-                                                    </span>
-                                                </div>
-                                                <div className="space-y-1 text-body-sm text-on-surface-variant font-mono-ticket">
-                                                    <div>• 1x Wagyu Smash Burger</div>
-                                                    <div>• 1x Truffle Fries (Extra Aioli)</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="bg-surface-container-low p-space-sm rounded-lg text-body-sm text-on-surface">
-                                            Expediter latency auto-adjusted to prevent cold pass staging.
-                                        </div>
-                                    </div>
-                                )}
-
-                                {activeStage === 3 && (
-                                    <div className="space-y-space-md">
-                                        <div className="flex items-center justify-between border-b border-surface-container-high pb-space-sm">
-                                            <span className="font-label-caps text-label-caps uppercase text-secondary font-bold">
-                                                Handheld Card Terminal • Tap-to-Pay
-                                            </span>
-                                            <span className="font-mono-ticket text-mono-ticket text-secondary font-bold">
-                                                EMV CONTACTLESS READY
-                                            </span>
-                                        </div>
-                                        <div className="bg-surface-container-low p-space-lg rounded-xl text-center space-y-space-sm">
-                                            <span className="font-body-md text-body-md text-on-surface-variant">
-                                                Table 12 • Guest 3 of 4
-                                            </span>
-                                            <div className="font-mono-metric text-mono-metric text-on-surface font-bold">
-                                                $48.25
-                                            </div>
-                                            <div className="flex justify-center gap-space-sm">
-                                                <button
-                                                    type="button"
-                                                    className="bg-surface-container-lowest px-space-md py-1 rounded font-mono-ticket font-bold text-on-surface shadow-xs"
-                                                >
-                                                    18% ($8.68)
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="bg-inverse-surface text-inverse-on-surface px-space-md py-1 rounded font-mono-ticket font-bold"
-                                                >
-                                                    20% ($9.65)
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="bg-surface-container-lowest px-space-md py-1 rounded font-mono-ticket font-bold text-on-surface shadow-xs"
-                                                >
-                                                    25% ($12.06)
-                                                </button>
-                                            </div>
-                                            <p className="font-body-sm text-body-sm text-secondary font-semibold">
-                                                Tapped via Apple Pay • Fast close in 1.4s
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {activeStage === 4 && (
-                                    <div className="space-y-space-md">
-                                        <div className="flex items-center justify-between border-b border-surface-container-high pb-space-sm">
-                                            <span className="font-label-caps text-label-caps uppercase text-on-surface font-bold">
-                                                Nightly Financial Reconcile
-                                            </span>
-                                            <span className="font-mono-ticket text-mono-ticket text-secondary font-bold">
-                                                MATCHED 100%
-                                            </span>
-                                        </div>
-                                        <div className="space-y-space-xs font-mono-ticket text-mono-ticket text-on-surface-variant">
-                                            <div className="flex justify-between p-space-sm bg-surface-container-low rounded">
-                                                <span>Credit &amp; Digital Tender:</span>
-                                                <span className="font-bold text-on-surface">$14,280.40</span>
-                                            </div>
-                                            <div className="flex justify-between p-space-sm bg-surface-container-low rounded">
-                                                <span>Cash Reconciled Drawer:</span>
-                                                <span className="font-bold text-on-surface">$1,450.00 ($0.00 Variance)</span>
-                                            </div>
-                                            <div className="flex justify-between p-space-sm bg-surface-container-low rounded">
-                                                <span>Auto-Export Status:</span>
-                                                <span className="text-secondary font-bold">
-                                                    Xero &amp; QuickBooks Synced (01:14 AM)
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* 4. SUPPORTED HOSPITALITY CONCEPTS */}
-                <section className="w-full px-gutter py-space-3xl bg-surface-container-low">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex flex-col md:flex-row md:items-end justify-between mb-space-2xl gap-space-md">
-                            <div>
-                                <span className="font-label-caps text-label-caps uppercase text-primary font-bold tracking-widest block mb-space-xs">
-                                    Tailored Engine
-                                </span>
-                                <h2 className="font-headline-lg text-3xl sm:text-headline-lg text-on-surface tracking-tight font-bold">
-                                    Designed for how your dining room actually works
-                                </h2>
-                            </div>
-                            <p className="font-body-md text-body-md text-on-surface-variant max-w-sm">
-                                No two dining concepts run identical shifts. Mise adapts to service mechanics, not the other way around.
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-lg">
-                            <div className="bg-surface-container-lowest rounded-xl p-space-lg shadow-xs flex flex-col justify-between">
-                                <div>
-                                    <div className="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary mb-space-md">
-                                        <span className="material-symbols-outlined text-[28px]">wine_bar</span>
-                                    </div>
-                                    <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface mb-space-xs">
-                                        Fine &amp; Casual Dining
-                                    </h3>
-                                    <p className="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
-                                        Dynamic multi-course holding, sommelier cellar reserve lookups, seat-specific firing, and precise guest allergy tracking.
-                                    </p>
-                                </div>
-                                <div className="pt-space-sm border-t border-surface-container font-mono-ticket text-mono-ticket text-on-surface">
-                                    Key Metric: <strong className="text-secondary">+18% faster course turnover</strong>
-                                </div>
-                            </div>
-
-                            <div className="bg-surface-container-lowest rounded-xl p-space-lg shadow-xs flex flex-col justify-between">
-                                <div>
-                                    <div className="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary mb-space-md">
-                                        <span className="material-symbols-outlined text-[28px]">coffee</span>
-                                    </div>
-                                    <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface mb-space-xs">
-                                        Cafés &amp; Bakeries
-                                    </h3>
-                                    <p className="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
-                                        Morning line queue busting, fast milk &amp; roast modifier toggles, barista counter display screens, and batch baking schedule counts.
-                                    </p>
-                                </div>
-                                <div className="pt-space-sm border-t border-surface-container font-mono-ticket text-mono-ticket text-on-surface">
-                                    Key Metric: <strong className="text-secondary">4.2s average queue checkout</strong>
-                                </div>
-                            </div>
-
-                            <div className="bg-surface-container-lowest rounded-xl p-space-lg shadow-xs flex flex-col justify-between">
-                                <div>
-                                    <div className="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary mb-space-md">
-                                        <span className="material-symbols-outlined text-[28px]">takeout_dining</span>
-                                    </div>
-                                    <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface mb-space-xs">
-                                        Cloud &amp; Ghost Kitchens
-                                    </h3>
-                                    <p className="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
-                                        Direct API aggregation for UberEats, DoorDash, and online menus into unified kitchen tickets. Zero manual re-punching.
-                                    </p>
-                                </div>
-                                <div className="pt-space-sm border-t border-surface-container font-mono-ticket text-mono-ticket text-on-surface">
-                                    Key Metric: <strong className="text-secondary">0% re-entry error rate</strong>
-                                </div>
-                            </div>
-
-                            <div className="bg-surface-container-lowest rounded-xl p-space-lg shadow-xs flex flex-col justify-between">
-                                <div>
-                                    <div className="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary mb-space-md">
-                                        <span className="material-symbols-outlined text-[28px]">corporate_fare</span>
-                                    </div>
-                                    <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface mb-space-xs">
-                                        Multi-Unit Hospitality
-                                    </h3>
-                                    <p className="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
-                                        Centralized master menu engineering, cross-branch commissary transfers, global pricing updates, and enterprise role permissions.
-                                    </p>
-                                </div>
-                                <div className="pt-space-sm border-t border-surface-container font-mono-ticket text-mono-ticket text-on-surface">
-                                    Key Metric: <strong className="text-secondary">One-click rollout to all branches</strong>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* 5. HARDWARE AGNOSTIC & ECOSYSTEM PARTNERS */}
-                <section className="w-full px-gutter py-space-3xl bg-surface">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-2xl items-center">
-                            <div className="lg:col-span-5 space-y-space-md">
-                                <span className="font-label-caps text-label-caps uppercase text-primary font-bold tracking-widest block">
-                                    Zero Extortion Guarantee
-                                </span>
-                                <h2 className="font-headline-lg text-3xl sm:text-headline-lg text-on-surface tracking-tight font-bold">
-                                    Bring your own iPads. Or use industrial hardware.
-                                </h2>
-                                <p className="font-body-lg text-body-lg text-on-surface-variant">
-                                    Unlike legacy POS providers that lock you into overpriced proprietary
-                                    hardware leases, Mise runs smoothly on standard off-the-shelf equipment.
-                                </p>
-                                <div className="space-y-space-sm pt-space-xs">
-                                    <div className="flex items-center gap-space-sm font-body-md text-body-md text-on-surface">
-                                        <span className="material-symbols-outlined text-secondary text-[22px]">
-                                            check_box
-                                        </span>
-                                        <span>Works with standard Apple iPads (iOS 15+)</span>
-                                    </div>
-                                    <div className="flex items-center gap-space-sm font-body-md text-body-md text-on-surface">
-                                        <span className="material-symbols-outlined text-secondary text-[22px]">
-                                            check_box
-                                        </span>
-                                        <span>Connects to industry standard Epson &amp; Star Micronics thermal printers</span>
-                                    </div>
-                                    <div className="flex items-center gap-space-sm font-body-md text-body-md text-on-surface">
-                                        <span className="material-symbols-outlined text-secondary text-[22px]">
-                                            check_box
-                                        </span>
-                                        <span>Direct tap-to-pay EMV readers via Stripe Terminal &amp; Square</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="lg:col-span-7 bg-surface-container-low p-space-xl rounded-xl border border-surface-container-high">
-                                <span className="font-label-caps text-label-caps uppercase text-tertiary font-bold tracking-wider block mb-space-md">
-                                    Verified Hardware &amp; Ecosystem Partners
-                                </span>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-space-md">
-                                    <div className="bg-surface-container-lowest p-space-md rounded-lg shadow-xs flex flex-col items-center justify-center text-center">
-                                        <span className="font-headline-sm text-headline-sm font-bold text-on-surface">
-                                            Stripe Terminal
-                                        </span>
-                                        <span className="font-label-caps text-label-caps uppercase text-secondary font-bold mt-1">
-                                            EMV Certified
-                                        </span>
-                                    </div>
-                                    <div className="bg-surface-container-lowest p-space-md rounded-lg shadow-xs flex flex-col items-center justify-center text-center">
-                                        <span className="font-headline-sm text-headline-sm font-bold text-on-surface">
-                                            Star Micronics
-                                        </span>
-                                        <span className="font-label-caps text-label-caps uppercase text-secondary font-bold mt-1">
-                                            KDS &amp; Receipt
-                                        </span>
-                                    </div>
-                                    <div className="bg-surface-container-lowest p-space-md rounded-lg shadow-xs flex flex-col items-center justify-center text-center">
-                                        <span className="font-headline-sm text-headline-sm font-bold text-on-surface">
-                                            Epson Pass
-                                        </span>
-                                        <span className="font-label-caps text-label-caps uppercase text-secondary font-bold mt-1">
-                                            Impact Kitchen
-                                        </span>
-                                    </div>
-                                    <div className="bg-surface-container-lowest p-space-md rounded-lg shadow-xs flex flex-col items-center justify-center text-center">
-                                        <span className="font-headline-sm text-headline-sm font-bold text-on-surface">
-                                            QuickBooks
-                                        </span>
-                                        <span className="font-label-caps text-label-caps uppercase text-secondary font-bold mt-1">
-                                            Auto-Ledger
-                                        </span>
-                                    </div>
-                                    <div className="bg-surface-container-lowest p-space-md rounded-lg shadow-xs flex flex-col items-center justify-center text-center">
-                                        <span className="font-headline-sm text-headline-sm font-bold text-on-surface">
-                                            Xero Accounting
-                                        </span>
-                                        <span className="font-label-caps text-label-caps uppercase text-secondary font-bold mt-1">
-                                            Live Sync
-                                        </span>
-                                    </div>
-                                    <div className="bg-surface-container-lowest p-space-md rounded-lg shadow-xs flex flex-col items-center justify-center text-center">
-                                        <span className="font-headline-sm text-headline-sm font-bold text-on-surface">
-                                            7shifts
-                                        </span>
-                                        <span className="font-label-caps text-label-caps uppercase text-secondary font-bold mt-1">
-                                            Labor &amp; Tips
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* 6. TRANSPARENT PRICING PREVIEW */}
-                <section className="w-full px-gutter py-space-3xl bg-surface-container-low">
-                    <div className="max-w-5xl mx-auto text-center">
-                        <span className="font-label-caps text-label-caps uppercase text-primary font-bold tracking-widest block mb-space-xs">
-                            Simple • Predictable
-                        </span>
-                        <h2 className="font-headline-lg text-3xl sm:text-headline-lg text-on-surface tracking-tight font-bold">
-                            Transparent pricing. Zero hidden transaction gouging.
-                        </h2>
-                        <p className="font-body-md text-body-md text-on-surface-variant mt-space-xs max-w-xl mx-auto">
-                            No setup fees, no required multi-year lockups, and no forced merchant processing fees.
-                        </p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-space-lg mt-space-2xl text-left">
-                            {/* Tier 1 */}
-                            <div className="bg-surface-container-lowest p-space-xl rounded-xl shadow-xs flex flex-col justify-between">
-                                <div>
-                                    <span className="font-label-caps text-label-caps uppercase text-tertiary font-bold block mb-1">
-                                        Café • Single Terminal
-                                    </span>
-                                    <h3 className="font-headline-md text-headline-md font-bold text-on-surface">
-                                        Essential
-                                    </h3>
-                                    <div className="mt-space-md mb-space-lg">
-                                        <span className="font-mono-metric text-headline-lg text-on-surface font-extrabold">
-                                            $69
-                                        </span>
-                                        <span className="font-body-sm text-body-sm text-on-surface-variant">
-                                            / month
-                                        </span>
-                                    </div>
-                                    <ul className="space-y-space-sm font-body-sm text-body-sm text-on-surface-variant">
-                                        <li className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-secondary text-[18px]">
-                                                check
-                                            </span>
-                                            1 POS Station &amp; Card Reader
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-secondary text-[18px]">
-                                                check
-                                            </span>
-                                            Real-time menu management
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-secondary text-[18px]">
-                                                check
-                                            </span>
-                                            Basic shift sales reporting
-                                        </li>
-                                    </ul>
-                                </div>
-                                <Link
-                                    href="/register"
-                                    className="mt-space-xl block text-center bg-surface-container hover:bg-surface-container-high text-on-surface font-body-sm font-semibold py-space-sm rounded-lg transition-colors"
-                                >
-                                    Start Free Trial
-                                </Link>
-                            </div>
-
-                            {/* Tier 2 (Featured) */}
-                            <div className="bg-surface-container-lowest p-space-xl rounded-xl shadow-xl flex flex-col justify-between relative ring-2 ring-primary">
-                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-on-primary font-label-caps text-label-caps uppercase px-space-md py-0.5 rounded-full font-bold">
-                                    Most Popular
-                                </div>
-                                <div>
-                                    <span className="font-label-caps text-label-caps uppercase text-primary font-bold block mb-1">
-                                        Full Service • KDS Included
-                                    </span>
-                                    <h3 className="font-headline-md text-headline-md font-bold text-on-surface">
-                                        Professional
-                                    </h3>
-                                    <div className="mt-space-md mb-space-lg">
-                                        <span className="font-mono-metric text-headline-lg text-on-surface font-extrabold">
-                                            $149
-                                        </span>
-                                        <span className="font-body-sm text-body-sm text-on-surface-variant">
-                                            / month
-                                        </span>
-                                    </div>
-                                    <ul className="space-y-space-sm font-body-sm text-body-sm text-on-surface-variant">
-                                        <li className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-secondary text-[18px]">
-                                                check
-                                            </span>
-                                            Unlimited terminals &amp; floor maps
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-secondary text-[18px]">
-                                                check
-                                            </span>
-                                            Up to 3 Kitchen Display screens (KDS)
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-secondary text-[18px]">
-                                                check
-                                            </span>
-                                            Recipe-level gram inventory ledger
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-secondary text-[18px]">
-                                                check
-                                            </span>
-                                            Split-by-seat handheld checkout
-                                        </li>
-                                    </ul>
-                                </div>
-                                <Link
-                                    href="/register"
-                                    className="mt-space-xl block text-center bg-primary hover:bg-primary-container text-on-primary font-body-sm font-semibold py-space-sm rounded-lg shadow transition-colors"
-                                >
-                                    Start Free Trial
-                                </Link>
-                            </div>
-
-                            {/* Tier 3 */}
-                            <div className="bg-surface-container-lowest p-space-xl rounded-xl shadow-xs flex flex-col justify-between">
-                                <div>
-                                    <span className="font-label-caps text-label-caps uppercase text-tertiary font-bold block mb-1">
-                                        Multi-Unit • Group Ops
-                                    </span>
-                                    <h3 className="font-headline-md text-headline-md font-bold text-on-surface">
-                                        Hospitality Group
-                                    </h3>
-                                    <div className="mt-space-md mb-space-lg">
-                                        <span className="font-mono-metric text-headline-lg text-on-surface font-extrabold">
-                                            $289
-                                        </span>
-                                        <span className="font-body-sm text-body-sm text-on-surface-variant">
-                                            / month / location
-                                        </span>
-                                    </div>
-                                    <ul className="space-y-space-sm font-body-sm text-body-sm text-on-surface-variant">
-                                        <li className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-secondary text-[18px]">
-                                                check
-                                            </span>
-                                            Centralized multi-branch commissary
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-secondary text-[18px]">
-                                                check
-                                            </span>
-                                            Consolidated multi-location P&amp;L
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-secondary text-[18px]">
-                                                check
-                                            </span>
-                                            Dedicated restaurant success architect
-                                        </li>
-                                    </ul>
-                                </div>
-                                <Link
-                                    href="/pricing"
-                                    className="mt-space-xl block text-center bg-surface-container hover:bg-surface-container-high text-on-surface font-body-sm font-semibold py-space-sm rounded-lg transition-colors"
-                                >
-                                    Compare All Features
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* 7. FREQUENTLY ASKED QUESTIONS */}
-                <section className="w-full px-gutter py-space-3xl bg-surface">
-                    <div className="max-w-4xl mx-auto">
-                        <div className="text-center mb-space-2xl">
-                            <span className="font-label-caps text-label-caps uppercase text-primary font-bold tracking-widest block mb-space-xs">
-                                Clear Answers
-                            </span>
-                            <h2 className="font-headline-lg text-3xl sm:text-headline-lg text-on-surface tracking-tight font-bold">
-                                Frequently Asked Questions
-                            </h2>
-                        </div>
-                        <div className="space-y-space-md">
-                            {[
-                                {
-                                    q: 'What happens if our restaurant internet cuts out during Friday dinner rush?',
-                                    a: 'Mise operates on an offline-first local mesh architecture. Even if your ISP drops completely, terminals communicate directly with kitchen printers and KDS screens over your local router. Orders fire, checks print, and offline card taps store safely in encrypted storage, automatically re-syncing to the cloud once connectivity resumes.',
-                                },
-                                {
-                                    q: 'How fast can we migrate our existing menu and nested modifier groups?',
-                                    a: 'Our concierge culinary team handles full menu ingestion within 24 hours. Simply email us your PDF menu or export from your previous POS (Toast, Square, Micros, or Lightspeed). We map all coursing flags, modifier groups, and allergen tags so you can launch immediately.',
-                                },
-                                {
-                                    q: 'Can we test Mise alongside our current POS without breaking operations?',
-                                    a: 'Yes. We frequently set up parallel pilot trials for dining rooms. You can run Mise on a single patio station or test our Kitchen Display System alongside your existing setup during our 14-day zero-risk trial period.',
-                                },
-                            ].map((faq, index) => {
-                                const isOpen = openFaq === index;
-                                return (
-                                    <div
-                                        key={index}
-                                        className="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs border border-surface-container-high"
-                                    >
-                                        <button
-                                            type="button"
-                                            onClick={() => setOpenFaq(isOpen ? null : index)}
-                                            className="w-full flex items-center justify-between text-left group"
-                                        >
-                                            <span className="font-headline-sm text-headline-sm font-bold text-on-surface group-hover:text-primary transition-colors">
-                                                {faq.q}
-                                            </span>
-                                            <span className="material-symbols-outlined text-tertiary group-hover:text-primary transition-transform">
-                                                {isOpen ? 'expand_less' : 'expand_more'}
-                                            </span>
-                                        </button>
-                                        {isOpen && (
-                                            <div className="mt-space-md text-on-surface-variant font-body-md text-body-md pt-space-sm border-t border-surface-container-low leading-relaxed">
-                                                {faq.a}
-                                            </div>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={handleFireTicket}
+                                                disabled={cart.length === 0}
+                                                className="w-full bg-[#B53014] hover:bg-[#9E2A11] active:bg-[#85230E] disabled:opacity-50 disabled:pointer-events-none text-white text-xs font-bold py-3 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <Flame className="w-4 h-4" />
+                                                <span>Fire Order to Kitchen ({cart.reduce((a, b) => a + b.count, 0)} items)</span>
+                                            </button>
                                         )}
                                     </div>
-                                );
-                            })}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                {/* 8. FINAL HIGH-IMPACT CONVERSION BANNER */}
-                <section className="w-full px-gutter py-space-3xl bg-inverse-surface text-inverse-on-surface">
-                    <div className="max-w-5xl mx-auto flex flex-col items-center text-center">
-                        <span className="font-label-caps text-label-caps uppercase bg-primary text-on-primary px-space-sm py-1 rounded font-bold mb-space-md">
-                            Dinner Rush Ready
-                        </span>
-                        <h2 className="font-display-xl text-4xl sm:text-5xl lg:text-display-xl tracking-tight text-surface-container-lowest max-w-3xl font-extrabold">
-                            Ready to quiet the dinner rush?
+                {/* 5. TRANSPARENT PRICING PREVIEW */}
+                <section className="w-full px-4 sm:px-6 lg:px-8 py-20 bg-white">
+                    <div className="max-w-6xl mx-auto">
+                        <div className="text-center max-w-2xl mx-auto mb-12">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#B53014] block mb-2">
+                                Simple &amp; Predictable
+                            </span>
+                            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">
+                                Honest pricing for every restaurant scale
+                            </h2>
+                            <p className="text-stone-600 mt-3 text-base">
+                                No proprietary hardware penalties, no hidden monthly lock-ins, and no arbitrary per-transaction markup.
+                            </p>
+
+                            {/* Billing Cycle Switcher */}
+                            <div className="mt-8 inline-flex items-center p-1 rounded-full bg-stone-100 border border-stone-200">
+                                <button
+                                    type="button"
+                                    onClick={() => setBillingCycle('monthly')}
+                                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                                        billingCycle === 'monthly'
+                                            ? 'bg-white text-stone-900 shadow-xs'
+                                            : 'text-stone-600 hover:text-stone-900'
+                                    }`}
+                                >
+                                    Monthly Billing
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setBillingCycle('yearly')}
+                                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                                        billingCycle === 'yearly'
+                                            ? 'bg-white text-stone-900 shadow-xs'
+                                            : 'text-stone-600 hover:text-stone-900'
+                                    }`}
+                                >
+                                    <span>Annual Billing</span>
+                                    <span className="bg-[#B53014]/10 text-[#B53014] text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                                        Save 20%
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Pricing Tiers Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {/* Tier 1: Starter */}
+                            <Card className="bg-white border-stone-200 flex flex-col justify-between">
+                                <CardHeader>
+                                    <div className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1">
+                                        Café &bull; Single Register
+                                    </div>
+                                    <CardTitle className="text-xl font-bold text-stone-900">
+                                        Starter
+                                    </CardTitle>
+                                    <CardDescription className="text-xs text-stone-600 mt-1">
+                                        Essential touch POS and shift sales reporting for small coffee shops and food trucks.
+                                    </CardDescription>
+                                    <div className="mt-4">
+                                        <span className="text-3xl font-extrabold text-stone-900">
+                                            {billingCycle === 'yearly' ? '$55' : '$69'}
+                                        </span>
+                                        <span className="text-xs text-stone-500 ml-1">/ month</span>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-2.5 text-xs text-stone-600">
+                                    <div className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
+                                        <span>1 POS Station &amp; Card Reader</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
+                                        <span>Menu &amp; modifier builder</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
+                                        <span>Receipt printer integration</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
+                                        <span>Daily shift closing reports</span>
+                                    </div>
+                                </CardContent>
+                                <CardFooter>
+                                    <Link
+                                        href="/register"
+                                        className="w-full text-center py-2.5 rounded-lg border border-stone-300 hover:bg-stone-50 text-stone-900 text-xs font-semibold transition-colors"
+                                    >
+                                        Start 14-Day Free Trial
+                                    </Link>
+                                </CardFooter>
+                            </Card>
+
+                            {/* Tier 2: Professional (Featured) */}
+                            <Card className="bg-white border-2 border-[#B53014] shadow-md flex flex-col justify-between relative">
+                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#B53014] text-white text-[11px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full">
+                                    Most Popular
+                                </div>
+                                <CardHeader>
+                                    <div className="text-xs font-bold uppercase tracking-wider text-[#B53014] mb-1">
+                                        Full Service &bull; KDS Included
+                                    </div>
+                                    <CardTitle className="text-xl font-bold text-stone-900">
+                                        Professional
+                                    </CardTitle>
+                                    <CardDescription className="text-xs text-stone-600 mt-1">
+                                        Complete floor management, kitchen routing screens, and inventory ledger.
+                                    </CardDescription>
+                                    <div className="mt-4">
+                                        <span className="text-3xl font-extrabold text-stone-900">
+                                            {billingCycle === 'yearly' ? '$119' : '$149'}
+                                        </span>
+                                        <span className="text-xs text-stone-500 ml-1">/ month</span>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-2.5 text-xs text-stone-600">
+                                    <div className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
+                                        <span>Unlimited POS terminals &amp; floor maps</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
+                                        <span>Up to 3 Kitchen Display screens (KDS)</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
+                                        <span>Recipe-level gram inventory ledger</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
+                                        <span>Handheld split-by-guest checkout</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
+                                        <span>Staff shift scheduling &amp; role permissions</span>
+                                    </div>
+                                </CardContent>
+                                <CardFooter>
+                                    <Link
+                                        href="/register"
+                                        className="w-full text-center py-2.5 rounded-lg bg-[#B53014] hover:bg-[#9E2A11] text-white text-xs font-semibold shadow-xs transition-colors"
+                                    >
+                                        Start 14-Day Free Trial
+                                    </Link>
+                                </CardFooter>
+                            </Card>
+
+                            {/* Tier 3: Multi-Location */}
+                            <Card className="bg-white border-stone-200 flex flex-col justify-between">
+                                <CardHeader>
+                                    <div className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1">
+                                        Multi-Location &bull; Enterprise
+                                    </div>
+                                    <CardTitle className="text-xl font-bold text-stone-900">
+                                        Hospitality Group
+                                    </CardTitle>
+                                    <CardDescription className="text-xs text-stone-600 mt-1">
+                                        Centralized operations, shared commissary kitchen stock, and group P&amp;L reporting.
+                                    </CardDescription>
+                                    <div className="mt-4">
+                                        <span className="text-3xl font-extrabold text-stone-900">
+                                            {billingCycle === 'yearly' ? '$239' : '$289'}
+                                        </span>
+                                        <span className="text-xs text-stone-500 ml-1">/ mo / branch</span>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-2.5 text-xs text-stone-600">
+                                    <div className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
+                                        <span>Centralized multi-branch commissary stock</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
+                                        <span>Consolidated group financial reporting</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
+                                        <span>Unlimited KDS screens &amp; printers</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
+                                        <span>Dedicated restaurant onboarding architect</span>
+                                    </div>
+                                </CardContent>
+                                <CardFooter>
+                                    <Link
+                                        href="/contact"
+                                        className="w-full text-center py-2.5 rounded-lg border border-stone-300 hover:bg-stone-50 text-stone-900 text-xs font-semibold transition-colors"
+                                    >
+                                        Contact Restaurant Sales
+                                    </Link>
+                                </CardFooter>
+                            </Card>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 6. GENUINE SHADCN ACCORDION FAQ */}
+                <section className="w-full px-4 sm:px-6 lg:px-8 py-20 bg-stone-50 border-t border-stone-200">
+                    <div className="max-w-4xl mx-auto">
+                        <div className="text-center max-w-2xl mx-auto mb-12">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#B53014] block mb-2">
+                                Clear Answers
+                            </span>
+                            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">
+                                Frequently asked questions
+                            </h2>
+                            <p className="text-stone-600 mt-3 text-base">
+                                Everything you need to know about Restrly architecture, hardware, and onboarding.
+                            </p>
+                        </div>
+
+                        <div className="bg-white rounded-xl border border-stone-200 p-6 sm:p-8 shadow-xs">
+                            <Accordion type="single" collapsible className="w-full space-y-2">
+                                <AccordionItem value="item-1">
+                                    <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
+                                        What hardware does Restrly support?
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        Restrly runs smoothly on standard modern hardware: iPads, Android tablets, touch displays, Mac, Windows, or Linux browsers. We connect seamlessly with standard ESC/POS thermal receipt printers (Epson, Star Micronics), cash drawers, and barcode scanners without proprietary hardware markups.
+                                    </AccordionContent>
+                                </AccordionItem>
+
+                                <AccordionItem value="item-2">
+                                    <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
+                                        What happens if our restaurant internet drops during peak service?
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        Restrly includes robust offline-resilient local sync. Even if your internet connection cuts out, registers continue firing tickets directly to kitchen displays and printers across your local Wi-Fi router. All transactions buffer securely and auto-synchronize to the cloud when connectivity returns.
+                                    </AccordionContent>
+                                </AccordionItem>
+
+                                <AccordionItem value="item-3">
+                                    <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
+                                        Can we import our existing menu and nested modifier groups?
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        Yes. You can import menus via CSV spreadsheet or export from Toast, Square, Lightspeed, or Clover. Our onboarding team also provides concierge assistance to structure nested modifiers, coursing sequences, and ingredient recipes before your go-live date.
+                                    </AccordionContent>
+                                </AccordionItem>
+
+                                <AccordionItem value="item-4">
+                                    <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
+                                        How does inventory deduction work with recipes and modifiers?
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        Every menu item and modifier can be tied directly to ingredient batches in your inventory ledger. When a guest orders a burger with extra cheese and gluten-free bread, Restrly calculates and deducts the precise gram amounts from raw stock and recalculates plate margin in real time.
+                                    </AccordionContent>
+                                </AccordionItem>
+
+                                <AccordionItem value="item-5">
+                                    <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
+                                        Can I manage multiple restaurant branches or commissary kitchens?
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        Yes. Restrly features a centralized multi-branch architecture. You can switch between locations in seconds, push standardized menus or seasonal specials to specific branches, and analyze consolidated sales reports or individual store margins.
+                                    </AccordionContent>
+                                </AccordionItem>
+
+                                <AccordionItem value="item-6">
+                                    <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
+                                        Are there long-term contracts or cancellation fees?
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        No. All standard Restrly subscriptions operate on month-to-month or annual terms with zero cancellation fees. You can upgrade, downgrade, or cancel whenever your operational needs change.
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 7. FINAL HIGH-CONVERSION SECTION */}
+                <section className="w-full px-4 sm:px-6 lg:px-8 py-20 bg-stone-900 text-white">
+                    <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
+                        <div className="w-12 h-12 rounded-xl bg-[#B53014] text-white flex items-center justify-center mb-6">
+                            <UtensilsCrossed className="w-6 h-6" />
+                        </div>
+
+                        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight max-w-2xl leading-tight">
+                            Ready to modernize your restaurant operations?
                         </h2>
-                        <p className="font-body-lg text-body-lg text-surface-dim max-w-2xl mt-space-md mb-space-2xl">
-                            Join over 1,200 ambitious restaurateurs running calm, high-velocity dining
-                            rooms on Mise OS. Zero hardware lock-in. Setup in under 20 minutes.
+
+                        <p className="text-stone-300 mt-4 max-w-xl text-base leading-relaxed">
+                            Join leading restaurateurs who rely on Restrly for sub-second POS velocity, real-time kitchen coordination, and inventory precision.
                         </p>
-                        <div className="flex flex-col sm:flex-row items-center gap-space-md w-full justify-center">
+
+                        <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 w-full justify-center">
                             <Link
                                 href="/register"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold px-space-2xl py-space-md rounded-lg shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#B53014] hover:bg-[#9E2A11] active:bg-[#85230E] text-white text-sm font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors"
                             >
-                                <span>Start Free Trial</span>
-                                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                                <span>Start 14-Day Free Trial</span>
+                                <ArrowRight className="w-4 h-4" />
                             </Link>
                             <Link
                                 href="/contact"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs bg-surface-container-high/20 hover:bg-surface-container-high/30 text-surface-container-lowest font-body-sm text-body-sm font-semibold px-space-xl py-space-md rounded-lg transition-colors"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-stone-800 hover:bg-stone-700 text-white text-sm font-semibold px-6 py-3 rounded-lg border border-stone-700 transition-colors"
                             >
-                                <span className="material-symbols-outlined text-[18px]">support_agent</span>
-                                <span>Talk to a Hospitality Specialist</span>
+                                <span>Schedule Product Walkthrough</span>
                             </Link>
                         </div>
-                        <div className="mt-space-xl font-mono-ticket text-mono-ticket text-surface-dim">
-                            No credit card required • 14-day full access • Complimentary 24-hr menu concierge
-                        </div>
+
+                        <p className="text-xs text-stone-400 mt-4">
+                            No credit card required &bull; Immediate setup &bull; Cancel anytime
+                        </p>
                     </div>
                 </section>
             </div>

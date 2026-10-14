@@ -15,6 +15,7 @@ class DiningTrackingService
         protected CustomerStatusMapper $status,
         protected DiningAuthorization $auth,
         protected QrDiningSettings $settings,
+        protected QrPaymentService $payments,
     ) {}
 
     /**
@@ -58,6 +59,8 @@ class DiningTrackingService
         });
 
         $lastUpdated = $orders->max(fn ($order) => $order->updated_at?->getTimestamp() ?? 0);
+        $currency = $session->orders()->value('currency') ?? 'USD';
+        $tenant = $session->tenant;
 
         return [
             'session' => [
@@ -69,8 +72,10 @@ class DiningTrackingService
             'totals' => [
                 'outstanding' => round($outstanding, 2),
                 'paid' => round($paid, 2),
-                'currency' => $session->orders()->value('currency') ?? 'USD',
+                'currency' => $currency,
             ],
+            // Methods the diner may pay with (enabled tenant gateways + cash).
+            'payment_options' => $tenant ? $this->payments->optionsFor($tenant, $currency) : [],
             'bill' => $this->bill($session),
             'live_tracking' => $this->settings->liveTracking(),
             'updated_at' => now()->toIso8601String(),

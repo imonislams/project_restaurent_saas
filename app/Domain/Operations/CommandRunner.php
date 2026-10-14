@@ -17,21 +17,55 @@ class CommandRunner
     public function curated(): array
     {
         return [
-            'migrate' => ['label' => 'Run migrations', 'command' => 'php artisan migrate --force', 'danger' => true],
-            'migrate_status' => ['label' => 'Migration status', 'command' => 'php artisan migrate:status', 'danger' => false],
-            'optimize_clear' => ['label' => 'Clear caches', 'command' => 'php artisan optimize:clear', 'danger' => false],
-            'config_cache' => ['label' => 'Cache config', 'command' => 'php artisan config:cache', 'danger' => false],
-            'route_cache' => ['label' => 'Cache routes', 'command' => 'php artisan route:cache', 'danger' => false],
-            'view_cache' => ['label' => 'Cache views', 'command' => 'php artisan view:cache', 'danger' => false],
-            'queue_restart' => ['label' => 'Restart queue workers', 'command' => 'php artisan queue:restart', 'danger' => false],
-            'queue_retry' => ['label' => 'Retry all failed jobs', 'command' => 'php artisan queue:retry all', 'danger' => false],
-            'storage_link' => ['label' => 'Link storage', 'command' => 'php artisan storage:link', 'danger' => false],
-            'backup' => ['label' => 'Run database backup', 'command' => 'php artisan db:backup', 'danger' => false],
-            'verify_backup' => ['label' => 'Verify last backup', 'command' => 'php artisan db:verify-backup', 'danger' => false],
-            'prune_backups' => ['label' => 'Prune expired backups', 'command' => 'php artisan backups:prune', 'danger' => false],
-            'platform_check' => ['label' => 'Platform readiness check', 'command' => 'php artisan platform:check', 'danger' => false],
-            'npm_build' => ['label' => 'Build frontend (npm run build)', 'command' => 'npm run build', 'danger' => true],
+            'migrate' => ['label' => 'Run migrations', 'command' => '{php} artisan migrate --force', 'danger' => true],
+            'migrate_status' => ['label' => 'Migration status', 'command' => '{php} artisan migrate:status', 'danger' => false],
+            'optimize_clear' => ['label' => 'Clear caches', 'command' => '{php} artisan optimize:clear', 'danger' => false],
+            'config_cache' => ['label' => 'Cache config', 'command' => '{php} artisan config:cache', 'danger' => false],
+            'route_cache' => ['label' => 'Cache routes', 'command' => '{php} artisan route:cache', 'danger' => false],
+            'view_cache' => ['label' => 'Cache views', 'command' => '{php} artisan view:cache', 'danger' => false],
+            'queue_restart' => ['label' => 'Restart queue workers', 'command' => '{php} artisan queue:restart', 'danger' => false],
+            'queue_retry' => ['label' => 'Retry all failed jobs', 'command' => '{php} artisan queue:retry all', 'danger' => false],
+            'storage_link' => ['label' => 'Link storage', 'command' => '{php} artisan storage:link --force', 'danger' => false],
+            'backup' => ['label' => 'Run database backup', 'command' => '{php} artisan db:backup', 'danger' => false],
+            'verify_backup' => ['label' => 'Verify last backup', 'command' => '{php} artisan db:verify-backup', 'danger' => false],
+            'prune_backups' => ['label' => 'Prune expired backups', 'command' => '{php} artisan backups:prune', 'danger' => false],
+            'platform_check' => ['label' => 'Platform readiness check', 'command' => '{php} artisan platform:check', 'danger' => false],
+            'npm_build' => ['label' => 'Build frontend (npm run build)', 'command' => '{npm} run build', 'danger' => true],
         ];
+    }
+
+    /**
+     * Resolve the {php} / {npm} placeholders to real executables so a command
+     * actually runs even when the webserver's PATH does not include them.
+     */
+    public function resolve(string $command): string
+    {
+        return str_replace(['{php}', '{npm}'], [$this->phpBinary(), $this->npmBinary()], $command);
+    }
+
+    public function phpBinary(): string
+    {
+        $configured = config('operations.php_binary');
+
+        if (is_string($configured) && $configured !== '') {
+            return $configured;
+        }
+
+        if (PHP_SAPI === 'cli') {
+            return PHP_BINARY;
+        }
+
+        // Under fpm/cgi, look for the sibling CLI binary (MAMP: php-fpm → php).
+        $sibling = \dirname(PHP_BINARY).DIRECTORY_SEPARATOR.'php';
+
+        return is_file($sibling) ? $sibling : 'php';
+    }
+
+    public function npmBinary(): string
+    {
+        $configured = config('operations.npm_binary');
+
+        return is_string($configured) && $configured !== '' ? $configured : 'npm';
     }
 
     /** Command prefixes permitted for the advanced terminal. @return list<string> */
@@ -72,6 +106,7 @@ class CommandRunner
         $output = '';
 
         try {
+            $command = $this->resolve($command);
             $process = Process::fromShellCommandline($command, base_path());
             $process->setTimeout(120);
             $process->setIdleTimeout(120);

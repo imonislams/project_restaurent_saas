@@ -28,6 +28,7 @@ class PlatformReadinessCheck extends Command
             'Database' => ($checks['database']['ok'] ?? false) ? 'ok' : 'FAILED',
             'Cache' => ($checks['cache']['ok'] ?? false) ? 'ok' : 'FAILED',
             'Storage' => ($checks['storage']['ok'] ?? false) ? 'ok' : 'FAILED',
+            'Public files' => ($checks['public_storage']['linked'] ?? false) ? 'ok' : 'missing storage:link',
             'Queued jobs' => (string) $queuedJobs,
             'Failed jobs' => $failedJobs === 0 ? 'none' : "{$failedJobs} — review",
             'Last backup' => $lastBackup ? ($lastBackup->created_at?->diffForHumans() ?? 'unknown') : 'none',

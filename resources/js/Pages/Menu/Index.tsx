@@ -27,7 +27,7 @@ import {
     Trash2,
     X,
 } from 'lucide-react';
-import { FormEventHandler, useMemo, useState } from 'react';
+import { FormEventHandler, useMemo, useRef, useState } from 'react';
 import { cn } from '@/Components/ui/cn';
 
 // --- Interfaces ---
@@ -65,6 +65,7 @@ interface Product {
     is_available: boolean;
     labels: string[];
     sort_order: number;
+    image_url?: string | null;
     variants: Variant[];
 }
 
@@ -100,6 +101,23 @@ export default function MenuIndex({
     const [editing, setEditing] = useState<Product | 'new' | null>(null);
     const [showCategoriesModal, setShowCategoriesModal] = useState(false);
     const [pendingDelete, setPendingDelete] = useState<Product | null>(null);
+    const importRef = useRef<HTMLInputElement>(null);
+    const [importing, setImporting] = useState(false);
+
+    const handleImport = (file: File | null) => {
+        if (!file) return;
+        const data = new FormData();
+        data.append('file', file);
+        setImporting(true);
+        router.post(route('menu.products.import'), data, {
+            forceFormData: true,
+            preserveScroll: true,
+            onFinish: () => {
+                setImporting(false);
+                if (importRef.current) importRef.current.value = '';
+            },
+        });
+    };
 
     const applyFilters = (overrides: Record<string, unknown> = {}) => {
         router.get(
@@ -129,25 +147,42 @@ export default function MenuIndex({
                     title="Menu & Products"
                     description="Configure restaurant catalog, multi-channel pricing, variants, and stock tracking."
                     actions={
-                        canManage ? (
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setShowCategoriesModal(true)}
-                                >
-                                    <Layers className="mr-1.5 h-3.5 w-3.5" />
-                                    Categories ({categories.length})
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    onClick={() => setEditing('new')}
-                                >
-                                    <Plus className="mr-1.5 h-3.5 w-3.5" />
-                                    New Product
-                                </Button>
-                            </div>
-                        ) : undefined
+                        <div className="flex flex-wrap items-center gap-2">
+                            <a
+                                href={route('menu.products.template')}
+                                className="inline-flex h-8 items-center rounded-md border border-input bg-background px-2.5 text-xs font-semibold text-foreground shadow-2xs transition-colors hover:bg-accent"
+                            >
+                                Template
+                            </a>
+                            <a
+                                href={route('menu.products.export', { format: 'csv' })}
+                                className="inline-flex h-8 items-center rounded-md border border-input bg-background px-2.5 text-xs font-semibold text-foreground shadow-2xs transition-colors hover:bg-accent"
+                            >
+                                Export CSV
+                            </a>
+                            <a
+                                href={route('menu.products.export', { format: 'pdf' })}
+                                className="inline-flex h-8 items-center rounded-md border border-input bg-background px-2.5 text-xs font-semibold text-foreground shadow-2xs transition-colors hover:bg-accent"
+                            >
+                                Export PDF
+                            </a>
+                            {canManage && (
+                                <>
+                                    <input ref={importRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => handleImport(e.target.files?.[0] ?? null)} />
+                                    <Button variant="outline" size="sm" disabled={importing} onClick={() => importRef.current?.click()}>
+                                        {importing ? 'Importing…' : 'Import CSV'}
+                                    </Button>
+                                    <Button variant="outline" size="sm" onClick={() => setShowCategoriesModal(true)}>
+                                        <Layers className="mr-1.5 h-3.5 w-3.5" />
+                                        Categories ({categories.length})
+                                    </Button>
+                                    <Button size="sm" onClick={() => setEditing('new')}>
+                                        <Plus className="mr-1.5 h-3.5 w-3.5" />
+                                        New Product
+                                    </Button>
+                                </>
+                            )}
+                        </div>
                     }
                 />
             }
@@ -611,6 +646,7 @@ function ProductEditorModal({
                 </div>
 
                 <form onSubmit={submit} className="mt-4 space-y-4">
+                    {product && <ProductImageUploader product={product} />}
                     {/* Basic Info */}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div className="sm:col-span-2">
@@ -1033,5 +1069,58 @@ function CategoryManagerModal({
                 </div>
             </div>
         </Modal>
+    );
+}
+
+/**
+ * Product image upload / replace / remove. Available once the product exists.
+ */
+function ProductImageUploader({ product }: { product: Product }) {
+    const imageRef = useRef<HTMLInputElement>(null);
+    const [preview, setPreview] = useState<string | null>(null);
+    const form = useForm<{ image: File | null }>({ image: null });
+
+    const pick = (file: File | null) => {
+        form.setData('image', file);
+        setPreview(file ? URL.createObjectURL(file) : null);
+    };
+
+    const upload = () => {
+        form.post(route('menu.products.image', product.id), {
+            preserveScroll: true,
+            forceFormData: true,
+            onSuccess: () => {
+                setPreview(null);
+                if (imageRef.current) imageRef.current.value = '';
+            },
+        });
+    };
+
+    const remove = () => router.delete(route('menu.products.image.destroy', product.id), { preserveScroll: true });
+
+    const shown = preview ?? product.image_url ?? null;
+
+    return (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+            {shown ? (
+                <img src={shown} alt={product.name} className="h-14 w-14 rounded-lg object-cover ring-1 ring-border" />
+            ) : (
+                <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-background text-[10px] font-semibold text-muted-foreground ring-1 ring-border">
+                    No image
+                </div>
+            )}
+            <div className="flex items-center gap-2">
+                <input ref={imageRef} type="file" accept="image/png,image/jpeg,image/webp" className="block text-xs text-muted-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1.5 file:text-xs file:font-semibold file:text-primary" onChange={(e) => pick(e.target.files?.[0] ?? null)} />
+                <Button type="button" size="xs" onClick={upload} disabled={!form.data.image} loading={form.processing}>
+                    Upload
+                </Button>
+                {product.image_url && !preview && (
+                    <Button type="button" size="xs" variant="ghost" onClick={remove}>
+                        Remove
+                    </Button>
+                )}
+            </div>
+            {form.errors.image && <p className="w-full text-xs text-destructive">{form.errors.image}</p>}
+        </div>
     );
 }

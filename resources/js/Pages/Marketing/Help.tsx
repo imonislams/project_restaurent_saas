@@ -1,11 +1,21 @@
 import {
-    Button,
     MarketingHead,
     MarketingLayout,
     SectionHeading,
 } from '@/Components/Marketing';
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from '@/Components/ui/accordion';
+import { Badge } from '@/Components/ui/Badge';
+import { Button } from '@/Components/ui/Button';
+import { Card, CardContent } from '@/Components/ui/Card';
+import { Input } from '@/Components/ui/Input';
 import { Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { ArrowRight, BookOpen, HelpCircle, Mail, Search } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface HelpArticle {
     id: number;
@@ -83,9 +93,10 @@ const HELP_DOCS: HelpArticle[] = [
 ];
 
 export default function Help() {
-    const [selectedCategory, setSelectedCategory] = useState<'all' | 'onboarding' | 'pos' | 'menu' | 'staff' | 'billing' | 'hardware'>('all');
+    const [selectedCategory, setSelectedCategory] = useState<
+        'all' | 'onboarding' | 'pos' | 'menu' | 'staff' | 'billing' | 'hardware'
+    >('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const [expandedDoc, setExpandedDoc] = useState<number | null>(1);
 
     const filtered = HELP_DOCS.filter((doc) => {
         const matchesCat = selectedCategory === 'all' || doc.category === selectedCategory;
@@ -102,32 +113,36 @@ export default function Help() {
                 description="Searchable documentation, hardware setup tutorials, register shift guides, and recipe configuration steps for Restrly."
             />
 
-            <section className="pt-12 pb-20 sm:pt-20 sm:pb-28">
-                <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-                    <SectionHeading
-                        badge="SUPPORT & DOCUMENTATION"
-                        title="Searchable Knowledge Base"
-                        description="Clear, accurate documentation reflecting the actual Restrly interface and workflows."
-                    />
+            <section className="pt-14 pb-20 sm:pt-20 sm:pb-28 bg-white">
+                <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+                    <div className="text-center max-w-2xl mx-auto mb-10">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-[#B53014] block mb-2">
+                            Support &amp; Documentation
+                        </span>
+                        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-900">
+                            Knowledge Base &amp; Guides
+                        </h1>
+                        <p className="text-stone-600 mt-3 text-base">
+                            Clear, accurate documentation reflecting the actual Restrly interface, hardware pairings, and workflows.
+                        </p>
+                    </div>
 
                     {/* Search Input Bar */}
-                    <div className="mt-10 max-w-2xl mx-auto">
+                    <div className="max-w-2xl mx-auto mb-8">
                         <div className="relative">
-                            <input
+                            <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+                            <Input
                                 type="text"
                                 placeholder="Search guides (e.g. blind till, thermal printer, recipe BOM, manager PIN)..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full rounded-2xl border-stone-300 py-4 pl-12 pr-4 text-xs sm:text-sm shadow-xs focus:border-primary focus:ring-primary/20"
+                                className="pl-11 pr-4 py-3 h-12 text-sm rounded-xl border-stone-300 bg-stone-50/50 focus:bg-white"
                             />
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-lg">
-                                🔍
-                            </span>
                         </div>
                     </div>
 
                     {/* Category Filter Pills */}
-                    <div className="mt-8 flex flex-wrap items-center justify-center gap-2 border-b border-stone-200 pb-4">
+                    <div className="flex flex-wrap items-center justify-center gap-2 border-b border-stone-200 pb-6 mb-8">
                         {[
                             { key: 'all', label: 'All Topics' },
                             { key: 'onboarding', label: 'Getting Started' },
@@ -141,11 +156,11 @@ export default function Help() {
                                 key={cat.key}
                                 type="button"
                                 onClick={() => setSelectedCategory(cat.key as any)}
-                                className={`rounded-xl px-4 py-2 text-xs font-semibold whitespace-nowrap transition-all ${
+                                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors ${
                                     selectedCategory === cat.key
-                                        ? 'bg-primary text-on-primary'
+                                        ? 'bg-[#B53014] text-white'
                                         : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                                }`}
+                                    }`}
                             >
                                 {cat.label}
                             </button>
@@ -153,48 +168,49 @@ export default function Help() {
                     </div>
 
                     {/* Articles Accordion List */}
-                    <div className="mt-12 space-y-4">
-                        {filtered.map((doc) => (
-                            <div
-                                key={doc.id}
-                                className="rounded-2xl border border-stone-200 bg-white overflow-hidden shadow-2xs"
-                            >
-                                <button
-                                    type="button"
-                                    onClick={() => setExpandedDoc(expandedDoc === doc.id ? null : doc.id)}
-                                    className="flex w-full items-center justify-between p-5 sm:p-6 text-left font-display font-bold text-stone-900 text-sm sm:text-base hover:text-primary"
-                                >
-                                    <div>
-                                        <div className="text-[10px] font-mono font-bold text-primary uppercase mb-1">
-                                            {doc.categoryLabel}
-                                        </div>
-                                        <span>{doc.title}</span>
-                                    </div>
-                                    <span className="ml-4 font-mono text-stone-400 text-lg">
-                                        {expandedDoc === doc.id ? '−' : '+'}
-                                    </span>
-                                </button>
-                                {expandedDoc === doc.id && (
-                                    <div className="px-5 pb-6 sm:px-6 text-xs sm:text-sm text-stone-600 leading-relaxed border-t border-stone-100 pt-4">
-                                        {doc.content}
-                                    </div>
-                                )}
+                    <div className="bg-white rounded-xl border border-stone-200 p-6 sm:p-8 shadow-xs">
+                        {filtered.length === 0 ? (
+                            <div className="text-center py-12 text-stone-500 text-sm">
+                                <HelpCircle className="w-8 h-8 mx-auto mb-2 text-stone-400" />
+                                No guides found matching &ldquo;{searchQuery}&rdquo;. Try another search term.
                             </div>
-                        ))}
+                        ) : (
+                            <Accordion type="single" collapsible defaultValue="doc-1" className="w-full space-y-2">
+                                {filtered.map((doc) => (
+                                    <AccordionItem key={doc.id} value={`doc-${doc.id}`}>
+                                        <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
+                                            <div className="text-left">
+                                                <span className="text-[10px] font-mono font-bold text-[#B53014] uppercase tracking-wider block mb-0.5">
+                                                    {doc.categoryLabel}
+                                                </span>
+                                                <span>{doc.title}</span>
+                                            </div>
+                                        </AccordionTrigger>
+                                        <AccordionContent className="text-xs sm:text-sm text-stone-600 leading-relaxed pt-2">
+                                            {doc.content}
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                        )}
                     </div>
 
                     {/* Support Contact Prompt */}
-                    <div className="mt-16 rounded-2xl border border-stone-200 bg-stone-50 p-8 text-center space-y-3">
-                        <h4 className="font-display font-bold text-stone-900 text-base">
+                    <div className="mt-14 rounded-2xl border border-stone-200 bg-stone-50 p-8 text-center space-y-3">
+                        <h4 className="font-bold text-stone-900 text-base">
                             Still Have Questions About Your Setup?
                         </h4>
-                        <p className="text-xs sm:text-sm text-stone-500 max-w-md mx-auto">
+                        <p className="text-xs sm:text-sm text-stone-600 max-w-md mx-auto">
                             Our team of restaurant specialists is available to assist with printer connections and menu importing.
                         </p>
                         <div className="pt-2">
-                            <Button href="/contact" variant="primary" size="md">
-                                Contact Hospitality Support
-                            </Button>
+                            <Link
+                                href="/contact"
+                                className="inline-flex items-center justify-center gap-2 bg-[#B53014] hover:bg-[#9E2A11] active:bg-[#85230E] text-white text-xs font-semibold px-5 py-2.5 rounded-lg transition-colors"
+                            >
+                                <Mail className="w-4 h-4" />
+                                <span>Contact Hospitality Support</span>
+                            </Link>
                         </div>
                     </div>
                 </div>

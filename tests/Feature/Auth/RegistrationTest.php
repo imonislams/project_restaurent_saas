@@ -31,6 +31,7 @@ class RegistrationTest extends TestCase
     public function test_new_users_can_register(): void
     {
         $response = $this->post('/register', [
+            'identifier_type' => 'email',
             'name' => 'Test User',
             'restaurant_name' => 'Test Restaurant',
             'email' => 'test@example.com',
@@ -39,12 +40,13 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('onboarding.index', absolute: false));
+        $response->assertRedirect(route('verification.notice', absolute: false));
     }
 
     public function test_registration_provisions_a_tenant_and_owner_role(): void
     {
         $this->post('/register', [
+            'identifier_type' => 'email',
             'name' => 'Test User',
             'restaurant_name' => 'Test Restaurant',
             'email' => 'test@example.com',
@@ -65,6 +67,7 @@ class RegistrationTest extends TestCase
     public function test_restaurant_name_is_required(): void
     {
         $response = $this->post('/register', [
+            'identifier_type' => 'email',
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password',
@@ -80,6 +83,7 @@ class RegistrationTest extends TestCase
         User::factory()->create(['email' => 'taken@example.com']);
 
         $response = $this->post('/register', [
+            'identifier_type' => 'email',
             'name' => 'Test User',
             'restaurant_name' => 'Test Restaurant',
             'email' => 'taken@example.com',

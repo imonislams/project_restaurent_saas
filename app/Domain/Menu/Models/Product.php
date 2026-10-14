@@ -8,6 +8,7 @@ use App\Domain\Kitchen\Models\KitchenStation;
 use App\Domain\Menu\Enums\InventoryMode;
 use App\Domain\Menu\Factories\ProductFactory;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,11 +16,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
     use BelongsToTenant, HasFactory, SoftDeletes;
+
+    protected $appends = ['image_url'];
 
     protected $fillable = [
         'tenant_id',
@@ -116,5 +120,13 @@ class Product extends Model
         $override = $this->availability->firstWhere('branch_id', $branchId);
 
         return $override?->is_available ?? true;
+    }
+
+    /** Public URL of the product image (null when none is set). */
+    protected function imageUrl(): Attribute
+    {
+        return Attribute::get(
+            fn () => $this->image_path ? Storage::disk('public')->url($this->image_path) : null,
+        );
     }
 }

@@ -12,9 +12,11 @@ import { FormEventHandler } from 'react';
 export default function Register() {
     const t = useT();
     const { data, setData, post, processing, errors, reset } = useForm({
+        identifier_type: 'email' as 'email' | 'phone',
         name: '',
         restaurant_name: '',
         email: '',
+        phone: '',
         password: '',
         password_confirmation: '',
     });
@@ -158,23 +160,60 @@ export default function Register() {
                     <InputError message={errors.restaurant_name} />
                 </div>
 
-                {/* Work Email Field */}
+                {/* Contact identity — email or mobile */}
                 <div>
-                    <InputLabel htmlFor="email" value={t('auth.work_email')} required />
+                    <InputLabel value={data.identifier_type === 'email' ? t('auth.work_email') : 'Mobile number'} required />
 
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="w-full"
-                        autoComplete="username"
-                        placeholder={t('auth.email_placeholder')}
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                    />
+                    <div className="mb-2 grid grid-cols-2 gap-1 rounded-lg bg-stone-100 p-1">
+                        {(['email', 'phone'] as const).map((mode) => (
+                            <button
+                                key={mode}
+                                type="button"
+                                onClick={() => setData('identifier_type', mode)}
+                                className={
+                                    'rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ' +
+                                    (data.identifier_type === mode
+                                        ? 'bg-white text-primary shadow-sm'
+                                        : 'text-stone-500 hover:text-stone-700')
+                                }
+                            >
+                                {mode === 'email' ? 'Email address' : 'Mobile number'}
+                            </button>
+                        ))}
+                    </div>
 
-                    <InputError message={errors.email} />
+                    {data.identifier_type === 'email' ? (
+                        <>
+                            <TextInput
+                                id="email"
+                                type="email"
+                                name="email"
+                                value={data.email}
+                                className="w-full"
+                                autoComplete="username"
+                                placeholder={t('auth.email_placeholder')}
+                                onChange={(e) => setData('email', e.target.value)}
+                                required
+                            />
+                            <InputError message={errors.email} />
+                        </>
+                    ) : (
+                        <>
+                            <TextInput
+                                id="phone"
+                                type="tel"
+                                name="phone"
+                                value={data.phone}
+                                className="w-full"
+                                autoComplete="tel"
+                                placeholder="+8801XXXXXXXXX"
+                                onChange={(e) => setData('phone', e.target.value)}
+                                required
+                            />
+                            <p className="mt-1 text-[11px] text-stone-500">We'll text you a 6-digit code to verify this number.</p>
+                            <InputError message={errors.phone} />
+                        </>
+                    )}
                 </div>
 
                 {/* Password Field with Strength Meter */}

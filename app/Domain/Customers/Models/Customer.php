@@ -14,11 +14,15 @@ class Customer extends Model
 {
     use BelongsToTenant, SoftDeletes;
 
-    protected $fillable = ['tenant_id', 'name', 'phone', 'email', 'notes', 'is_active'];
+    protected $fillable = ['tenant_id', 'name', 'phone', 'email', 'notes', 'tags', 'is_active', 'is_marketing_opt_in'];
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return [
+            'is_active' => 'boolean',
+            'is_marketing_opt_in' => 'boolean',
+            'tags' => 'array',
+        ];
     }
 
     public function loyaltyAccount(): HasOne

@@ -28,7 +28,7 @@ class CommandController extends Controller
             'curated' => collect($this->runner->curated())->map(fn ($action, $key) => [
                 'key' => $key,
                 'label' => $action['label'],
-                'command' => $action['command'],
+                'command' => $this->runner->resolve($action['command']),
                 'danger' => $action['danger'],
             ])->values(),
             'advanced' => [

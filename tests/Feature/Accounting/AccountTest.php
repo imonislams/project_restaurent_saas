@@ -51,6 +51,7 @@ class AccountTest extends TestCase
     public function test_registration_provisions_a_default_bank_account_and_a_branch_cash_account(): void
     {
         $this->post('/register', [
+            'identifier_type' => 'email',
             'name' => 'Owner',
             'restaurant_name' => 'Spice House',
             'email' => 'new@example.com',

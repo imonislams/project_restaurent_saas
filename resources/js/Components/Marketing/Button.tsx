@@ -17,17 +17,17 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
     primary:
-        'bg-primary text-on-primary hover:bg-primary-container active:bg-[#8f200b] border border-primary shadow-sm shadow-primary/20 transition-all duration-200',
+        'bg-[#B53014] text-white hover:bg-[#9E2A11] active:bg-[#85230E] border border-[#B53014] shadow-xs transition-colors duration-150',
     secondary:
-        'bg-surface-container text-on-surface hover:bg-surface-container-high active:bg-[#dfdedb] border border-surface-container-high shadow-none transition-all duration-200',
+        'bg-stone-100 text-stone-900 hover:bg-stone-200 active:bg-stone-300 border border-stone-200 shadow-none transition-colors duration-150',
     accent:
-        'bg-secondary text-white hover:bg-[#3d5147] active:bg-[#314239] border border-secondary shadow-sm shadow-secondary/20 transition-all duration-200',
+        'bg-stone-900 text-white hover:bg-stone-800 active:bg-black border border-stone-900 shadow-xs transition-colors duration-150',
     outline:
-        'bg-transparent text-primary hover:bg-primary/5 active:bg-primary/10 border border-primary/30 hover:border-primary/60 transition-all duration-200',
+        'bg-transparent text-stone-800 hover:bg-stone-50 active:bg-stone-100 border border-stone-300 transition-colors duration-150',
     ghost:
-        'bg-transparent text-on-surface hover:bg-on-surface/5 active:bg-on-surface/10 border border-transparent transition-all duration-200',
+        'bg-transparent text-stone-700 hover:text-stone-900 hover:bg-stone-100 border border-transparent transition-colors duration-150',
     dark:
-        'bg-[#1a1c1a] text-surface hover:bg-[#2f312f] active:bg-black border border-[#2f312f] transition-all duration-200',
+        'bg-stone-950 text-white hover:bg-stone-900 active:bg-black border border-stone-800 transition-colors duration-150',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {

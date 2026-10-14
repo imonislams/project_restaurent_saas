@@ -7,6 +7,8 @@ use App\Domain\Branches\Models\Branch;
 use App\Domain\CashManagement\ShiftService;
 use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
+use App\Domain\Inventory\Models\Ingredient;
+use App\Domain\Inventory\StockService;
 use App\Domain\Menu\Models\Product;
 use App\Domain\Payments\Actions\ProvisionPaymentDefaults;
 use App\Domain\Reporting\ReportPeriod;
@@ -198,6 +200,33 @@ class ReportTest extends TestCase
             ->get('/reports?type=profit')
             ->assertOk()
             ->assertInertia(fn ($page) => $page->component('Reports/Index')->where('type', 'profit'));
+    }
+
+    public function test_inventory_report_values_ingredients(): void
+    {
+        $ingredient = Ingredient::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Basmati Rice', 'cost_per_unit' => 4.5]);
+        $location = $this->branch->stockLocations()->firstOrFail();
+
+        app(StockService::class)->receiveOpening($ingredient, $location, 10);
+
+        app(TenantContext::class)->set($this->tenant);
+        $report = app(ReportService::class)->inventory($this->period());
+
+        $row = collect($report['rows'])->firstWhere('item', 'Basmati Rice');
+
+        $this->assertNotNull($row);
+        $this->assertSame(4.5, $row['unit_cost']);
+        $this->assertSame(45.0, $row['value']);
+    }
+
+    public function test_customers_report_type_is_reachable(): void
+    {
+        $this->sellProduct();
+
+        $this->actingAs($this->owner)
+            ->get('/reports?type=customers')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Reports/Index')->where('type', 'customers')->has('report.summary'));
     }
 
     public function test_unknown_report_type_falls_back_to_sales(): void

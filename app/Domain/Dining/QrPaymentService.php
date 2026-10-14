@@ -2,13 +2,15 @@
 
 namespace App\Domain\Dining;
 
-use App\Domain\Loyalty\LoyaltyService;
 use App\Domain\Dining\Models\DiningSession;
+use App\Domain\Loyalty\LoyaltyService;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Models\Order;
+use App\Domain\PaymentGateways\TenantGatewayManager;
 use App\Domain\Payments\Enums\PaymentStatus;
 use App\Domain\Payments\PaymentGatewayManager;
 use App\Domain\Tables\TableService;
+use App\Domain\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -34,6 +36,48 @@ class QrPaymentService
     }
 
     /**
+     * Payment methods the diner may choose: every enabled tenant gateway
+     * (Stripe / SSLCommerz / bKash / cash) plus a "pay at counter" fallback.
+     * Nothing is charged here — this only advertises what the tenant accepts.
+     *
+     * @return list<array{provider: string, label: string, is_cash: bool, is_default: bool}>
+     */
+    public function optionsFor(Tenant $tenant, ?string $currency = null): array
+    {
+        $options = [];
+
+        foreach (app(TenantGatewayManager::class)->enabledFor($tenant) as $gateway) {
+            if ($currency && ! $gateway->supports($currency)) {
+                continue;
+            }
+
+            $options[] = [
+                'provider' => $gateway->provider,
+                'label' => $gateway->displayName(),
+                'is_cash' => $gateway->provider === 'cash',
+                'is_default' => (bool) $gateway->is_default,
+            ];
+        }
+
+        // Offer "pay at the counter" only when the tenant actually accepts cash
+        // (an enabled cash gateway, or the accept-cash setting). A tenant that
+        // turned cash off must not be shown a cash option it cannot settle.
+        $acceptCash = (bool) ($tenant->getSetting('payments.accept_cash') ?? true);
+        $hasCash = collect($options)->contains(fn (array $o) => $o['is_cash']);
+
+        if (! $hasCash && $acceptCash) {
+            $options[] = [
+                'provider' => 'cash',
+                'label' => 'Cash / pay at the counter',
+                'is_cash' => true,
+                'is_default' => $options === [],
+            ];
+        }
+
+        return $options;
+    }
+
+    /**
      * Reconcile every unsettled order in a session (used by the tracking poll
      * so webhook-confirmed online payments finalize promptly).
      */
@@ -46,10 +90,15 @@ class QrPaymentService
     }
 
     /**
-     * @return array{status: string, reference: ?string, payment_id?: int}
+     * @return array{status: string, reference: ?string, payment_id?: int, redirect_url?: ?string, mode?: string}
      */
-    public function startOnline(Order $order, ?string $idempotencyKey = null): array
+    public function startOnline(Order $order, ?string $provider = null, ?string $idempotencyKey = null, ?string $returnUrl = null): array
     {
+        // Cash is settled physically by staff; a diner can never self-settle it.
+        if ($provider === 'cash') {
+            return ['status' => PaymentStatus::Pending->value, 'reference' => null, 'mode' => 'counter'];
+        }
+
         $this->reconcile($order);
 
         $outstanding = $this->outstanding($order);
@@ -66,11 +115,14 @@ class QrPaymentService
             }
         }
 
-        $gateway = $this->gateways->for();
+        $gateway = $this->gateways->for($provider);
         $result = $gateway->charge([
             'amount' => $outstanding,
             'currency' => $order->currency,
             'reference' => $order->order_number,
+            'description' => 'Order '.$order->order_number,
+            'success_url' => $returnUrl ?? '',
+            'cancel_url' => $returnUrl ?? '',
         ]);
 
         $succeeded = ($result['status'] ?? 'pending') === 'succeeded';
@@ -95,7 +147,12 @@ class QrPaymentService
             $this->reconcile($order);
         }
 
-        return ['status' => $payment->status->value, 'reference' => $result['reference'] ?? null, 'payment_id' => $payment->getKey()];
+        return [
+            'status' => $payment->status->value,
+            'reference' => $result['reference'] ?? null,
+            'payment_id' => $payment->getKey(),
+            'redirect_url' => $result['redirect_url'] ?? null,
+        ];
     }
 
     /**

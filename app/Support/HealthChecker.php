@@ -29,6 +29,7 @@ class HealthChecker
 
                 return Storage::disk('local')->exists($path);
             }),
+            'public_storage' => $this->publicStorageCheck(),
             'queue' => [
                 'ok' => true,
                 'queued' => DB::table('jobs')->count(),
@@ -46,6 +47,28 @@ class HealthChecker
         }
 
         return true;
+    }
+
+    /**
+     * The public disk must be writable and its public symlink present, otherwise
+     * uploaded images (products, logos, avatars) 404 even though storage works.
+     *
+     * @return array<string, mixed>
+     */
+    protected function publicStorageCheck(): array
+    {
+        $result = $this->check(function () {
+            $path = 'health/public-probe.txt';
+            Storage::disk('public')->put($path, 'ok');
+            $exists = Storage::disk('public')->exists($path);
+            Storage::disk('public')->delete($path);
+
+            return $exists;
+        });
+
+        $result['linked'] = file_exists(public_path('storage'));
+
+        return $result;
     }
 
     /** @return array<string, mixed> */

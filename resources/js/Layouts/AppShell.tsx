@@ -180,7 +180,7 @@ export default function AppShell({
     return (
         <ToastProvider>
             <NotificationWatcher pending={pendingApprovals} />
-            <SidebarProvider defaultOpen>
+            <SidebarProvider defaultOpen className="tenant-shell">
                 {/* Desktop and Mobile Genuine shadcn Sidebar */}
                 <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar select-none">
                     {/* Header: Logo, Brand wordmark & Restaurant Selector */}
@@ -206,10 +206,10 @@ export default function AppShell({
                                     </div>
                                 )}
                                 <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                                    <div className="truncate text-sm font-bold tracking-tight text-sidebar-foreground">
+                                    <div className="truncate text-[15px] font-bold tracking-tight text-sidebar-foreground">
                                         Restrly
                                     </div>
-                                    <div className="truncate text-[10px] font-medium tracking-wide uppercase text-muted-foreground">
+                                    <div className="truncate text-[10.5px] font-semibold tracking-wide uppercase text-muted-foreground">
                                         {brand.title}
                                     </div>
                                 </div>
@@ -246,7 +246,7 @@ export default function AppShell({
                                                         isActive={item.active}
                                                         tooltip={item.label}
                                                         className={cn(
-                                                            'h-9 px-2.5 text-[13px] font-medium rounded-md transition-colors',
+                                                            'h-9 px-2.5 text-[13.5px] font-medium rounded-md transition-colors',
                                                             item.active
                                                                 ? 'bg-sidebar-accent font-semibold text-sidebar-accent-foreground shadow-2xs'
                                                                 : 'text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground'
@@ -294,11 +294,11 @@ export default function AppShell({
                                             {userInitial}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <div className="grid flex-1 text-left text-xs leading-tight min-w-0 group-data-[collapsible=icon]:hidden">
+                                    <div className="grid flex-1 text-left text-[13px] leading-tight min-w-0 group-data-[collapsible=icon]:hidden">
                                         <span className="truncate font-semibold text-sidebar-foreground">
                                             {user.name}
                                         </span>
-                                        <span className="truncate text-[10px] text-muted-foreground">
+                                        <span className="truncate text-[11px] text-muted-foreground">
                                             {user.role ?? user.email}
                                         </span>
                                     </div>
@@ -323,7 +323,7 @@ export default function AppShell({
                                 <DropdownMenuItem asChild>
                                     <Link
                                         href={route('profile.edit')}
-                                        className="flex items-center gap-2 px-2 py-1.5 text-xs rounded-sm cursor-pointer"
+                                        className="flex items-center gap-2 px-2 py-1.5 text-[13px] rounded-sm cursor-pointer"
                                     >
                                         <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
                                         <span>My Profile</span>
@@ -332,7 +332,7 @@ export default function AppShell({
                                 <DropdownMenuItem asChild>
                                     <Link
                                         href={route('settings.show', { group: 'company' })}
-                                        className="flex items-center gap-2 px-2 py-1.5 text-xs rounded-sm cursor-pointer"
+                                        className="flex items-center gap-2 px-2 py-1.5 text-[13px] rounded-sm cursor-pointer"
                                     >
                                         <Sliders className="h-3.5 w-3.5 text-muted-foreground" />
                                         <span>Restaurant Settings</span>
@@ -344,7 +344,7 @@ export default function AppShell({
                                         href={route('logout')}
                                         method="post"
                                         as="button"
-                                        className="flex w-full items-center gap-2 px-2 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 rounded-sm cursor-pointer"
+                                        className="flex w-full items-center gap-2 px-2 py-1.5 text-[13px] font-medium text-destructive hover:bg-destructive/10 rounded-sm cursor-pointer"
                                     >
                                         <LogOut className="h-3.5 w-3.5" />
                                         <span>{t('shell.signout')}</span>
@@ -368,7 +368,7 @@ export default function AppShell({
 
                             {/* Breadcrumb Context */}
                             {currentActiveItem && (
-                                <nav className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground min-w-0">
+                                <nav className="hidden sm:flex items-center gap-1.5 text-[13px] text-muted-foreground min-w-0">
                                     {currentActiveItem.groupLabel && (
                                         <>
                                             <span className="font-normal text-muted-foreground truncate">
@@ -390,7 +390,7 @@ export default function AppShell({
                             <button
                                 type="button"
                                 onClick={() => setCommandPaletteOpen(true)}
-                                className="flex items-center gap-2 rounded-md border border-input bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground hover:border-border hover:bg-background hover:text-foreground transition-colors shadow-xs sm:w-60 cursor-pointer"
+                                className="flex items-center gap-2 rounded-md border border-input bg-muted/40 px-2.5 py-1.5 text-[13px] text-muted-foreground hover:border-border hover:bg-background hover:text-foreground transition-colors shadow-xs sm:w-60 cursor-pointer"
                             >
                                 <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                 <span className="hidden sm:inline truncate text-left flex-1">Search or jump to...</span>

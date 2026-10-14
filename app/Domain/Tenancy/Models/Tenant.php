@@ -7,6 +7,7 @@ use App\Domain\Branches\Models\Branch;
 use App\Domain\Identity\Models\Invitation;
 use App\Domain\Inventory\Models\Unit;
 use App\Domain\Payments\Models\PaymentMethod;
+use App\Domain\PaymentGateways\Models\TenantGateway;
 use App\Domain\Subscriptions\Models\Plan;
 use App\Domain\Subscriptions\Models\Subscription;
 use App\Domain\Tenancy\Enums\TenantStatus;
@@ -81,6 +82,11 @@ class Tenant extends Model
     public function paymentMethods(): HasMany
     {
         return $this->hasMany(PaymentMethod::class);
+    }
+
+    public function paymentGateways(): HasMany
+    {
+        return $this->hasMany(TenantGateway::class);
     }
 
     public function financialAccounts(): HasMany

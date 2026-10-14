@@ -21,7 +21,7 @@ class RegisterTenant
     public const TRIAL_DAYS = 14;
 
     /**
-     * @param  array{name: string, email: string, password: string, restaurant_name: string}  $data
+     * @param  array{name: string, email?: ?string, phone?: ?string, password: string, restaurant_name: string}  $data
      */
     public function execute(array $data): User
     {
@@ -29,7 +29,7 @@ class RegisterTenant
             $tenant = Tenant::create([
                 'name' => $data['restaurant_name'],
                 'slug' => $this->uniqueSlug($data['restaurant_name']),
-                'business_email' => $data['email'],
+                'business_email' => $data['email'] ?? null,
                 'status' => TenantStatus::Active,
                 'trial_ends_at' => now()->addDays(self::TRIAL_DAYS),
             ]);
@@ -42,7 +42,8 @@ class RegisterTenant
             $user = User::create([
                 'tenant_id' => $tenant->getKey(),
                 'name' => $data['name'],
-                'email' => $data['email'],
+                'email' => $data['email'] ?? null,
+                'phone' => $data['phone'] ?? null,
                 'password' => $data['password'],
                 'status' => 'active',
             ]);

@@ -13,7 +13,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useEffect } from 'react';
 
-const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'pos', 'notifications', 'qr'] as const;
+const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'pos', 'notifications', 'qr', 'payments'] as const;
 
 export default function SettingsShow({
     group,
@@ -71,7 +71,7 @@ export default function SettingsShow({
                     <Tabs
                         tabs={GROUPS.map((key) => ({ key, label: t(`settings.tab.${key}`) }))}
                         value={group}
-                        onChange={(key) => router.get(route('settings.show', { group: key }), {}, { preserveScroll: true })}
+                        onChange={(key) => router.get(key === 'payments' ? route('settings.payments.index') : route('settings.show', { group: key }), {}, { preserveScroll: true })}
                     />
 
                     <form onSubmit={submit} className="space-y-5">

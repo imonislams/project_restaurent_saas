@@ -5,6 +5,8 @@ namespace App\Domain\Reporting;
 use App\Domain\Accounting\Models\Expense;
 use App\Domain\CashManagement\Models\CashMovement;
 use App\Domain\CashManagement\Models\Shift;
+use App\Domain\Customers\CustomerSegmentationService;
+use App\Domain\Inventory\Models\Ingredient;
 use App\Domain\Inventory\Models\StockBalance;
 use App\Domain\Inventory\Models\StockMovement;
 use App\Domain\Loyalty\Models\LoyaltyAccount;
@@ -15,6 +17,7 @@ use App\Domain\Orders\Models\OrderItem;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Purchasing\Models\GoodsReceiptItem;
 use App\Domain\Purchasing\Models\PurchaseOrder;
+use App\Domain\Tenancy\TenantContext;
 use App\Domain\Waste\Models\WasteRecord;
 use Illuminate\Support\Collection;
 
@@ -585,6 +588,53 @@ class ReportService
                 ['key' => 'points', 'label' => 'Points', 'align' => 'right', 'format' => 'number'],
             ],
             'rows' => $rows,
+        ];
+    }
+
+    public function customers(ReportPeriod $period): array
+    {
+        $tenant = app(TenantContext::class)->tenant();
+
+        if ($tenant === null) {
+            return ['summary' => [], 'columns' => [], 'rows' => [], 'chart' => []];
+        }
+
+        $service = app(CustomerSegmentationService::class);
+        $summary = $service->summary($tenant);
+        $profiles = $service->profiles($tenant);
+
+        $bySegment = collect($summary['segments'])->keyBy('key');
+
+        $rows = $profiles->take(100)->map(fn (array $p) => [
+            'customer' => $p['name'],
+            'segment' => CustomerSegmentationService::SEGMENTS[$p['segment']] ?? $p['segment'],
+            'orders' => $p['orders'],
+            'spend' => $p['spend'],
+            'last_order' => $p['last_order_at'],
+        ])->all();
+
+        return [
+            'summary' => [
+                ['label' => 'Customers', 'value' => $summary['total'], 'format' => 'number'],
+                ['label' => 'Lifetime spend', 'value' => $summary['spend'], 'format' => 'money'],
+                ['label' => 'Champions', 'value' => (int) ($bySegment['champions']['count'] ?? 0), 'format' => 'number'],
+                ['label' => 'High-value', 'value' => (int) ($bySegment['high_value']['count'] ?? 0), 'format' => 'number'],
+                ['label' => 'At risk', 'value' => (int) ($bySegment['at_risk']['count'] ?? 0), 'format' => 'number'],
+                ['label' => 'Lost', 'value' => (int) ($bySegment['lost']['count'] ?? 0), 'format' => 'number'],
+            ],
+            'columns' => [
+                ['key' => 'customer', 'label' => 'Customer'],
+                ['key' => 'segment', 'label' => 'Segment'],
+                ['key' => 'orders', 'label' => 'Orders', 'align' => 'right', 'format' => 'number'],
+                ['key' => 'spend', 'label' => 'Spend', 'align' => 'right', 'format' => 'money'],
+                ['key' => 'last_order', 'label' => 'Last order', 'format' => 'date'],
+            ],
+            'rows' => $rows,
+            'chart' => collect($summary['segments'])
+                ->filter(fn (array $s) => $s['count'] > 0)
+                ->map(fn (array $s) => ['label' => $s['label'], 'value' => $s['count']])
+                ->values()
+                ->all(),
         ];
     }
 

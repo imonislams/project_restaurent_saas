@@ -3,6 +3,7 @@
 use App\Http\Middleware\AddCorrelationContext;
 use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\EnsureFeature;
+use App\Http\Middleware\EnsureOnboardingComplete;
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\EnsurePlatformOperational;
@@ -40,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant.active' => EnsureTenantIsActive::class,
             'permission' => EnsurePermission::class,
+            'onboarding.completed' => EnsureOnboardingComplete::class,
             'platform' => EnsurePlatformAdmin::class,
             'platform.permission' => EnsurePlatformPermission::class,
             'feature' => EnsureFeature::class,

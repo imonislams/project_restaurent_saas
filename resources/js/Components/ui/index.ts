@@ -181,3 +181,23 @@ export {
     useSidebar,
 } from './sidebar';
 
+// Accordion Suite
+export {
+    Accordion,
+    AccordionItem,
+    AccordionTrigger,
+    AccordionContent,
+} from './accordion';
+
+// Navigation Menu Suite
+export {
+    navigationMenuTriggerStyle,
+    NavigationMenu,
+    NavigationMenuList,
+    NavigationMenuItem,
+    NavigationMenuContent,
+    NavigationMenuTrigger,
+    NavigationMenuLink,
+    NavigationMenuIndicator,
+    NavigationMenuViewport,
+} from './navigation-menu';

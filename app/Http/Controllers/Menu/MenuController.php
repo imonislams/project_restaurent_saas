@@ -5,15 +5,20 @@ namespace App\Http\Controllers\Menu;
 use App\Domain\Menu\Enums\InventoryMode;
 use App\Domain\Menu\Models\Category;
 use App\Domain\Menu\Models\Product;
+use App\Domain\Menu\ProductImportService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Menu\CategoryRequest;
 use App\Http\Requests\Menu\ProductRequest;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MenuController extends Controller
 {
@@ -67,6 +72,7 @@ class MenuController extends Controller
                 'is_available' => $product->is_available,
                 'labels' => $product->labels ?? [],
                 'sort_order' => $product->sort_order,
+                'image_url' => $product->image_url,
                 'variants' => $product->variants->map(fn ($variant) => [
                     'id' => $variant->getKey(),
                     'name' => $variant->name,
@@ -115,19 +121,25 @@ class MenuController extends Controller
     public function storeProduct(ProductRequest $request): RedirectResponse
     {
         $data = $this->productAttributes($request->validated());
+        unset($data['image']);
 
         $product = Product::create($data);
 
         $this->syncVariants($product, $request->validated('variants') ?? []);
+        $this->storeProductImage($product, $request->file('image'));
 
         return back()->with('success', 'Product created.');
     }
 
     public function updateProduct(ProductRequest $request, Product $product): RedirectResponse
     {
-        $product->update($this->productAttributes($request->validated(), $product));
+        $data = $this->productAttributes($request->validated(), $product);
+        unset($data['image']);
+
+        $product->update($data);
 
         $this->syncVariants($product, $request->validated('variants') ?? []);
+        $this->storeProductImage($product, $request->file('image'));
 
         return back()->with('success', 'Product updated.');
     }
@@ -137,6 +149,118 @@ class MenuController extends Controller
         $product->delete();
 
         return back()->with('success', 'Product removed.');
+    }
+
+    public function updateProductImage(Request $request, Product $product): RedirectResponse
+    {
+        $request->validate([
+            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ]);
+
+        $this->storeProductImage($product, $request->file('image'));
+
+        return back()->with('success', 'Product image updated.');
+    }
+
+    /** Store an uploaded image and replace the previous file, if any. */
+    protected function storeProductImage(Product $product, ?UploadedFile $file): void
+    {
+        if ($file === null) {
+            return;
+        }
+
+        $previous = $product->image_path;
+        $path = $file->store('products/'.$product->tenant_id, 'public');
+
+        $product->forceFill(['image_path' => $path])->save();
+
+        if ($previous && $previous !== $path) {
+            Storage::disk('public')->delete($previous);
+        }
+    }
+
+    public function destroyProductImage(Product $product): RedirectResponse
+    {
+        if ($product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
+            $product->forceFill(['image_path' => null])->save();
+        }
+
+        return back()->with('success', 'Product image removed.');
+    }
+
+    /** Downloadable CSV template for bulk product import. */
+    public function template(): StreamedResponse
+    {
+        return response()->streamDownload(function () {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ProductImportService::COLUMNS);
+            fputcsv($out, ['Chicken Biryani', 'Mains', 'BRY-01', '', 320, 320, 340, 120, 'Signature dish', '1', '']);
+            fclose($out);
+        }, 'product-import-template.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    /** Export the product catalogue as CSV or PDF. */
+    public function export(Request $request): StreamedResponse|\Illuminate\Http\Response
+    {
+        $products = Product::query()->with('category:id,name')->orderBy('name')->get();
+
+        if ($request->string('format')->toString() === 'pdf') {
+            return Pdf::loadView('products.export', [
+                'products' => $products,
+                'tenant' => $request->user()->tenant,
+                'generatedAt' => now(),
+            ])->download('products-'.now()->format('Ymd').'.pdf');
+        }
+
+        return response()->streamDownload(function () use ($products) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ProductImportService::COLUMNS);
+            foreach ($products as $product) {
+                fputcsv($out, [
+                    $product->name,
+                    $product->category?->name,
+                    $product->sku,
+                    $product->barcode,
+                    (float) $product->price_dine_in,
+                    (float) $product->price_takeaway,
+                    (float) $product->price_delivery,
+                    (float) $product->cost_price,
+                    $product->description,
+                    $product->is_active ? '1' : '0',
+                    $product->image_url,
+                ]);
+            }
+            fclose($out);
+        }, 'products-'.now()->format('Ymd').'.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    /** Bulk import products from a CSV upload. */
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:5120'],
+        ]);
+
+        $result = app(ProductImportService::class)->import($request->user()->tenant, $request->file('file'));
+
+        $message = "Imported {$result['created']} new, {$result['updated']} updated.";
+
+        if ($result['errors'] !== []) {
+            $message .= ' '.$result['skipped'].' row(s) skipped.';
+        }
+
+        if (($result['warnings'] ?? []) !== []) {
+            $message .= ' '.count($result['warnings']).' image(s) skipped.';
+        }
+
+        return back()->with('success', $message)->with('import_result', [
+            'created' => $result['created'],
+            'updated' => $result['updated'],
+            'skipped' => $result['skipped'],
+            'errors' => $result['errors'],
+            'warnings' => $result['warnings'] ?? [],
+        ]);
     }
 
     /**

@@ -15,9 +15,10 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Inter', '"Plus Jakarta Sans"', ...defaultTheme.fontFamily.sans],
-                display: ['Inter', '"Plus Jakarta Sans"', ...defaultTheme.fontFamily.sans],
-                mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', ...defaultTheme.fontFamily.mono],
+                sans: ['"Plus Jakarta Sans"', 'Inter', ...defaultTheme.fontFamily.sans],
+                display: ['"Plus Jakarta Sans"', 'Inter', ...defaultTheme.fontFamily.sans],
+                ui: ['Roboto', 'Inter', ...defaultTheme.fontFamily.sans],
+                mono: ['"Roboto Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', ...defaultTheme.fontFamily.mono],
                 'display-xl': ['64px', { lineHeight: '70px', letterSpacing: '-0.03em', fontWeight: '800' }],
                 'display-xl-mobile': ['38px', { lineHeight: '44px', letterSpacing: '-0.025em', fontWeight: '800' }],
                 'headline-lg': ['40px', { lineHeight: '48px', letterSpacing: '-0.025em', fontWeight: '700' }],

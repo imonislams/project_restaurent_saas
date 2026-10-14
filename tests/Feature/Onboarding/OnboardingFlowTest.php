@@ -4,6 +4,7 @@ namespace Tests\Feature\Onboarding;
 
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Branches\Models\BusinessHour;
+use App\Domain\PaymentGateways\Models\TenantGateway;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -18,8 +19,17 @@ class OnboardingFlowTest extends TestCase
     protected function tenantUser(?Tenant $tenant = null): User
     {
         return User::factory()
-            ->forTenant($tenant ?? Tenant::factory()->create())
+            ->forTenant($tenant ?? Tenant::factory()->notOnboarded()->create())
             ->create();
+    }
+
+    protected function validProfilePayload(array $overrides = []): array
+    {
+        return array_merge([
+            'name' => 'Alex Owner',
+            'phone' => '+8801700000000',
+            'role_title' => 'Owner',
+        ], $overrides);
     }
 
     protected function validCompanyPayload(array $overrides = []): array
@@ -49,11 +59,12 @@ class OnboardingFlowTest extends TestCase
         ], $overrides);
     }
 
-    public function test_registration_redirects_to_onboarding(): void
+    public function test_registration_redirects_to_verification(): void
     {
         $this->seed(RolePermissionSeeder::class);
 
         $response = $this->post('/register', [
+            'identifier_type' => 'email',
             'name' => 'Owner',
             'restaurant_name' => 'My Restaurant',
             'email' => 'owner@example.com',
@@ -61,7 +72,7 @@ class OnboardingFlowTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
-        $response->assertRedirect(route('onboarding.index'));
+        $response->assertRedirect(route('verification.notice'));
     }
 
     public function test_onboarding_index_redirects_to_first_incomplete_step(): void
@@ -70,7 +81,70 @@ class OnboardingFlowTest extends TestCase
 
         $this->actingAs($user)
             ->get('/onboarding')
+            ->assertRedirect(route('onboarding.show', 'profile'));
+    }
+
+    public function test_profile_step_saves_and_advances(): void
+    {
+        $user = $this->tenantUser();
+        $tenant = $user->tenant;
+
+        $this->actingAs($user)
+            ->get('/onboarding/profile')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Onboarding/Show')
+                ->where('step', 'profile'));
+
+        $this->actingAs($user)
+            ->post('/onboarding/profile', $this->validProfilePayload())
             ->assertRedirect(route('onboarding.show', 'company'));
+
+        $user->refresh();
+        $tenant->refresh();
+
+        $this->assertSame('Alex Owner', $user->name);
+        $this->assertSame('+8801700000000', $user->phone);
+        $this->assertNotNull($tenant->getSetting('profile.completed_at'));
+        $this->assertSame('company', $tenant->onboarding_step);
+    }
+
+    public function test_payments_step_configures_real_gateways_with_a_default(): void
+    {
+        $user = $this->tenantUser();
+        $tenant = $user->tenant;
+
+        $this->actingAs($user)
+            ->post('/onboarding/payments', [
+                'gateways' => [
+                    ['provider' => 'cash', 'environment' => 'sandbox', 'is_enabled' => true],
+                    ['provider' => 'sslcommerz', 'environment' => 'sandbox', 'is_enabled' => true, 'credentials' => ['store_id' => 's', 'store_password' => 'p']],
+                ],
+                'default_provider' => 'sslcommerz',
+            ])
+            ->assertRedirect(route('onboarding.show', 'menu'));
+
+        $this->assertDatabaseHas('tenant_gateways', ['tenant_id' => $tenant->id, 'provider' => 'cash', 'is_enabled' => true]);
+
+        $ssl = TenantGateway::withoutGlobalScopes()->where('provider', 'sslcommerz')->firstOrFail();
+
+        $this->assertTrue($ssl->is_enabled);
+        $this->assertTrue($ssl->is_default);
+        $this->assertFalse(TenantGateway::withoutGlobalScopes()->where('provider', 'cash')->firstOrFail()->is_default);
+        $this->assertTrue($tenant->fresh()->getSetting('payments.accept_cash'));
+    }
+
+    public function test_payments_step_requires_credentials_for_online_gateways(): void
+    {
+        $user = $this->tenantUser();
+
+        $this->actingAs($user)
+            ->post('/onboarding/payments', [
+                'gateways' => [
+                    ['provider' => 'bkash', 'environment' => 'sandbox', 'is_enabled' => true],
+                ],
+            ])
+            ->assertSessionHasErrors('gateways');
     }
 
     public function test_company_step_renders_and_saves_then_advances(): void
@@ -163,7 +237,7 @@ class OnboardingFlowTest extends TestCase
                 'receipt_show_tax' => true,
                 'receipt_show_logo' => false,
             ])
-            ->assertRedirect(route('onboarding.show', 'review'));
+            ->assertRedirect(route('onboarding.show', 'payments'));
 
         $tenant->refresh();
         $this->assertSame(15.0, (float) $tenant->getSetting('tax.rate'));
@@ -196,7 +270,7 @@ class OnboardingFlowTest extends TestCase
 
         $this->actingAs($user)
             ->post('/onboarding/complete')
-            ->assertRedirect(route('onboarding.show', 'company'))
+            ->assertRedirect(route('onboarding.show', 'profile'))
             ->assertSessionHas('error');
 
         $this->assertNull($user->tenant->fresh()->onboarding_completed_at);
@@ -207,6 +281,7 @@ class OnboardingFlowTest extends TestCase
         $user = $this->tenantUser();
         $tenant = $user->tenant;
 
+        $this->actingAs($user)->post('/onboarding/profile', $this->validProfilePayload());
         $this->actingAs($user)->post('/onboarding/company', $this->validCompanyPayload());
         $this->actingAs($user)->post('/onboarding/branch', $this->validBranchPayload());
 
@@ -220,9 +295,24 @@ class OnboardingFlowTest extends TestCase
         $this->assertTrue($tenant->hasCompletedOnboarding());
     }
 
-    public function test_dashboard_shows_the_activation_checklist(): void
+    public function test_dashboard_redirects_to_onboarding_while_incomplete(): void
     {
         $user = $this->tenantUser();
+
+        $this->actingAs($user)
+            ->get('/dashboard')
+            ->assertRedirect(route('onboarding.show', 'profile'));
+    }
+
+    public function test_dashboard_shows_analytics_once_onboarding_is_complete(): void
+    {
+        $user = $this->tenantUser();
+        $tenant = $user->tenant;
+
+        $this->actingAs($user)->post('/onboarding/profile', $this->validProfilePayload());
+        $this->actingAs($user)->post('/onboarding/company', $this->validCompanyPayload());
+        $this->actingAs($user)->post('/onboarding/branch', $this->validBranchPayload());
+        $this->actingAs($user)->post('/onboarding/complete');
 
         $this->actingAs($user)
             ->get('/dashboard')
@@ -230,8 +320,11 @@ class OnboardingFlowTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
                 ->has('checklist')
-                ->has('progress.steps', 6)
-                ->where('tenant.name', $user->tenant->name));
+                ->has('progress.steps', 10)
+                ->has('analytics')
+                ->has('customerAnalytics')
+                ->has('business360')
+                ->where('tenant.name', $tenant->name));
     }
 
     public function test_platform_admins_have_no_onboarding(): void
@@ -257,7 +350,7 @@ class OnboardingFlowTest extends TestCase
         // Tenant B still starts fresh — never sees A's progress.
         $this->actingAs($userB)
             ->get('/onboarding')
-            ->assertRedirect(route('onboarding.show', 'company'));
+            ->assertRedirect(route('onboarding.show', 'profile'));
 
         $this->assertSame(1, Branch::withoutGlobalScopes()->where('tenant_id', $userA->tenant_id)->count());
         $this->assertSame(0, Branch::withoutGlobalScopes()->where('tenant_id', $userB->tenant_id)->count());

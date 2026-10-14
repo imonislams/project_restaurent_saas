@@ -132,9 +132,13 @@ class SettingsTest extends TestCase
         $this->assertFalse($checklist->firstWhere('key', 'payments')['done']);
         $this->assertFalse($checklist->firstWhere('key', 'staff')['done']);
 
-        // Reviewing payment settings marks it done.
-        $tenant->mergeSettings(['payments.provider' => 'manual']);
-        $tenant->save();
+        // Configuring a payment gateway marks it done.
+        $tenant->paymentGateways()->create([
+            'provider' => 'cash',
+            'environment' => 'sandbox',
+            'is_enabled' => true,
+            'is_default' => true,
+        ]);
 
         // Adding a second user marks the team step done.
         User::factory()->forTenant($tenant)->create();

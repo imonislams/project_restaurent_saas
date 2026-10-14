@@ -52,6 +52,11 @@ export default function OnboardingLayout({
                     <Stepper steps={progress.steps} current={step} percent={progress.percent} />
                 </div>
 
+                {progress.completed > 0 && !flash?.success && (
+                    <div className="mb-4 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
+                        Welcome back — resuming where you left off. Your saved progress is shown below.
+                    </div>
+                )}
                 {flash?.success && <div className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{flash.success}</div>}
                 {flash?.error && <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{flash.error}</div>}
 

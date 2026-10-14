@@ -17,25 +17,22 @@ use App\Http\Controllers\Menu\MenuController;
 use App\Http\Controllers\Menu\ModifierController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Onboarding\OnboardingController;
-use App\Http\Controllers\Tenant\SettingsController as TenantSettingsController;
-use App\Http\Controllers\Tenant\TenantBrandingController;
-use App\Http\Controllers\Tenant\BranchController as TenantBranchController;
 use App\Http\Controllers\Orders\OrderController;
 use App\Http\Controllers\Orders\ReceiptController;
 use App\Http\Controllers\Payments\PaymentWebhookController;
 use App\Http\Controllers\Payments\PlatformCallbackController;
 use App\Http\Controllers\Platform\AdminController as PlatformAdminController;
 use App\Http\Controllers\Platform\AnalyticsController as PlatformAnalyticsController;
+use App\Http\Controllers\Platform\AnnouncementController as PlatformAnnouncementController;
 use App\Http\Controllers\Platform\AuditController as PlatformAuditController;
 use App\Http\Controllers\Platform\BackupController as PlatformBackupController;
+use App\Http\Controllers\Platform\CampaignController as PlatformCampaignController;
+use App\Http\Controllers\Platform\CommandController as PlatformCommandController;
 use App\Http\Controllers\Platform\CouponController as PlatformCouponController;
 use App\Http\Controllers\Platform\DashboardController as PlatformDashboardController;
 use App\Http\Controllers\Platform\DiagnosticsController as PlatformDiagnosticsController;
 use App\Http\Controllers\Platform\EmailController as PlatformEmailController;
 use App\Http\Controllers\Platform\EmailTemplateController as PlatformEmailTemplateController;
-use App\Http\Controllers\Platform\CampaignController as PlatformCampaignController;
-use App\Http\Controllers\Platform\AnnouncementController as PlatformAnnouncementController;
-use App\Http\Controllers\Platform\CommandController as PlatformCommandController;
 use App\Http\Controllers\Platform\EntitlementsController as PlatformEntitlementsController;
 use App\Http\Controllers\Platform\GatewayController as PlatformGatewayController;
 use App\Http\Controllers\Platform\GatewayEventController as PlatformGatewayEventController;
@@ -50,11 +47,15 @@ use App\Http\Controllers\Platform\RoleController as PlatformRoleController;
 use App\Http\Controllers\Platform\SecurityController as PlatformSecurityController;
 use App\Http\Controllers\Platform\SessionController as PlatformSessionController;
 use App\Http\Controllers\Platform\SettingsController as PlatformSettingsController;
+use App\Http\Controllers\Platform\SmsController as PlatformSmsController;
 use App\Http\Controllers\Platform\SubscriptionController as PlatformSubscriptionController;
 use App\Http\Controllers\Platform\SupportTicketController as PlatformSupportTicketController;
 use App\Http\Controllers\Platform\TenantController as PlatformTenantController;
 use App\Http\Controllers\Platform\UsageController as PlatformUsageController;
 use App\Http\Controllers\POS\PosController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Purchasing\PurchaseOrderController;
+use App\Http\Controllers\Purchasing\SupplierController;
 use App\Http\Controllers\QrDining\QrAnalyticsController;
 use App\Http\Controllers\QrDining\QrBillController;
 use App\Http\Controllers\QrDining\QrEntryController;
@@ -65,17 +66,18 @@ use App\Http\Controllers\QrDining\QrPaymentController;
 use App\Http\Controllers\QrDining\QrSessionController;
 use App\Http\Controllers\QrDining\QrTableController;
 use App\Http\Controllers\QrDining\QrTrackingController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Purchasing\PurchaseOrderController;
-use App\Http\Controllers\Purchasing\SupplierController;
 use App\Http\Controllers\Reporting\ReportController;
 use App\Http\Controllers\Staff\AcceptInvitationController;
 use App\Http\Controllers\Staff\ManagerPinController;
 use App\Http\Controllers\Staff\StaffController;
 use App\Http\Controllers\Subscription\SubscriptionController as TenantSubscriptionController;
 use App\Http\Controllers\Tables\TableController;
+use App\Http\Controllers\Tenant\BranchController as TenantBranchController;
+use App\Http\Controllers\Tenant\PaymentGatewayController as TenantPaymentGatewayController;
+use App\Http\Controllers\Tenant\SettingsController as TenantSettingsController;
+use App\Http\Controllers\Tenant\TenantBrandingController;
 use App\Http\Controllers\Waste\WasteController;
-use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -104,7 +106,6 @@ Route::get('/robots.txt', function () {
     return response(file_get_contents(public_path('robots.txt')), 200, ['Content-Type' => 'text/plain']);
 });
 
-
 // Public invitation acceptance (staff join via emailed link).
 Route::middleware('guest')->group(function () {
     Route::get('/invitations/{token}', [AcceptInvitationController::class, 'show'])->name('invitations.accept');
@@ -125,26 +126,31 @@ Route::post('/payments/ipn/{provider}', [PlatformCallbackController::class, 'ipn
 // Language switch (available to guests so auth screens can be localized too).
 Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('onboarding')->name('onboarding.')->group(function () {
         Route::get('/', [OnboardingController::class, 'index'])->name('index');
         Route::get('/{step}', [OnboardingController::class, 'show'])->name('show');
+        Route::post('/profile', [OnboardingController::class, 'storeProfile'])->name('profile');
         Route::post('/company', [OnboardingController::class, 'storeCompany'])->name('company');
         Route::post('/branch', [OnboardingController::class, 'storeBranch'])->name('branch');
         Route::post('/hours', [OnboardingController::class, 'storeHours'])->name('hours');
         Route::post('/tax', [OnboardingController::class, 'storeTax'])->name('tax');
         Route::post('/receipt', [OnboardingController::class, 'storeReceipt'])->name('receipt');
+        Route::post('/payments', [OnboardingController::class, 'storePayments'])->name('payments');
+        Route::post('/menu', [OnboardingController::class, 'storeMenu'])->name('menu');
+        Route::post('/team', [OnboardingController::class, 'storeTeam'])->name('team');
         Route::post('/skip/{step}', [OnboardingController::class, 'skip'])->name('skip');
         Route::post('/complete', [OnboardingController::class, 'complete'])->name('complete');
     });
 
     Route::put('/profile/manager-pin', [ManagerPinController::class, 'update'])->name('profile.manager-pin');
-    Route::post('/branch/switch', function (\Illuminate\Http\Request $request) {
+    Route::post('/branch/switch', function (Request $request) {
         $request->validate(['branch_id' => 'required|integer']);
         $user = $request->user();
         if ($user && $user->canAccessBranch($request->integer('branch_id'))) {
             $request->session()->put('active_branch_id', $request->integer('branch_id'));
         }
+
         return back();
     })->name('branch.switch');
 });
@@ -178,7 +184,7 @@ Route::prefix('qr')->name('qr.')->middleware(['qr.context', 'throttle:qr-public'
     });
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'onboarding.completed'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::prefix('staff')->name('staff.')->group(function () {
@@ -201,13 +207,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [MenuController::class, 'index'])
             ->middleware('permission:menu.view')->name('index');
 
+        Route::get('/products/template', [MenuController::class, 'template'])
+            ->middleware('permission:menu.view')->name('products.template');
+        Route::get('/products/export', [MenuController::class, 'export'])
+            ->middleware('permission:menu.view')->name('products.export');
+
         Route::middleware('permission:menu.manage')->group(function () {
             Route::post('/categories', [MenuController::class, 'storeCategory'])->name('categories.store');
             Route::patch('/categories/{category}', [MenuController::class, 'updateCategory'])->name('categories.update');
             Route::delete('/categories/{category}', [MenuController::class, 'destroyCategory'])->name('categories.destroy');
             Route::post('/products', [MenuController::class, 'storeProduct'])->name('products.store');
+            Route::post('/products/import', [MenuController::class, 'import'])->name('products.import');
             Route::patch('/products/{product}', [MenuController::class, 'updateProduct'])->name('products.update');
             Route::delete('/products/{product}', [MenuController::class, 'destroyProduct'])->name('products.destroy');
+            Route::post('/products/{product}/image', [MenuController::class, 'updateProductImage'])->name('products.image');
+            Route::delete('/products/{product}/image', [MenuController::class, 'destroyProductImage'])->name('products.image.destroy');
         });
     });
 
@@ -402,6 +416,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [CustomerController::class, 'index'])
             ->middleware('permission:customers.view')->name('index');
 
+        Route::middleware('permission:customers.view')->group(function () {
+            Route::get('/export', [CustomerController::class, 'export'])->name('export');
+            Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
+        });
+
         Route::middleware('permission:customers.manage')->group(function () {
             Route::post('/', [CustomerController::class, 'store'])->name('store');
             Route::patch('/{customer}', [CustomerController::class, 'update'])->name('update');
@@ -436,6 +455,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Branding upload (registered before the /{group} catch-all below).
         Route::post('/logo', [TenantBrandingController::class, 'updateLogo'])->name('logo.update');
         Route::delete('/logo', [TenantBrandingController::class, 'destroyLogo'])->name('logo.destroy');
+
+        // Payment gateways (registered before the /{group} catch-all below).
+        Route::get('/payments', [TenantPaymentGatewayController::class, 'index'])->name('payments.index');
+        Route::post('/payments', [TenantPaymentGatewayController::class, 'store'])->name('payments.store');
+        Route::patch('/payments/{gateway}', [TenantPaymentGatewayController::class, 'update'])->name('payments.update');
+        Route::post('/payments/{gateway}/toggle', [TenantPaymentGatewayController::class, 'toggle'])->name('payments.toggle');
+        Route::post('/payments/{gateway}/default', [TenantPaymentGatewayController::class, 'setDefault'])->name('payments.default');
+        Route::post('/payments/{gateway}/test', [TenantPaymentGatewayController::class, 'test'])->name('payments.test');
+        Route::delete('/payments/{gateway}', [TenantPaymentGatewayController::class, 'destroy'])->name('payments.destroy');
 
         Route::get('/{group}', [TenantSettingsController::class, 'show'])->name('show');
         Route::post('/{group}', [TenantSettingsController::class, 'update'])->name('update');
@@ -568,6 +596,13 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
         Route::post('/gateways/{gateway}/test', [PlatformGatewayController::class, 'test'])->name('gateways.test');
         Route::delete('/gateways/{gateway}', [PlatformGatewayController::class, 'destroy'])->name('gateways.destroy');
     });
+
+    Route::get('/sms', [PlatformSmsController::class, 'index'])
+        ->middleware('platform.permission:platform.settings.view')->name('sms.index');
+    Route::post('/sms', [PlatformSmsController::class, 'update'])
+        ->middleware('platform.permission:platform.settings.manage')->name('sms.update');
+    Route::post('/sms/test', [PlatformSmsController::class, 'test'])
+        ->middleware('platform.permission:platform.settings.manage')->name('sms.test');
 
     Route::middleware('platform.permission:platform.email.view')->group(function () {
         Route::get('/email', [PlatformEmailController::class, 'index'])->name('email.dashboard');

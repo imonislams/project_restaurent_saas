@@ -29,6 +29,7 @@ class ReportController extends Controller
         'branches' => 'Branch comparison',
         'hourly' => 'Hourly sales',
         'loyalty' => 'Loyalty',
+        'customers' => 'Customer analytics',
     ];
 
     public function __construct(protected ReportService $reports) {}

@@ -5,10 +5,18 @@ namespace App\Domain\Onboarding;
 use App\Domain\Accounting\Actions\ProvisionAccountingDefaults;
 use App\Domain\Branches\Enums\ServiceType;
 use App\Domain\Branches\Models\Branch;
+use App\Domain\Identity\InvitationService;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
+use App\Domain\Menu\Enums\InventoryMode;
+use App\Domain\Menu\Models\Category;
+use App\Domain\Menu\Models\Product;
 use App\Domain\Onboarding\Enums\OnboardingStep;
+use App\Domain\PaymentGateways\TenantGatewayManager;
 use App\Domain\Tenancy\Models\Tenant;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Drives the onboarding wizard: persists each step, tracks progress, derives
@@ -19,22 +27,46 @@ class OnboardingService
 {
     /** Steps a user can configure during onboarding (Review is the finish line). */
     public const CONFIGURABLE_STEPS = [
+        OnboardingStep::Profile,
         OnboardingStep::Company,
         OnboardingStep::Branch,
         OnboardingStep::Hours,
         OnboardingStep::Tax,
         OnboardingStep::Receipt,
+        OnboardingStep::Payments,
+        OnboardingStep::Menu,
+        OnboardingStep::Team,
     ];
 
     /** Steps that must be complete before the restaurant can be activated. */
     public const REQUIRED_STEPS = [
+        OnboardingStep::Profile,
         OnboardingStep::Company,
         OnboardingStep::Branch,
     ];
 
     public function currentStep(Tenant $tenant): OnboardingStep
     {
-        return $this->firstIncompleteStep($tenant) ?? OnboardingStep::Review;
+        $step = $this->firstIncompleteStep($tenant) ?? OnboardingStep::Review;
+
+        // Keep the stored pointer truthful so the row reflects where the owner is held.
+        if ($tenant->onboarding_step !== $step->value) {
+            $tenant->forceFill(['onboarding_step' => $step->value])->save();
+        }
+
+        return $step;
+    }
+
+    /**
+     * Record the step the owner is being advanced to after completing one.
+     */
+    public function advanceStep(Tenant $tenant, OnboardingStep $completed): OnboardingStep
+    {
+        $next = $completed->next() ?? OnboardingStep::Review;
+
+        $tenant->forceFill(['onboarding_step' => $next->value])->save();
+
+        return $next;
     }
 
     public function firstIncompleteStep(Tenant $tenant): ?OnboardingStep
@@ -65,11 +97,15 @@ class OnboardingService
     public function isStepComplete(Tenant $tenant, OnboardingStep $step): bool
     {
         return match ($step) {
+            OnboardingStep::Profile => $this->profileConfigured($tenant),
             OnboardingStep::Company => $this->companyConfigured($tenant),
             OnboardingStep::Branch => $this->branchConfigured($tenant),
             OnboardingStep::Hours => $this->hoursConfigured($tenant),
             OnboardingStep::Tax => $this->taxConfigured($tenant),
             OnboardingStep::Receipt => $this->receiptConfigured($tenant),
+            OnboardingStep::Payments => $this->paymentsConfigured($tenant),
+            OnboardingStep::Menu => $this->menuConfigured($tenant),
+            OnboardingStep::Team => $this->staffConfigured($tenant),
             OnboardingStep::Review => $tenant->hasCompletedOnboarding(),
         };
     }
@@ -106,6 +142,34 @@ class OnboardingService
             'total' => $total,
             'steps' => $steps,
         ];
+    }
+
+    /**
+     * Confirm the owner's own profile before the restaurant setup begins.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function saveProfile(Tenant $tenant, array $data, User $user): void
+    {
+        if (! empty($data['name'])) {
+            $user->name = $data['name'];
+        }
+
+        // Mobile accounts already hold a (verified) number — only email accounts may add one.
+        if ($user->registersByEmail() && ! empty($data['phone'])) {
+            $user->phone = $data['phone'];
+        }
+
+        $user->save();
+
+        $tenant->mergeSettings([
+            'profile' => [
+                'role_title' => $data['role_title'] ?? null,
+                'completed_at' => now()->toIso8601String(),
+            ],
+        ]);
+
+        $tenant->save();
     }
 
     public function saveCompany(Tenant $tenant, array $data): void
@@ -230,6 +294,104 @@ class OnboardingService
     }
 
     /**
+     * Persist the tenant's chosen payment gateways (cash / Stripe / SSLCommerz /
+     * bKash). Several may be enabled at once; exactly one is the default. This
+     * writes real `tenant_gateways` rows — the single source of truth — rather
+     * than a settings string.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function savePayments(Tenant $tenant, array $data): void
+    {
+        $gateways = array_values(array_filter(
+            is_array($data['gateways'] ?? null) ? $data['gateways'] : [],
+            fn ($gateway) => ! empty($gateway['provider']),
+        ));
+
+        app(TenantGatewayManager::class)->upsertForTenant($tenant, $gateways, $data['default_provider'] ?? null);
+
+        $default = $data['default_provider'] ?? ($gateways[0]['provider'] ?? null);
+
+        $tenant->mergeSettings([
+            'payments.provider' => $default,
+            'payments.accept_cash' => collect($gateways)->contains(fn ($gateway) => $gateway['provider'] === 'cash'),
+        ]);
+
+        $tenant->save();
+    }
+
+    /**
+     * Quick-start menu: create the first category and a first product so the
+     * owner can ring up a sale without leaving the journey.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function saveMenu(Tenant $tenant, array $data): void
+    {
+        DB::transaction(function () use ($tenant, $data) {
+            $category = $tenant->getSetting('onboarding.starter_category_id')
+                ? Category::find($tenant->getSetting('onboarding.starter_category_id'))
+                : null;
+
+            if (! $category) {
+                $category = Category::create([
+                    'tenant_id' => $tenant->getKey(),
+                    'name' => $data['category_name'] ?? 'Menu',
+                    'slug' => $this->uniqueSlug(Category::class, $data['category_name'] ?? 'Menu'),
+                    'is_active' => true,
+                ]);
+            }
+
+            $price = (float) ($data['price'] ?? 0);
+
+            Product::create([
+                'tenant_id' => $tenant->getKey(),
+                'category_id' => $category->getKey(),
+                'name' => $data['product_name'],
+                'slug' => $this->uniqueSlug(Product::class, $data['product_name']),
+                'price_dine_in' => $price,
+                'price_takeaway' => $price,
+                'price_delivery' => $price,
+                'cost_price' => (float) ($data['cost_price'] ?? 0),
+                'inventory_mode' => InventoryMode::None->value,
+                'is_active' => true,
+                'is_available' => true,
+            ]);
+
+            $tenant->mergeSettings(['onboarding.starter_category_id' => $category->getKey()]);
+            $tenant->save();
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function saveTeam(Tenant $tenant, array $data, ?User $inviter = null): void
+    {
+        app(InvitationService::class)->invite($tenant, [
+            'email' => $data['email'],
+            'name' => $data['name'] ?? null,
+            'roles' => [$data['role'] ?? 'branch_manager'],
+        ], $inviter);
+    }
+
+    /**
+     * @param  class-string<Model>  $model
+     */
+    protected function uniqueSlug(string $model, string $name): string
+    {
+        $base = Str::slug($name) ?: 'item';
+        $slug = $base;
+        $suffix = 1;
+
+        while ($model::withTrashed()->where('slug', $slug)->exists()) {
+            $slug = $base.'-'.(++$suffix);
+        }
+
+        return $slug;
+    }
+
+    /**
      * Activation checklist rendered on the dashboard.
      *
      * @return list<array{key: string, label: string, done: bool, required: bool}>
@@ -237,6 +399,7 @@ class OnboardingService
     public function checklist(Tenant $tenant): array
     {
         return [
+            $this->checklistItem('profile', 'Owner profile completed', $this->profileConfigured($tenant), true, 'onboarding.show', ['step' => 'profile']),
             $this->checklistItem('company', 'Company & region configured', $this->companyConfigured($tenant), true, 'settings.show', ['group' => 'company']),
             $this->checklistItem('branch', 'First branch created', $this->branchConfigured($tenant), true, 'settings.show', ['group' => 'branches']),
             $this->checklistItem('hours', 'Operating hours set', $this->hoursConfigured($tenant), false, 'settings.show', ['group' => 'hours']),
@@ -285,12 +448,21 @@ class OnboardingService
 
     protected function paymentsConfigured(Tenant $tenant): bool
     {
-        return $tenant->getSetting('payments.provider') !== null;
+        if (app(TenantGatewayManager::class)->enabledFor($tenant)->isNotEmpty()) {
+            return true;
+        }
+
+        return $tenant->getSetting('payments.accept_cash') === true;
     }
 
     protected function staffConfigured(Tenant $tenant): bool
     {
         return $tenant->users()->count() > 1 || $tenant->invitations()->exists();
+    }
+
+    protected function menuConfigured(Tenant $tenant): bool
+    {
+        return Product::withoutGlobalScopes()->where('tenant_id', $tenant->getKey())->exists();
     }
 
     public function savePos(Tenant $tenant, array $data): void
@@ -414,6 +586,12 @@ class OnboardingService
     public function stepData(Tenant $tenant, OnboardingStep $step): array
     {
         return match ($step) {
+            OnboardingStep::Profile => [
+                'name' => $tenant->users()->orderBy('id')->value('name') ?? '',
+                'phone' => $tenant->users()->orderBy('id')->value('phone') ?? '',
+                'role_title' => $tenant->getSetting('profile.role_title', ''),
+                'phone_editable' => $tenant->users()->orderBy('id')->value('email') !== null,
+            ],
             OnboardingStep::Company => [
                 'legal_name' => $tenant->getSetting('company.legal_name', $tenant->name),
                 'phone' => $tenant->getSetting('company.phone', ''),
@@ -480,6 +658,11 @@ class OnboardingService
         }
 
         return $days;
+    }
+
+    protected function profileConfigured(Tenant $tenant): bool
+    {
+        return $tenant->getSetting('profile.completed_at') !== null;
     }
 
     protected function companyConfigured(Tenant $tenant): bool

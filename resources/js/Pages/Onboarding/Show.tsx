@@ -1,9 +1,13 @@
 import BranchStep from '@/Components/Onboarding/BranchStep';
 import CompanyStep from '@/Components/Onboarding/CompanyStep';
 import HoursStep from '@/Components/Onboarding/HoursStep';
+import MenuStep from '@/Components/Onboarding/MenuStep';
+import PaymentsStep from '@/Components/Onboarding/PaymentsStep';
+import ProfileStep from '@/Components/Onboarding/ProfileStep';
 import ReceiptStep from '@/Components/Onboarding/ReceiptStep';
 import ReviewStep from '@/Components/Onboarding/ReviewStep';
 import TaxStep from '@/Components/Onboarding/TaxStep';
+import TeamStep from '@/Components/Onboarding/TeamStep';
 import OnboardingLayout from '@/Layouts/OnboardingLayout';
 import { OnboardingOptions, OnboardingProgress } from '@/types/onboarding';
 
@@ -22,6 +26,8 @@ export default function OnboardingShow({
 
     const renderStep = () => {
         switch (step) {
+            case 'profile':
+                return <ProfileStep form={form} />;
             case 'company':
                 return <CompanyStep form={form} options={options} />;
             case 'branch':
@@ -32,6 +38,12 @@ export default function OnboardingShow({
                 return <TaxStep form={form} options={options} />;
             case 'receipt':
                 return <ReceiptStep form={form} options={options} />;
+            case 'payments':
+                return <PaymentsStep form={form} options={options} />;
+            case 'menu':
+                return <MenuStep form={form} />;
+            case 'team':
+                return <TeamStep form={form} options={options} />;
             case 'review':
                 return <ReviewStep progress={progress} />;
             default:

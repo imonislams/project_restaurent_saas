@@ -106,7 +106,7 @@ const SOLUTION_DATA: Record<string, SolutionDetail> = {
                 </div>
                 <div className="flex justify-between text-xs font-bold pt-1">
                     <span>TOTAL DUE</span>
-                    <span className="text-base text-[#0B271F]">$10.75</span>
+                    <span className="text-base text-stone-900">$10.75</span>
                 </div>
             </div>
         ),
@@ -236,7 +236,7 @@ const SOLUTION_DATA: Record<string, SolutionDetail> = {
                 <div className="bg-white p-3 rounded-xl border border-stone-200 text-stone-700 font-sans space-y-1">
                     <div className="font-bold">Customer: Sarah Jenkins (555-0192)</div>
                     <div className="text-xs text-stone-500">Address: 742 Evergreen Terrace (Gate Code #4102)</div>
-                    <div className="text-xs font-bold text-[#0B271F] pt-1">Cash on Delivery Due: $34.50 (incl. $4.00 zone fee)</div>
+                    <div className="text-xs font-bold text-stone-900 pt-1">Cash on Delivery Due: $34.50 (incl. $4.00 zone fee)</div>
                 </div>
             </div>
         ),
@@ -316,12 +316,12 @@ export default function SolutionShow({ solutionKey }: { solutionKey: string }) {
             <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="max-w-3xl">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-[#0B271F]/15 bg-white px-3.5 py-1 text-xs font-mono font-semibold uppercase tracking-wider text-[#0B271F] mb-6">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+                        <div className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3.5 py-1 text-xs font-mono font-semibold uppercase tracking-wider text-[#B53014] mb-6">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#B53014]" />
                             <span>{solution.badge}</span>
                         </div>
 
-                        <h1 className="font-display text-4xl font-extrabold tracking-tight text-[#0B271F] sm:text-6xl leading-[1.1]">
+                        <h1 className="font-display text-4xl font-extrabold tracking-tight text-stone-900 sm:text-6xl leading-[1.1]">
                             {solution.heroHeadline}
                         </h1>
 
@@ -382,124 +382,124 @@ export default function SolutionShow({ solutionKey }: { solutionKey: string }) {
                                     {item.pain}
                                 </h3>
                                 <div className="pt-4 border-t border-stone-200/80">
-                                    <div className="text-xs font-mono font-bold text-[#10B981] uppercase">
+                                    <div className="text-xs font-mono font-bold text-[#B53014] uppercase">
                                         HOW RESTRY SOLVES IT
                                     </div>
                                     <p className="mt-1 text-xs sm:text-sm text-stone-600 leading-relaxed">
-                                        {item.solution}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
+                                         {item.solution}
+                                     </p>
+                                 </div>
+                             </div>
+                         ))}
+                     </div>
+                 </div>
+             </section>
 
-            {/* Workflow Steps */}
-            <section className="border-t border-stone-200/80 bg-[#FBFBF9] py-20 sm:py-28">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <SectionHeading
-                        badge="HOW IT WORKS"
-                        title={solution.workflowTitle}
-                        description="Intuitive steps that floor staff and line cooks adopt effortlessly."
-                    />
+             {/* Workflow Steps */}
+             <section className="border-t border-stone-200/80 bg-[#FBFBF9] py-20 sm:py-28">
+                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                     <SectionHeading
+                         badge="HOW IT WORKS"
+                         title={solution.workflowTitle}
+                         description="Intuitive steps that floor staff and line cooks adopt effortlessly."
+                     />
 
-                    <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {solution.workflowSteps.map((step, idx) => (
-                            <div
-                                key={idx}
-                                className="rounded-2xl border border-stone-200/90 bg-white p-8 space-y-3 shadow-xs"
-                            >
-                                <div className="text-xs font-mono font-bold text-[#10B981]">
-                                    STEP {step.step}
-                                </div>
-                                <h3 className="font-display text-xl font-bold text-stone-900">
-                                    {step.title}
-                                </h3>
-                                <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
-                                    {step.desc}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
+                     <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-8">
+                         {solution.workflowSteps.map((step, idx) => (
+                             <div
+                                 key={idx}
+                                 className="rounded-2xl border border-stone-200/90 bg-white p-8 space-y-3 shadow-xs"
+                             >
+                                 <div className="text-xs font-mono font-bold text-[#B53014]">
+                                     STEP {step.step}
+                                 </div>
+                                 <h3 className="font-display text-xl font-bold text-stone-900">
+                                     {step.title}
+                                 </h3>
+                                 <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
+                                     {step.desc}
+                                 </p>
+                             </div>
+                         ))}
+                     </div>
+                 </div>
+             </section>
 
-            {/* Relevant Modules */}
-            <section className="border-t border-stone-200/80 bg-white py-16">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-wrap items-center justify-between gap-4 pb-8 border-b border-stone-200">
-                        <div>
-                            <h3 className="font-display text-xl font-bold text-stone-900">
-                                Key Modules for {solution.title}
-                            </h3>
-                            <p className="text-xs text-stone-500 mt-1">
-                                Restrly activates the modules you need and hides what you don’t.
-                            </p>
-                        </div>
-                    </div>
+             {/* Relevant Modules */}
+             <section className="border-t border-stone-200/80 bg-white py-16">
+                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                     <div className="flex flex-wrap items-center justify-between gap-4 pb-8 border-b border-stone-200">
+                         <div>
+                             <h3 className="font-display text-xl font-bold text-stone-900">
+                                 Key Modules for {solution.title}
+                             </h3>
+                             <p className="text-xs text-stone-500 mt-1">
+                                 Restrly activates the modules you need and hides what you don’t.
+                             </p>
+                         </div>
+                     </div>
 
-                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                        {solution.coreModules.map((m) => (
-                            <Link
-                                key={m.slug}
-                                href={`/features/${m.slug}`}
-                                className="group block rounded-xl border border-stone-200 bg-stone-50 p-6 hover:border-[#0B271F] transition-all"
-                            >
-                                <div className="font-display font-bold text-stone-900 text-base group-hover:text-[#0B271F]">
-                                    {m.title}
-                                </div>
-                                <p className="mt-2 text-xs text-stone-600 leading-relaxed">
-                                    {m.desc}
-                                </p>
-                                <div className="mt-4 text-xs font-semibold text-[#0B271F] group-hover:text-[#10B981] flex items-center gap-1">
-                                    <span>Learn more</span>
-                                    <span>→</span>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            </section>
+                     <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                         {solution.coreModules.map((m) => (
+                             <Link
+                                 key={m.slug}
+                                 href={`/features/${m.slug}`}
+                                 className="group block rounded-xl border border-stone-200 bg-stone-50 p-6 hover:border-[#B53014] transition-all"
+                             >
+                                 <div className="font-display font-bold text-stone-900 text-base group-hover:text-[#B53014]">
+                                     {m.title}
+                                 </div>
+                                 <p className="mt-2 text-xs text-stone-600 leading-relaxed">
+                                     {m.desc}
+                                 </p>
+                                 <div className="mt-4 text-xs font-semibold text-[#B53014] group-hover:underline flex items-center gap-1">
+                                     <span>Learn more</span>
+                                     <span>→</span>
+                                 </div>
+                             </Link>
+                         ))}
+                     </div>
+                 </div>
+             </section>
 
-            {/* Solution FAQs */}
-            <section className="border-t border-stone-200/80 bg-[#FBFBF9] py-20 sm:py-28">
-                <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-                    <SectionHeading
-                        badge="FAQS"
-                        title="Frequently Asked Questions"
-                        description={`Answers specific to operating ${solution.title.toLowerCase()} on Restrly.`}
-                    />
+             {/* Solution FAQs */}
+             <section className="border-t border-stone-200/80 bg-[#FBFBF9] py-20 sm:py-28">
+                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+                     <SectionHeading
+                         badge="FAQS"
+                         title="Frequently Asked Questions"
+                         description={`Answers specific to operating ${solution.title.toLowerCase()} on Restrly.`}
+                     />
 
-                    <div className="mt-12 space-y-4">
-                        {solution.faqs.map((faq, idx) => (
-                            <div
-                                key={idx}
-                                className="rounded-2xl border border-stone-200 bg-white overflow-hidden"
-                            >
-                                <button
-                                    type="button"
-                                    onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                                    className="flex w-full items-center justify-between p-5 text-left font-display font-bold text-stone-900 text-sm sm:text-base hover:text-[#0B271F]"
-                                >
-                                    <span>{faq.q}</span>
-                                    <span className="ml-4 font-mono text-stone-400">
-                                        {openFaq === idx ? '−' : '+'}
-                                    </span>
-                                </button>
-                                {openFaq === idx && (
-                                    <div className="px-5 pb-6 text-xs sm:text-sm text-stone-600 leading-relaxed border-t border-stone-200/60 pt-4">
-                                        {faq.a}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
+                     <div className="mt-12 space-y-4">
+                         {solution.faqs.map((faq, idx) => (
+                             <div
+                                 key={idx}
+                                 className="rounded-2xl border border-stone-200 bg-white overflow-hidden"
+                             >
+                                 <button
+                                     type="button"
+                                     onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                                     className="flex w-full items-center justify-between p-5 text-left font-display font-bold text-stone-900 text-sm sm:text-base hover:text-[#B53014]"
+                                 >
+                                     <span>{faq.q}</span>
+                                     <span className="ml-4 font-mono text-stone-400">
+                                         {openFaq === idx ? '−' : '+'}
+                                     </span>
+                                 </button>
+                                 {openFaq === idx && (
+                                     <div className="px-5 pb-6 text-xs sm:text-sm text-stone-600 leading-relaxed border-t border-stone-200/60 pt-4">
+                                         {faq.a}
+                                     </div>
+                                 )}
+                             </div>
+                         ))}
+                     </div>
+                 </div>
+             </section>
 
-            {/* Contextual Bottom CTA */}
-            <section className="bg-[#0B271F] py-20 text-white text-center">
+             {/* Contextual Bottom CTA */}
+             <section className="bg-stone-900 py-20 text-white text-center">
                 <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-6">
                     <h2 className="font-display text-3xl sm:text-4xl font-extrabold">
                         Ready to Transform Your {solution.title}?

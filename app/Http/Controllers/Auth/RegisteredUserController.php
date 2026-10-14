@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Domain\Identity\OtpService;
 use App\Domain\Tenancy\Actions\RegisterTenant;
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Http\Requests\Auth\RegisterRequest;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rules;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -28,24 +26,25 @@ class RegisteredUserController extends Controller
 
     /**
      * Handle an incoming registration request.
-     *
-     * @throws ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(RegisterRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'restaurant_name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        $data = $request->validated();
 
-        $user = $this->registerTenant->execute($validated);
-
-        event(new Registered($user));
+        $user = $this->registerTenant->execute($data);
 
         Auth::login($user);
 
-        return redirect(route('onboarding.index', absolute: false));
+        if ($user->registersByEmail()) {
+            // Sends the verification link (User implements MustVerifyEmail).
+            event(new Registered($user));
+
+            return redirect(route('verification.notice', absolute: false));
+        }
+
+        // Mobile sign-up: deliver a one-time code to the phone.
+        app(OtpService::class)->issue($user);
+
+        return redirect(route('verification.phone', absolute: false));
     }
 }

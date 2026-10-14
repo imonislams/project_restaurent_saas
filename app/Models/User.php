@@ -11,11 +11,13 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
@@ -31,6 +33,7 @@ class User extends Authenticatable
         'status',
         'name',
         'email',
+        'phone',
         'password',
         'locale',
         'last_login_at',
@@ -65,6 +68,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_platform_admin' => 'boolean',
             'last_login_at' => 'datetime',
@@ -72,9 +76,58 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * A contact is verified when either the email or the mobile number is proven.
+     */
+    public function hasVerifiedEmail(): bool
+    {
+        return $this->email_verified_at !== null || $this->phone_verified_at !== null;
+    }
+
+    public function markPhoneAsVerified(): bool
+    {
+        if ($this->phone_verified_at !== null) {
+            return false;
+        }
+
+        return $this->forceFill(['phone_verified_at' => now()])->save();
+    }
+
+    /**
+     * Whether the account was created with an email address (as opposed to mobile).
+     */
+    public function registersByEmail(): bool
+    {
+        return $this->email !== null;
+    }
+
+    /**
+     * Normalise a phone number to a digits-and-leading-plus form so the same
+     * number always maps to one account.
+     */
+    protected function phone(): Attribute
+    {
+        return Attribute::make(
+            set: function (?string $value) {
+                if ($value === null) {
+                    return null;
+                }
+
+                $digits = preg_replace('/[^\d+]/', '', $value) ?? '';
+
+                return ltrim($digits, '+') === '' ? null : '+'.ltrim($digits, '+');
+            },
+        );
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function phoneVerificationCodes(): HasMany
+    {
+        return $this->hasMany(\App\Domain\Identity\Models\PhoneVerificationCode::class);
     }
 
     /** Public URL of the user's profile photo (null when none is set). */

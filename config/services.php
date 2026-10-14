@@ -40,4 +40,10 @@ return [
         'stub_secret' => env('PAYMENT_STUB_SECRET', 'stub-secret'),
     ],
 
+    'sms' => [
+        // The active driver is configured in the platform SMS settings; these
+        // values are the fallback defaults.
+        'driver' => env('SMS_DRIVER', 'log'),
+    ],
+
 ];

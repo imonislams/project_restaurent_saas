@@ -44,6 +44,7 @@ class SubscriptionTest extends TestCase
     public function test_registration_starts_a_trial_subscription(): void
     {
         $this->post('/register', [
+            'identifier_type' => 'email',
             'name' => 'Owner',
             'restaurant_name' => 'Spice House',
             'email' => 'new@example.com',

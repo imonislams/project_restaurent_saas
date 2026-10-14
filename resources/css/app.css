@@ -95,6 +95,34 @@
     background: #94a3b8;
 }
 
+/* Tenant panel — refined typography (Roboto, consistent scale) */
+.tenant-shell {
+    font-family: 'Roboto', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: 0.006em;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.tenant-shell h1,
+.tenant-shell h2,
+.tenant-shell h3,
+.tenant-shell h4 {
+    letter-spacing: -0.012em;
+}
+
+.tenant-shell th,
+.tenant-shell td,
+.tenant-shell .tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+.tenant-shell small {
+    font-size: 0.75rem;
+}
+
 .material-symbols-outlined {
     font-family: 'Material Symbols Outlined', sans-serif;
     font-weight: normal;

@@ -54,9 +54,14 @@ const REPORT_GROUPS: { group: string; icon: string; types: string[] }[] = [
         types: ['inventory', 'purchases', 'waste'],
     },
     {
+        group: 'Customers & Loyalty',
+        icon: '🧑',
+        types: ['customers', 'loyalty'],
+    },
+    {
         group: 'Team & Branches',
         icon: '👥',
-        types: ['staff', 'branches', 'loyalty'],
+        types: ['staff', 'branches'],
     },
 ];
 

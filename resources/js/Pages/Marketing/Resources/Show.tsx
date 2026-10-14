@@ -139,7 +139,7 @@ export default function ResourceShow({ slug }: { slug: string }) {
                     <div className="mt-16 pt-8 border-t border-stone-200 flex flex-wrap items-center justify-between gap-4">
                         <Link
                             href="/resources"
-                            className="text-xs font-semibold text-[#0B271F] hover:text-[#10B981]"
+                            className="text-xs font-semibold text-[#B53014] hover:underline"
                         >
                             ← Back to all operations guides
                         </Link>

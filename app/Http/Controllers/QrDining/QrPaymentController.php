@@ -26,6 +26,7 @@ class QrPaymentController extends Controller
 
         $validated = $request->validate([
             'order_id' => ['required', 'integer'],
+            'provider' => ['nullable', 'string', 'max:40'],
             'idempotency_key' => ['nullable', 'string', 'max:100'],
         ]);
 
@@ -33,7 +34,15 @@ class QrPaymentController extends Controller
 
         abort_if($order->status->value === 'voided', 422, 'This order was cancelled.');
 
-        $result = app(QrPaymentService::class)->startOnline($order, $validated['idempotency_key'] ?? null);
+        $token = $request->attributes->get('qr_token')?->token;
+        $returnUrl = $token ? route('qr.tracking', ['token' => $token]) : null;
+
+        $result = app(QrPaymentService::class)->startOnline(
+            $order,
+            $validated['provider'] ?? null,
+            $validated['idempotency_key'] ?? null,
+            $returnUrl,
+        );
 
         return response()->json(['payment' => $result]);
     }

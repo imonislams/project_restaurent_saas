@@ -24,7 +24,14 @@ class TenantFactory extends Factory
             'business_email' => fake()->unique()->companyEmail(),
             'status' => TenantStatus::Active,
             'trial_ends_at' => now()->addDays(14),
+            // A factory tenant is a fully provisioned, ready-to-use restaurant.
+            'onboarding_completed_at' => now(),
         ];
+    }
+
+    public function notOnboarded(): static
+    {
+        return $this->state(fn () => ['onboarding_completed_at' => null]);
     }
 
     public function pending(): static

@@ -40,6 +40,7 @@ class ProductRequest extends FormRequest
             'inventory_mode' => ['required', Rule::in(InventoryMode::values())],
             'is_active' => ['boolean'],
             'is_available' => ['boolean'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'variants' => ['nullable', 'array'],
             'variants.*.name' => ['required', 'string', 'max:100'],

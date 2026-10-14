@@ -1,3 +1,4 @@
+import ApplicationLogo from '@/Components/ApplicationLogo';
 import { Link } from '@inertiajs/react';
 
 export interface MiseLogoProps {
@@ -23,46 +24,49 @@ export default function MiseLogo({
 
     const sizeClasses = {
         sm: {
+            icon: 'h-6 w-6',
             title: 'text-lg',
-            badge: 'text-[9px] px-1 py-0.5',
+            gap: 'gap-2',
         },
         md: {
-            title: 'text-2xl',
-            badge: 'text-[11px] px-1.5 py-0.5',
+            icon: 'h-7 w-7',
+            title: 'text-xl',
+            gap: 'gap-2.5',
         },
         lg: {
-            title: 'text-3xl',
-            badge: 'text-xs px-2 py-0.5',
+            icon: 'h-9 w-9',
+            title: 'text-2xl',
+            gap: 'gap-3',
         },
     }[size];
 
+    const markOnly = variant === 'icon' || variant === 'mark';
+
     const content = (
-        <span className={`inline-flex flex-col select-none ${className}`}>
-            <span className="inline-flex items-baseline gap-1">
-                <span
-                    className={`font-['Plus_Jakarta_Sans'] font-extrabold tracking-tight transition-colors ${
-                        sizeClasses.title
-                    } ${isDark ? 'text-surface-container-lowest' : 'text-on-surface'}`}
-                >
-                    mise<span className="text-primary">.</span>
-                </span>
-                <span
-                    className={`font-['Space_Mono'] font-bold uppercase tracking-wider rounded ${
-                        sizeClasses.badge
-                    } ${
-                        isDark
-                            ? 'text-secondary-fixed bg-secondary-fixed/20'
-                            : 'text-secondary bg-secondary-container'
-                    }`}
-                >
-                    pos
-                </span>
+        <span className={`inline-flex items-center select-none ${sizeClasses.gap} ${className}`}>
+            <span className="shrink-0 transition-transform group-hover:scale-105 duration-200">
+                <ApplicationLogo className={`${sizeClasses.icon} drop-shadow-xs`} />
             </span>
-            {withTagline && tagline && (
-                <span className={`font-mono text-[9px] uppercase tracking-widest font-semibold ${
-                    isDark ? 'text-primary-fixed' : 'text-stone-500'
-                }`}>
-                    {tagline}
+            {!markOnly && (
+                <span className="inline-flex flex-col">
+                    <span className="inline-flex items-baseline">
+                        <span
+                            className={`font-sans font-bold tracking-tight transition-colors ${
+                                sizeClasses.title
+                            } ${isDark ? 'text-white' : 'text-foreground'}`}
+                        >
+                            Restrly<span className="text-primary">.</span>
+                        </span>
+                    </span>
+                    {withTagline && tagline && (
+                        <span
+                            className={`font-sans text-[10px] uppercase tracking-wider font-semibold ${
+                                isDark ? 'text-muted-foreground' : 'text-muted-foreground'
+                            }`}
+                        >
+                            {tagline}
+                        </span>
+                    )}
                 </span>
             )}
         </span>
@@ -72,8 +76,8 @@ export default function MiseLogo({
         return (
             <Link
                 href={href}
-                className="inline-flex items-baseline group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
-                aria-label="mise.pos"
+                className="inline-flex items-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg"
+                aria-label="Restrly"
             >
                 {content}
             </Link>

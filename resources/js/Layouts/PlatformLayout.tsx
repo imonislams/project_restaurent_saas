@@ -84,6 +84,7 @@ const NAV: NavSection[] = [
             { label: 'Failed Emails', icon: 'alert', permission: 'platform.email.view', routeName: 'platform.email.failed', pattern: 'platform.email.failed' },
             { label: 'Email Templates', icon: 'file', permission: 'platform.email.manage', routeName: 'platform.email.templates', pattern: 'platform.email.templates' },
             { label: 'Email Provider', icon: 'sliders', permission: 'platform.email.manage', routeName: 'platform.email.settings', pattern: 'platform.email.settings' },
+            { label: 'SMS Provider', icon: 'envelope', permission: 'platform.settings.view', routeName: 'platform.sms.index', pattern: 'platform.sms.*' },
             { label: 'Notifications', icon: 'bell', permission: 'platform.email.view', routeName: 'platform.notifications.index', pattern: 'platform.notifications.*' },
         ],
     },

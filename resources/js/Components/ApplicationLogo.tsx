@@ -17,41 +17,41 @@ export default function ApplicationLogo({
             {...props}
         >
             {/* Rounded Squircle Brand Container */}
-            <rect width="64" height="64" rx="16" fill="#0B271F" />
+            <rect width="64" height="64" rx="16" fill="#B53014" />
             <rect
                 x="1"
                 y="1"
                 width="62"
                 height="62"
                 rx="15"
-                stroke="#165B47"
+                stroke="#9E2A11"
                 strokeWidth="1.5"
                 strokeOpacity="0.75"
             />
 
             {/* Ambient culinary glow */}
-            <circle cx="36" cy="28" r="22" fill="#10B981" fillOpacity="0.14" />
+            <circle cx="36" cy="28" r="22" fill="#FFFFFF" fillOpacity="0.12" />
 
             {/* Cloche Dome Top Knob Accent */}
-            <circle cx="34" cy="15" r="3" fill="#10B981" />
+            <circle cx="34" cy="15" r="3" fill="#FFFFFF" />
 
             {/* Left foundational pillar of R */}
-            <rect x="15" y="18" width="7" height="30" rx="3.5" fill="#FBFBF9" />
+            <rect x="15" y="18" width="7" height="30" rx="3.5" fill="#FFFFFF" />
 
             {/* Cloche Dome & Upper Bowl of R */}
             <path
                 d="M22 18H34C40.6274 18 46 23.3726 46 30C46 36.6274 40.6274 42 34 42H22V35H33.5C36.5376 35 39 32.5376 39 29.5C39 26.4624 36.5376 24 33.5 24H22V18Z"
-                fill="#FBFBF9"
+                fill="#FFFFFF"
             />
 
             {/* Dynamic serving sweep / leg of R */}
             <path
                 d="M30 35L42.5 47.5C43.5 48.5 42.8 50 41.4 50H34.5C33.4 50 32.4 49.5 31.7 48.7L22 38L30 35Z"
-                fill="#FBFBF9"
+                fill="#FFFFFF"
             />
 
             {/* Digital Service Pulse Dot */}
-            <circle cx="30" cy="30" r="2.5" fill="#10B981" />
+            <circle cx="30" cy="30" r="2.5" fill="#FFFFFF" fillOpacity="0.9" />
         </svg>
     );
 }

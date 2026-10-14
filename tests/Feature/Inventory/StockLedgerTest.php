@@ -52,6 +52,7 @@ class StockLedgerTest extends TestCase
     public function test_registration_provisions_default_units(): void
     {
         $this->post('/register', [
+            'identifier_type' => 'email',
             'name' => 'Owner',
             'restaurant_name' => 'Spice House',
             'email' => 'owner@example.com',

@@ -20,6 +20,10 @@ requirement in [ROADMAP.md](./ROADMAP.md) is satisfied and the report below is f
 | 12 — Queues, scheduler and notifications | Complete |
 | 13 — Performance and production readiness | Complete |
 | 14 — Internationalization and advanced features | Complete |
+| 15A — Registration, verification & onboarding journey | Complete pending review |
+| 15B — Tenant payment gateways | Complete pending review |
+| 15C — Customer segmentation & analytics | Complete pending review |
+| 15D — Product images, bulk import/export & storage link | Complete pending review |
 
 ---
 
@@ -1461,3 +1465,568 @@ recorded); `/customers` and `/delivery-zones` render.
 driven by the "known defects and unresolved risks" noted per phase (real gateway, full UI
 i18n, loyalty redemption, delivery integrations) and the production runbook in
 [docs/PRODUCTION.md](./PRODUCTION.md).
+
+---
+
+## Phase 15A — Registration, verification and onboarding journey
+
+### Business journey completed
+
+A restaurant owner registers with an **email address or a mobile number** (+ password).
+Email accounts confirm via a **verification link**; mobile accounts receive a **6-digit SMS
+code**. Until the owner finishes the guided setup journey, the dashboard and every
+management module redirect them to the exact step still outstanding; on activation the
+dashboard unlocks with **real analytics charts and a Business 360 snapshot**.
+
+### Features implemented
+
+- **Email-or-mobile registration** — `RegisterRequest` validates an `identifier_type`
+  (`email`/`phone`); phone numbers are normalised to a single canonical form; `users.email`
+  and `tenants.business_email` become nullable; `users.phone` is unique.
+- **Real verification enforcement** — `User` now implements `MustVerifyEmail` and reports a
+  contact as verified when **either** email or phone is verified. (Previously the `verified`
+  middleware was inert because the model did not implement the contract.) A unified
+  `VerificationNoticeController` renders the email or mobile screen as appropriate.
+- **SMS OTP** — `PhoneVerificationCode` model + `OtpService` (hashed, single-use, 10-minute
+  expiry, 5-attempt limit, 60s resend cooldown). `PhoneVerificationController`
+  (`show`/`verify`/`resend`) with throttling; success marks `phone_verified_at`.
+- **Pluggable SMS providers** — `SmsProvider` contract + `SmsManager` with four drivers
+  (Log, SSL Wireless, BulkSMSBD, Twilio). The **platform administrator** selects the active
+  provider and supplies credentials via a new `/platform/sms` screen; credentials are
+  **encrypted at rest**, masked in the UI, and a test-send is available. A delivery failure
+  is non-fatal.
+- **Expanded onboarding journey** — new optional steps `Payments`, `Menu` (quick-add the
+  first product) and `Team` (invite a teammate) alongside Company/Branch/Hours/Tax/Receipt/
+  Review. Only Company and Branch remain required.
+- **Dashboard gating** — `EnsureOnboardingComplete` middleware (`onboarding.completed`),
+  applied to the tenant app group. It resolves the tenant from the authenticated user,
+  skips platform admins and impersonating sessions, and redirects an incomplete tenant to
+  the first outstanding step. Onboarding/profile/auth routes remain reachable.
+- **Dashboard analytics & Business 360** — `DashboardAnalyticsService` produces KPIs, a
+  14-day sales trend, top products, payment mix and busiest hours from real records (no
+  mocked data); the dashboard renders these with `recharts` plus a 360° operations panel.
+
+### Files and modules changed
+
+```
+app/Domain/Identity/{OtpService,Models/PhoneVerificationCode}
+app/Domain/Communications/Sms/{SmsManager,Contracts/SmsProvider,Providers/*}
+app/Domain/Reporting/DashboardAnalyticsService
+app/Domain/Onboarding/{Enums/OnboardingStep,OnboardingService}      (new steps + savers)
+app/Domain/Tenancy/Actions/RegisterTenant.php                       (nullable email, phone)
+app/Domain/Tenancy/Factories/TenantFactory.php                      (onboarded default)
+app/Http/Requests/Auth/RegisterRequest.php
+app/Http/Controllers/Auth/{RegisteredUserController,VerificationNoticeController,PhoneVerificationController}
+app/Http/Controllers/Onboarding/OnboardingController.php            (payments/menu/team)
+app/Http/Controllers/DashboardController.php
+app/Http/Controllers/Platform/SmsController.php
+app/Http/Middleware/EnsureOnboardingComplete.php
+app/Models/User.php                                                 (MustVerifyEmail, phone)
+bootstrap/app.php                                                   (onboarding.completed alias)
+routes/{auth.php,web.php}, config/services.php
+database/migrations/2026_10_12_0000{06,07}_*
+resources/js/Pages/Auth/{Register,VerifyPhone}.tsx
+resources/js/Components/Onboarding/{PaymentsStep,MenuStep,TeamStep}.tsx
+resources/js/Pages/{Dashboard.tsx,Onboarding/Show.tsx,Platform/Sms/Index.tsx}
+resources/js/Layouts/PlatformLayout.tsx                             (SMS nav item)
+tests/Feature/Auth/{MobileRegistrationTest,PhoneVerificationTest}
+tests/Feature/Communications/SmsProviderTest
+tests/Feature/Onboarding/OnboardingGatingTest
+```
+
+### Database and migration changes
+
+- Altered: `users` (+`phone` unique, `phone_verified_at`, `email` nullable);
+  `tenants` (`business_email` nullable).
+- New: `phone_verification_codes`.
+- Verified on in-memory SQLite (tests). All migrations are additive and reversible.
+
+### Security and tenant-isolation results
+
+- OTP codes are hashed, single-use, expiring and attempt-limited; codes are never logged in
+  plaintext. Verification is enforced server-side by the `verified` middleware.
+- SMS credentials are encrypted at rest and never returned to the frontend.
+- The gating middleware resolves the tenant from trusted server-side context only, and
+  never traps platform admins or impersonating sessions.
+- Registration tests assert email/mobile uniqueness and normalisation.
+
+### Tests executed
+
+```
+php artisan test   →  473 passed (2558 assertions)
+```
+
+New coverage (25 tests): mobile registration (provisioning, no OTP for email, duplicate,
+normalisation, identifier required); phone verification (notice, valid/incorrect/expired
+code, single-use, resend, blocked dashboard, verified access); SMS manager (default/unknown
+driver, selection, encrypted credentials, incomplete config, provider sends, failure not
+thrown); onboarding gating (module redirect, completed passthrough, onboarding reachable,
+platform admin unaffected). Existing auth/onboarding tests were updated to the new flow.
+
+### Performance considerations
+
+- Dashboard aggregates are bounded to a 14-day window and grouped in PHP (portable across
+  MySQL/SQLite); no per-day queries.
+- OTP issuance is guarded by a resend cooldown and the route is rate-limited.
+
+### Known defects and unresolved risks
+
+- The **SMS drivers are implemented but unverified against live providers** (SSL Wireless /
+  BulkSMSBD / Twilio) — no provider account was exercised; the Log driver is the default and
+  used in development.
+- Real SMS delivery requires the **queue worker** for production throughput; OTP sending is
+  currently synchronous (a failure is swallowed and surfaced to the user).
+- The `Menu` onboarding step creates a **single** product (multi-item/bluk import is Phase D).
+- The `Team` onboarding step sends a normal staff invitation; it does not pre-verify the
+  invitee (they still accept via the emailed link).
+- Full frontend i18n string-extraction for the new screens is not done (English strings are
+  inline, consistent with existing auth screens).
+- Phase B (tenant payment gateways), C (customer segmentation) and D (product bulk ops) are
+  planned but **not yet implemented**.
+
+### Deployment / rollback
+
+- Migrations are additive and reversible. Set the SMS provider in `/platform/sms` before
+  going live with mobile verification; otherwise the Log driver is used.
+
+### Final phase status
+
+**Complete pending review.** Awaiting approval before Phase B (tenant payment gateways).
+
+---
+
+## Phase 15B — Tenant payment gateways
+
+### Business journey completed
+
+A restaurant owner opens **Settings → Payment Gateways**, adds one or more methods
+(cash, Stripe, SSLCommerz, bKash), enables several at once, sets a default, and configures
+credentials that are encrypted at rest. Online and QR payments resolve to the tenant's
+configured gateway; a payment is only recorded as paid once the provider is verified
+server-side (webhook/validation), never on a redirect alone.
+
+### Features implemented
+
+- **Gateway abstraction** — `GatewayDriver` contract with four drivers: `CashDriver`,
+  `StripeDriver` (hosted Checkout Sessions + PaymentIntents verification + `Stripe-Signature`
+  HMAC), `SslCommerzDriver` (hosted checkout + validation API), `BkashDriver`
+  (token grant → create → execute, BDT).
+- **`TenantGateway` model** — per-tenant configuration with `provider`, `environment`,
+  `is_enabled`, `is_default`, `supported_currencies`, encrypted `credentials`, health fields.
+  Several may be enabled; one default.
+- **`TenantGatewayManager`** — resolves drivers, enabled configs, currency support, and a
+  default *online* gateway (excludes cash).
+- **Integration** — `Payments\PaymentGatewayManager` now prefers the tenant's configured
+  gateway (via a `ConfiguredGateway` adapter) and falls back to the legacy manual/stub
+  provider. `QrPaymentService::startOnline` returns the hosted `redirect_url` for the
+  customer to complete.
+- **Webhooks** — `WebhookService` verifies tenant gateways by their own secrets
+  (`verifyAnyEnabled`); the legacy `stub`/`manual` behaviour is preserved.
+- **Tenant settings UI** — a new **Payment Gateways** tab in Settings (add/edit/enable/
+  disable/set-default/test/remove), credentials masked and never returned to the browser.
+
+### Files and modules changed
+
+```
+app/Domain/PaymentGateways/{Models/TenantGateway,Contracts/GatewayDriver,
+    Drivers/{CashDriver,StripeDriver,SslCommerzDriver,BkashDriver},
+    TenantGatewayManager,ConfiguredGateway}
+app/Domain/Payments/PaymentGatewayManager.php     (prefer tenant gateway)
+app/Domain/Payments/WebhookService.php            (tenant-aware verification)
+app/Domain/Dining/QrPaymentService.php            (redirect_url passthrough)
+app/Http/Controllers/Tenant/PaymentGatewayController.php
+app/Domain/Tenancy/Models/Tenant.php              (paymentGateways relation)
+database/migrations/2026_10_12_000008_create_tenant_gateways_table.php
+routes/web.php, resources/js/Pages/Settings/{Payments.tsx,Show.tsx}
+resources/js/i18n/translations.ts                 (settings.tab.payments)
+tests/Feature/Payments/TenantGatewayTest.php
+```
+
+### Database and migration changes
+
+- New: `tenant_gateways` (encrypted credentials via the model cast). Additive and reversible.
+
+### Security and tenant-isolation results
+
+- Credentials are encrypted at rest and never exposed to the frontend — verified.
+- Gateway management is scoped to the actor's tenant; a cross-tenant gateway returns 404 —
+  verified.
+- Webhook signatures are verified against tenant secrets; hosted payments are confirmed
+  server-side.
+
+### Tests executed
+
+```
+php artisan test   →  493 passed (2618 assertions)
+```
+
+New coverage (8): add cash gateway + default, non-cash requires credentials, credentials
+encrypted at rest, multiple enabled + default switch, cross-tenant 404, online-default
+excludes cash, Stripe signature verification, configured gateway returns a redirect.
+
+### Known defects and unresolved risks
+
+- Drivers are implemented but **not exercised against live accounts**; HTTP calls are covered
+  by `Http::fake()`. Sandbox smoke tests are recommended before enabling in production.
+- Stripe refunds and SSLCommerz refunds are recorded for manual action (no automatic refund
+  API calls yet).
+- Webhook verification tries all enabled configs for a provider (a valid signature only
+  matches the correct tenant secret); a per-tenant webhook endpoint would be more explicit.
+
+### Final phase status
+
+**Complete pending review.**
+
+---
+
+## Phase 15C — Customer segmentation & analytics
+
+### Business journey completed
+
+An owner opens **Customers** and sees each guest's segment (Champions, Loyal, High-value,
+New, Regular, At risk, Lost) derived from real order history, filters by segment, and reads
+a **Customer analytics** report (segment distribution + top spenders) in the Reports
+workspace.
+
+### Features implemented
+
+- **RFM segmentation** — `CustomerSegmentationService` computes recency, frequency and
+  monetary value from completed orders and classifies each customer; nothing is stored or
+  mocked.
+- **Consent & tags** — `customers.is_marketing_opt_in` and `customers.tags` added and
+  editable through the customer form.
+- **Report** — a `customers` report type added to `ReportService`/`ReportController`
+  (summary, per-customer rows, segment chart).
+- **UI** — a segment strip with clickable filters and a Segment column on the Customers page.
+
+### Files and modules changed
+
+```
+app/Domain/Customers/CustomerSegmentationService.php
+app/Domain/Customers/Models/Customer.php          (fillable/casts)
+app/Domain/Reporting/ReportService.php             (customers report)
+app/Http/Controllers/{Customers/CustomerController,Reporting/ReportController}.php
+app/Http/Requests/Customers/CustomerRequest.php
+database/migrations/2026_10_12_000009_add_segmentation_to_customers_table.php
+resources/js/Pages/Customers/Index.tsx
+tests/Feature/Customers/CustomerSegmentationTest.php
+```
+
+### Database and migration changes
+
+- Altered `customers` (+`is_marketing_opt_in`, `tags`). Additive and reversible.
+
+### Security and tenant-isolation results
+
+- Segmentation runs through tenant-scoped models; a customer report never includes another
+  tenant's data — verified.
+
+### Tests executed
+
+```
+php artisan test   →  493 passed (2618 assertions)
+```
+
+New coverage (4): segment classification (champions/loyal/new/at-risk/lost), summary counts
+and lifetime spend, customer analytics report rendering, tenant isolation.
+
+### Known defects and unresolved risks
+
+- The customers report is **lifetime-based** (RFM is inherently lifetime); the date filter is
+  not applied to segment membership yet.
+- Campaign targeting/export from a segment is not implemented (the platform CampaignService
+  exists; tenant-side campaign targeting is a follow-on).
+
+### Final phase status
+
+**Complete pending review.**
+
+---
+
+## Phase 15D — Product images, bulk import/export & storage link
+
+### Business journey completed
+
+An owner uploads or replaces a product image, downloads a CSV template, bulk-imports a
+product catalogue (re-import updates rather than duplicates), and exports the catalogue as
+CSV or PDF. The platform "Link storage" command now succeeds even when the symlink already
+exists.
+
+### Features implemented
+
+- **Product images** — `updateProductImage`/`destroyProductImage` (public disk, replaces the
+  previous file), a `Product::imageUrl` accessor, and an uploader in the product editor.
+- **Bulk import** — `ProductImportService` upserts by SKU (falling back to name), creates
+  categories on demand, commits in a transaction, and reports skipped rows. Downloadable CSV
+  template.
+- **Export** — streamed CSV and a dompdf PDF (`resources/views/products/export.blade.php`).
+- **Storage link** — the curated `storage:link --force` command is idempotent, and storage is
+  already surfaced by the health endpoint.
+
+### Files and modules changed
+
+```
+app/Domain/Menu/{ProductImportService,Models/Product.php}
+app/Http/Controllers/Menu/MenuController.php
+app/Domain/Operations/CommandRunner.php            (storage:link --force)
+resources/views/products/export.blade.php
+routes/web.php, resources/js/Pages/Menu/Index.tsx
+tests/Feature/Menu/ProductBulkOpsTest.php
+```
+
+### Database and migration changes
+
+None — `products.image_path` already existed.
+
+### Security and tenant-isolation results
+
+- Image uploads are validated (image, mime, 2 MB) and stored under the tenant's folder; the
+  previous file is deleted on replace.
+- Import is scoped to the acting tenant's catalogue and validated.
+
+### Tests executed
+
+```
+php artisan test   →  493 passed (2618 assertions)
+```
+
+New coverage (8): image upload + replace (old file deleted), image remove, CSV import,
+re-import updates (no duplicate), CSV export, PDF export, template download, storage-link
+command idempotency.
+
+### Known defects and unresolved risks
+
+- Import is **synchronous**; very large catalogues should move to a queued job.
+- Import matches columns by header name; only the documented columns are read.
+
+### Final phase status
+
+**Complete pending review.**
+
+---
+
+## Phase 16A — Registration → activation journey
+
+### Business journey completed
+
+A new owner registers with an email address or a mobile number, proves the contact through
+its natural channel (email link or SMS one-time code), confirms their own profile, then moves
+through the guided setup wizard. The dashboard and every management module stay locked until
+the required steps are done — any attempt to reach them is redirected to the exact step still
+holding the owner, and a returning owner resumes where they left off.
+
+### Features implemented
+
+- **Profile step** — a new first, required onboarding step captures the owner's name, phone
+  (only when the account registered by email) and role/title; completion is recorded in
+  `settings('profile.completed_at')`.
+- **Truthful step pointer** — `tenants.onboarding_step` is now written on every step save and
+  when the current step is resolved (previously it was only ever nulled on completion).
+- **Harder gate** — the onboarding routes now require `verified`, so an unverified user cannot
+  jump straight into the wizard; post-verification redirects land on the first held step.
+- **Resume hint** — the onboarding shell shows a "resuming where you left off" notice when
+  saved progress exists.
+
+### Files and modules changed
+
+```
+app/Domain/Onboarding/Enums/OnboardingStep.php          (Profile case, first + required)
+app/Domain/Onboarding/OnboardingService.php             (saveProfile, advanceStep, profile
+                                                          checklist item, step persistence)
+app/Http/Controllers/Onboarding/OnboardingController.php (storeProfile, Profile stepData)
+app/Http/Controllers/Auth/VerifyEmailController.php     (redirect to onboarding)
+app/Http/Controllers/Auth/PhoneVerificationController.php (redirect to onboarding)
+routes/web.php                                          (onboarding/profile; group behind verified)
+resources/js/Components/Onboarding/ProfileStep.tsx      (new)
+resources/js/Pages/Onboarding/Show.tsx                  (render Profile step)
+resources/js/Layouts/OnboardingLayout.tsx               (resume hint)
+tests/Feature/Onboarding/OnboardingFlowTest.php         (+2 tests, expectations updated)
+tests/Feature/Onboarding/OnboardingGatingTest.php       (+1 test, expectations updated)
+tests/Feature/Auth/{EmailVerificationTest,PhoneVerificationTest}.php (redirect target)
+```
+
+### Database and migration changes
+
+None — `profile.*` lives in the tenant `settings` JSON; `onboarding_step` already existed.
+
+### Security and tenant-isolation results
+
+- Unverified users are bounced to the verification screen before the wizard — verified.
+- Profile writes are scoped to the acting user's tenant; mobile numbers cannot be overwritten
+  by email-account edits — verified.
+- Platform admins remain ungated — verified.
+
+### Tests executed
+
+```
+php artisan test   →  499 passed (2663 assertions)
+```
+
+New coverage (+6): profile step renders/saves/advances and sets the step pointer; unverified
+users cannot reach the wizard; registration still redirects to verification.
+
+### Known defects and unresolved risks
+
+- Mobile OTP still requires an SMS provider at `/platform/sms`; the `log` driver is the
+  default in development.
+- The dashboard "activation complete" cue remains the existing flash message rather than a
+  bespoke first-run animation.
+
+### Final phase status
+
+**Complete pending review.** Awaiting approval before Phase 16B (tenant payment gateways).
+
+---
+
+## Phase 16B — Tenant payment gateways (onboarding + QR)
+
+### Business journey completed
+
+A restaurant owner enables cash, Stripe, SSLCommerz (Bangladesh) and/or bKash — several at
+once with one default — either during onboarding or later in Settings. QR ordering offers
+every enabled method (and cash only when the tenant accepts it). An online payment is never
+recorded as paid from a redirect or a claimed status alone: SSLCommerz and bKash transactions
+are confirmed with the provider before the payment settles.
+
+### Features implemented
+
+- **Onboarding writes real gateways** — the Payments step now captures providers, environment,
+  credentials and a default, and persists `tenant_gateways` rows (encrypted credentials)
+  instead of a `payments.provider` string. `TenantGatewayManager::upsertForTenant` creates/
+  updates rows, disables ones left out (credentials preserved) and keeps exactly one default.
+- **Single source of truth** — QR `optionsFor` reads enabled gateways; "pay at the counter"
+  is shown only when the tenant accepts cash (`accept_cash` / an enabled cash gateway).
+- **Server-side verification** — `WebhookService` confirms SSLCommerz/bKash transactions via
+  the driver's `verifyTransaction` before marking a `Payment` succeeded (their callbacks are
+  not HMAC-signed).
+- **Default currencies** — SSLCommerz/bKash default to BDT, Stripe to USD/BDT, cash to all.
+
+### Files and modules changed
+
+```
+app/Domain/PaymentGateways/TenantGatewayManager.php   (upsertForTenant, DEFAULT_CURRENCIES)
+app/Domain/Onboarding/OnboardingService.php           (savePayments → gateways, checklist)
+app/Http/Controllers/Onboarding/OnboardingController.php (storePayments, schema in options)
+app/Domain/Dining/QrPaymentService.php                (cash only when accepted)
+app/Domain/Payments/WebhookService.php                (verify BD transactions server-side)
+resources/js/Components/Onboarding/PaymentsStep.tsx   (provider/credential UI)
+resources/js/Pages/Onboarding/Show.tsx, resources/js/types/onboarding.d.ts
+tests/Feature/{Onboarding/OnboardingFlowTest,Payments/TenantGatewayTest,
+    Qr/QrPaymentOptionsTest,Tenant/SettingsTest}.php
+```
+
+### Database and migration changes
+
+None — `tenant_gateways` already existed and is reused as the single source of truth.
+
+### Security and tenant-isolation results
+
+- Credentials remain encrypted at rest and are never returned to the browser (only key names).
+- Onboarding upsert is scoped to the acting tenant; gateway rows are found by tenant id.
+- BD webhooks only settle after a server-side provider check — verified.
+
+### Tests executed
+
+```
+php artisan test   →  503 passed (2678 assertions)
+```
+
+New coverage (+4): onboarding payments create real gateways with a default; online gateways
+require credentials in onboarding; QR omits cash when the tenant turned it off; SSLCommerz
+webhook settles only after server-side verification.
+
+### Known defects and unresolved risks
+
+- Drivers are still exercised via `Http::fake()` only; sandbox smoke tests are recommended
+  before production.
+- Stripe/SSLCommerz refunds remain manual; the unique `(tenant, provider, environment)` key
+  still allows one config per provider per environment.
+
+### Final phase status
+
+**Complete pending review.** Awaiting approval before Phase 16C (customer segmentation & analytics).
+
+---
+
+## Phase 16C — Customer segmentation & analytics
+
+### Business journey completed
+
+An owner sees customer segmentation on the dashboard (segment distribution + top spenders),
+opens a per-guest Customer 360 (spend, visits, orders, loyalty, recent orders), filters the
+directory server-side, tags guests and sets marketing consent, and exports any segment as a
+marketing CSV. The Customer analytics report is reachable from the Reports navigation.
+
+### Features implemented
+
+- **Dashboard customers card** — `DashboardAnalyticsService::customerAnalytics` adds segment
+  distribution, repeat guests and the top five spenders; Business 360 gains an active-guests
+  fact.
+- **Customer 360** — a new `Customers/Show` page (route `customers.show`) with lifetime spend,
+  visits, orders, average ticket, loyalty balance, tags, consent and recent orders.
+- **Server-side directory** — `customers.index` is paginated (25/page) with server-side search,
+  segment, status and loyalty filters; metrics come from the server, not the visible page.
+- **Marketing export** — `customers.export` streams a segment/audience CSV (respecting
+  `opt_in=1`).
+- **Real visit counts** — `CustomerSegmentationService` counts distinct dining sessions per
+  customer alongside orders.
+- **Defect fixed** — `ReportService::inventory` now imports `Ingredient`, so ingredient stock
+  is valued (previously always `0.0`).
+- **Design** — the customer screens and the tenant shell use the shared shadcn-based UI kit;
+  the tenant panel now uses Roboto with a refined type scale (see below).
+
+### Files and modules changed
+
+```
+app/Domain/Customers/CustomerSegmentationService.php   (visits)
+app/Domain/Reporting/DashboardAnalyticsService.php     (customerAnalytics)
+app/Domain/Reporting/ReportService.php                 (Ingredient import fix)
+app/Http/Controllers/{DashboardController,Customers/CustomerController}.php
+routes/web.php                                         (customers.show, customers.export)
+resources/js/Pages/Dashboard.tsx                       (customers card)
+resources/js/Pages/Customers/{Index,Show}.tsx          (rebuilt with the UI kit + 360)
+resources/js/Pages/Reports/Index.tsx                   (Customers & Loyalty group)
+resources/js/Layouts/AppShell.tsx, resources/css/app.css,
+    tailwind.config.js, resources/views/app.blade.php   (Roboto, tenant-shell type scale)
+tests/Feature/{Customers/CustomerSegmentationTest,Reporting/ReportTest,
+    Onboarding/OnboardingFlowTest}.php
+```
+
+### Database and migration changes
+
+None — visits are derived from `dining_sessions`; tags/consent columns already existed.
+
+### Security and tenant-isolation results
+
+- Customer 360 and export are tenant-scoped; a cross-tenant customer returns 404 — verified.
+- Backend permissions (`customers.view` / `customers.manage`) gate every route — verified.
+
+### Tests executed
+
+```
+php artisan test   →  509 passed (2731 assertions)
+```
+
+New coverage (+7): visit counts, Customer 360 render, segment CSV export, paginated/filtered
+index, dashboard customerAnalytics, inventory report values ingredients, customers report
+reachable.
+
+### Known defects and unresolved risks
+
+- Segmentation still loads all of a tenant's completed orders into memory (fine at current
+  scale; a SQL-side rollup is a follow-on).
+- Visit counts are zero for tenants that only use POS (no dining sessions).
+- Customer 360 shows the 20 most recent orders; no time-filtered history yet.
+
+### Final phase status
+
+**Complete pending review.** Awaiting approval before Phase 16D (product bulk ops, images &
+command fixes).
+
+---
+
+## Program status
+
+Phases 15A–15D, 16A, 16B and 16C are implemented and verified (509 tests passing; frontend
+build clean). Remaining known gaps are noted per phase. Phase 16D (product bulk ops, images &
+command fixes) is planned but not yet implemented.

@@ -12,6 +12,9 @@ import {
     KpiCard,
     Money,
     PageHeader,
+    Pagination,
+    SelectField,
+    Switch,
     Table,
     TableBody,
     TableCell,
@@ -21,10 +24,11 @@ import {
     TextField,
     TextareaField,
 } from '@/Components/ui';
+import type { BadgeTone, PageLink } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { Search, X } from 'lucide-react';
-import { FormEventHandler, useMemo, useState } from 'react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Download, Plus, Users } from 'lucide-react';
+import { FormEventHandler, useState } from 'react';
 
 interface CustomerRow {
     id: number;
@@ -32,59 +36,114 @@ interface CustomerRow {
     phone: string | null;
     email: string | null;
     notes?: string | null;
-    orders_count?: number;
-    orders_sum_total?: number;
+    tags: string[];
+    orders_count: number;
+    orders_sum_total: number;
     points: number;
+    segment: string | null;
+    visits: number;
     is_active: boolean;
+    is_marketing_opt_in: boolean;
 }
+
+interface Paginator {
+    data: CustomerRow[];
+    links: PageLink[];
+    total: number;
+    from: number | null;
+    to: number | null;
+}
+
+interface SegmentSummary {
+    total: number;
+    spend: number;
+    segments: { key: string; label: string; count: number; spend: number }[];
+}
+
+interface Filters {
+    search: string;
+    segment: string;
+    status: string;
+    points: string;
+}
+
+const SEGMENT_TONE: Record<string, BadgeTone> = {
+    champions: 'success',
+    loyal: 'info',
+    high_value: 'success',
+    new: 'info',
+    regular: 'neutral',
+    at_risk: 'warning',
+    lost: 'danger',
+};
+
+const SEGMENT_LABEL: Record<string, string> = {
+    champions: 'Champions',
+    loyal: 'Loyal',
+    high_value: 'High-value',
+    new: 'New',
+    regular: 'Regular',
+    at_risk: 'At risk',
+    lost: 'Lost',
+};
+
+const parseTags = (value: string): string[] =>
+    value
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean);
 
 export default function CustomersIndex({
     customers,
+    summary,
+    metrics,
+    segments,
     loyaltyEnabled,
     filters,
 }: {
-    customers: CustomerRow[];
+    customers: Paginator;
+    summary: SegmentSummary;
+    metrics: { total: number; active: number; points: number; spend: number; orders: number };
+    segments: { value: string; label: string }[];
     loyaltyEnabled: boolean;
-    filters: { search: string };
+    filters: Filters;
 }) {
     const { auth, flash } = usePage().props as Record<string, any>;
     const canManage = auth.permissions.includes('customers.manage');
 
-    // Search and filter states
     const [search, setSearch] = useState(filters.search ?? '');
-    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-    const [pointsFilter, setPointsFilter] = useState<'all' | 'has_points' | 'zero'>('all');
-
-    // Drawer / Modal states
     const [customerDrawerMode, setCustomerDrawerMode] = useState<'create' | 'edit' | null>(null);
     const [selectedCustomer, setSelectedCustomer] = useState<CustomerRow | null>(null);
     const [pointsCustomer, setPointsCustomer] = useState<CustomerRow | null>(null);
     const [pendingDelete, setPendingDelete] = useState<CustomerRow | null>(null);
 
-    // Form for Create / Edit Customer
     const customerForm = useForm({
         name: '',
         phone: '',
         email: '',
         notes: '',
+        tags: '',
         is_active: true,
+        is_marketing_opt_in: true,
     });
 
-    // Form for Adjust Points
-    const pointsForm = useForm({
-        points: 50,
-        reason: 'Loyalty bonus',
-    });
+    const pointsForm = useForm({ points: 50, reason: 'Loyalty bonus' });
+
+    const applyFilters = (overrides: Partial<Filters>) => {
+        const merged: Record<string, string> = { ...filters, ...overrides };
+        const params: Record<string, string> = {};
+
+        Object.entries(merged).forEach(([key, value]) => {
+            if (value && value !== 'all') params[key] = String(value);
+        });
+
+        router.get(route('customers.index'), params, { preserveState: true, preserveScroll: true, replace: true });
+    };
 
     const openCreateDrawer = () => {
         customerForm.reset();
-        customerForm.setData({
-            name: '',
-            phone: '',
-            email: '',
-            notes: '',
-            is_active: true,
-        });
+        customerForm.setData({ name: '', phone: '', email: '', notes: '', tags: '', is_active: true, is_marketing_opt_in: true });
+        customerForm.clearErrors();
         setSelectedCustomer(null);
         setCustomerDrawerMode('create');
     };
@@ -95,23 +154,26 @@ export default function CustomersIndex({
             phone: customer.phone ?? '',
             email: customer.email ?? '',
             notes: customer.notes ?? '',
+            tags: (customer.tags ?? []).join(', '),
             is_active: customer.is_active,
+            is_marketing_opt_in: customer.is_marketing_opt_in,
         });
+        customerForm.clearErrors();
         setSelectedCustomer(customer);
         setCustomerDrawerMode('edit');
     };
 
     const openPointsDrawer = (customer: CustomerRow) => {
         pointsForm.reset();
-        pointsForm.setData({
-            points: 50,
-            reason: 'Loyalty adjustment',
-        });
+        pointsForm.setData({ points: 50, reason: 'Loyalty adjustment' });
         setPointsCustomer(customer);
     };
 
     const handleCustomerSubmit: FormEventHandler = (e) => {
         e.preventDefault();
+
+        customerForm.transform((data) => ({ ...data, tags: parseTags(data.tags) }));
+
         if (customerDrawerMode === 'create') {
             customerForm.post(route('customers.store'), {
                 preserveScroll: true,
@@ -142,61 +204,23 @@ export default function CustomersIndex({
         });
     };
 
-    const triggerSearch = () => {
-        router.get(
-            route('customers.index'),
-            { search },
-            { preserveState: true, preserveScroll: true, replace: true },
-        );
-    };
-
-    // Calculate metrics
-    const metrics = useMemo(() => {
-        const total = customers.length;
-        const active = customers.filter((c) => c.is_active).length;
-        const totalPoints = customers.reduce((acc, c) => acc + (c.points || 0), 0);
-        const totalSpend = customers.reduce((acc, c) => acc + (c.orders_sum_total || 0), 0);
-        const totalOrders = customers.reduce((acc, c) => acc + (c.orders_count || 0), 0);
-
-        return {
-            total,
-            active,
-            totalPoints,
-            totalSpend,
-            totalOrders,
-        };
-    }, [customers]);
-
-    // Filter customers
-    const filteredCustomers = useMemo(() => {
-        return customers.filter((c) => {
-            if (statusFilter === 'active' && !c.is_active) return false;
-            if (statusFilter === 'inactive' && c.is_active) return false;
-
-            if (pointsFilter === 'has_points' && (!c.points || c.points <= 0)) return false;
-            if (pointsFilter === 'zero' && c.points > 0) return false;
-
-            return true;
-        });
-    }, [customers, statusFilter, pointsFilter]);
+    const rows = customers.data ?? [];
 
     return (
         <AuthenticatedLayout
             header={
                 <PageHeader
-                    title="Customer CRM & Loyalty"
-                    description="Guest directory, dining history, lifetime spend, and loyalty rewards."
+                    title="Customers & CRM"
+                    description="Guest directory, segmentation, lifetime spend and loyalty."
                     actions={
-                        <div className="flex flex-wrap items-center gap-2.5">
-                            {loyaltyEnabled ? (
-                                <Badge tone="success">Loyalty Active</Badge>
-                            ) : (
-                                <Badge tone="neutral">Loyalty Disabled</Badge>
-                            )}
-
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Badge tone={loyaltyEnabled ? 'success' : 'neutral'}>{loyaltyEnabled ? 'Loyalty active' : 'Loyalty off'}</Badge>
+                            <Button size="sm" variant="secondary" href={route('customers.export', { segment: filters.segment || undefined })} icon={<Download className="h-3.5 w-3.5" />}>
+                                Export
+                            </Button>
                             {canManage && (
-                                <Button size="sm" onClick={openCreateDrawer}>
-                                    + Add Customer
+                                <Button size="sm" onClick={openCreateDrawer} icon={<Plus className="h-3.5 w-3.5" />}>
+                                    Add customer
                                 </Button>
                             )}
                         </div>
@@ -208,491 +232,265 @@ export default function CustomersIndex({
 
             <div className="py-6">
                 <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
-                    {flash?.success && (
-                        <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-                            <span className="text-emerald-600">✓</span>
-                            {flash.success}
-                        </div>
-                    )}
-                    {flash?.error && (
-                        <div className="flex items-center gap-2 rounded-lg bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">
-                            <span className="text-rose-600">✕</span>
-                            {flash.error}
-                        </div>
-                    )}
+                    {flash?.success && <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-800">{flash.success}</div>}
+                    {flash?.error && <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-medium text-rose-800">{flash.error}</div>}
 
-                    {/* CRM KPI Metrics */}
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <KpiCard
-                            label="Total Customers"
-                            value={metrics.total}
-                            hint={`${metrics.active} active guest accounts`}
-                        />
-                        <KpiCard
-                            label="Active Members"
-                            value={metrics.active}
-                            hint="Verified & active guests"
-                            tone="success"
-                        />
-                        <KpiCard
-                            label="Loyalty Points Circulation"
-                            value={metrics.totalPoints.toLocaleString()}
-                            hint={loyaltyEnabled ? 'Across all member balances' : 'Program currently disabled'}
-                            tone={loyaltyEnabled ? 'warning' : 'neutral'}
-                        />
-                        <KpiCard
-                            label="Guest Lifetime Spend"
-                            value={<Money amount={metrics.totalSpend} />}
-                            hint={`${metrics.totalOrders} recorded orders`}
-                        />
+                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                        <KpiCard label="Total customers" value={metrics.total} hint={`${metrics.active} active`} icon={<Users className="h-4 w-4" />} />
+                        <KpiCard label="Lifetime spend" value={<Money amount={metrics.spend} />} hint={`${metrics.orders} orders`} />
+                        <KpiCard label="Loyalty points" value={metrics.points.toLocaleString()} hint={loyaltyEnabled ? 'Circulating balance' : 'Program disabled'} tone={loyaltyEnabled ? 'warning' : 'neutral'} />
+                        <KpiCard label="Repeat guests" value={summary.segments.reduce((acc, s) => acc + (['champions', 'loyal'].includes(s.key) ? s.count : 0), 0)} hint="Champions + loyal" tone="success" />
                     </div>
 
-                    {/* Filter and Search Bar */}
+                    <Card>
+                        <CardBody className="flex flex-wrap items-center gap-2 p-3">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Segments</span>
+                            <Button size="xs" variant={filters.segment === '' ? 'primary' : 'secondary'} onClick={() => applyFilters({ segment: '' })}>
+                                All ({summary.total})
+                            </Button>
+                            {summary.segments
+                                .filter((s) => s.count > 0)
+                                .map((s) => (
+                                    <Button key={s.key} size="xs" variant={filters.segment === s.key ? 'primary' : 'secondary'} onClick={() => applyFilters({ segment: s.key })}>
+                                        {s.label} ({s.count})
+                                    </Button>
+                                ))}
+                            {summary.total === 0 && <span className="text-xs text-muted-foreground">Segments appear once customers place orders.</span>}
+                        </CardBody>
+                    </Card>
+
                     <Card>
                         <CardBody className="p-4">
-                            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                                {/* Search */}
-                                <div className="flex w-full max-w-md items-center gap-2">
-                                    <div className="relative flex-1">
-                                        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search by name or phone number..."
-                                            value={search}
-                                            onChange={(e) => setSearch(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && triggerSearch()}
-                                            className="h-9 w-full rounded-md border border-input bg-background py-1.5 pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                                        />
-                                        {search && (
-                                            <button
-                                                onClick={() => {
-                                                    setSearch('');
-                                                    router.get(
-                                                        route('customers.index'),
-                                                        {},
-                                                        { preserveState: true, replace: true },
-                                                    );
-                                                }}
-                                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
-                                            >
-                                                <X className="h-3.5 w-3.5" />
-                                            </button>
-                                        )}
-                                    </div>
-                                    <Button size="sm" variant="secondary" onClick={triggerSearch}>
-                                        Search
-                                    </Button>
-                                </div>
-
-                                {/* Status Filters */}
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <div className="flex items-center rounded-md border border-border bg-muted/40 p-0.5 text-xs font-medium">
-                                        <button
-                                            onClick={() => setStatusFilter('all')}
-                                            className={`rounded-sm px-2.5 py-1 transition cursor-pointer ${
-                                                statusFilter === 'all'
-                                                    ? 'bg-background text-foreground shadow-xs font-semibold'
-                                                    : 'text-muted-foreground hover:text-foreground'
-                                            }`}
-                                        >
-                                            All Status
-                                        </button>
-                                        <button
-                                            onClick={() => setStatusFilter('active')}
-                                            className={`rounded-sm px-2.5 py-1 transition cursor-pointer ${
-                                                statusFilter === 'active'
-                                                    ? 'bg-background text-foreground shadow-xs font-semibold'
-                                                    : 'text-muted-foreground hover:text-foreground'
-                                            }`}
-                                        >
-                                            Active
-                                        </button>
-                                        <button
-                                            onClick={() => setStatusFilter('inactive')}
-                                            className={`rounded-sm px-2.5 py-1 transition cursor-pointer ${
-                                                statusFilter === 'inactive'
-                                                    ? 'bg-background text-foreground shadow-xs font-semibold'
-                                                    : 'text-muted-foreground hover:text-foreground'
-                                            }`}
-                                        >
-                                            Inactive
-                                        </button>
-                                    </div>
-
-                                    {loyaltyEnabled && (
-                                        <div className="flex items-center rounded-md border border-border bg-muted/40 p-0.5 text-xs font-medium">
-                                            <button
-                                                onClick={() => setPointsFilter('all')}
-                                                className={`rounded-sm px-2.5 py-1 transition cursor-pointer ${
-                                                    pointsFilter === 'all'
-                                                    ? 'bg-background text-foreground shadow-xs font-semibold'
-                                                    : 'text-muted-foreground hover:text-foreground'
-                                                }`}
-                                            >
-                                                All Points
-                                            </button>
-                                            <button
-                                                onClick={() => setPointsFilter('has_points')}
-                                                className={`rounded-sm px-2.5 py-1 transition cursor-pointer ${
-                                                    pointsFilter === 'has_points'
-                                                    ? 'bg-background text-foreground shadow-xs font-semibold'
-                                                    : 'text-muted-foreground hover:text-foreground'
-                                                }`}
-                                            >
-                                                Has Balance
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                <TextField
+                                    label="Search"
+                                    value={search}
+                                    placeholder="Name or phone…"
+                                    onChange={setSearch}
+                                    onEnter={() => applyFilters({ search })}
+                                />
+                                <SelectField
+                                    label="Status"
+                                    value={filters.status || 'all'}
+                                    options={[
+                                        { value: 'all', label: 'All statuses' },
+                                        { value: 'active', label: 'Active' },
+                                        { value: 'inactive', label: 'Inactive' },
+                                    ]}
+                                    onChange={(v) => applyFilters({ status: v })}
+                                />
+                                <SelectField
+                                    label="Segment"
+                                    value={filters.segment || 'all'}
+                                    options={[{ value: 'all', label: 'All segments' }, ...segments]}
+                                    onChange={(v) => applyFilters({ segment: v === 'all' ? '' : v })}
+                                />
+                                <SelectField
+                                    label="Loyalty balance"
+                                    value={filters.points || 'all'}
+                                    options={[
+                                        { value: 'all', label: 'All balances' },
+                                        { value: 'has', label: 'Has points' },
+                                        { value: 'zero', label: 'No points' },
+                                    ]}
+                                    onChange={(v) => applyFilters({ points: v })}
+                                />
                             </div>
                         </CardBody>
                     </Card>
 
-                    {/* Customer Roster Table */}
                     <Card>
-                        <CardHeader
-                            title={`Customer Directory (${filteredCustomers.length} guests)`}
-                            description="Profiles, contacts, visit frequencies, and loyalty reward balances."
-                        />
+                        <CardHeader title={`Customer directory (${customers.total})`} description="Profiles, contacts, visits, spend and loyalty balances." />
                         <CardBody className="p-0">
-                            {filteredCustomers.length === 0 ? (
+                            {rows.length === 0 ? (
                                 <EmptyState
                                     title="No customers found"
-                                    description={
-                                        search
-                                            ? `No guest found matching "${search}".`
-                                            : 'Add your first customer to build guest relationships and loyalty.'
-                                    }
-                                    action={
-                                        canManage ? (
-                                            <Button size="sm" onClick={openCreateDrawer}>
-                                                Add Customer
-                                            </Button>
-                                        ) : undefined
-                                    }
+                                    description={filters.search ? `No guest matching “${filters.search}”.` : 'Add your first customer to build guest relationships.'}
+                                    action={canManage ? <Button size="sm" onClick={openCreateDrawer}>Add customer</Button> : undefined}
                                 />
                             ) : (
-                                <div className="overflow-x-auto">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow className="hover:bg-transparent">
-                                                <TableHead className="px-5 py-3">Customer Profile</TableHead>
-                                                <TableHead className="px-5 py-3">Contact Details</TableHead>
-                                                <TableHead className="px-5 py-3 text-center">Visits & Spend</TableHead>
-                                                <TableHead className="px-5 py-3 text-right">Loyalty Points</TableHead>
-                                                <TableHead className="px-5 py-3 text-center">Status</TableHead>
-                                                {canManage && <TableHead className="px-5 py-3 text-right">Actions</TableHead>}
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {filteredCustomers.map((customer) => {
-                                                const initials = customer.name
-                                                    .split(' ')
-                                                    .map((n) => n[0])
-                                                    .slice(0, 2)
-                                                    .join('')
-                                                    .toUpperCase();
+                                <>
+                                    <div className="overflow-x-auto">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow className="hover:bg-transparent">
+                                                    <TableHead className="px-5 py-3">Customer</TableHead>
+                                                    <TableHead className="px-5 py-3">Contact</TableHead>
+                                                    <TableHead className="px-5 py-3 text-center">Orders & spend</TableHead>
+                                                    <TableHead className="px-5 py-3 text-center">Segment</TableHead>
+                                                    <TableHead className="px-5 py-3 text-right">Points</TableHead>
+                                                    <TableHead className="px-5 py-3 text-center">Status</TableHead>
+                                                    {canManage && <TableHead className="px-5 py-3 text-right">Actions</TableHead>}
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {rows.map((customer) => {
+                                                    const initials = customer.name
+                                                        .split(' ')
+                                                        .map((n) => n[0])
+                                                        .slice(0, 2)
+                                                        .join('')
+                                                        .toUpperCase();
 
-                                                return (
-                                                    <TableRow key={customer.id} className="hover:bg-muted/30 transition-colors">
-                                                        {/* Profile */}
-                                                        <TableCell className="px-5 py-3.5">
-                                                            <div className="flex items-center gap-3">
-                                                                <Avatar className="h-8 w-8 rounded-full border border-border">
-                                                                    <AvatarFallback className="bg-primary/10 font-semibold text-primary text-xs">
-                                                                        {initials || 'C'}
-                                                                    </AvatarFallback>
-                                                                </Avatar>
-                                                                <div>
-                                                                    <div className="font-semibold text-foreground">
-                                                                        {customer.name}
+                                                    return (
+                                                        <TableRow key={customer.id} className="transition-colors hover:bg-muted/30">
+                                                            <TableCell className="px-5 py-3.5">
+                                                                <div className="flex items-center gap-3">
+                                                                    <Avatar className="h-8 w-8 rounded-full border border-border">
+                                                                        <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">{initials || 'C'}</AvatarFallback>
+                                                                    </Avatar>
+                                                                    <div className="min-w-0">
+                                                                        <Link href={route('customers.show', customer.id)} className="block truncate font-medium text-foreground hover:text-primary">
+                                                                            {customer.name}
+                                                                        </Link>
+                                                                        {customer.tags && customer.tags.length > 0 ? (
+                                                                            <div className="mt-0.5 flex flex-wrap gap-1">
+                                                                                {customer.tags.slice(0, 3).map((tag) => (
+                                                                                    <span key={tag} className="rounded border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] text-muted-foreground">{tag}</span>
+                                                                                ))}
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="text-xs text-muted-foreground/60">Guest #{customer.id}</div>
+                                                                        )}
                                                                     </div>
-                                                                    {customer.notes ? (
-                                                                        <div className="max-w-xs truncate text-xs text-muted-foreground">
-                                                                            {customer.notes}
-                                                                        </div>
-                                                                    ) : (
-                                                                        <div className="text-xs text-muted-foreground/60">
-                                                                            Guest ID #{customer.id}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </TableCell>
-
-                                                        {/* Contact */}
-                                                        <TableCell className="px-5 py-3.5">
-                                                            <div className="space-y-0.5 text-xs">
-                                                                {customer.phone ? (
-                                                                    <div className="text-foreground">
-                                                                        {customer.phone}
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-muted-foreground">No phone</span>
-                                                                )}
-                                                                {customer.email && (
-                                                                    <div className="text-muted-foreground">
-                                                                        {customer.email}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </TableCell>
-
-                                                        {/* Visits & Spend */}
-                                                        <TableCell className="px-5 py-3.5 text-center">
-                                                            <div className="text-xs">
-                                                                <span className="font-semibold text-foreground">
-                                                                    {customer.orders_count ?? 0} visit
-                                                                    {(customer.orders_count ?? 0) === 1 ? '' : 's'}
-                                                                </span>
-                                                                <div className="text-muted-foreground">
-                                                                    <Money amount={customer.orders_sum_total ?? 0} />
-                                                                </div>
-                                                            </div>
-                                                        </TableCell>
-
-                                                        {/* Loyalty Points */}
-                                                        <TableCell className="px-5 py-3.5 text-right">
-                                                            {loyaltyEnabled ? (
-                                                                <div className="flex items-center justify-end gap-1.5">
-                                                                    <span className="font-semibold tabular-nums text-foreground">
-                                                                        {customer.points.toLocaleString()}
-                                                                    </span>
-                                                                    <span className="text-xs text-muted-foreground">pts</span>
-                                                                </div>
-                                                            ) : (
-                                                                <span className="text-xs text-muted-foreground">—</span>
-                                                            )}
-                                                        </TableCell>
-
-                                                        {/* Status */}
-                                                        <TableCell className="px-5 py-3.5 text-center">
-                                                            <Badge tone={customer.is_active ? 'success' : 'neutral'}>
-                                                                {customer.is_active ? 'Active' : 'Inactive'}
-                                                            </Badge>
-                                                        </TableCell>
-
-                                                        {/* Actions */}
-                                                        {canManage && (
-                                                            <TableCell className="px-5 py-3.5 text-right">
-                                                                <div className="flex items-center justify-end gap-1.5">
-                                                                    {loyaltyEnabled && (
-                                                                        <Button
-                                                                            size="xs"
-                                                                            variant="ghost"
-                                                                            onClick={() => openPointsDrawer(customer)}
-                                                                            className="text-amber-700 hover:bg-amber-500/10 hover:text-amber-800"
-                                                                        >
-                                                                            Points
-                                                                        </Button>
-                                                                    )}
-                                                                    <Button
-                                                                        size="xs"
-                                                                        variant="outline"
-                                                                        onClick={() => openEditDrawer(customer)}
-                                                                    >
-                                                                        Edit
-                                                                    </Button>
-                                                                    <Button
-                                                                        size="xs"
-                                                                        variant="ghost"
-                                                                        onClick={() => setPendingDelete(customer)}
-                                                                        className="text-rose-600 hover:text-rose-700"
-                                                                    >
-                                                                        Delete
-                                                                    </Button>
                                                                 </div>
                                                             </TableCell>
-                                                        )}
-                                                    </TableRow>
-                                                );
-                                            })}
-                                        </TableBody>
-                                    </Table>
-                                </div>
+                                                            <TableCell className="px-5 py-3.5">
+                                                                <div className="space-y-0.5 text-xs">
+                                                                    {customer.phone ? <div className="text-foreground">{customer.phone}</div> : <span className="text-muted-foreground">No phone</span>}
+                                                                    {customer.email && <div className="text-muted-foreground">{customer.email}</div>}
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="px-5 py-3.5 text-center text-xs">
+                                                                <span className="font-semibold text-foreground">{customer.orders_count} order{customer.orders_count === 1 ? '' : 's'}</span>
+                                                                <div className="text-muted-foreground"><Money amount={customer.orders_sum_total} /></div>
+                                                            </TableCell>
+                                                            <TableCell className="px-5 py-3.5 text-center">
+                                                                {customer.segment ? (
+                                                                    <Badge tone={SEGMENT_TONE[customer.segment] ?? 'neutral'}>{SEGMENT_LABEL[customer.segment] ?? customer.segment}</Badge>
+                                                                ) : (
+                                                                    <span className="text-xs text-muted-foreground">—</span>
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell className="px-5 py-3.5 text-right text-xs">
+                                                                {loyaltyEnabled ? (
+                                                                    <span className="font-semibold tabular-nums text-foreground">{customer.points.toLocaleString()}<span className="ml-0.5 font-normal text-muted-foreground">pts</span></span>
+                                                                ) : (
+                                                                    <span className="text-muted-foreground">—</span>
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell className="px-5 py-3.5 text-center">
+                                                                <Badge tone={customer.is_active ? 'success' : 'neutral'}>{customer.is_active ? 'Active' : 'Inactive'}</Badge>
+                                                            </TableCell>
+                                                            {canManage && (
+                                                                <TableCell className="px-5 py-3.5 text-right">
+                                                                    <div className="flex items-center justify-end gap-1.5">
+                                                                        <Button size="xs" variant="secondary" href={route('customers.show', customer.id)}>View</Button>
+                                                                        {loyaltyEnabled && (
+                                                                            <Button size="xs" variant="ghost" className="text-amber-700 hover:bg-amber-500/10 hover:text-amber-800" onClick={() => openPointsDrawer(customer)}>
+                                                                                Points
+                                                                            </Button>
+                                                                        )}
+                                                                        <Button size="xs" variant="ghost" onClick={() => openEditDrawer(customer)}>Edit</Button>
+                                                                        <Button size="xs" variant="ghost" className="text-rose-600 hover:text-rose-700" onClick={() => setPendingDelete(customer)}>Delete</Button>
+                                                                    </div>
+                                                                </TableCell>
+                                                            )}
+                                                        </TableRow>
+                                                    );
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3 border-t border-border/60 px-5 py-2">
+                                        <span className="text-xs text-muted-foreground">
+                                            {customers.from ?? 0}–{customers.to ?? 0} of {customers.total}
+                                        </span>
+                                        <Pagination links={customers.links} className="pt-0" />
+                                    </div>
+                                </>
                             )}
                         </CardBody>
                     </Card>
                 </div>
             </div>
 
-            {/* Create / Edit Customer Drawer */}
             <Drawer
                 show={customerDrawerMode !== null}
                 onClose={() => setCustomerDrawerMode(null)}
-                title={
-                    customerDrawerMode === 'create'
-                        ? 'Add Customer'
-                        : `Edit Customer — ${selectedCustomer?.name ?? ''}`
-                }
+                title={customerDrawerMode === 'create' ? 'Add customer' : `Edit — ${selectedCustomer?.name ?? ''}`}
                 footer={
                     <div className="flex justify-end gap-2.5">
-                        <Button variant="secondary" onClick={() => setCustomerDrawerMode(null)}>
-                            Cancel
-                        </Button>
+                        <Button variant="secondary" onClick={() => setCustomerDrawerMode(null)}>Cancel</Button>
                         <Button loading={customerForm.processing} onClick={handleCustomerSubmit}>
-                            {customerDrawerMode === 'create' ? 'Save Customer' : 'Update Profile'}
+                            {customerDrawerMode === 'create' ? 'Save customer' : 'Update profile'}
                         </Button>
                     </div>
                 }
             >
                 <form onSubmit={handleCustomerSubmit} className="space-y-4">
-                    <TextField
-                        label="Full Name *"
-                        placeholder="e.g. Sarah Jenkins"
-                        value={customerForm.data.name}
-                        error={customerForm.errors.name}
-                        onChange={(v) => customerForm.setData('name', v)}
-                    />
+                    <TextField label="Full name" value={customerForm.data.name} placeholder="e.g. Sarah Jenkins" error={customerForm.errors.name} onChange={(v) => customerForm.setData('name', v)} />
+                    <TextField label="Phone" type="tel" value={customerForm.data.phone} placeholder="+8801XXXXXXXXX" error={customerForm.errors.phone} onChange={(v) => customerForm.setData('phone', v)} />
+                    <TextField label="Email" type="email" value={customerForm.data.email} placeholder="sarah@example.com" error={customerForm.errors.email} onChange={(v) => customerForm.setData('email', v)} />
+                    <TextField label="Tags" value={customerForm.data.tags} placeholder="vip, weekend, allergies" hint="Comma-separated." error={customerForm.errors.tags} onChange={(v) => customerForm.setData('tags', v)} />
+                    <TextareaField label="Notes" value={customerForm.data.notes} placeholder="Preferences, allergies, VIP status…" error={customerForm.errors.notes} onChange={(v) => customerForm.setData('notes', v)} />
 
-                    <TextField
-                        label="Phone Number"
-                        type="tel"
-                        placeholder="e.g. +1 (555) 234-5678"
-                        value={customerForm.data.phone}
-                        error={customerForm.errors.phone}
-                        onChange={(v) => customerForm.setData('phone', v)}
-                    />
-
-                    <TextField
-                        label="Email Address"
-                        type="email"
-                        placeholder="e.g. sarah@example.com"
-                        value={customerForm.data.email}
-                        error={customerForm.errors.email}
-                        onChange={(v) => customerForm.setData('email', v)}
-                    />
-
-                    <TextareaField
-                        label="Guest Notes & Preferences"
-                        placeholder="e.g. Table preference: booth; Allergies: shellfish; VIP member."
-                        value={customerForm.data.notes}
-                        error={customerForm.errors.notes}
-                        onChange={(v) => customerForm.setData('notes', v)}
-                    />
-
-                    <div className="pt-2">
-                        <label className="flex items-center gap-2 text-sm text-gray-700">
-                            <input
-                                type="checkbox"
-                                checked={customerForm.data.is_active}
-                                onChange={(e) => customerForm.setData('is_active', e.target.checked)}
-                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                            />
-                            <span>Active account</span>
+                    <div className="space-y-3 border-t border-border/60 pt-3">
+                        <label className="flex items-center justify-between gap-3">
+                            <span className="text-sm text-foreground">Active account</span>
+                            <Switch checked={customerForm.data.is_active} onCheckedChange={(v) => customerForm.setData('is_active', v)} />
+                        </label>
+                        <label className="flex items-center justify-between gap-3">
+                            <span className="text-sm text-foreground">Marketing opt-in</span>
+                            <Switch checked={customerForm.data.is_marketing_opt_in} onCheckedChange={(v) => customerForm.setData('is_marketing_opt_in', v)} />
                         </label>
                     </div>
                 </form>
             </Drawer>
 
-            {/* Adjust Loyalty Points Drawer */}
             <Drawer
                 show={pointsCustomer !== null}
                 onClose={() => setPointsCustomer(null)}
-                title={`Adjust Points — ${pointsCustomer?.name ?? ''}`}
+                title={`Adjust points — ${pointsCustomer?.name ?? ''}`}
                 footer={
                     <div className="flex justify-end gap-2.5">
-                        <Button variant="secondary" onClick={() => setPointsCustomer(null)}>
-                            Cancel
-                        </Button>
-                        <Button
-                            loading={pointsForm.processing}
-                            onClick={handlePointsSubmit}
-                            className="bg-amber-600 hover:bg-amber-700"
-                        >
-                            Apply Points
-                        </Button>
+                        <Button variant="secondary" onClick={() => setPointsCustomer(null)}>Cancel</Button>
+                        <Button loading={pointsForm.processing} onClick={handlePointsSubmit}>Apply points</Button>
                     </div>
                 }
             >
                 {pointsCustomer && (
                     <div className="space-y-5">
-                        {/* Current Balance Card */}
                         <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <span className="text-xs font-semibold uppercase tracking-wider text-amber-800">
-                                        Current Balance
-                                    </span>
-                                    <p className="text-2xl font-black tabular-nums text-amber-900">
-                                        {pointsCustomer.points.toLocaleString()} pts
-                                    </p>
-                                </div>
-                                <div className="text-right">
-                                    <span className="text-xs text-amber-700">Projected Balance:</span>
-                                    <p className="text-sm font-bold tabular-nums text-amber-900">
-                                        {Math.max(0, pointsCustomer.points + (pointsForm.data.points || 0)).toLocaleString()}{' '}
-                                        pts
-                                    </p>
-                                </div>
-                            </div>
+                            <span className="text-xs font-semibold uppercase tracking-wider text-amber-800">Current balance</span>
+                            <p className="text-2xl font-bold tabular-nums text-amber-900">{pointsCustomer.points.toLocaleString()} pts</p>
                         </div>
 
-                        {/* Quick Presets */}
                         <div>
-                            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-700">
-                                Quick Presets
-                            </label>
+                            <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick presets</span>
                             <div className="grid grid-cols-3 gap-2">
-                                {[
-                                    { label: '+50 pts', val: 50 },
-                                    { label: '+100 pts', val: 100 },
-                                    { label: '+250 pts', val: 250 },
-                                    { label: '+500 pts', val: 500 },
-                                    { label: '-50 pts', val: -50 },
-                                    { label: '-100 pts', val: -100 },
-                                ].map((preset) => (
-                                    <button
-                                        key={preset.label}
-                                        type="button"
-                                        onClick={() => pointsForm.setData('points', preset.val)}
-                                        className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
-                                            pointsForm.data.points === preset.val
-                                                ? 'border-amber-600 bg-amber-600 text-white shadow-xs'
-                                                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        {preset.label}
-                                    </button>
+                                {[50, 100, 250, 500, -50, -100].map((value) => (
+                                    <Button key={value} size="xs" variant={pointsForm.data.points === value ? 'primary' : 'secondary'} onClick={() => pointsForm.setData('points', value)}>
+                                        {value > 0 ? `+${value}` : value}
+                                    </Button>
                                 ))}
                             </div>
                         </div>
 
-                        {/* Manual Input */}
-                        <TextField
-                            label="Points Delta (+/-) *"
-                            type="number"
-                            placeholder="e.g. 100 or -50"
-                            value={String(pointsForm.data.points)}
-                            error={pointsForm.errors.points}
-                            onChange={(v) => pointsForm.setData('points', Number(v))}
-                        />
-
-                        <TextField
-                            label="Reason for Adjustment *"
-                            placeholder="e.g. Birthday reward, apology credit, manual correction"
-                            value={pointsForm.data.reason}
-                            error={pointsForm.errors.reason}
-                            onChange={(v) => pointsForm.setData('reason', v)}
-                        />
+                        <TextField label="Points delta (+/-)" type="number" value={String(pointsForm.data.points)} error={pointsForm.errors.points} onChange={(v) => pointsForm.setData('points', Number(v))} />
+                        <TextField label="Reason" value={pointsForm.data.reason} placeholder="Birthday reward, correction…" error={pointsForm.errors.reason} onChange={(v) => pointsForm.setData('reason', v)} />
                     </div>
                 )}
             </Drawer>
 
-            {/* Confirm Delete Customer Dialog */}
             <ConfirmDialog
                 show={pendingDelete !== null}
                 title={`Remove ${pendingDelete?.name ?? 'customer'}?`}
-                description="This will remove the guest record from your active directory. Previous orders associated with this customer will be preserved."
-                confirmLabel="Remove Customer"
+                description="This removes the guest record from your directory. Past orders are preserved."
+                confirmLabel="Remove customer"
                 onConfirm={() => {
                     if (pendingDelete) {
-                        router.delete(route('customers.destroy', pendingDelete.id), {
-                            preserveScroll: true,
-                            onFinish: () => {
-                                setPendingDelete(null);
-                            },
-                        });
+                        router.delete(route('customers.destroy', pendingDelete.id), { preserveScroll: true, onFinish: () => setPendingDelete(null) });
                     }
                 }}
                 onClose={() => setPendingDelete(null)}
