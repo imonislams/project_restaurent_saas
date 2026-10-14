@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Domain\Auditing\AuditLogger;
+use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Operations\CommandRunner;
 use App\Domain\Operations\Models\CommandRun;
 use App\Domain\PlatformSettings\PlatformSettings;
@@ -33,7 +34,7 @@ class CommandController extends Controller
             ])->values(),
             'advanced' => [
                 'enabled' => $advancedEnabled,
-                'is_super_admin' => (bool) request()->user()?->hasRole(\App\Domain\Identity\Enums\RoleName::SaasSuperAdmin),
+                'is_super_admin' => (bool) request()->user()?->hasRole(RoleName::SaasSuperAdmin),
                 'allowed_prefixes' => $this->runner->allowedPrefixes(),
             ],
             'runs' => CommandRun::query()->with('user:id,name')->latest('id')->limit(25)->get()->map(fn (CommandRun $run) => [
@@ -70,7 +71,7 @@ class CommandController extends Controller
     {
         $user = $request->user();
 
-        abort_unless($user?->hasRole(\App\Domain\Identity\Enums\RoleName::SaasSuperAdmin), 403, 'Only the SaaS super admin can use the advanced terminal.');
+        abort_unless($user?->hasRole(RoleName::SaasSuperAdmin), 403, 'Only the SaaS super admin can use the advanced terminal.');
         abort_unless((bool) app(PlatformSettings::class)->get('features.command_terminal', false), 403, 'The advanced terminal is disabled.');
 
         $data = $request->validate(['command' => ['required', 'string', 'max:500']]);

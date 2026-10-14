@@ -10,6 +10,7 @@ use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -55,6 +56,31 @@ class ProductBulkOpsTest extends TestCase
         $product->refresh();
         $this->assertNotSame($first, $product->image_path);
         Storage::disk('public')->assertMissing($first);
+    }
+
+    public function test_a_product_image_can_be_set_on_create(): void
+    {
+        Storage::fake('public');
+        $owner = $this->owner();
+
+        $this->actingAs($owner)
+            ->post(route('menu.products.store'), [
+                'name' => 'With Image',
+                'price_dine_in' => 100,
+                'price_takeaway' => 100,
+                'price_delivery' => 120,
+                'inventory_mode' => 'none',
+                'image' => UploadedFile::fake()->image('dish.jpg'),
+            ])
+            ->assertRedirect();
+
+        $product = Product::withoutGlobalScopes()
+            ->where('tenant_id', $owner->tenant_id)
+            ->where('name', 'With Image')
+            ->firstOrFail();
+
+        $this->assertNotNull($product->image_path);
+        Storage::disk('public')->assertExists($product->image_path);
     }
 
     public function test_a_product_image_can_be_removed(): void
@@ -139,11 +165,56 @@ class ProductBulkOpsTest extends TestCase
         $this->assertStringContainsString('text/csv', (string) $response->headers->get('content-type'));
     }
 
-    public function test_storage_link_command_is_idempotent(): void
+    public function test_products_can_be_imported_with_images_from_urls(): void
     {
-        $command = app(CommandRunner::class)->curated()['storage_link']['command'];
+        Storage::fake('public');
+        Http::fake(['*' => Http::response('binary-image-data', 200, ['Content-Type' => 'image/jpeg'])]);
+        $owner = $this->owner();
 
+        $csv = "name,category,sku,price_dine_in,image_url\n"
+            ."Photo Burger,Mains,PB-1,150,https://cdn.example.com/burger.jpg\n";
+
+        $this->actingAs($owner)
+            ->post(route('menu.products.import'), ['file' => UploadedFile::fake()->createWithContent('p.csv', $csv)])
+            ->assertRedirect();
+
+        $product = Product::withoutGlobalScopes()->where('sku', 'PB-1')->firstOrFail();
+
+        $this->assertNotNull($product->image_path);
+        Storage::disk('public')->assertExists($product->image_path);
+    }
+
+    public function test_import_reports_an_image_that_cannot_be_downloaded(): void
+    {
+        Storage::fake('public');
+        Http::fake(['*' => Http::response('nope', 404)]);
+        $owner = $this->owner();
+
+        $csv = "name,sku,price_dine_in,image_url\n"
+            ."No Photo,NP-1,100,https://cdn.example.com/missing.jpg\n";
+
+        $this->actingAs($owner)
+            ->post(route('menu.products.import'), ['file' => UploadedFile::fake()->createWithContent('p.csv', $csv)])
+            ->assertRedirect()
+            ->assertSessionHas('import_result');
+
+        // The product is still imported — just without the image.
+        $product = Product::withoutGlobalScopes()->where('sku', 'NP-1')->firstOrFail();
+        $this->assertNull($product->image_path);
+    }
+
+    public function test_the_storage_link_command_actually_runs(): void
+    {
+        $runner = app(CommandRunner::class);
+
+        $command = $runner->curated()['storage_link']['command'];
         $this->assertStringContainsString('storage:link', $command);
         $this->assertStringContainsString('--force', $command);
+        $this->assertStringContainsString('{php}', $command);
+
+        $run = $runner->run($command, 'curated');
+
+        $this->assertSame(0, $run->exit_code, $run->output);
+        $this->assertFileExists(public_path('storage'));
     }
 }

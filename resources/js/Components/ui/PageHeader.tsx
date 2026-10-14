@@ -26,7 +26,7 @@ export default function PageHeader({
     className,
 }: PageHeaderProps) {
     return (
-        <div className={cn('flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between', className)}>
+        <div className={cn('flex animate-fade-in flex-col gap-4 sm:flex-row sm:items-center sm:justify-between', className)}>
             <div className="min-w-0 space-y-1">
                 {breadcrumb && breadcrumb.length > 0 && (
                     <Breadcrumb className="mb-1.5">
@@ -55,7 +55,7 @@ export default function PageHeader({
                         </BreadcrumbList>
                     </Breadcrumb>
                 )}
-                <h1 className="text-2xl sm:text-[26px] font-semibold tracking-tight text-foreground truncate leading-tight">
+                <h1 className="truncate font-display text-2xl font-semibold leading-tight tracking-tight text-foreground sm:text-[26px]">
                     {title}
                 </h1>
                 {description && (

@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\Communications\AnnouncementService;
+use App\Domain\Orders\Models\Order;
 use App\Domain\Tenancy\TenantContext;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -54,6 +56,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
+                'import_result' => fn () => $request->session()->get('import_result'),
             ],
             'impersonation' => $request->session()->has('impersonator_id') ? [
                 'admin_id' => $request->session()->get('impersonator_id'),
@@ -64,7 +67,7 @@ class HandleInertiaRequests extends Middleware
             ],
             // Orders awaiting staff confirmation (QR orders when auto-accept is off).
             'pending_approvals' => fn () => ($user && $tenant && $user->hasPermission('orders.update'))
-                ? (int) \App\Domain\Orders\Models\Order::withoutGlobalScopes()
+                ? (int) Order::withoutGlobalScopes()
                     ->where('tenant_id', $tenant->getKey())
                     ->where('acceptance_status', 'pending')
                     ->count()
@@ -80,7 +83,7 @@ class HandleInertiaRequests extends Middleware
             'active_branch_id' => fn () => $request->session()->get('active_branch_id')
                 ?: ($user && $tenant ? ($tenant->primaryBranch?->getKey() ?? ($user->accessibleBranchIds()[0] ?? null)) : null),
             'announcements' => fn () => $tenant
-                ? app(\App\Domain\Communications\AnnouncementService::class)->forTenant($tenant)
+                ? app(AnnouncementService::class)->forTenant($tenant)
                 : [],
             'locale' => app()->getLocale(),
             'locales' => collect(config('app.locales', ['en' => 'English']))

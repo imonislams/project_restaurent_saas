@@ -1,54 +1,91 @@
-import { useT } from '@/i18n';
+import { Badge } from '@/Components/ui';
+import { cn } from '@/Components/ui/cn';
 import { OnboardingStepInfo } from '@/types/onboarding';
 import { Link } from '@inertiajs/react';
+import {
+    Building2,
+    Check,
+    CheckCircle2,
+    Clock,
+    CreditCard,
+    Percent,
+    Receipt,
+    Store,
+    User,
+    Users,
+    UtensilsCrossed,
+    type LucideIcon,
+} from 'lucide-react';
 
-export default function Stepper({ steps, current, percent }: { steps: OnboardingStepInfo[]; current: string; percent: number }) {
-    const t = useT();
+const STEP_ICONS: Record<string, LucideIcon> = {
+    profile: User,
+    company: Building2,
+    branch: Store,
+    hours: Clock,
+    tax: Percent,
+    receipt: Receipt,
+    payments: CreditCard,
+    menu: UtensilsCrossed,
+    team: Users,
+    review: CheckCircle2,
+};
 
+export default function Stepper({ steps, current }: { steps: OnboardingStepInfo[]; current: string }) {
     return (
-        <div>
-            <div className="mb-2 flex items-center justify-between text-xs font-medium text-gray-500">
-                <span>{t('dash.setup_progress')}</span>
-                <span className="tabular-nums">{percent}%</span>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                <div className="h-full rounded-full bg-indigo-600 transition-all duration-300" style={{ width: `${percent}%` }} />
-            </div>
+        <ol className="space-y-0.5">
+            {steps.map((step, index) => {
+                const isCurrent = step.value === current;
+                const isComplete = step.complete;
+                const StepIcon = STEP_ICONS[step.value];
 
-            <ol className="mt-4 flex flex-wrap gap-2">
-                {steps.map((step, index) => {
-                    const isCurrent = step.value === current;
-
-                    return (
-                        <li key={step.value}>
-                            <Link
-                                href={route('onboarding.show', step.value)}
-                                className={
-                                    'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition ' +
-                                    (isCurrent
-                                        ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
-                                        : step.complete
-                                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                          : 'border-gray-200 text-gray-500 hover:bg-gray-50')
-                                }
-                            >
-                                <span
-                                    className={
-                                        'flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold ' +
-                                        (step.complete ? 'bg-emerald-600 text-white' : isCurrent ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600')
-                                    }
-                                >
-                                    {step.complete ? '✓' : index + 1}
-                                </span>
-                                {step.label}
-                                {step.optional && (
-                                    <span className="rounded bg-white/70 px-1 text-[10px] uppercase tracking-wide text-gray-400">optional</span>
+                return (
+                    <li key={step.value} style={{ animationDelay: `${index * 35}ms` }} className="animate-fade-up">
+                        <Link
+                            href={route('onboarding.show', step.value)}
+                            aria-current={isCurrent ? 'step' : undefined}
+                            className={cn(
+                                'group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 ease-out-expo',
+                                isCurrent ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : 'hover:bg-accent',
+                            )}
+                        >
+                            <span
+                                className={cn(
+                                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors duration-200',
+                                    isComplete
+                                        ? 'border-transparent bg-emerald-600 text-white'
+                                        : isCurrent
+                                          ? 'border-transparent bg-primary text-primary-foreground'
+                                          : 'border-border bg-background text-muted-foreground group-hover:border-border',
                                 )}
-                            </Link>
-                        </li>
-                    );
-                })}
-            </ol>
-        </div>
+                            >
+                                {isComplete ? (
+                                    <Check className="h-3.5 w-3.5 stroke-[3]" />
+                                ) : StepIcon ? (
+                                    <StepIcon className="h-3.5 w-3.5" />
+                                ) : (
+                                    <span className="text-[11px] font-semibold">{index + 1}</span>
+                                )}
+                            </span>
+                            <span className="min-w-0 flex-1">
+                                <span
+                                    className={cn(
+                                        'block truncate text-sm transition-colors',
+                                        isCurrent ? 'font-semibold text-foreground' : 'font-medium text-muted-foreground group-hover:text-foreground',
+                                    )}
+                                >
+                                    {step.label}
+                                </span>
+                                {step.optional && <span className="block text-[11px] text-muted-foreground">Optional</span>}
+                            </span>
+                            {isCurrent && (
+                                <Badge tone="brand" dot={false} className="shrink-0">
+                                    Current
+                                </Badge>
+                            )}
+                        </Link>
+                    </li>
+                );
+            })}
+        </ol>
     );
 }

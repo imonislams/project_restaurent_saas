@@ -2025,8 +2025,88 @@ command fixes).
 
 ---
 
+## Phase 16D — Product images, bulk ops & command fixes
+
+### Business journey completed
+
+An owner uploads an image while creating a product (not only when editing), downloads a CSV
+template, bulk-imports a catalogue whose rows may carry an `image_url` (downloaded and stored,
+with failures reported but never dropping the product), and exports the catalogue as CSV or
+PDF including images. The platform "Link storage" command now runs with a resolved PHP binary
+and reports real public-storage health.
+
+### Features implemented
+
+- **Image on create** — `ProductRequest` accepts an `image`; `storeProduct`/`updateProduct`
+  store it (public disk, replacing the previous file). The product editor shows an image
+  picker for new products and submits multipart; the standalone replace/remove endpoints
+  remain.
+- **Import with images** — `ProductImportService` gains an `image_url` column: each URL is
+  downloaded (type/size checked) and stored under the tenant's folder. A failed download is a
+  warning — the product is still imported. The controller flashes a structured import result
+  (created/updated/skipped/errors/warnings) rendered in the UI.
+- **Template/export** — the CSV template and export include `image_url`, so a round-trip is
+  lossless.
+- **Command runner** — new `config/operations.php`; `CommandRunner` resolves `{php}`/`{npm}`
+  placeholders to real executables (CLI `PHP_BINARY`, a sibling CLI binary under fpm/cgi, or
+  an env override). Verified by actually executing `storage:link --force` in a test.
+- **Health** — `HealthChecker` adds a public-storage check (writable public disk + symlink
+  present); `platform:check` reports a "Public files" row.
+- **Design** — the menu header actions and product editor fields use the shared UI kit
+  (`TextField`, `SelectField`, `CheckboxField`, `Button`, `Card`, `Badge`).
+
+### Files and modules changed
+
+```
+app/Http/Requests/Menu/ProductRequest.php              (image rule)
+app/Http/Controllers/Menu/MenuController.php           (image on create/update, import result)
+app/Domain/Menu/ProductImportService.php               (image_url fetch, warnings)
+app/Domain/Operations/CommandRunner.php                (binary resolution, placeholders)
+app/Http/Controllers/Platform/CommandController.php   (resolved command display)
+app/Support/HealthChecker.php, app/Console/Commands/PlatformReadinessCheck.php
+app/Http/Middleware/HandleInertiaRequests.php          (flash import_result)
+config/operations.php                                  (new)
+resources/js/Pages/Menu/Index.tsx                      (editor + import UI)
+tests/Feature/Menu/ProductBulkOpsTest.php
+```
+
+### Database and migration changes
+
+None.
+
+### Security and tenant-isolation results
+
+- Uploaded/imported images are validated (image mime, 2–3 MB) and stored under the tenant's
+  folder; the previous file is deleted on replace.
+- Remote image fetches are time-bounded and type-checked; a malicious/unreachable URL cannot
+  break or block an import — verified.
+
+### Tests executed
+
+```
+php artisan test   →  512 passed (2743 assertions)
+```
+
+New coverage (+3 net): image on create, import with `image_url`, import warning on a failed
+image, and a storage-link test that really executes the command (exit 0).
+
+### Known defects and unresolved risks
+
+- Import remains synchronous; very large catalogues with many images should move to a queued
+  job.
+- Import reads only the documented columns; no Excel (`.xlsx`) support (CSV only, per scope).
+- `OPERATIONS_PHP_BINARY`/`OPERATIONS_NPM_BINARY` may still be needed on hosts whose layout
+  does not match the auto-detection.
+
+### Final phase status
+
+**Complete pending review.** This closes the 16A–16D refinement program.
+
+---
+
 ## Program status
 
-Phases 15A–15D, 16A, 16B and 16C are implemented and verified (509 tests passing; frontend
-build clean). Remaining known gaps are noted per phase. Phase 16D (product bulk ops, images &
-command fixes) is planned but not yet implemented.
+Phases 15A–15D and 16A–16D are implemented and verified (512 tests passing; frontend build
+clean). Remaining known gaps are noted per phase. The owner journey, tenant payment gateways,
+customer segmentation/analytics and product bulk operations are now complete, with the tenant
+panel restyled on the shared shadcn-based UI kit and Roboto typography.

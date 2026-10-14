@@ -52,6 +52,33 @@ export default {
                 'mono-ticket': ['13px', { lineHeight: '18px', letterSpacing: '0.02em', fontWeight: '400' }],
                 'label-caps': ['11px', { lineHeight: '14px', letterSpacing: '0.08em', fontWeight: '700' }],
             },
+            keyframes: {
+                'fade-in': {
+                    from: { opacity: '0' },
+                    to: { opacity: '1' },
+                },
+                'fade-up': {
+                    from: { opacity: '0', transform: 'translateY(10px)' },
+                    to: { opacity: '1', transform: 'translateY(0)' },
+                },
+                'fade-down': {
+                    from: { opacity: '0', transform: 'translateY(-8px)' },
+                    to: { opacity: '1', transform: 'translateY(0)' },
+                },
+                'scale-in': {
+                    from: { opacity: '0', transform: 'scale(0.97)' },
+                    to: { opacity: '1', transform: 'scale(1)' },
+                },
+            },
+            animation: {
+                'fade-in': 'fade-in 0.35s ease-out both',
+                'fade-up': 'fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both',
+                'fade-down': 'fade-down 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
+                'scale-in': 'scale-in 0.3s ease-out both',
+            },
+            transitionTimingFunction: {
+                'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
+            },
             borderRadius: {
                 lg: 'var(--radius)',
                 md: 'calc(var(--radius) - 2px)',
