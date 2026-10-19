@@ -1,5 +1,6 @@
 import Icon from '@/Components/Icon';
 import Badge from '@/Components/ui/Badge';
+import { BranchSummary } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -31,11 +32,6 @@ interface Ticket {
 }
 
 interface Station {
-    id: number;
-    name: string;
-}
-
-interface Branch {
     id: number;
     name: string;
 }
@@ -108,7 +104,7 @@ export default function KitchenIndex({
     selectedStation,
     tickets,
 }: {
-    branches: Branch[];
+    branches: BranchSummary[];
     branchId: number | null;
     stations: Station[];
     selectedStation: number | null;
@@ -188,7 +184,7 @@ export default function KitchenIndex({
     const applyFilters = (params: Record<string, unknown>) => {
         router.get(
             route('kitchen.index'),
-            { branch_id: branchId, station_id: selectedStation, ...params },
+            { station_id: selectedStation, ...params },
             { preserveState: true, preserveScroll: true, replace: true },
         );
     };
@@ -274,7 +270,9 @@ export default function KitchenIndex({
                     <select
                         aria-label="Select Branch"
                         value={branchId ?? ''}
-                        onChange={(e) => applyFilters({ branch_id: e.target.value })}
+                        onChange={(e) =>
+                            router.post(route('branch.switch'), { branch_id: Number(e.target.value) }, { preserveScroll: true })
+                        }
                         className={`h-8 rounded-lg border py-1 pl-2.5 pr-8 text-xs font-semibold cursor-pointer shadow-subtle ${
                             isDarkMode
                                 ? 'bg-gray-800 border-gray-700 text-gray-200 focus:border-amber-500'

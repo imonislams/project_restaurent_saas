@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Orders;
 
+use App\Domain\Branches\Models\Branch;
 use App\Domain\Orders\Enums\FulfillmentStatus;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Enums\OrderType;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Orders\OrderService;
 use App\Domain\POS\SaleService;
+use App\Http\Controllers\Concerns\ResolvesActiveBranch;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\FulfillmentRequest;
 use App\Http\Requests\Orders\SettleOrderRequest;
@@ -19,6 +21,8 @@ use Inertia\Response;
 
 class OrderController extends Controller
 {
+    use ResolvesActiveBranch;
+
     public function __construct(
         protected OrderService $orders,
         protected SaleService $sales,
@@ -26,6 +30,21 @@ class OrderController extends Controller
 
     public function index(Request $request): Response
     {
+        $user = $request->user();
+        $tenantWide = $user->hasTenantWideBranchAccess();
+        $accessible = $user->accessibleBranchIds();
+        $rawBranch = $request->string('branch_id')->toString();
+        $active = $this->activeBranch($request);
+
+        // Default to the active branch; "all" is only honoured for tenant-wide users.
+        if ($rawBranch === 'all' && $tenantWide) {
+            $branchId = null;
+        } elseif ($rawBranch !== '' && $rawBranch !== 'all' && in_array((int) $rawBranch, $accessible, true)) {
+            $branchId = (int) $rawBranch;
+        } else {
+            $branchId = $active?->getKey();
+        }
+
         $from = $request->date('from')?->startOfDay() ?? today()->startOfDay();
         $to = $request->date('to')?->endOfDay() ?? today()->endOfDay();
         $status = $request->string('status')->toString() ?: null;
@@ -35,6 +54,7 @@ class OrderController extends Controller
         $orders = Order::query()
             ->with(['cashier:id,name', 'branch:id,name', 'table:id,name'])
             ->withCount('items')
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->whereBetween('placed_at', [$from, $to])
             ->when($status, fn ($q) => $q->where('status', $status))
             ->when($type, fn ($q) => $q->where('order_type', $type))
@@ -65,12 +85,18 @@ class OrderController extends Controller
 
         return Inertia::render('Orders/Index', [
             'orders' => $orders,
+            'branches' => Branch::query()
+                ->when(! $tenantWide, fn ($q) => $q->whereIn('id', $accessible))
+                ->orderBy('name')->get()
+                ->map(fn (Branch $b) => ['id' => $b->getKey(), 'name' => $b->name]),
+            'canViewAllBranches' => $tenantWide,
             'filters' => [
                 'from' => $from->toDateString(),
                 'to' => $to->toDateString(),
                 'status' => $status,
                 'order_type' => $type,
                 'source' => $source,
+                'branch_id' => $branchId,
             ],
             'statuses' => collect(OrderStatus::cases())
                 ->map(fn (OrderStatus $s) => ['value' => $s->value, 'label' => $s->label()])->values(),

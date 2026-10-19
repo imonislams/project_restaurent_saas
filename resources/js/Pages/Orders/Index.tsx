@@ -13,6 +13,7 @@ import {
     TableRow,
 } from '@/Components/ui/Table';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { BranchSummary } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Printer } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -66,11 +67,15 @@ const money = (n: number, currency: string) =>
 export default function OrdersIndex({
     orders,
     filters,
+    branches,
+    canViewAllBranches,
     statuses,
     types,
 }: {
     orders: Paginated<OrderRow>;
-    filters: { from: string; to: string; status: string | null; order_type: string | null };
+    filters: { from: string; to: string; status: string | null; order_type: string | null; branch_id: number | null };
+    branches: BranchSummary[];
+    canViewAllBranches: boolean;
     statuses: { value: string; label: string }[];
     types: { value: string; label: string }[];
 }) {
@@ -80,6 +85,7 @@ export default function OrdersIndex({
     const [to, setTo] = useState(filters.to);
     const [status, setStatus] = useState(filters.status ?? '');
     const [orderType, setOrderType] = useState(filters.order_type ?? '');
+    const [branchId, setBranchId] = useState<string>(filters.branch_id ? String(filters.branch_id) : 'all');
     const [searchQuery, setSearchQuery] = useState('');
 
     const apply = (overrides: Record<string, unknown> = {}) => {
@@ -90,6 +96,7 @@ export default function OrdersIndex({
                 to,
                 status: status || null,
                 order_type: orderType || null,
+                branch_id: branchId && branchId !== 'all' ? Number(branchId) : 'all',
                 ...overrides,
             },
             { preserveState: true, preserveScroll: true, replace: true },
@@ -258,7 +265,7 @@ export default function OrdersIndex({
                             </div>
 
                             {/* Detailed Inputs Row */}
-                            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5 items-end">
+                            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-6 items-end">
                                 <div>
                                     <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                                         From Date
@@ -316,6 +323,28 @@ export default function OrdersIndex({
                                         {types.map((t) => (
                                             <option key={t.value} value={t.value}>
                                                 {t.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
+                                        Branch
+                                    </label>
+                                    <select
+                                        aria-label="Branch"
+                                        value={branchId}
+                                        onChange={(e) => {
+                                            setBranchId(e.target.value);
+                                            apply({ branch_id: e.target.value && e.target.value !== 'all' ? Number(e.target.value) : 'all' });
+                                        }}
+                                        className="h-9 w-full rounded-md border border-input bg-background py-1.5 px-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                                    >
+                                        {canViewAllBranches && <option value="all">All branches</option>}
+                                        {branches.map((b) => (
+                                            <option key={b.id} value={String(b.id)}>
+                                                {b.name}
                                             </option>
                                         ))}
                                     </select>

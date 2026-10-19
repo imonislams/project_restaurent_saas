@@ -18,7 +18,12 @@ class PlaceOrderRequest extends FormRequest
         $tenantId = $this->user()->tenant_id;
 
         return [
-            'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $tenantId)],
+            'branch_id' => [
+                'required',
+                'integer',
+                Rule::exists('branches', 'id')->where('tenant_id', $tenantId),
+                Rule::in($this->user()->accessibleBranchIds()),
+            ],
             'shift_id' => ['nullable', 'integer', Rule::exists('shifts', 'id')->where('tenant_id', $tenantId)],
             'order_type' => ['required', Rule::in(OrderType::values())],
             'table_id' => ['nullable', 'integer', Rule::exists('tables', 'id')->where('tenant_id', $tenantId)],

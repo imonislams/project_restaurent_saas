@@ -8,6 +8,7 @@ use App\Domain\Tables\Enums\TableStatus;
 use App\Domain\Tables\Models\DiningArea;
 use App\Domain\Tables\Models\Table;
 use App\Domain\Tables\TableService;
+use App\Http\Controllers\Concerns\ResolvesActiveBranch;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tables\TableRequest;
 use App\Http\Requests\Tables\TableStatusRequest;
@@ -19,16 +20,18 @@ use Inertia\Response;
 
 class TableController extends Controller
 {
+    use ResolvesActiveBranch;
+
     public function __construct(protected TableService $tables) {}
 
     public function index(Request $request): Response
     {
-        $tenant = $request->user()->tenant;
-        $branchId = $request->integer('branch_id')
-            ?: ($tenant->primaryBranch?->getKey() ?? $tenant->branches()->orderBy('id')->value('id'));
+        $user = $request->user();
+        $branch = $this->activeBranch($request);
+        $branchId = $branch?->getKey();
 
         return Inertia::render('Tables/Index', [
-            'branches' => Branch::query()->orderBy('name')->get()
+            'branches' => Branch::query()->whereIn('id', $user->accessibleBranchIds())->active()->orderBy('name')->get()
                 ->map(fn (Branch $b) => ['id' => $b->getKey(), 'name' => $b->name]),
             'branchId' => $branchId,
             'areas' => DiningArea::query()

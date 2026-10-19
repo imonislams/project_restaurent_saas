@@ -158,7 +158,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Roles whose holders may access every branch in the tenant.
      */
-    protected function hasTenantWideBranchAccess(): bool
+    public function hasTenantWideBranchAccess(): bool
     {
         return $this->isPlatformAdmin()
             || $this->hasRole([RoleName::TenantOwner, RoleName::TenantAdmin])

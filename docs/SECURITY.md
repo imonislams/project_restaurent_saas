@@ -31,6 +31,10 @@ Platform access, tenant business access and support access are **separate permis
 - Every endpoint, query, job, export and file operation is constrained by the resolved
   tenant (and branch where applicable).
 - Branch-level operations validate **both** `tenant_id` and `branch_id`.
+- The active branch is resolved server-side per request (`ResolveActiveBranch`) from the
+  authenticated user's accessible branches; a client-supplied branch is honoured only when the
+  user may access it. Data-layer branch scoping (a fail-closed global scope) is added in
+  Phase 16E(B).
 - Cross-tenant access must **fail closed**.
 - Automated cross-tenant tests are mandatory in every phase.
 

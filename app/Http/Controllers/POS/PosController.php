@@ -11,6 +11,7 @@ use App\Domain\Menu\Models\Product;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Models\Order;
 use App\Domain\POS\SaleService;
+use App\Http\Controllers\Concerns\ResolvesActiveBranch;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\POS\PlaceOrderRequest;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,8 @@ use Inertia\Response;
 
 class PosController extends Controller
 {
+    use ResolvesActiveBranch;
+
     public function __construct(protected SaleService $sales) {}
 
     public function index(Request $request): Response
@@ -27,18 +30,14 @@ class PosController extends Controller
         $user = $request->user();
         $tenant = $user->tenant;
 
-        $accessible = $user->accessibleBranchIds();
-        $branchId = $request->integer('branch_id')
-            ?: ($tenant->primaryBranch?->getKey() ?? ($accessible[0] ?? null));
-
-        $branch = $branchId ? Branch::query()->find($branchId) : null;
+        $branch = $this->activeBranch($request);
 
         $shift = $branch
             ? Shift::query()->where('branch_id', $branch->getKey())->open()->latest('opened_at')->with('openedBy:id,name')->first()
             : null;
 
         return Inertia::render('Pos/Index', [
-            'branches' => Branch::query()->whereIn('id', $accessible)->orderBy('name')->get()
+            'branches' => Branch::query()->whereIn('id', $user->accessibleBranchIds())->active()->orderBy('name')->get()
                 ->map(fn (Branch $b) => ['id' => $b->getKey(), 'name' => $b->name]),
             'branch' => $branch ? [
                 'id' => $branch->getKey(),

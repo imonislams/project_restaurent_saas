@@ -77,8 +77,7 @@ class HandleInertiaRequests extends Middleware
                     'currency' => $b->currency ?? $tenant->getSetting('region.currency') ?? 'USD',
                 ])->values()
                 : [],
-            'active_branch_id' => fn () => $request->session()->get('active_branch_id')
-                ?: ($user && $tenant ? ($tenant->primaryBranch?->getKey() ?? ($user->accessibleBranchIds()[0] ?? null)) : null),
+            'active_branch_id' => fn () => app(TenantContext::class)->branchId(),
             'announcements' => fn () => $tenant
                 ? app(\App\Domain\Communications\AnnouncementService::class)->forTenant($tenant)
                 : [],

@@ -20,6 +20,7 @@ import {
     TextField,
 } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { BranchSummary } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { LayoutGrid, List, Pencil, Plus, Search, Trash2, Users, X } from 'lucide-react';
 import { FormEventHandler, useMemo, useState } from 'react';
@@ -97,7 +98,7 @@ export default function TablesIndex({
     tables,
     statuses,
 }: {
-    branches: { id: number; name: string }[];
+    branches: BranchSummary[];
     branchId: number | null;
     areas: { id: number; name: string }[];
     tables: TableRow[];
@@ -287,9 +288,9 @@ export default function TablesIndex({
                                     className="h-8 rounded-md border border-input bg-background px-2.5 text-xs font-medium text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
                                     value={branchId ?? ''}
                                     onChange={(e) =>
-                                        router.get(
-                                            route('tables.index'),
-                                            { branch_id: e.target.value },
+                                        router.post(
+                                            route('branch.switch'),
+                                            { branch_id: Number(e.target.value) },
                                             { preserveScroll: true },
                                         )
                                     }

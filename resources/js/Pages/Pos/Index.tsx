@@ -2,15 +2,11 @@ import Icon from '@/Components/Icon';
 import Badge from '@/Components/ui/Badge';
 import Button from '@/Components/ui/Button';
 import { useT } from '@/i18n';
+import { BranchSummary } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 // --- Interfaces ---
-
-interface Branch {
-    id: number;
-    name: string;
-}
 
 interface ShiftInfo {
     id: number;
@@ -181,7 +177,7 @@ export default function PosIndex({
     serviceChargeRate,
     openOrders = [],
 }: {
-    branches: Branch[];
+    branches: BranchSummary[];
     branch: { id: number; name: string; currency: string } | null;
     shift: ShiftInfo | null;
     products: Product[];
@@ -584,7 +580,7 @@ export default function PosIndex({
                             className="h-8 rounded-md border border-input bg-background py-1 pl-2.5 pr-8 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
                             value={branch.id}
                             onChange={(e) =>
-                                router.get(route('pos.index'), { branch_id: e.target.value }, { preserveScroll: true })
+                                router.post(route('branch.switch'), { branch_id: Number(e.target.value) }, { preserveScroll: true })
                             }
                         >
                             {branches.map((b) => (

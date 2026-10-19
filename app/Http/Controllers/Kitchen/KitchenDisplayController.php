@@ -9,6 +9,7 @@ use App\Domain\Kitchen\KitchenService;
 use App\Domain\Kitchen\Models\KitchenStation;
 use App\Domain\Kitchen\Models\KitchenTicket;
 use App\Domain\Kitchen\Models\KitchenTicketItem;
+use App\Http\Controllers\Concerns\ResolvesActiveBranch;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Kitchen\ItemStatusRequest;
 use App\Http\Requests\Kitchen\TicketStatusRequest;
@@ -19,13 +20,15 @@ use Inertia\Response;
 
 class KitchenDisplayController extends Controller
 {
+    use ResolvesActiveBranch;
+
     public function __construct(protected KitchenService $kitchen) {}
 
     public function index(Request $request): Response
     {
-        $tenant = $request->user()->tenant;
-        $branchId = $request->integer('branch_id')
-            ?: ($tenant->primaryBranch?->getKey() ?? $tenant->branches()->orderBy('id')->value('id'));
+        $user = $request->user();
+        $branch = $this->activeBranch($request);
+        $branchId = $branch?->getKey();
         $stationId = $request->integer('station_id') ?: null;
 
         $tickets = KitchenTicket::query()
@@ -69,7 +72,7 @@ class KitchenDisplayController extends Controller
             ]);
 
         return Inertia::render('Kitchen/Index', [
-            'branches' => Branch::query()->orderBy('name')->get()
+            'branches' => Branch::query()->whereIn('id', $user->accessibleBranchIds())->active()->orderBy('name')->get()
                 ->map(fn (Branch $b) => ['id' => $b->getKey(), 'name' => $b->name]),
             'branchId' => $branchId,
             'stations' => KitchenStation::query()->orderBy('sort_order')->orderBy('name')->get()

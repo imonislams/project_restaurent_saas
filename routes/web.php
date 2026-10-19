@@ -73,11 +73,11 @@ use App\Http\Controllers\Staff\StaffController;
 use App\Http\Controllers\Subscription\SubscriptionController as TenantSubscriptionController;
 use App\Http\Controllers\Tables\TableController;
 use App\Http\Controllers\Tenant\BranchController as TenantBranchController;
+use App\Http\Controllers\Tenant\BranchSwitchController;
 use App\Http\Controllers\Tenant\PaymentGatewayController as TenantPaymentGatewayController;
 use App\Http\Controllers\Tenant\SettingsController as TenantSettingsController;
 use App\Http\Controllers\Tenant\TenantBrandingController;
 use App\Http\Controllers\Waste\WasteController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -144,15 +144,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::put('/profile/manager-pin', [ManagerPinController::class, 'update'])->name('profile.manager-pin');
-    Route::post('/branch/switch', function (Request $request) {
-        $request->validate(['branch_id' => 'required|integer']);
-        $user = $request->user();
-        if ($user && $user->canAccessBranch($request->integer('branch_id'))) {
-            $request->session()->put('active_branch_id', $request->integer('branch_id'));
-        }
-
-        return back();
-    })->name('branch.switch');
+    Route::post('/branch/switch', [BranchSwitchController::class, 'update'])->name('branch.switch');
 });
 
 /*

@@ -24,6 +24,7 @@ requirement in [ROADMAP.md](./ROADMAP.md) is satisfied and the report below is f
 | 15B — Tenant payment gateways | Complete pending review |
 | 15C — Customer segmentation & analytics | Complete pending review |
 | 15D — Product images, bulk import/export & storage link | Complete pending review |
+| 16E(A) — Active restaurant & branch context | Complete pending review |
 
 ---
 
@@ -2025,8 +2026,102 @@ command fixes).
 
 ---
 
+## Phase 16E(A) — Active restaurant & branch context
+
+### Business journey completed
+
+An owner logs in, picks a branch once in the sidebar, and every module — POS, Orders,
+Kitchen, Tables, Reports and Payments — uses that same branch without re-selecting it.
+Navigation between modules preserves the selection; switching branch refreshes the data.
+The active branch is resolved and validated on the server for every request, so a branch
+the user cannot access is never honoured.
+
+### Problem addressed
+
+The active branch was two disconnected mechanisms: a session value (`active_branch_id`)
+that no controller read, and per-page `?branch_id` query params each with its own fallback
+chain (Orders had no branch filter at all; `TenantContext::branchId()` was dead outside the
+QR flow). The sidebar switcher changed only the displayed label.
+
+### Features implemented
+
+- **`ResolveActiveBranch` middleware** — resolves one active branch from trusted server-side
+  context, with precedence: valid session choice → tenant primary branch → first accessible
+  branch. Binds it onto `TenantContext::setBranchId()`, exposes it on the request, adds
+  `branch_id` to the log context, and persists the winning value to the session. A branch the
+  user cannot access is never honoured (fail closed).
+- **`BranchSwitchController`** — the `branch.switch` route is now a controller action that
+  validates `canAccessBranch()` and returns 403 for an inaccessible/foreign branch (previously
+  silently ignored).
+- **Controllers consume the resolved branch** — POS, Kitchen, Tables, Reports and Orders read
+  the resolved branch via a shared `ResolvesActiveBranch` trait instead of re-deriving it.
+  Order `branch_id` now passes `Rule::in(accessibleBranchIds())`.
+- **Branch switchers only list accessible branches** (Kitchen/Tables previously listed all
+  tenant branches).
+- **Reports/Orders** default to the active branch; the "All branches" option exists only for
+  tenant-wide users (owner/admin/`branches.manage`).
+- **Frontend** — POS, Kitchen and Tables switchers now switch the global context
+  (`branch.switch`) rather than a page-local `?branch_id`; Orders gained a branch filter.
+  Branch types consolidated onto `BranchSummary`.
+
+### Files and modules changed
+
+```
+app/Http/Middleware/ResolveActiveBranch.php          (new)
+app/Http/Controllers/Concerns/ResolvesActiveBranch.php (new)
+app/Http/Controllers/Tenant/BranchSwitchController.php (new)
+app/Http/Middleware/HandleInertiaRequests.php        (active_branch_id from context)
+app/Models/User.php                                  (hasTenantWideBranchAccess public)
+app/Http/Controllers/{POS/PosController,Kitchen/KitchenDisplayController,
+    Tables/TableController,Reporting/ReportController,Orders/OrderController}.php
+app/Http/Requests/POS/PlaceOrderRequest.php
+bootstrap/app.php                                    (web stack + branch.active alias)
+routes/web.php                                       (branch.switch -> controller)
+resources/js/{Pages/Pos/Index,Pages/Kitchen/Index,Pages/Tables/Index,
+    Pages/Reports/Index,Pages/Orders/Index}.tsx
+tests/Feature/Branches/ActiveBranchContextTest.php   (new)
+```
+
+### Security and tenant-isolation results
+
+- Active branch resolved from trusted server-side context; client-supplied branch ids are
+  validated against `accessibleBranchIds()`.
+- Switching to an inaccessible or foreign-tenant branch returns 403 — verified.
+- An inaccessible session value falls back to an accessible branch — verified.
+- Branch switchers and the Orders/Reports filter only expose accessible branches — verified.
+- Full suite green: no cross-tenant or cross-branch regression.
+
+### Tests executed
+
+```
+php artisan test      →  509 passed (2731 assertions)   [baseline preserved]
+new: ActiveBranchContextTest → 7 passed (122 assertions)
+npm run build         →  tsc + vite build clean
+```
+
+### Known defects and unresolved risks
+
+- **Data-layer branch isolation is not yet in place** — this phase unifies the *context*;
+  the fail-closed `BelongsToBranch` global scope, route-model-bound ownership checks and
+  write-path hardening land in **Phase 16E(B)**. Until then, a model fetched by a direct URL
+  is still constrained only by the tenant scope.
+- **Pint could not run** (binary requires PHP 8.3; environment is PHP 8.2) — formatting was
+  kept consistent with surrounding code by hand.
+- Per-page branch selects still exist as styled controls (they now drive the global context);
+  a full swap to the shared `BranchSelector` component is deferred to avoid churn on the
+  dark KDS theme.
+
+### Final phase status
+
+**Complete pending review.** Awaiting approval before Phase 16E(B) (branch-wise permissions &
+task assignment).
+
+---
+
 ## Program status
 
 Phases 15A–15D, 16A, 16B and 16C are implemented and verified (509 tests passing; frontend
 build clean). Remaining known gaps are noted per phase. Phase 16D (product bulk ops, images &
-command fixes) is planned but not yet implemented.
+command fixes) is planned but not yet implemented. Phase 16E(A) (active restaurant & branch
+context) is implemented and verified (509 + 7 tests passing). Phase 16E(B) (branch-wise
+permissions & task assignment) is planned but not yet implemented.

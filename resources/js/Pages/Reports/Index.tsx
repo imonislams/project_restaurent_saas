@@ -9,6 +9,7 @@ import {
     PageHeader,
 } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { BranchSummary } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
@@ -71,6 +72,7 @@ export default function ReportsIndex({
     title,
     filters,
     branches,
+    canViewAllBranches,
     timezone,
     currency,
     report,
@@ -79,14 +81,15 @@ export default function ReportsIndex({
     type: string;
     title: string;
     filters: { from: string; to: string; branch_id: number | null };
-    branches: { id: number; name: string }[];
+    branches: BranchSummary[];
+    canViewAllBranches: boolean;
     timezone: string;
     currency: string;
     report: Report;
 }) {
     const [from, setFrom] = useState(filters.from);
     const [to, setTo] = useState(filters.to);
-    const [branchId, setBranchId] = useState<string>(filters.branch_id ? String(filters.branch_id) : '');
+    const [branchId, setBranchId] = useState<string>(filters.branch_id ? String(filters.branch_id) : 'all');
     const [searchQuery, setSearchQuery] = useState('');
 
     const money = (n: number) =>
@@ -99,7 +102,7 @@ export default function ReportsIndex({
                 type,
                 from,
                 to,
-                branch_id: branchId ? Number(branchId) : null,
+                branch_id: branchId && branchId !== 'all' ? Number(branchId) : 'all',
                 ...overrides,
             },
             { preserveScroll: true, replace: true }
@@ -341,11 +344,11 @@ export default function ReportsIndex({
                                         value={branchId}
                                         onChange={(e) => {
                                             setBranchId(e.target.value);
-                                            apply({ branch_id: e.target.value ? Number(e.target.value) : null });
+                                            apply({ branch_id: e.target.value && e.target.value !== 'all' ? Number(e.target.value) : 'all' });
                                         }}
                                         className="h-8 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                     >
-                                        <option value="">All Branches</option>
+                                        {canViewAllBranches && <option value="all">All Branches</option>}
                                         {branches.map((b) => (
                                             <option key={b.id} value={String(b.id)}>
                                                 {b.name}

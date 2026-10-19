@@ -10,6 +10,7 @@ use App\Http\Middleware\EnsurePlatformOperational;
 use App\Http\Middleware\EnsurePlatformPermission;
 use App\Http\Middleware\EnsureTenantIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\ResolveActiveBranch;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\ResolveQrContext;
 use App\Http\Middleware\ResolveDiningSession;
@@ -31,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             AddCorrelationContext::class,
             AddSecurityHeaders::class,
             ResolveTenant::class,
+            ResolveActiveBranch::class,
             SetLocale::class,
             EnsureTenantIsActive::class,
             EnsurePlatformOperational::class,
@@ -40,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'tenant.active' => EnsureTenantIsActive::class,
+            'branch.active' => ResolveActiveBranch::class,
             'permission' => EnsurePermission::class,
             'onboarding.completed' => EnsureOnboardingComplete::class,
             'platform' => EnsurePlatformAdmin::class,
