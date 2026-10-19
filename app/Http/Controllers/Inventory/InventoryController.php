@@ -29,7 +29,7 @@ class InventoryController extends Controller
         $tenant = $request->user()->tenant;
 
         return Inertia::render('Inventory/Index', [
-            'branches' => $tenant->branches()->active()->orderBy('name')->get()
+            'branches' => $tenant->branches()->whereIn('id', $request->user()->accessibleBranchIds())->active()->orderBy('name')->get()
                 ->map(fn ($branch) => ['id' => $branch->getKey(), 'name' => $branch->name]),
             'locations' => StockLocation::query()
                 ->with('branch:id,name')

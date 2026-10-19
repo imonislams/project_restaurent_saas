@@ -2,6 +2,7 @@
 
 namespace App\Domain\Reporting;
 
+use App\Domain\Branches\Support\BranchScope;
 use App\Domain\Customers\CustomerSegmentationService;
 use App\Domain\Inventory\Models\StockBalance;
 use App\Domain\Orders\Models\Order;
@@ -30,8 +31,10 @@ class DashboardAnalyticsService
         $utcStart = $start->copy()->utc();
         $utcEnd = $now->copy()->endOfDay()->utc();
 
-        $orders = Order::withoutGlobalScopes()
-            ->where('tenant_id', $tenant->getKey())
+        $orders = tap(
+            Order::withoutGlobalScopes()->where('tenant_id', $tenant->getKey()),
+            fn ($query) => BranchScope::apply($query),
+        )
             ->where('status', 'completed')
             ->whereBetween('placed_at', [$utcStart, $utcEnd])
             ->get(['id', 'placed_at', 'total', 'tax_total']);
@@ -72,10 +75,12 @@ class DashboardAnalyticsService
     {
         return OrderItem::withoutGlobalScopes()
             ->where('tenant_id', $tenant->getKey())
-            ->whereHas('order', fn ($q) => $q->withoutGlobalScopes()
-                ->where('tenant_id', $tenant->getKey())
-                ->where('status', 'completed')
-                ->whereBetween('placed_at', [$utcStart, $utcEnd]))
+            ->whereHas('order', function ($q) use ($tenant, $utcStart, $utcEnd) {
+                $q->withoutGlobalScopes()->where('tenant_id', $tenant->getKey());
+                BranchScope::apply($q);
+                $q->where('status', 'completed')
+                    ->whereBetween('placed_at', [$utcStart, $utcEnd]);
+            })
             ->get(['name', 'quantity', 'line_total'])
             ->groupBy('name')
             ->map(fn (Collection $group, string $name) => [
@@ -93,10 +98,12 @@ class DashboardAnalyticsService
     {
         return Payment::withoutGlobalScopes()
             ->where('tenant_id', $tenant->getKey())
-            ->whereHas('order', fn ($q) => $q->withoutGlobalScopes()
-                ->where('tenant_id', $tenant->getKey())
-                ->where('status', 'completed')
-                ->whereBetween('placed_at', [$utcStart, $utcEnd]))
+            ->whereHas('order', function ($q) use ($tenant, $utcStart, $utcEnd) {
+                $q->withoutGlobalScopes()->where('tenant_id', $tenant->getKey());
+                BranchScope::apply($q);
+                $q->where('status', 'completed')
+                    ->whereBetween('placed_at', [$utcStart, $utcEnd]);
+            })
             ->with('method:id,name')
             ->get(['payment_method_id', 'amount'])
             ->groupBy(fn (Payment $p) => $p->method?->name ?? 'Other')
@@ -160,16 +167,20 @@ class DashboardAnalyticsService
     {
         $threshold = (float) ($tenant->getSetting('inventory.low_stock_threshold', 0) ?? 0);
 
-        return StockBalance::withoutGlobalScopes()
-            ->where('tenant_id', $tenant->getKey())
+        return tap(
+            StockBalance::withoutGlobalScopes()->where('tenant_id', $tenant->getKey()),
+            fn ($query) => BranchScope::apply($query),
+        )
             ->where('quantity', '<=', $threshold)
             ->count();
     }
 
     public function pendingApprovals(Tenant $tenant): int
     {
-        return Order::withoutGlobalScopes()
-            ->where('tenant_id', $tenant->getKey())
+        return tap(
+            Order::withoutGlobalScopes()->where('tenant_id', $tenant->getKey()),
+            fn ($query) => BranchScope::apply($query),
+        )
             ->where('acceptance_status', 'pending')
             ->count();
     }

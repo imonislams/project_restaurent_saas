@@ -25,6 +25,7 @@ requirement in [ROADMAP.md](./ROADMAP.md) is satisfied and the report below is f
 | 15C — Customer segmentation & analytics | Complete pending review |
 | 15D — Product images, bulk import/export & storage link | Complete pending review |
 | 16E(A) — Active restaurant & branch context | Complete pending review |
+| 16E(B) — Branch-wise permissions & task assignment | Complete pending review |
 
 ---
 
@@ -2118,10 +2119,98 @@ task assignment).
 
 ---
 
+## Phase 16E(B) — Branch-wise permissions & task assignment
+
+### Business journey completed
+
+A user assigned to a branch (and the tasks their role permits) can only see and act on
+that branch's records — orders, kitchen tickets, tables, shifts, stock, purchasing, waste,
+expenses, accounts, QR tables and analytics. Direct URLs and API calls to another branch's
+record fail closed. Multi-branch access works only when it has been explicitly granted, and
+a user cannot widen it through a request field.
+
+### Problem addressed
+
+There was no branch data layer — only a tenant scope. Branch filtering was manual and easy
+to omit (Orders had no filter; Kitchen listed every tenant branch; mutations acted on any
+ticket in the tenant). `role_user.branch_id` remains inert; "task" maps to the module
+permissions a role already grants, enforced together with branch access.
+
+### Features implemented
+
+- **Fail-closed branch scope** — `BelongsToBranch` trait + `BranchScope` support class add a
+  `branch` global scope. No authenticated user (jobs, console, public QR) or tenant-wide
+  user ⇒ unrestricted; otherwise constrained to `accessibleBranchIds()`; an empty set fails
+  closed (`1 = 0`). Company-wide models (expense, financial account/transaction, delivery
+  zone) also allow a null branch; `StockTransfer` allows either branch.
+- **Applied to branch-owned models** — Order, DiningArea, Table, TableQrToken, KitchenStation,
+  KitchenTicket, Shift, Register, CashMovement, StockLocation, StockMovement, StockBalance,
+  PurchaseOrder, GoodsReceipt, WasteRecord, Expense, FinancialAccount, FinancialTransaction,
+  DeliveryZone, DiningSession, ProductAvailability, StockTransfer.
+- **Direct-URL ownership** — route-model binding runs through the scope, so a record from an
+  inaccessible branch resolves to **404** without per-controller code.
+- **Write-path validation** — every FormRequest accepting a branch input now enforces
+  `Rule::in(accessibleBranchIds())` (POS, shift open, table, stock movement/transfer, waste,
+  purchase order, expense, account, delivery zone, staff branch assignment).
+- **Branch lists scoped** — every module's `branches` selector now lists only accessible
+  branches; QR analytics validates its branch filter.
+- **Dashboard & shared props** — dashboard KPIs/trends and the pending-approvals badge are
+  constrained to accessible branches.
+- **Staff hardening** — a manager can only grant branches they themselves can reach.
+- **Performance** — `accessibleBranchIds()` / `hasTenantWideBranchAccess()` are memoised per
+  user (invalidated when roles/branches change).
+
+### Files and modules changed
+
+```
+app/Domain/Branches/{Concerns/BelongsToBranch,Support/BranchScope}.php   (new)
+app/Domain/**/Models/*.php                                              (22 branch-owned models)
+app/Models/User.php                                                     (memoisation)
+app/Http/Requests/**/*.php                                              (branch input validation)
+app/Http/Controllers/**/*.php                                           (branch lists + QR analytics filter)
+app/Http/Middleware/HandleInertiaRequests.php                           (scoped pending_approvals)
+app/Domain/Reporting/DashboardAnalyticsService.php                      (scoped analytics)
+tests/Feature/Branches/BranchAccessEnforcementTest.php                  (new)
+```
+
+### Security and tenant-isolation results
+
+- Branch-restricted users cannot read, list, print, act on, settle, void or transfer another
+  branch's records (404/403) — verified.
+- Records are scoped at the data layer, so a forgotten `where('branch_id')` no longer leaks.
+- Inaccessible `branch_id` inputs in writes are rejected (422); an inaccessible branch filter
+  is ignored and falls back to the active branch.
+- Multi-branch access works only when explicitly granted; the owner remains unrestricted.
+- Cross-tenant isolation is unchanged (tenant scope retained above the branch scope).
+
+### Tests executed
+
+Full suite (run before the standing instruction to stop using tests): **522 passed
+(2951 assertions)** — 6 new Phase 16E(B) enforcement tests plus the Phase 16E(A) suite, with
+no regressions. Two pre-existing permission tests were tightened so their cashier is granted
+branch access, exercising the permission gate (403) rather than the branch scope (404).
+
+### Known defects and unresolved risks
+
+- `ReportService` uses `withoutGlobalScopes()`, so it is constrained at the controller level
+  (a restricted user's report branch is forced to an accessible branch), not by the scope.
+- `role_user.branch_id` remains inert; permissions are still resolved tenant-wide per role and
+  combined with branch access. Per-branch permission grants are not implemented.
+- Customer-level analytics/segmentation remains tenant-wide (customers are not branch-owned).
+- Pint could not run (binary requires PHP 8.3; environment is PHP 8.2); import ordering in a
+  few models was reordered by hand.
+
+### Final phase status
+
+**Complete pending review.** This completes the "restaurant & branch selection" and
+"branch-wise permissions & task assignment" work (Phases 16E(A) and 16E(B)).
+
+---
+
 ## Program status
 
 Phases 15A–15D, 16A, 16B and 16C are implemented and verified (509 tests passing; frontend
 build clean). Remaining known gaps are noted per phase. Phase 16D (product bulk ops, images &
-command fixes) is planned but not yet implemented. Phase 16E(A) (active restaurant & branch
-context) is implemented and verified (509 + 7 tests passing). Phase 16E(B) (branch-wise
-permissions & task assignment) is planned but not yet implemented.
+command fixes) is planned but not yet implemented. Phases 16E(A) (active restaurant & branch
+context) and 16E(B) (branch-wise permissions & task assignment) are implemented and verified
+(522 tests passing).

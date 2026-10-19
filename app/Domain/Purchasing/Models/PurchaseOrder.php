@@ -4,6 +4,7 @@ namespace App\Domain\Purchasing\Models;
 
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Purchasing\Enums\PurchaseOrderStatus;
+use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PurchaseOrder extends Model
 {
-    use BelongsToTenant, SoftDeletes;
+    use BelongsToTenant, BelongsToBranch, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',

@@ -20,7 +20,12 @@ class AccountRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::in(AccountType::values())],
-            'branch_id' => ['nullable', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $tenantId)],
+            'branch_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('branches', 'id')->where('tenant_id', $tenantId),
+                Rule::in($this->user()->accessibleBranchIds()),
+            ],
             'opening_balance' => ['nullable', 'numeric'],
             'is_active' => ['boolean'],
         ];

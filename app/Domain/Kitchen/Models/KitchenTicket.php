@@ -4,6 +4,7 @@ namespace App\Domain\Kitchen\Models;
 
 use App\Domain\Kitchen\Enums\KitchenTicketStatus;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class KitchenTicket extends Model
 {
-    use BelongsToTenant;
+    use BelongsToTenant, BelongsToBranch;
 
     protected $fillable = [
         'tenant_id',

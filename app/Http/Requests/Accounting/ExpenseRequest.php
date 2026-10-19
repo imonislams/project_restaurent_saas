@@ -17,7 +17,12 @@ class ExpenseRequest extends FormRequest
         $tenantId = $this->user()->tenant_id;
 
         return [
-            'branch_id' => ['nullable', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $tenantId)],
+            'branch_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('branches', 'id')->where('tenant_id', $tenantId),
+                Rule::in($this->user()->accessibleBranchIds()),
+            ],
             'expense_category_id' => ['nullable', 'integer', Rule::exists('expense_categories', 'id')->where('tenant_id', $tenantId)],
             'financial_account_id' => ['nullable', 'integer', Rule::exists('financial_accounts', 'id')->where('tenant_id', $tenantId)],
             'amount' => ['required', 'numeric', 'min:0.01'],

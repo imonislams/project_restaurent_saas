@@ -155,14 +155,21 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->manager_pin !== null;
     }
 
+    /** @var list<int>|null */
+    protected ?array $accessibleBranchIdsCache = null;
+
+    protected ?bool $tenantWideBranchAccessCache = null;
+
     /**
      * Roles whose holders may access every branch in the tenant.
      */
     public function hasTenantWideBranchAccess(): bool
     {
-        return $this->isPlatformAdmin()
+        return $this->tenantWideBranchAccessCache ??= (
+            $this->isPlatformAdmin()
             || $this->hasRole([RoleName::TenantOwner, RoleName::TenantAdmin])
-            || $this->hasPermission('branches.manage');
+            || $this->hasPermission('branches.manage')
+        );
     }
 
     /**
@@ -174,11 +181,21 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function accessibleBranchIds(): array
     {
-        if ($this->hasTenantWideBranchAccess()) {
-            return $this->tenant?->branches()->pluck('id')->all() ?? [];
+        if ($this->accessibleBranchIdsCache !== null) {
+            return $this->accessibleBranchIdsCache;
         }
 
-        return $this->branches()->pluck('branches.id')->all();
+        return $this->accessibleBranchIdsCache = $this->hasTenantWideBranchAccess()
+            ? ($this->tenant?->branches()->pluck('id')->all() ?? [])
+            : $this->branches()->pluck('branches.id')->all();
+    }
+
+    /** Drop memoised branch access after roles/branches change. */
+    public function forgetBranchAccessCache(): void
+    {
+        $this->accessibleBranchIdsCache = null;
+        $this->tenantWideBranchAccessCache = null;
+        $this->unsetRelation('roles');
     }
 
     public function canAccessBranch(Branch|int $branch): bool
@@ -201,5 +218,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $this->branches()->syncWithPivotValues($valid, ['tenant_id' => $this->tenant_id]);
         $this->unsetRelation('branches');
+        $this->forgetBranchAccessCache();
     }
 }

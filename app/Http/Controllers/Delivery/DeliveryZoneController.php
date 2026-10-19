@@ -18,7 +18,7 @@ class DeliveryZoneController extends Controller
         $tenant = $request->user()->tenant;
 
         return Inertia::render('Delivery/Index', [
-            'branches' => $tenant->branches()->orderBy('name')->get()
+            'branches' => $tenant->branches()->whereIn('id', $request->user()->accessibleBranchIds())->orderBy('name')->get()
                 ->map(fn (Branch $b) => ['id' => $b->getKey(), 'name' => $b->name]),
             'zones' => DeliveryZone::query()->with('branch:id,name')->orderBy('name')->get()
                 ->map(fn (DeliveryZone $zone) => [

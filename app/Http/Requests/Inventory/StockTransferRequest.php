@@ -18,8 +18,18 @@ class StockTransferRequest extends FormRequest
         $tenantId = $this->user()->tenant_id;
 
         return [
-            'from_branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $tenantId)],
-            'to_branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $tenantId)],
+            'from_branch_id' => [
+                'required',
+                'integer',
+                Rule::exists('branches', 'id')->where('tenant_id', $tenantId),
+                Rule::in($this->user()->accessibleBranchIds()),
+            ],
+            'to_branch_id' => [
+                'required',
+                'integer',
+                Rule::exists('branches', 'id')->where('tenant_id', $tenantId),
+                Rule::in($this->user()->accessibleBranchIds()),
+            ],
             'notes' => ['nullable', 'string', 'max:500'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.item_type' => ['required', Rule::in(StockItemResolver::TYPES)],

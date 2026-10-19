@@ -154,6 +154,7 @@ class QrManagerTest extends TestCase
         $table = $this->table();
         $cashier = User::factory()->forTenant($this->tenant)->create();
         $cashier->assignRole(RoleName::Cashier);
+        $cashier->syncBranchAccess([$this->branch->id]);
 
         $this->actingAs($cashier)->get('/qr-dining/tables')->assertOk();
         $this->actingAs($cashier)->post("/qr-dining/tables/{$table->id}/regenerate")->assertForbidden();

@@ -33,8 +33,11 @@ Platform access, tenant business access and support access are **separate permis
 - Branch-level operations validate **both** `tenant_id` and `branch_id`.
 - The active branch is resolved server-side per request (`ResolveActiveBranch`) from the
   authenticated user's accessible branches; a client-supplied branch is honoured only when the
-  user may access it. Data-layer branch scoping (a fail-closed global scope) is added in
-  Phase 16E(B).
+  user may access it.
+- Branch isolation is enforced at the data layer: branch-owned models carry a fail-closed
+  `branch` global scope (`BelongsToBranch` / `BranchScope`) constrained to the user's
+  accessible branches, so route-model binding and every query fail closed for out-of-branch
+  records. Tenant-wide users (owner/admin/`branches.manage`) are unrestricted.
 - Cross-tenant access must **fail closed**.
 - Automated cross-tenant tests are mandatory in every phase.
 

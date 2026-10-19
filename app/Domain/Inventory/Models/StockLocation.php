@@ -4,6 +4,7 @@ namespace App\Domain\Inventory\Models;
 
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Inventory\Factories\StockLocationFactory;
+use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class StockLocation extends Model
 {
     /** @use HasFactory<StockLocationFactory> */
-    use BelongsToTenant, HasFactory, SoftDeletes;
+    use BelongsToTenant, BelongsToBranch, HasFactory, SoftDeletes;
 
     protected $fillable = ['tenant_id', 'branch_id', 'name', 'is_default'];
 

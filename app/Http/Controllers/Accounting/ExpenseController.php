@@ -25,7 +25,7 @@ class ExpenseController extends Controller
         $tenant = $request->user()->tenant;
 
         return Inertia::render('Expenses/Index', [
-            'branches' => $tenant->branches()->orderBy('name')->get()
+            'branches' => $tenant->branches()->whereIn('id', $request->user()->accessibleBranchIds())->orderBy('name')->get()
                 ->map(fn (Branch $b) => ['id' => $b->getKey(), 'name' => $b->name]),
             'categories' => ExpenseCategory::query()->orderBy('name')->get()
                 ->map(fn (ExpenseCategory $c) => ['id' => $c->getKey(), 'name' => $c->name, 'type' => $c->type]),

@@ -21,7 +21,8 @@ class QrAnalyticsController extends Controller
 
         $from = $request->date('from')?->startOfDay() ?? now()->subDays(29)->startOfDay();
         $to = $request->date('to')?->endOfDay() ?? now()->endOfDay();
-        $branchId = $request->integer('branch_id') ?: null;
+        $requested = $request->integer('branch_id') ?: null;
+        $branchId = $requested !== null && in_array($requested, $accessible, true) ? $requested : null;
 
         return Inertia::render('QrDining/Analytics', [
             'analytics' => app(QrAnalyticsService::class)->forPeriod($tenant, $from, $to, $branchId),

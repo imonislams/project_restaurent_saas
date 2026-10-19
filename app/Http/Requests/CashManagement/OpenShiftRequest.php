@@ -17,7 +17,12 @@ class OpenShiftRequest extends FormRequest
         $tenantId = $this->user()->tenant_id;
 
         return [
-            'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $tenantId)],
+            'branch_id' => [
+                'required',
+                'integer',
+                Rule::exists('branches', 'id')->where('tenant_id', $tenantId),
+                Rule::in($this->user()->accessibleBranchIds()),
+            ],
             'register_id' => ['nullable', 'integer', Rule::exists('registers', 'id')->where('tenant_id', $tenantId)],
             'opening_float' => ['required', 'numeric', 'min:0'],
         ];

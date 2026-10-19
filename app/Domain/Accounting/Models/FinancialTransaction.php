@@ -3,6 +3,7 @@
 namespace App\Domain\Accounting\Models;
 
 use App\Domain\Accounting\Enums\TransactionCategory;
+use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,12 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class FinancialTransaction extends Model
 {
-    use BelongsToTenant;
+    use BelongsToTenant, BelongsToBranch;
+
+    protected static function branchScopeAllowsNull(): bool
+    {
+        return true;
+    }
 
     public const UPDATED_AT = null;
 

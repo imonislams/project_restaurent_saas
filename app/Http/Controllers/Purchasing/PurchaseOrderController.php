@@ -54,7 +54,7 @@ class PurchaseOrderController extends Controller
                     'total' => (float) $order->total,
                     'is_receivable' => $order->status->isReceivable(),
                 ]),
-            'branches' => $tenant->branches()->orderBy('name')->get()
+            'branches' => $tenant->branches()->whereIn('id', $request->user()->accessibleBranchIds())->orderBy('name')->get()
                 ->map(fn (Branch $b) => ['id' => $b->getKey(), 'name' => $b->name]),
             'items' => $this->itemOptions($tenant->getKey()),
             'statuses' => collect(PurchaseOrderStatus::cases())

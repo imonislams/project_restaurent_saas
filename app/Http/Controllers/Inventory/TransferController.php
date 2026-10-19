@@ -22,7 +22,7 @@ class TransferController extends Controller
         $tenant = $request->user()->tenant;
 
         return Inertia::render('Transfers/Index', [
-            'branches' => $tenant->branches()->orderBy('name')->get()
+            'branches' => $tenant->branches()->whereIn('id', $request->user()->accessibleBranchIds())->orderBy('name')->get()
                 ->map(fn (Branch $b) => ['id' => $b->getKey(), 'name' => $b->name]),
             'items' => Ingredient::query()->orderBy('name')->get()
                 ->map(fn (Ingredient $i) => [

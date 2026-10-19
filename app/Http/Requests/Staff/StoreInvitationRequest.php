@@ -35,6 +35,7 @@ class StoreInvitationRequest extends FormRequest
             'branch_ids.*' => [
                 'integer',
                 Rule::exists('branches', 'id')->where('tenant_id', $tenantId),
+                Rule::in($this->user()->accessibleBranchIds()),
             ],
         ];
     }

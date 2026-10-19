@@ -66,7 +66,7 @@ class StaffController extends Controller
                     'expires_at' => $invitation->expires_at->toIso8601String(),
                 ]),
             'roles' => $this->roleOptions(),
-            'branches' => $tenant->branches()->active()->orderBy('name')->get()
+            'branches' => $tenant->branches()->whereIn('id', $request->user()->accessibleBranchIds())->active()->orderBy('name')->get()
                 ->map(fn ($branch) => ['id' => $branch->getKey(), 'name' => $branch->name]),
         ]);
     }

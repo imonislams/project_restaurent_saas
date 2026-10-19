@@ -3,6 +3,7 @@
 namespace App\Domain\Inventory\Models;
 
 use App\Domain\Inventory\Enums\StockMovementReason;
+use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class StockMovement extends Model
 {
-    use BelongsToTenant;
+    use BelongsToTenant, BelongsToBranch;
 
     /** Append-only: never update a record. */
     public const UPDATED_AT = null;

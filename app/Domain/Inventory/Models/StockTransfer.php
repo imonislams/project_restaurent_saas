@@ -3,6 +3,7 @@
 namespace App\Domain\Inventory\Models;
 
 use App\Domain\Branches\Models\Branch;
+use App\Domain\Branches\Support\BranchScope;
 use App\Domain\Inventory\Enums\TransferStatus;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Models\User;
@@ -14,6 +15,33 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class StockTransfer extends Model
 {
     use BelongsToTenant, SoftDeletes;
+
+    /**
+     * A transfer is accessible when the user can reach either of its branches.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope('branch', function ($builder): void {
+            $ids = BranchScope::accessibleBranchIds();
+
+            if ($ids === null) {
+                return;
+            }
+
+            if ($ids === []) {
+                $builder->whereRaw('1 = 0');
+
+                return;
+            }
+
+            $table = $builder->getModel()->getTable();
+
+            $builder->where(function ($query) use ($table, $ids): void {
+                $query->whereIn($table.'.from_branch_id', $ids)
+                    ->orWhereIn($table.'.to_branch_id', $ids);
+            });
+        });
+    }
 
     protected $fillable = [
         'tenant_id',

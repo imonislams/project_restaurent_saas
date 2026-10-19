@@ -17,7 +17,12 @@ class DeliveryZoneRequest extends FormRequest
         $tenantId = $this->user()->tenant_id;
 
         return [
-            'branch_id' => ['nullable', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $tenantId)],
+            'branch_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('branches', 'id')->where('tenant_id', $tenantId),
+                Rule::in($this->user()->accessibleBranchIds()),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'fee' => ['required', 'numeric', 'min:0'],
             'min_order' => ['nullable', 'numeric', 'min:0'],

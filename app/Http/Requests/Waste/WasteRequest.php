@@ -19,7 +19,12 @@ class WasteRequest extends FormRequest
         $tenantId = $this->user()->tenant_id;
 
         return [
-            'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $tenantId)],
+            'branch_id' => [
+                'required',
+                'integer',
+                Rule::exists('branches', 'id')->where('tenant_id', $tenantId),
+                Rule::in($this->user()->accessibleBranchIds()),
+            ],
             'item_type' => ['required', Rule::in(StockItemResolver::TYPES)],
             'item_id' => ['required', 'integer', 'min:1'],
             'quantity' => ['required', 'numeric', 'min:0.001'],

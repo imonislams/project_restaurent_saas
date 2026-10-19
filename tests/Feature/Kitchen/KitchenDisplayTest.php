@@ -170,6 +170,7 @@ class KitchenDisplayTest extends TestCase
     {
         $cashier = User::factory()->forTenant($this->tenant)->create();
         $cashier->assignRole(RoleName::Cashier);
+        $cashier->syncBranchAccess([$this->branch->id]);
 
         $product = Product::factory()->create(['tenant_id' => $this->tenant->id]);
         $this->sell($product);

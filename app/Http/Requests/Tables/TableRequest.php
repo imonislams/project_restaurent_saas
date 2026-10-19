@@ -17,7 +17,12 @@ class TableRequest extends FormRequest
         $tenantId = $this->user()->tenant_id;
 
         return [
-            'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $tenantId)],
+            'branch_id' => [
+                'required',
+                'integer',
+                Rule::exists('branches', 'id')->where('tenant_id', $tenantId),
+                Rule::in($this->user()->accessibleBranchIds()),
+            ],
             'dining_area_id' => ['nullable', 'integer', Rule::exists('dining_areas', 'id')->where('tenant_id', $tenantId)],
             'name' => ['required', 'string', 'max:100'],
             'seats' => ['nullable', 'integer', 'min:1', 'max:100'],

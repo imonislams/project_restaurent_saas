@@ -17,7 +17,12 @@ class StockMovementRequest extends FormRequest
         $tenantId = $this->user()->tenant_id;
 
         return [
-            'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('tenant_id', $tenantId)],
+            'branch_id' => [
+                'required',
+                'integer',
+                Rule::exists('branches', 'id')->where('tenant_id', $tenantId),
+                Rule::in($this->user()->accessibleBranchIds()),
+            ],
             'stock_location_id' => ['required', 'integer', Rule::exists('stock_locations', 'id')->where('tenant_id', $tenantId)],
             'item_type' => ['required', Rule::in(['product', 'ingredient'])],
             'item_id' => ['required', 'integer', 'min:1'],

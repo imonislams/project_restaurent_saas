@@ -24,7 +24,7 @@ class AccountController extends Controller
         $tenant = $request->user()->tenant;
 
         return Inertia::render('Accounts/Index', [
-            'branches' => $tenant->branches()->orderBy('name')->get()
+            'branches' => $tenant->branches()->whereIn('id', $request->user()->accessibleBranchIds())->orderBy('name')->get()
                 ->map(fn (Branch $b) => ['id' => $b->getKey(), 'name' => $b->name]),
             'accounts' => FinancialAccount::query()
                 ->with('branch:id,name')
