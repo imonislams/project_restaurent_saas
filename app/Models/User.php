@@ -150,6 +150,15 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->status === 'active' && $this->deactivated_at === null;
     }
 
+    /**
+     * Whether this user may be assigned to a table (serve or manage table
+     * orders). Reuses the permission catalog — no separate eligibility flag.
+     */
+    public function canServeTableOrders(): bool
+    {
+        return $this->hasPermission('pos.use') || $this->hasPermission('tables.manage');
+    }
+
     public function hasManagerPin(): bool
     {
         return $this->manager_pin !== null;

@@ -98,12 +98,16 @@ class PosController extends Controller
             'taxRate' => (float) $tenant->getSetting('tax.rate', 0),
             'serviceChargeRate' => (float) $tenant->getSetting('service_charge.rate', 0),
             'tables' => $branch
-                ? $branch->tables()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get()
+                ? $branch->tables()->where('is_active', true)->with('staff:id,name')->orderBy('sort_order')->orderBy('name')->get()
                     ->map(fn ($table) => [
                         'id' => $table->getKey(),
                         'name' => $table->name,
                         'seats' => $table->seats,
                         'status' => $table->status->value,
+                        'staff' => $table->staff->map(fn ($user) => [
+                            'id' => $user->getKey(),
+                            'name' => $user->name,
+                        ])->values(),
                     ])
                 : [],
             'customers' => Customer::query()->where('is_active', true)->orderBy('name')->limit(200)->get()

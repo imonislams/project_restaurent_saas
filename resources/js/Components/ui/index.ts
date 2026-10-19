@@ -29,6 +29,8 @@ export { ToastProvider, useToast } from './Toast';
 export { default as FilterBar } from './FilterBar';
 export { TextField, SelectField, TextareaField, CheckboxField } from './Field';
 export type { FieldOption } from './Field';
+export { default as StaffMultiSelect } from './StaffMultiSelect';
+export type { StaffOption } from './StaffMultiSelect';
 export { default as RichTextEditor } from './RichTextEditor';
 export { default as ActivityBadge, describeAction } from './ActivityBadge';
 export { default as FormSection } from './FormSection';

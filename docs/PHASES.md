@@ -26,6 +26,7 @@ requirement in [ROADMAP.md](./ROADMAP.md) is satisfied and the report below is f
 | 15D — Product images, bulk import/export & storage link | Complete pending review |
 | 16E(A) — Active restaurant & branch context | Complete pending review |
 | 16E(B) — Branch-wise permissions & task assignment | Complete pending review |
+| 16F — Table staff assignment (create & edit) | Complete pending review |
 
 ---
 
@@ -2207,10 +2208,108 @@ branch access, exercising the permission gate (403) rather than the branch scope
 
 ---
 
+## Phase 16F — Table staff assignment (create & edit)
+
+### Business journey completed
+
+A manager creating a table assigns the staff who serve it (searchable multi-select, filtered
+to the branch), and later opens Table Management → Edit to change, add, or remove those
+assignments. Only active staff authorized for the selected branch can be assigned. New
+orders at a table snapshot its current staff; changing the table's assignment afterwards
+never rewrites the historical staff on existing orders, and an active order keeps its
+original assignment.
+
+### Problem addressed
+
+The Create/Edit Table forms had no staff concept and orders carried no staff reference, so a
+table could not be tied to a server and order history had no per-order staff record.
+
+### Features implemented
+
+- **Table staff assignment** — new `table_staff` pivot (multiple staff per table);
+  `Table::staff()` relation. Optional — a table may be saved unassigned.
+- **Eligible staff** — active users of the branch's tenant who can access the branch and may
+  serve or manage table orders (`pos.use` OR `tables.manage`), reusing `isActive()`,
+  `canAccessBranch()`, tenant scoping and the permission catalog. No new eligibility system.
+- **`TableStaffService`** — `assignableStaff()`, `assignableStaffByBranch()`, `isAssignable()`,
+  `sync()` (fail-closed to eligible ids; audits `table.staff_updated` with before/after and the
+  open-order count), `snapshotToOrder()`.
+- **Create & edit** — `TableRequest` accepts `staff_ids` and rejects any staff ineligible for
+  the selected branch (422); `store()`/`update()` write the table and assignment in one
+  transaction.
+- **Order snapshot** — new `order_staff` table (`user_id` + `name` snapshot); `Order::staff()`.
+  `SaleService::createOrder()` freezes the table's staff onto every new order (POS and QR).
+  Editing a table's staff only affects orders opened afterwards; existing orders are untouched
+  and the UI says so.
+- **POS & Orders** — POS table selector shows the assigned staff; the order detail shows
+  "Served by" from the snapshot.
+- **UI** — new reusable `StaffMultiSelect` (searchable Popover + checkboxes + chips,
+  keyboard/aria accessible); the Tables page shows assigned staff on floor cards, the list
+  view, and the details drawer.
+
+### Files and modules changed
+
+```
+app/Domain/Tables/TableStaffService.php                 (new)
+app/Domain/Tables/Models/Table.php                      (staff relation)
+app/Domain/Orders/Models/Order.php                      (staff snapshot relation)
+app/Models/User.php                                      (canServeTableOrders)
+app/Http/Requests/Tables/TableRequest.php               (staff_ids + eligibility)
+app/Http/Controllers/Tables/TableController.php         (store/update sync + index props)
+app/Domain/POS/SaleService.php                          (snapshot on order creation)
+app/Http/Controllers/POS/PosController.php              (table staff prop)
+app/Http/Controllers/Orders/OrderController.php         (staff in index/show payloads)
+database/migrations/2026_10_13_000001_create_table_staff_tables.php  (new)
+resources/js/Components/ui/StaffMultiSelect.tsx          (new) + ui/index.ts export
+resources/js/Pages/Tables/Index.tsx, Pos/Index.tsx, Orders/Show.tsx
+tests/Feature/Tables/TableStaffAssignmentTest.php        (new)
+```
+
+### Database and migration changes
+
+- New: `table_staff`, `order_staff`. Additive and reversible.
+
+### Security and tenant-isolation results
+
+- Eligibility enforced server-side: inactive, other-tenant, no-branch-access, and non-serving
+  users are rejected (422); the service also intersects with the eligible set (fail closed).
+- `tables.manage` required to create/update; branch `Rule::in(accessibleBranchIds())` retained.
+- Verified: no cross-tenant or cross-branch staff can be assigned.
+
+### Tests executed
+
+```
+php artisan test tests/Feature/Tables/TableStaffAssignmentTest.php
+  →  16 passed (66 assertions)
+php -l on all changed PHP files → clean
+npm run build → tsc + vite clean
+```
+
+Coverage: create with/without staff; inactive / no-branch-access / no-serving-permission /
+foreign-tenant staff rejected; permission gate; order snapshot on open; change/add/remove on
+edit; other-branch staff rejected on edit; editing does not rewrite an active order snapshot;
+a new order after edit snapshots the new staff; page props expose assigned + assignable staff.
+
+### Known defects and unresolved risks
+
+- Eligibility maps "serve or manage table orders" to `pos.use OR tables.manage` (Kitchen,
+  Inventory, Accountant, Auditor excluded) — flagged for confirmation.
+- `staffByBranch` sends assignable staff for every accessible branch; fine at expected
+  branch/team sizes (switch to an on-demand endpoint if a tenant has many branches).
+- `order_staff.name` duplicates the user's name at snapshot time by design (history survives a
+  rename/deactivate).
+
+### Final phase status
+
+**Complete pending review.**
+
+---
+
 ## Program status
 
 Phases 15A–15D, 16A, 16B and 16C are implemented and verified (509 tests passing; frontend
 build clean). Remaining known gaps are noted per phase. Phase 16D (product bulk ops, images &
 command fixes) is planned but not yet implemented. Phases 16E(A) (active restaurant & branch
 context) and 16E(B) (branch-wise permissions & task assignment) are implemented and verified
-(522 tests passing).
+(522 tests passing). Phase 16F (table staff assignment — create & edit) is implemented and
+verified (new `TableStaffAssignmentTest`: 16 tests passing; frontend build clean).

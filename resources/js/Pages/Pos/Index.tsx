@@ -82,6 +82,7 @@ interface TableInfo {
     name: string;
     seats: number;
     status: string;
+    staff: { id: number; name: string }[];
 }
 
 interface CustomerInfo {
@@ -971,7 +972,11 @@ export default function PosIndex({
                                         <option value="">{t('pos.no_table')}</option>
                                         {tables.map((tbl) => (
                                             <option key={tbl.id} value={tbl.id}>
-                                                {tbl.name} ({tbl.seats} seats · {tbl.status})
+                                                {tbl.name} ({tbl.seats} seats · {tbl.status}
+                                                {tbl.staff.length > 0
+                                                    ? ` · ${tbl.staff.map((s) => s.name).join(', ')}`
+                                                    : ''}
+                                                )
                                             </option>
                                         ))}
                                     </select>

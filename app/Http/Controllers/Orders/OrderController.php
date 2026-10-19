@@ -52,7 +52,7 @@ class OrderController extends Controller
         $source = $request->string('source')->toString() ?: null;
 
         $orders = Order::query()
-            ->with(['cashier:id,name', 'branch:id,name', 'table:id,name'])
+            ->with(['cashier:id,name', 'branch:id,name', 'table:id,name', 'staff:id,name'])
             ->withCount('items')
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->whereBetween('placed_at', [$from, $to])
@@ -77,6 +77,10 @@ class OrderController extends Controller
                 'table_name' => $order->table?->name,
                 'branch_name' => $order->branch?->name,
                 'cashier_name' => $order->cashier?->name,
+                'staff' => $order->staff->map(fn ($user) => [
+                    'id' => $user->getKey(),
+                    'name' => $user->pivot->name ?: $user->name,
+                ])->values(),
                 'items_count' => $order->items_count,
                 'total' => (float) $order->total,
                 'currency' => $order->currency,
@@ -109,7 +113,7 @@ class OrderController extends Controller
 
     public function show(Order $order): Response
     {
-        $order->load(['items', 'payments.method', 'cashier:id,name', 'branch:id,name', 'table:id,name', 'kitchenTicket', 'statusHistory.user:id,name']);
+        $order->load(['items', 'payments.method', 'cashier:id,name', 'branch:id,name', 'table:id,name', 'staff:id,name', 'kitchenTicket', 'statusHistory.user:id,name']);
 
         return Inertia::render('Orders/Show', [
             'order' => $this->payload($order),
@@ -199,6 +203,10 @@ class OrderController extends Controller
             'notes' => $order->notes,
             'branch_name' => $order->branch?->name,
             'cashier_name' => $order->cashier?->name,
+            'staff' => $order->staff->map(fn ($user) => [
+                'id' => $user->getKey(),
+                'name' => $user->pivot->name ?: $user->name,
+            ])->values(),
             'currency' => $order->currency,
             'subtotal' => (float) $order->subtotal,
             'discount_total' => (float) $order->discount_total,

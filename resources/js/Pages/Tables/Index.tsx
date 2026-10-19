@@ -11,6 +11,7 @@ import {
     Money,
     PageHeader,
     SelectField,
+    StaffMultiSelect,
     Table,
     TableBody,
     TableCell,
@@ -19,10 +20,11 @@ import {
     TableRow,
     TextField,
 } from '@/Components/ui';
+import type { StaffOption } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { BranchSummary } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { LayoutGrid, List, Pencil, Plus, Search, Trash2, Users, X } from 'lucide-react';
+import { LayoutGrid, List, Pencil, Plus, Search, Trash2, UserCheck, Users, X } from 'lucide-react';
 import { FormEventHandler, useMemo, useState } from 'react';
 
 interface OpenOrder {
@@ -41,6 +43,7 @@ interface TableRow {
     dining_area_id?: number | null;
     sort_order?: number;
     is_active?: boolean;
+    staff: { id: number; name: string }[];
     open_orders: OpenOrder[];
 }
 
@@ -96,12 +99,14 @@ export default function TablesIndex({
     branchId,
     areas,
     tables,
+    staffByBranch,
     statuses,
 }: {
     branches: BranchSummary[];
     branchId: number | null;
     areas: { id: number; name: string }[];
     tables: TableRow[];
+    staffByBranch: Record<number, StaffOption[]>;
     statuses: { value: string; label: string }[];
 }) {
     const { auth, flash } = usePage().props as Record<string, any>;
@@ -127,7 +132,12 @@ export default function TablesIndex({
         seats: 4,
         sort_order: 0,
         is_active: true,
+        staff_ids: [] as number[],
     });
+
+    const staffError = Object.entries(form.errors).find(([key]) => key.startsWith('staff_ids'))?.[1] as
+        | string
+        | undefined;
 
     const openCreateDrawer = () => {
         form.reset();
@@ -138,6 +148,7 @@ export default function TablesIndex({
             seats: 4,
             sort_order: 0,
             is_active: true,
+            staff_ids: [],
         });
         setDrawerMode('create');
     };
@@ -150,6 +161,7 @@ export default function TablesIndex({
             seats: table.seats,
             sort_order: table.sort_order ?? 0,
             is_active: table.is_active ?? true,
+            staff_ids: table.staff.map((s) => s.id),
         });
         setActiveTable(table);
         setDrawerMode('edit');
@@ -546,6 +558,14 @@ export default function TablesIndex({
                                                                         <Users className="h-3 w-3" />
                                                                         <span className="tabular-nums">{table.seats} seats</span>
                                                                     </div>
+                                                                    {table.staff.length > 0 && (
+                                                                        <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                                            <UserCheck className="h-3 w-3 shrink-0" />
+                                                                            <span className="truncate">
+                                                                                {table.staff.map((s) => s.name).join(', ')}
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                                 <Badge tone={config.badgeTone}>{config.label}</Badge>
                                                             </div>
@@ -651,6 +671,7 @@ export default function TablesIndex({
                                             <TableRow>
                                                 <TableHead>Table Name</TableHead>
                                                 <TableHead>Dining Area</TableHead>
+                                                <TableHead>Assigned Staff</TableHead>
                                                 <TableHead className="text-center">Capacity</TableHead>
                                                 <TableHead>Status</TableHead>
                                                 <TableHead>Active Tab</TableHead>
@@ -682,6 +703,15 @@ export default function TablesIndex({
                                                             {table.dining_area || (
                                                                 <span className="text-muted-foreground/60">
                                                                     General Floor
+                                                                </span>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-muted-foreground">
+                                                            {table.staff.length > 0 ? (
+                                                                table.staff.map((s) => s.name).join(', ')
+                                                            ) : (
+                                                                <span className="text-muted-foreground/60">
+                                                                    Unassigned
                                                                 </span>
                                                             )}
                                                         </TableCell>
@@ -810,6 +840,27 @@ export default function TablesIndex({
                             options={branches.map((b) => ({ value: String(b.id), label: b.name }))}
                         />
                     )}
+
+                    <StaffMultiSelect
+                        label="Assigned Staff"
+                        hint={
+                            drawerMode === 'create'
+                                ? 'Optional — choose the staff who will serve this table at the selected branch.'
+                                : 'Change, add, or remove the staff assigned to this table.'
+                        }
+                        value={form.data.staff_ids}
+                        options={staffByBranch[Number(form.data.branch_id)] ?? []}
+                        error={staffError}
+                        onChange={(ids) => form.setData('staff_ids', ids)}
+                    />
+
+                    {drawerMode === 'edit' && activeTable && activeTable.open_orders.length > 0 && (
+                        <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                            This table has {activeTable.open_orders.length} active order
+                            {activeTable.open_orders.length > 1 ? 's' : ''}. Changing staff here will not alter
+                            their original assignment.
+                        </p>
+                    )}
                 </form>
             </Drawer>
 
@@ -874,6 +925,14 @@ export default function TablesIndex({
                                 <div>
                                     <span className="text-gray-500">Seating Capacity:</span>
                                     <p className="font-semibold text-gray-900">{activeTable.seats} Seats</p>
+                                </div>
+                                <div className="col-span-2">
+                                    <span className="text-gray-500">Assigned Staff:</span>
+                                    <p className="font-semibold text-gray-900">
+                                        {activeTable.staff.length > 0
+                                            ? activeTable.staff.map((s) => s.name).join(', ')
+                                            : 'Unassigned'}
+                                    </p>
                                 </div>
                             </div>
                         </div>

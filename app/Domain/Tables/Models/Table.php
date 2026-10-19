@@ -8,9 +8,11 @@ use App\Domain\Tables\Enums\TableStatus;
 use App\Domain\Tables\Factories\TableFactory;
 use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -62,6 +64,16 @@ class Table extends Model
     public function diningSessions(): HasMany
     {
         return $this->hasMany(DiningSession::class);
+    }
+
+    /**
+     * Staff currently assigned to serve this table.
+     */
+    public function staff(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'table_staff')
+            ->withPivot('tenant_id')
+            ->withTimestamps();
     }
 
     public function hasOpenOrders(): bool

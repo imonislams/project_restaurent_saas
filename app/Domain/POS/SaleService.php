@@ -31,6 +31,7 @@ use App\Domain\Payments\Enums\PaymentStatus;
 use App\Domain\Payments\Models\PaymentMethod;
 use App\Domain\Tables\Models\Table;
 use App\Domain\Tables\TableService;
+use App\Domain\Tables\TableStaffService;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
 use App\Jobs\OpenKitchenTicket;
@@ -55,6 +56,7 @@ class SaleService
         protected CashService $cash,
         protected ManagerPinService $pins,
         protected TableService $tables,
+        protected TableStaffService $tableStaff,
         protected AuditLogger $audit,
         protected TenantContext $context,
     ) {}
@@ -320,6 +322,10 @@ class SaleService
 
         if ($table) {
             $this->tables->assign($order, $table);
+
+            // Freeze the table's current staff onto the order. Later changes to
+            // the table's assignment never rewrite this history.
+            $this->tableStaff->snapshotToOrder($order, $table);
         }
 
         return $order;

@@ -22,6 +22,7 @@ use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -147,6 +148,18 @@ class Order extends Model
     public function cashier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Staff snapshot: the table's assigned staff captured when the order was
+     * opened. Frozen at creation — later table assignment changes never
+     * rewrite this history.
+     */
+    public function staff(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'order_staff')
+            ->withPivot('name', 'tenant_id')
+            ->withTimestamps();
     }
 
     public function items(): HasMany

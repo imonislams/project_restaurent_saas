@@ -49,6 +49,7 @@ interface OrderDetail {
     notes: string | null;
     branch_name: string | null;
     cashier_name: string | null;
+    staff: { id: number; name: string }[];
     currency: string;
     subtotal: number;
     discount_total: number;
@@ -176,6 +177,9 @@ export default function OrderShow({
                                     order.covers ? `${order.covers} guests` : null,
                                     order.branch_name,
                                     order.cashier_name ? `Cashier: ${order.cashier_name}` : null,
+                                    order.staff.length > 0
+                                        ? `Served by: ${order.staff.map((s) => s.name).join(', ')}`
+                                        : null,
                                     order.placed_at ? new Date(order.placed_at).toLocaleString() : null,
                                 ]
                                     .filter(Boolean)
