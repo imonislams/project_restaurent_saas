@@ -122,7 +122,7 @@ class RolePermissionSeeder extends Seeder
 
             RoleName::BranchManager->value => [
                 'dashboard.view', 'pos.use',
-                'orders.view', 'orders.create', 'orders.update', 'orders.void',
+                'orders.view', 'orders.create', 'orders.update', 'orders.void', 'orders.approve',
                 'tables.view', 'tables.manage', 'kitchen.view',
                 'menu.view', 'modifiers.view', 'modifiers.manage',
                 'qr.view', 'qr.manage',
@@ -135,7 +135,7 @@ class RolePermissionSeeder extends Seeder
 
             RoleName::Supervisor->value => [
                 'dashboard.view', 'pos.use',
-                'orders.view', 'orders.create', 'orders.update', 'orders.void', 'orders.refund',
+                'orders.view', 'orders.create', 'orders.update', 'orders.void', 'orders.refund', 'orders.approve',
                 'tables.view', 'tables.manage', 'kitchen.view', 'kitchen.manage',
                 'menu.view', 'modifiers.view', 'modifiers.manage',
                 'qr.view', 'qr.manage',
@@ -148,6 +148,16 @@ class RolePermissionSeeder extends Seeder
                 'orders.view', 'orders.create', 'orders.update',
                 'tables.view', 'kitchen.view', 'customers.view',
                 'qr.view', 'modifiers.view',
+            ],
+
+            // Service-facing role: takes table orders and submits them for
+            // confirmation. No payment, void, approval, financial or admin access.
+            RoleName::TableStaff->value => [
+                'dashboard.view', 'pos.use',
+                'orders.view', 'orders.create',
+                'tables.view', 'kitchen.view',
+                'menu.view', 'modifiers.view',
+                'customers.view',
             ],
 
             RoleName::KitchenStaff->value => [

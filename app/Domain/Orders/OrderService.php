@@ -35,6 +35,7 @@ class OrderService
         protected ManagerPinService $pins,
         protected KitchenService $kitchen,
         protected TableService $tables,
+        protected OrderConfirmationSettings $confirmation,
         protected AuditLogger $audit,
         protected TenantContext $context,
     ) {}
@@ -140,7 +141,7 @@ class OrderService
     }
 
     /**
-     * Staff-confirm a pending QR order and send it to the kitchen.
+     * Confirm a pending order (QR or table-staff) and send it to the kitchen.
      */
     public function accept(Order $order, User $user): Order
     {
@@ -151,19 +152,22 @@ class OrderService
         $order->forceFill([
             'acceptance_status' => AcceptanceStatus::Accepted,
             'accepted_at' => now(),
+            'confirmed_by_user_id' => $user->getKey(),
         ])->save();
 
         $order->statusHistory()->create([
             'tenant_id' => $order->tenant_id,
             'status' => $order->status,
             'user_id' => $user->getKey(),
-            'note' => 'QR order accepted',
+            'note' => 'Order confirmed',
         ]);
 
-        try {
-            OpenKitchenTicket::dispatch($order->getKey());
-        } catch (\Throwable $e) {
-            report($e);
+        if ($this->confirmation->sendConfirmedToKitchen()) {
+            try {
+                OpenKitchenTicket::dispatch($order->getKey());
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         $this->audit->log('order.accepted', $order, ['order_number' => $order->order_number], $user, $order->tenant_id);
@@ -172,13 +176,13 @@ class OrderService
     }
 
     /**
-     * Reject a pending QR order, reversing the stock it reserved.
+     * Reject a pending order, reversing the stock it reserved.
      */
     public function reject(Order $order, User $user, ?string $reason = null): Order
     {
-        if ($order->acceptance_status === AcceptanceStatus::Accepted) {
+        if ($order->acceptance_status !== AcceptanceStatus::Pending) {
             throw ValidationException::withMessages([
-                'order' => 'An accepted order cannot be rejected; void it instead.',
+                'order' => 'Only an order awaiting confirmation can be rejected.',
             ]);
         }
 
@@ -191,6 +195,7 @@ class OrderService
                 'acceptance_status' => AcceptanceStatus::Rejected,
                 'rejected_at' => now(),
                 'rejected_reason' => $reason,
+                'rejected_by_user_id' => $user->getKey(),
                 'status' => OrderStatus::Voided,
                 'voided_at' => now(),
             ])->save();
@@ -199,7 +204,7 @@ class OrderService
                 'tenant_id' => $order->tenant_id,
                 'status' => OrderStatus::Voided,
                 'user_id' => $user->getKey(),
-                'note' => 'QR order rejected'.($reason ? ': '.$reason : ''),
+                'note' => 'Order rejected'.($reason ? ': '.$reason : ''),
             ]);
 
             $this->audit->log('order.rejected', $order, [

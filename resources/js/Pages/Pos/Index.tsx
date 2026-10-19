@@ -103,6 +103,8 @@ interface OpenOrderSummary {
     table_name: string | null;
     customer_name: string | null;
     order_type: string;
+    acceptance_status?: string;
+    rejection_reason?: string | null;
     total: number;
     items_count: number;
     placed_at: string;
@@ -192,7 +194,11 @@ export default function PosIndex({
     serviceChargeRate: number;
     openOrders?: OpenOrderSummary[];
 }) {
-    const { flash } = usePage().props as { flash?: { success?: string; error?: string } };
+    const { auth, flash } = usePage().props as {
+        auth?: { permissions?: string[] };
+        flash?: { success?: string; error?: string };
+    };
+    const canTakePayment = (auth?.permissions ?? []).includes('orders.update');
     const t = useT();
     const currency = branch?.currency ?? '$';
 
@@ -1275,19 +1281,21 @@ export default function PosIndex({
                             </div>
                         </dl>
 
-                        {/* Primary Pay Button */}
-                        <button
-                            type="button"
-                            disabled={cart.length === 0 || !shift}
-                            onClick={() => {
-                                playSound('tap');
-                                setShowPayment(true);
-                            }}
-                            className="mt-3 flex w-full items-center justify-between rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 active:scale-[0.99] transition disabled:opacity-50 disabled:pointer-events-none"
-                        >
-                            <span>{t('pos.pay')} (F4)</span>
-                            <span className="font-mono tracking-tight">{money(totals.total, currency)}</span>
-                        </button>
+                        {/* Primary Pay Button — cashiers/managers only */}
+                        {canTakePayment && (
+                            <button
+                                type="button"
+                                disabled={cart.length === 0 || !shift}
+                                onClick={() => {
+                                    playSound('tap');
+                                    setShowPayment(true);
+                                }}
+                                className="mt-3 flex w-full items-center justify-between rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 active:scale-[0.99] transition disabled:opacity-50 disabled:pointer-events-none"
+                            >
+                                <span>{t('pos.pay')} (F4)</span>
+                                <span className="font-mono tracking-tight">{money(totals.total, currency)}</span>
+                            </button>
+                        )}
 
                         {/* Dine-In Park / Open Order Button */}
                         {orderType === 'dine_in' && (
@@ -1296,9 +1304,13 @@ export default function PosIndex({
                                 disabled={cart.length === 0 || !shift}
                                 onClick={handleHoldOrder}
                                 className="mt-2 w-full rounded-xl border border-amber-300 bg-amber-50 py-2 text-xs font-bold text-amber-800 shadow-subtle hover:bg-amber-100 transition disabled:opacity-50"
-                                title="Send to kitchen without taking payment now"
+                                title={
+                                    canTakePayment
+                                        ? 'Send to kitchen without taking payment now'
+                                        : 'Submit this table order for central approval'
+                                }
                             >
-                                Park / Kitchen Ticket (F8)
+                                {canTakePayment ? 'Park / Kitchen Ticket (F8)' : 'Submit for Confirmation (F8)'}
                             </button>
                         )}
 
@@ -2237,6 +2249,12 @@ function HeldOrdersDrawer({
                                                 {order.table_name}
                                             </Badge>
                                         )}
+                                        {order.acceptance_status === 'pending' && (
+                                            <Badge tone="warning">Awaiting confirmation</Badge>
+                                        )}
+                                        {order.acceptance_status === 'rejected' && (
+                                            <Badge tone="danger">Rejected</Badge>
+                                        )}
                                     </div>
                                     <div className="mt-1 text-xs text-gray-500">
                                         {order.customer_name || 'Guest'} · {order.items_count} items · {order.placed_at}
@@ -2244,6 +2262,11 @@ function HeldOrdersDrawer({
                                     <div className="mt-1 font-mono text-xs font-bold text-gray-900">
                                         {money(order.total, currency)}
                                     </div>
+                                    {order.acceptance_status === 'rejected' && order.rejection_reason && (
+                                        <div className="mt-1 text-[11px] font-medium text-rose-600">
+                                            {order.rejection_reason}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <Link

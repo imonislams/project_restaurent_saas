@@ -12,6 +12,7 @@ use App\Http\Requests\Onboarding\HoursRequest;
 use App\Http\Requests\Onboarding\ReceiptRequest;
 use App\Http\Requests\Onboarding\TaxRequest;
 use App\Http\Requests\Tenant\NotificationSettingsRequest;
+use App\Http\Requests\Tenant\OrderSettingsRequest;
 use App\Http\Requests\Tenant\PosSettingsRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,7 +26,7 @@ use Inertia\Response;
  */
 class SettingsController extends Controller
 {
-    public const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'pos', 'notifications', 'qr'];
+    public const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'pos', 'orders', 'notifications', 'qr'];
 
     public function __construct(
         protected OnboardingService $onboarding,
@@ -63,6 +64,7 @@ class SettingsController extends Controller
             'tax' => $this->onboarding->saveTax($tenant, $data),
             'receipt' => $this->onboarding->saveReceipt($tenant, $data),
             'pos' => $this->onboarding->savePos($tenant, $data),
+            'orders' => $this->onboarding->saveOrders($tenant, $data),
             'notifications' => $this->onboarding->saveNotifications($tenant, $data),
             'qr' => $this->onboarding->saveQr($tenant, $data),
         };
@@ -82,6 +84,7 @@ class SettingsController extends Controller
             'tax' => app(TaxRequest::class)->rules(),
             'receipt' => app(ReceiptRequest::class)->rules(),
             'pos' => app(PosSettingsRequest::class)->rules(),
+            'orders' => app(OrderSettingsRequest::class)->rules(),
             'notifications' => app(NotificationSettingsRequest::class)->rules(),
             'qr' => app(\App\Http\Requests\Tenant\QrSettingsRequest::class)->rules(),
         };

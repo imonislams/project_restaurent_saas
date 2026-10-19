@@ -50,15 +50,17 @@ class OrderController extends Controller
         $status = $request->string('status')->toString() ?: null;
         $type = $request->string('order_type')->toString() ?: null;
         $source = $request->string('source')->toString() ?: null;
+        $acceptance = $request->string('acceptance')->toString() ?: null;
 
         $orders = Order::query()
-            ->with(['cashier:id,name', 'branch:id,name', 'table:id,name', 'staff:id,name'])
+            ->with(['cashier:id,name', 'branch:id,name', 'table:id,name', 'staff:id,name', 'confirmedBy:id,name', 'rejectedBy:id,name'])
             ->withCount('items')
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->whereBetween('placed_at', [$from, $to])
             ->when($status, fn ($q) => $q->where('status', $status))
             ->when($type, fn ($q) => $q->where('order_type', $type))
             ->when($source, fn ($q) => $q->where('source', $source))
+            ->when($acceptance, fn ($q) => $q->where('acceptance_status', $acceptance))
             ->latest('placed_at')
             ->paginate(25)
             ->withQueryString()
@@ -81,6 +83,9 @@ class OrderController extends Controller
                     'id' => $user->getKey(),
                     'name' => $user->pivot->name ?: $user->name,
                 ])->values(),
+                'confirmed_by_name' => $order->confirmedBy?->name,
+                'rejected_by_name' => $order->rejectedBy?->name,
+                'rejection_reason' => $order->rejected_reason,
                 'items_count' => $order->items_count,
                 'total' => (float) $order->total,
                 'currency' => $order->currency,
@@ -100,6 +105,7 @@ class OrderController extends Controller
                 'status' => $status,
                 'order_type' => $type,
                 'source' => $source,
+                'acceptance' => $acceptance,
                 'branch_id' => $branchId,
             ],
             'statuses' => collect(OrderStatus::cases())
@@ -113,7 +119,7 @@ class OrderController extends Controller
 
     public function show(Order $order): Response
     {
-        $order->load(['items', 'payments.method', 'cashier:id,name', 'branch:id,name', 'table:id,name', 'staff:id,name', 'kitchenTicket', 'statusHistory.user:id,name']);
+        $order->load(['items', 'payments.method', 'cashier:id,name', 'branch:id,name', 'table:id,name', 'staff:id,name', 'confirmedBy:id,name', 'rejectedBy:id,name', 'kitchenTicket', 'statusHistory.user:id,name']);
 
         return Inertia::render('Orders/Show', [
             'order' => $this->payload($order),
@@ -207,6 +213,10 @@ class OrderController extends Controller
                 'id' => $user->getKey(),
                 'name' => $user->pivot->name ?: $user->name,
             ])->values(),
+            'confirmed_by_name' => $order->confirmedBy?->name,
+            'confirmed_at' => $order->accepted_at?->toIso8601String(),
+            'rejected_by_name' => $order->rejectedBy?->name,
+            'rejection_reason' => $order->rejected_reason,
             'currency' => $order->currency,
             'subtotal' => (float) $order->subtotal,
             'discount_total' => (float) $order->discount_total,

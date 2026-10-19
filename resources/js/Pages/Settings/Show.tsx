@@ -2,6 +2,7 @@ import BranchFields from '@/Components/Settings/BranchFields';
 import CompanyFields from '@/Components/Settings/CompanyFields';
 import HoursFields from '@/Components/Settings/HoursFields';
 import NotificationFields from '@/Components/Settings/NotificationFields';
+import OrdersFields from '@/Components/Settings/OrdersFields';
 import PosFields from '@/Components/Settings/PosFields';
 import QrFields from '@/Components/Settings/QrFields';
 import ReceiptFields from '@/Components/Settings/ReceiptFields';
@@ -13,7 +14,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useEffect } from 'react';
 
-const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'pos', 'notifications', 'qr', 'payments'] as const;
+const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'pos', 'orders', 'notifications', 'qr', 'payments'] as const;
 
 export default function SettingsShow({
     group,
@@ -53,6 +54,8 @@ export default function SettingsShow({
                 return <ReceiptFields data={data} setData={setData} errors={errors} options={options} />;
             case 'pos':
                 return <PosFields data={data} setData={setData} errors={errors} options={options} />;
+            case 'orders':
+                return <OrdersFields data={data} setData={setData} errors={errors} options={options} />;
             case 'notifications':
                 return <NotificationFields data={data} setData={setData} errors={errors} options={options} />;
             case 'qr':

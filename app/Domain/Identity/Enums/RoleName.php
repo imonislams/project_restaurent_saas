@@ -19,6 +19,7 @@ enum RoleName: string
     case BranchManager = 'branch_manager';
     case Supervisor = 'supervisor';
     case Cashier = 'cashier';
+    case TableStaff = 'table_staff';
     case KitchenStaff = 'kitchen_staff';
     case InventoryManager = 'inventory_manager';
     case Accountant = 'accountant';
@@ -39,6 +40,7 @@ enum RoleName: string
             self::BranchManager => 'Branch Manager',
             self::Supervisor => 'Supervisor',
             self::Cashier => 'Cashier',
+            self::TableStaff => 'Table Staff',
             self::KitchenStaff => 'Kitchen Staff',
             self::InventoryManager => 'Inventory Manager',
             self::Accountant => 'Accountant',

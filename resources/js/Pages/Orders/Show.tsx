@@ -50,6 +50,12 @@ interface OrderDetail {
     branch_name: string | null;
     cashier_name: string | null;
     staff: { id: number; name: string }[];
+    acceptance_status: string;
+    acceptance_label: string;
+    confirmed_by_name: string | null;
+    confirmed_at: string | null;
+    rejected_by_name: string | null;
+    rejection_reason: string | null;
     currency: string;
     subtotal: number;
     discount_total: number;
@@ -98,13 +104,17 @@ export default function OrderShow({
 
     const canVoid = permissions.includes('orders.void') && order.can_void;
     const canFulfill = permissions.includes('orders.update');
-    const canSettle = permissions.includes('pos.use') && order.is_open;
+    const canSettle = permissions.includes('orders.update') && order.is_open;
+    const canApprove = permissions.includes('orders.approve') && order.acceptance_status === 'pending';
 
     const [showVoid, setShowVoid] = useState(false);
     const [showSettle, setShowSettle] = useState(false);
+    const [showReject, setShowReject] = useState(false);
+    const [rejectReason, setRejectReason] = useState('');
 
     // Forms
     const voidForm = useForm({ manager_pin: '' });
+    const confirmForm = useForm({});
 
     // Settle Order State
     const [settleMethodId, setSettleMethodId] = useState<number>(paymentMethods[0]?.id ?? 1);
@@ -177,6 +187,13 @@ export default function OrderShow({
                                     order.covers ? `${order.covers} guests` : null,
                                     order.branch_name,
                                     order.cashier_name ? `Cashier: ${order.cashier_name}` : null,
+                                    order.acceptance_status !== 'auto_accepted'
+                                        ? `Confirmation: ${order.acceptance_label}`
+                                        : null,
+                                    order.confirmed_by_name ? `Confirmed by ${order.confirmed_by_name}` : null,
+                                    order.rejected_by_name
+                                        ? `Rejected by ${order.rejected_by_name}${order.rejection_reason ? ` — ${order.rejection_reason}` : ''}`
+                                        : null,
                                     order.staff.length > 0
                                         ? `Served by: ${order.staff.map((s) => s.name).join(', ')}`
                                         : null,
@@ -195,6 +212,27 @@ export default function OrderShow({
                                 🖨 Receipt
                             </Button>
                         </Link>
+
+                        {canApprove && (
+                            <>
+                                <Button
+                                    size="sm"
+                                    onClick={() => router.post(route('orders.accept', order.id))}
+                                    icon={<Icon name="check" className="h-4 w-4" />}
+                                >
+                                    Confirm &amp; Send to Kitchen
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                                    onClick={() => setShowReject(true)}
+                                    icon={<Icon name="x" className="h-4 w-4" />}
+                                >
+                                    Reject
+                                </Button>
+                            </>
+                        )}
 
                         {canSettle && (
                             <Button
@@ -700,6 +738,61 @@ export default function OrderShow({
                                 disabled={!voidForm.data.manager_pin}
                             >
                                 Confirm Void Order
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
+
+            {/* --- REJECT CONFIRMATION MODAL --- */}
+            {showReject && (
+                <Modal show={true} onClose={() => setShowReject(false)} maxWidth="md">
+                    <div className="p-6">
+                        <div className="flex items-center justify-between border-b border-border pb-3">
+                            <div className="flex items-center gap-2 text-destructive">
+                                <Icon name="alert" className="h-5 w-5" />
+                                <h3 className="text-base font-semibold text-foreground">Reject Order {order.order_number}</h3>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowReject(false)}
+                                className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                            >
+                                <Icon name="x" className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <p className="mt-4 text-xs text-muted-foreground">
+                            Rejecting voids the order and reverses its reserved stock. A rejected order is never sent to the kitchen.
+                        </p>
+
+                        <div className="mt-4">
+                            <label className="text-xs font-semibold text-foreground block mb-1">Reason</label>
+                            <textarea
+                                rows={3}
+                                placeholder="Why is this order being rejected?"
+                                value={rejectReason}
+                                onChange={(e) => setRejectReason(e.target.value)}
+                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                            />
+                        </div>
+
+                        <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
+                            <Button type="button" variant="outline" onClick={() => setShowReject(false)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                onClick={() => {
+                                    confirmForm.transform(() => ({ reason: rejectReason }));
+                                    confirmForm.post(route('orders.reject', order.id), {
+                                        onSuccess: () => setShowReject(false),
+                                    });
+                                }}
+                                loading={confirmForm.processing}
+                            >
+                                Reject Order
                             </Button>
                         </div>
                     </div>

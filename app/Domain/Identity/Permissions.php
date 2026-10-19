@@ -16,7 +16,7 @@ final class Permissions
         return [
             'dashboard' => ['view'],
             'pos' => ['use'],
-            'orders' => ['view', 'create', 'update', 'void', 'refund'],
+            'orders' => ['view', 'create', 'update', 'void', 'refund', 'approve'],
             'tables' => ['view', 'manage'],
             'kitchen' => ['view', 'manage'],
             'menu' => ['view', 'manage'],

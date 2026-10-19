@@ -269,7 +269,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->group(function 
     Route::get('/pos', [PosController::class, 'index'])
         ->middleware('permission:pos.use')->name('pos.index');
     Route::post('/pos/orders', [PosController::class, 'store'])
-        ->middleware('permission:pos.use')->name('pos.orders.store');
+        ->middleware(['permission:pos.use', 'permission:orders.update'])->name('pos.orders.store');
     Route::post('/pos/orders/open', [PosController::class, 'open'])
         ->middleware('permission:pos.use')->name('pos.orders.open');
 
@@ -288,13 +288,13 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->group(function 
     Route::post('/orders/{order}/void', [OrderController::class, 'void'])
         ->middleware('permission:orders.void')->name('orders.void');
     Route::post('/orders/{order}/settle', [OrderController::class, 'settle'])
-        ->middleware('permission:pos.use')->name('orders.settle');
+        ->middleware('permission:orders.update')->name('orders.settle');
     Route::patch('/orders/{order}/fulfillment', [OrderController::class, 'updateFulfillment'])
         ->middleware('permission:orders.update')->name('orders.fulfillment');
     Route::post('/orders/{order}/accept', [OrderController::class, 'accept'])
-        ->middleware('permission:orders.update')->name('orders.accept');
+        ->middleware('permission:orders.approve')->name('orders.accept');
     Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])
-        ->middleware('permission:orders.update')->name('orders.reject');
+        ->middleware('permission:orders.approve')->name('orders.reject');
 
     Route::prefix('kitchen')->name('kitchen.')->middleware('feature:kitchen')->group(function () {
         Route::middleware('permission:kitchen.view')->group(function () {

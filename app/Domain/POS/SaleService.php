@@ -12,6 +12,7 @@ use App\Domain\Delivery\DeliveryService;
 use App\Domain\Dining\Models\DiningParticipant;
 use App\Domain\Dining\Models\DiningSession;
 use App\Domain\Dining\QrDiningSettings;
+use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Identity\ManagerPinService;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
 use App\Domain\Inventory\Enums\StockMovementReason;
@@ -27,6 +28,7 @@ use App\Domain\Orders\Enums\OrderSource;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Enums\OrderType;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Orders\OrderConfirmationSettings;
 use App\Domain\Payments\Enums\PaymentStatus;
 use App\Domain\Payments\Models\PaymentMethod;
 use App\Domain\Tables\Models\Table;
@@ -57,6 +59,7 @@ class SaleService
         protected ManagerPinService $pins,
         protected TableService $tables,
         protected TableStaffService $tableStaff,
+        protected OrderConfirmationSettings $confirmation,
         protected AuditLogger $audit,
         protected TenantContext $context,
     ) {}
@@ -115,17 +118,42 @@ class SaleService
         $tenant = $this->context->tenant() ?? $cashier->tenant;
         $prepared = $this->prepare($data, $branch, $tenant, false);
 
-        $order = DB::transaction(function () use ($data, $cashier, $branch, $tenant, $prepared) {
-            $order = $this->createOrder($data, $cashier, $branch, $tenant, $prepared, OrderStatus::Held);
+        // Table-staff table orders may need central approval before the kitchen.
+        $requiresApproval = $this->requiresCentralApproval($cashier, $prepared['type']);
+
+        $order = DB::transaction(function () use ($data, $cashier, $branch, $tenant, $prepared, $requiresApproval) {
+            $order = $this->createOrder($data, $cashier, $branch, $tenant, $prepared, OrderStatus::Held, $requiresApproval ? [
+                'acceptance_status' => AcceptanceStatus::Pending->value,
+                'accepted_at' => null,
+            ] : []);
 
             $this->deductStock($order, $branch);
 
-            $this->recordStatus($order, OrderStatus::Held, $cashier, 'Order opened');
+            $this->recordStatus(
+                $order,
+                OrderStatus::Held,
+                $cashier,
+                $requiresApproval ? 'Order submitted for confirmation' : 'Order opened',
+            );
 
             return $order;
         });
 
         return $this->postCommit($order);
+    }
+
+    /**
+     * Whether an order taken by this user must await central approval. Only
+     * table-staff, dine-in orders are ever routed to approval.
+     */
+    protected function requiresCentralApproval(?User $cashier, OrderType $type): bool
+    {
+        if ($cashier === null || $type !== OrderType::DineIn) {
+            return false;
+        }
+
+        return $cashier->hasRole(RoleName::TableStaff)
+            && $this->confirmation->centralApprovalRequired();
     }
 
     /**
@@ -166,7 +194,7 @@ class SaleService
             return $order;
         });
 
-        return $this->postCommit($order, $autoAccept);
+        return $this->postCommit($order);
     }
 
     /**
@@ -271,6 +299,9 @@ class SaleService
             'order_type' => $prepared['type'],
             'status' => $status,
             'fulfillment_status' => FulfillmentStatus::New,
+            // Carry the DB default onto the in-memory model so postCommit can
+            // read it without a refresh ($extra may override for QR/pending).
+            'acceptance_status' => AcceptanceStatus::AutoAccepted->value,
             'customer_name' => $data['customer_name'] ?? $customer?->name,
             'covers' => $data['covers'] ?? null,
             'delivery_address' => $data['delivery_address'] ?? null,
@@ -372,11 +403,13 @@ class SaleService
         ]);
     }
 
-    protected function postCommit(Order $order, bool $openKitchen = true): Order
+    protected function postCommit(Order $order): Order
     {
         // Secondary work runs after the core transaction, on the queue. The job
-        // is idempotent per order, so a retry never duplicates the sale.
-        if ($openKitchen) {
+        // is idempotent per order, so a retry never duplicates the sale. Only a
+        // confirmed order is dispatched, and only when the tenant sends
+        // confirmed orders to the kitchen.
+        if ($order->acceptance_status->isConfirmed() && $this->confirmation->sendConfirmedToKitchen()) {
             try {
                 OpenKitchenTicket::dispatch($order->getKey());
             } catch (\Throwable $e) {

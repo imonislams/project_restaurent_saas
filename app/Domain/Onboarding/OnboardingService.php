@@ -480,6 +480,19 @@ class OnboardingService
         $tenant->save();
     }
 
+    public function saveOrders(Tenant $tenant, array $data): void
+    {
+        $mode = $data['staff_confirmation_mode'] ?? 'direct';
+
+        $tenant->mergeSettings([
+            'orders.staff_confirmation_mode' => in_array($mode, ['central', 'direct'], true) ? $mode : 'direct',
+            'orders.branch_direct_order_taking' => (bool) ($data['branch_direct_order_taking'] ?? true),
+            'orders.send_confirmed_to_kitchen' => (bool) ($data['send_confirmed_to_kitchen'] ?? true),
+        ]);
+
+        $tenant->save();
+    }
+
     public function saveNotifications(Tenant $tenant, array $data): void
     {
         $tenant->mergeSettings([
@@ -531,6 +544,11 @@ class OnboardingService
                 'pos_cash_variance_threshold' => $tenant->getSetting('pos.cash_variance_threshold'),
                 'pos_discount_approval_percent' => $tenant->getSetting('pos.discount_approval_percent'),
                 'payments_provider' => $tenant->getSetting('payments.provider', 'manual'),
+            ],
+            'orders' => [
+                'staff_confirmation_mode' => (string) $tenant->getSetting('orders.staff_confirmation_mode', 'direct'),
+                'branch_direct_order_taking' => (bool) $tenant->getSetting('orders.branch_direct_order_taking', true),
+                'send_confirmed_to_kitchen' => (bool) $tenant->getSetting('orders.send_confirmed_to_kitchen', true),
             ],
             'notifications' => [
                 'low_stock_threshold' => (float) $tenant->getSetting('inventory.low_stock_threshold', 0),

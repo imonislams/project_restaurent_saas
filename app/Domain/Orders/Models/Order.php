@@ -71,6 +71,8 @@ class Order extends Model
         'accepted_at',
         'rejected_at',
         'rejected_reason',
+        'confirmed_by_user_id',
+        'rejected_by_user_id',
         'voided_at',
     ];
 
@@ -148,6 +150,16 @@ class Order extends Model
     public function cashier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function confirmedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'confirmed_by_user_id');
+    }
+
+    public function rejectedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by_user_id');
     }
 
     /**

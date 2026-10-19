@@ -27,6 +27,7 @@ requirement in [ROADMAP.md](./ROADMAP.md) is satisfied and the report below is f
 | 16E(A) — Active restaurant & branch context | Complete pending review |
 | 16E(B) — Branch-wise permissions & task assignment | Complete pending review |
 | 16F — Table staff assignment (create & edit) | Complete pending review |
+| 16G — Table staff role & order confirmation | Complete pending review |
 
 ---
 
@@ -2305,6 +2306,123 @@ a new order after edit snapshots the new staff; page props expose assigned + ass
 
 ---
 
+## Phase 16G — Table staff role & order confirmation
+
+### Business journey completed
+
+An owner assigns a **Table Staff** role to a server. The server uses the POS to build a table
+order and, when the tenant requires it, submits it for **central approval** instead of taking
+payment. A manager/approver opens Orders, inspects the order (table, items, total, initiating
+staff, assigned serving staff, time), then approves it (it flows to the kitchen) or rejects it
+with a reason (it is voided, stock reversed, never sent to the kitchen). If the tenant enables
+**Direct confirmation**, table-staff orders are confirmed immediately and flow to the kitchen as
+before.
+
+### Problem addressed
+
+There was no service-facing role and no way to route POS table orders through an approval gate.
+The existing confirmation mechanism (`acceptance_status` + `OrderService::accept/reject` + the
+single kitchen-ticket path) was wired to QR orders only. This phase reuses it rather than adding
+a parallel order/confirmation/kitchen system.
+
+### Features implemented
+
+- **`table_staff` role** — `RoleName::TableStaff`, seeded minimal permissions
+  (`dashboard.view, pos.use, orders.view, orders.create, tables.view, kitchen.view, menu.view,
+  modifiers.view, customers.view`). No payment, void, approve, financial or admin access. It
+  auto-appears in the Staff UI and is immediately assignable to tables (has `pos.use`).
+- **`orders.approve` permission** — new catalog action; granted to Owner/Admin/Manager/Supervisor.
+  Approve/reject/confirm and the pending badge now require it (cashier no longer approves).
+- **Confirmation gating (reuse)** — `SaleService::openOrder()` creates a **Pending** order only when
+  the creator holds the `table_staff` role, the order is dine-in, and central approval is required
+  (mode = central, or branch direct order-taking off). Otherwise unchanged (`auto_accepted`).
+- **Unified kitchen gate** — `SaleService::postCommit()` now dispatches only when
+  `acceptance_status->isConfirmed()` (uses the previously-dead `isConfirmed()` helper) and
+  `OrderConfirmationSettings::sendConfirmedToKitchen()`. Pending/rejected orders never dispatch.
+- **Settings (tenant-level, `orders.*`)** — new typed accessor `OrderConfirmationSettings`
+  (`staff_confirmation_mode` = central|direct default direct; `branch_direct_order_taking` default
+  true; `send_confirmed_to_kitchen` default true) with a new **Orders** Settings tab, request
+  validation, and `OnboardingService::saveOrders()`.
+- **Central confirmation UI** — Orders index gains a Confirmation filter; accept/reject are gated
+  on `orders.approve`; the order detail shows Approve / Reject-with-reason and the approver /
+  rejector / timestamp / reason.
+- **Table-staff POS** — when the user lacks `orders.update` the Pay button is hidden and the
+  dine-in action becomes **Submit for Confirmation**; held/pending/rejected statuses and rejection
+  reasons are shown.
+- **Approver/rejector recorded** — new nullable `confirmed_by_user_id` / `rejected_by_user_id`
+  (additive), alongside existing `accepted_at` / `rejected_at` / `rejected_reason` and status history.
+- **Idempotency / safety** — `accept()` no-ops unless Pending; `reject()` now requires Pending
+  (previously could re-reject). Kitchen ticket creation remains single-path and idempotent.
+
+### Files and modules changed
+
+```
+app/Domain/Identity/{Permissions,Enums/RoleName}.php
+database/seeders/RolePermissionSeeder.php
+app/Domain/Orders/OrderConfirmationSettings.php                 (new)
+app/Domain/Orders/{OrderService,Models/Order}.php
+app/Domain/POS/SaleService.php
+app/Http/Controllers/{Orders/OrderController,POS/PosController,Tenant/SettingsController}.php
+app/Http/Requests/Tenant/OrderSettingsRequest.php               (new)
+app/Http/Middleware/HandleInertiaRequests.php
+app/Domain/Onboarding/OnboardingService.php
+routes/web.php
+database/migrations/2026_10_13_000002_add_confirmation_reviewers_to_orders_table.php (new)
+resources/js/Components/Settings/OrdersFields.tsx               (new)
+resources/js/Pages/Settings/Show.tsx
+resources/js/Pages/Orders/{Index,Show}.tsx
+resources/js/Pages/Pos/Index.tsx
+```
+
+### Database and migration changes
+
+- Altered `orders` (+nullable `confirmed_by_user_id`, `rejected_by_user_id`, `nullOnDelete`).
+  Additive and reversible. No destructive migration.
+
+### Settings and permissions added
+
+- **Permission:** `orders.approve` (catalog + seeder grants).
+- **Role:** `table_staff`.
+- **Settings (tenant `tenants.settings`):** `orders.staff_confirmation_mode`,
+  `orders.branch_direct_order_taking`, `orders.send_confirmed_to_kitchen`. Defaults preserve
+  existing behaviour.
+- **Route middleware changes:** `orders.accept|reject` → `orders.approve`; `pos.orders.store` and
+  `orders.settle` → also require `orders.update` (so table staff cannot take payment).
+
+### Order confirmation and kitchen integration behaviour
+
+- Pending orders have no kitchen ticket and are not actionable in the KDS.
+- Rejected orders are voided, stock reversed, never dispatched.
+- Approved / directly-confirmed orders follow the existing kitchen workflow; dispatch happens once
+  (idempotent job + unique `kitchen_tickets.order_id`).
+- Changing the settings never rewrites historical orders.
+
+### Blockers and decisions
+
+- **Re-seed required:** existing databases must run `RolePermissionSeeder` (adds the `table_staff`
+  role and `orders.approve` permission). I did not run it (no DB writes).
+- **Open order still needs an open shift** (`SaleService::openOrder` shift requirement unchanged) —
+  noted; a table-staff submission without an open shift is rejected as before.
+- **Decision D5 in effect:** cashiers no longer approve QR/table orders — managers+ do. Revert by
+  granting `orders.approve` to Cashier if desired.
+- **Decision D2 in effect:** approver/rejector recorded via the two new nullable columns.
+
+### Verification
+
+- `php artisan test` → **538 passed (3019 assertions)**.
+- `npm run build` → tsc + vite clean.
+- **Defect found and fixed during verification:** the kitchen-gate refactor read
+  `acceptance_status` off a freshly-`create()`d order (which is `null` until the DB default applies),
+  causing a 500 on every POS order creation — including a table-staff submission. The default is now
+  carried onto the in-memory model at creation. `RolePermissionTest`'s role-count assertion was
+  updated to `count(RoleName::cases())` for the new role.
+
+### Final phase status
+
+**Complete pending review.** Awaiting explicit authorization before any test/QA run.
+
+---
+
 ## Program status
 
 Phases 15A–15D, 16A, 16B and 16C are implemented and verified (509 tests passing; frontend
@@ -2312,4 +2430,6 @@ build clean). Remaining known gaps are noted per phase. Phase 16D (product bulk 
 command fixes) is planned but not yet implemented. Phases 16E(A) (active restaurant & branch
 context) and 16E(B) (branch-wise permissions & task assignment) are implemented and verified
 (522 tests passing). Phase 16F (table staff assignment — create & edit) is implemented and
-verified (new `TableStaffAssignmentTest`: 16 tests passing; frontend build clean).
+verified (new `TableStaffAssignmentTest`: 16 tests passing; frontend build clean). Phase 16G
+(table staff role & order confirmation) is implemented and verified — **538 tests passing**,
+frontend build clean. Re-seed `RolePermissionSeeder` for the new role and permission.

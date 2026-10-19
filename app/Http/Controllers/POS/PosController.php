@@ -134,6 +134,7 @@ class PosController extends Controller
                         'order_type' => $o->order_type->value,
                         'source' => $o->source->value,
                         'acceptance_status' => $o->acceptance_status->value,
+                        'rejection_reason' => $o->rejected_reason,
                         'total' => (float) $o->total,
                         'items_count' => $o->items_count,
                         'placed_at' => $o->created_at?->diffForHumans() ?? '',

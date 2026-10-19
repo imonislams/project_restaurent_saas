@@ -73,18 +73,23 @@ export default function OrdersIndex({
     types,
 }: {
     orders: Paginated<OrderRow>;
-    filters: { from: string; to: string; status: string | null; order_type: string | null; branch_id: number | null };
+    filters: { from: string; to: string; status: string | null; order_type: string | null; acceptance: string | null; branch_id: number | null };
     branches: BranchSummary[];
     canViewAllBranches: boolean;
     statuses: { value: string; label: string }[];
     types: { value: string; label: string }[];
 }) {
-    const { flash } = usePage().props as { flash?: { success?: string; error?: string } };
+    const { auth, flash } = usePage().props as {
+        auth?: { permissions?: string[] };
+        flash?: { success?: string; error?: string };
+    };
+    const canApprove = (auth?.permissions ?? []).includes('orders.approve');
 
     const [from, setFrom] = useState(filters.from);
     const [to, setTo] = useState(filters.to);
     const [status, setStatus] = useState(filters.status ?? '');
     const [orderType, setOrderType] = useState(filters.order_type ?? '');
+    const [acceptance, setAcceptance] = useState(filters.acceptance ?? '');
     const [branchId, setBranchId] = useState<string>(filters.branch_id ? String(filters.branch_id) : 'all');
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -96,6 +101,7 @@ export default function OrdersIndex({
                 to,
                 status: status || null,
                 order_type: orderType || null,
+                acceptance: acceptance || null,
                 branch_id: branchId && branchId !== 'all' ? Number(branchId) : 'all',
                 ...overrides,
             },
@@ -248,19 +254,37 @@ export default function OrdersIndex({
                                     ))}
                                 </div>
 
-                                {/* Search Box */}
-                                <div className="relative w-full sm:w-64">
-                                    <Icon
-                                        name="search"
-                                        className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Quick filter (Order #, table)..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="h-8 w-full rounded-md border border-input bg-background py-1.5 pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                                    />
+                                <div className="flex w-full items-center gap-2 sm:w-auto">
+                                    <select
+                                        aria-label="Confirmation status"
+                                        value={acceptance}
+                                        onChange={(e) => {
+                                            setAcceptance(e.target.value);
+                                            apply({ acceptance: e.target.value || null });
+                                        }}
+                                        className="h-8 rounded-md border border-input bg-background px-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                                    >
+                                        <option value="">All confirmation</option>
+                                        <option value="pending">Awaiting confirmation</option>
+                                        <option value="accepted">Confirmed</option>
+                                        <option value="rejected">Rejected</option>
+                                        <option value="auto_accepted">Auto-accepted</option>
+                                    </select>
+
+                                    {/* Search Box */}
+                                    <div className="relative w-full sm:w-64">
+                                        <Icon
+                                            name="search"
+                                            className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Quick filter (Order #, table)..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="h-8 w-full rounded-md border border-input bg-background py-1.5 pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -478,7 +502,7 @@ export default function OrdersIndex({
                                                     {/* Actions */}
                                                     <TableCell className="px-5 py-3.5 text-right whitespace-nowrap">
                                                         <div className="flex items-center justify-end gap-1.5">
-                                                            {order.acceptance_status === 'pending' && (
+                                                            {canApprove && order.acceptance_status === 'pending' && (
                                                                 <>
                                                                     <Button
                                                                         size="xs"
