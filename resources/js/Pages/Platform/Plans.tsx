@@ -1,4 +1,4 @@
-import { Badge, Button, Card, ConfirmDialog, EmptyState } from '@/Components/ui';
+import { Badge, Button, Card, ConfirmDialog, EmptyState, FilterBar, SelectField, TextField } from '@/Components/ui';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
@@ -18,6 +18,9 @@ interface PlanRow {
     limits: Record<string, number | null>;
     is_active: boolean;
     visibility: string;
+    region: string;
+    region_label?: string;
+    is_featured: boolean;
     version: number;
     archived: boolean;
     subscriptions_count: number;
@@ -31,16 +34,37 @@ interface Option {
 
 const format = (value: number | null | undefined) => (value === null || value === undefined ? '∞' : String(value));
 
+interface PlanFilters {
+    search: string;
+    region: string;
+    status: string;
+}
+
 export default function PlatformPlans({
     plans,
     currencies,
     enabled_currencies,
+    filters,
+    options,
+    has_any_plans,
 }: {
     plans: PlanRow[];
     currencies: Option[];
     enabled_currencies: string[];
+    filters: PlanFilters;
+    options: { regions: Option[]; statuses: Option[] };
+    has_any_plans: boolean;
 }) {
     const [pending, setPending] = useState<{ type: 'archive' | 'delete'; plan: PlanRow } | null>(null);
+    const [state, setState] = useState<PlanFilters>(filters);
+
+    const apply = (overrides: Partial<PlanFilters> = {}) => {
+        const next = { ...state, ...overrides };
+        setState(next);
+        router.get(route('platform.plans.index'), next as any, { preserveState: true, preserveScroll: true, replace: true });
+    };
+
+    const clear = () => apply({ search: '', region: '', status: '' });
 
     const confirmPending = () => {
         if (!pending) return;
@@ -66,15 +90,55 @@ export default function PlatformPlans({
                 </Button>
             }
         >
+            <FilterBar>
+                <TextField
+                    label="Search"
+                    value={state.search}
+                    placeholder="Name or slug"
+                    onChange={(v) => setState((s) => ({ ...s, search: v }))}
+                    onEnter={() => apply()}
+                />
+                <SelectField
+                    label="Region"
+                    value={state.region}
+                    options={[{ value: '', label: 'All regions' }, ...options.regions]}
+                    onChange={(v) => apply({ region: v })}
+                />
+                <SelectField
+                    label="Status"
+                    value={state.status}
+                    options={[{ value: '', label: 'Any status' }, ...options.statuses]}
+                    onChange={(v) => apply({ status: v })}
+                />
+                <Button size="sm" onClick={() => apply()}>
+                    Apply
+                </Button>
+                {(state.search !== '' || state.region !== '' || state.status !== '') && (
+                    <Button size="sm" variant="ghost" onClick={clear}>
+                        Clear
+                    </Button>
+                )}
+            </FilterBar>
+
             {plans.length === 0 ? (
                 <Card>
                     <EmptyState
-                        title="No plans yet"
-                        description="Create your first subscription plan to start selling."
+                        title={has_any_plans ? 'No plans match your filters' : 'No plans yet'}
+                        description={
+                            has_any_plans
+                                ? 'Try a different region, status or search term.'
+                                : 'Create your first subscription plan to start selling.'
+                        }
                         action={
-                            <Button size="sm" onClick={() => router.get(route('platform.plans.create'))}>
-                                Create Plan
-                            </Button>
+                            has_any_plans ? (
+                                <Button size="sm" variant="secondary" onClick={clear}>
+                                    Clear filters
+                                </Button>
+                            ) : (
+                                <Button size="sm" onClick={() => router.get(route('platform.plans.create'))}>
+                                    Create Plan
+                                </Button>
+                            )
                         }
                     />
                 </Card>
@@ -94,6 +158,12 @@ export default function PlatformPlans({
                                             {plan.name}
                                         </h2>
                                         <p className="truncate font-mono text-[11px] text-muted-foreground">{plan.slug}</p>
+                                        <div className="mt-1 flex flex-wrap items-center gap-1">
+                                            <Badge tone={plan.region === 'bd' ? 'brand' : 'info'}>
+                                                {plan.region_label ?? plan.region}
+                                            </Badge>
+                                            {plan.is_featured && <Badge tone="success">Featured</Badge>}
+                                        </div>
                                     </div>
                                     <div className="flex shrink-0 flex-col items-end gap-1">
                                         <Badge tone={plan.archived ? 'neutral' : plan.is_active ? 'success' : 'warning'}>

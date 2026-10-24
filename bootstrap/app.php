@@ -12,6 +12,7 @@ use App\Http\Middleware\EnsureTenantIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveActiveBranch;
 use App\Http\Middleware\ResolveTenant;
+use App\Http\Middleware\ResolvePricingRegion;
 use App\Http\Middleware\ResolveQrContext;
 use App\Http\Middleware\ResolveDiningSession;
 use App\Http\Middleware\SetLocale;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ResolveTenant::class,
             ResolveActiveBranch::class,
             SetLocale::class,
+            ResolvePricingRegion::class,
             EnsureTenantIsActive::class,
             EnsurePlatformOperational::class,
             HandleInertiaRequests::class,
@@ -48,9 +50,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'platform' => EnsurePlatformAdmin::class,
             'platform.permission' => EnsurePlatformPermission::class,
             'feature' => EnsureFeature::class,
+            'pricing.region' => ResolvePricingRegion::class,
             'qr.context' => ResolveQrContext::class,
             'qr.session' => ResolveDiningSession::class,
         ]);
+
+        // The pricing-region cookie is written by the browser (public-site
+        // location detection) and carries only a 2-letter country code, so it
+        // must not be run through cookie encryption.
+        $middleware->encryptCookies(except: ['pricing_country']);
 
         // Provider webhooks / gateway callbacks are authenticated by signature or
         // server-side verification, not CSRF tokens.

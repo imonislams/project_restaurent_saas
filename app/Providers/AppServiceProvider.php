@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Billing\PricingRegionContext;
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Branches\Policies\BranchPolicy;
 use App\Domain\Identity\Models\Role;
@@ -42,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(TenantContext::class);
+        $this->app->singleton(PricingRegionContext::class);
 
         // Memoised so the git commit probe runs at most once per request.
         $this->app->singleton(AppVersion::class);

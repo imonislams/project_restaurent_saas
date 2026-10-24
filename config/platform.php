@@ -39,6 +39,48 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Regional pricing
+    |--------------------------------------------------------------------------
+    |
+    | The public site shows region-specific plan pricing. A visitor's region is
+    | resolved from an explicit choice (session), then a trusted CDN country
+    | header, then `default_region`. This affects display only — billing and
+    | gateway eligibility use the tenant's billing profile.
+    |
+    */
+
+    'pricing' => [
+        // null = derive from the platform default currency (BDT ⇒ Bangladesh);
+        // set PLATFORM_DEFAULT_PRICING_REGION=bd|international to force it.
+        'default_region' => env('PLATFORM_DEFAULT_PRICING_REGION'),
+
+        // Trust the country header only when the app is behind a CDN/proxy that
+        // sets it (Cloudflare, Vercel). Leave false when directly exposed.
+        'trust_country_header' => (bool) env('PLATFORM_TRUST_COUNTRY_HEADER', true),
+        'country_headers' => ['CF-IPCountry', 'X-Vercel-IP-Country', 'X-Country-Code'],
+
+        // When the server cannot see the visitor's country (e.g. local dev, or a
+        // host without a geo header), the browser detects its own country and
+        // stores it here. Display only — validated as a 2-letter code.
+        'country_cookie' => 'pricing_country',
+        'geo_lookup_url' => env('PLATFORM_GEO_LOOKUP_URL', 'https://ipwho.is/'),
+
+        'regions' => [
+            'bd' => [
+                'label' => 'Bangladesh',
+                'currency' => 'BDT',
+                'country_codes' => ['BD'],
+            ],
+            'international' => [
+                'label' => 'International',
+                'currency' => 'USD',
+                'country_codes' => [],
+            ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Supported currencies
     |--------------------------------------------------------------------------
     |

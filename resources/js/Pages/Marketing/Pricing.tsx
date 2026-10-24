@@ -7,9 +7,11 @@ import { useState } from 'react';
 interface PricingProps {
     plans?: PricingPlan[];
     platformCurrency?: string;
+    regionCurrency?: string;
+    regionLabel?: string;
 }
 
-export default function Pricing({ plans = [], platformCurrency = 'USD' }: PricingProps) {
+export default function Pricing({ plans = [], platformCurrency = 'USD', regionCurrency = 'USD', regionLabel }: PricingProps) {
     const [cardVolume, setCardVolume] = useState<number>(60000);
     const featured = plans.find((p) => p.is_popular) ?? plans[0];
     const featuredMonthly = featured?.price_monthly ?? 0;
@@ -47,7 +49,7 @@ export default function Pricing({ plans = [], platformCurrency = 'USD' }: Pricin
                 </section>
 
                 <section className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
-                    <PricingPlans plans={plans} />
+                    <PricingPlans plans={plans} regionLabel={regionLabel} />
                     <Reveal className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-stone-600">
                         <span className="inline-flex items-center gap-2">
                             <ShieldCheck className="h-4 w-4 text-[#EC3013]" /> Secure online payment
@@ -62,7 +64,8 @@ export default function Pricing({ plans = [], platformCurrency = 'USD' }: Pricin
                     </Reveal>
                 </section>
 
-                {/* SECTION 3: PROCESSING SAVINGS CALCULATOR */}
+                {/* SECTION 3: PROCESSING SAVINGS CALCULATOR (USD card-processing model) */}
+                {regionCurrency === 'USD' && (
                 <Reveal as="section" className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                     <div className="bg-stone-50 rounded-2xl border border-stone-200 p-6 sm:p-10">
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
@@ -141,6 +144,7 @@ export default function Pricing({ plans = [], platformCurrency = 'USD' }: Pricin
                         </div>
                     </div>
                 </Reveal>
+                )}
 
                 <FaqSection className="bg-[#F3F2F2]" />
 

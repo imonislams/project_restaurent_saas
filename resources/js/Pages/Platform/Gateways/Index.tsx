@@ -212,7 +212,7 @@ export default function GatewaysIndex({
     return (
         <PlatformLayout
             title={provider_filter ? provider_labels[provider_filter] ?? 'Payment Gateways' : 'Payment Gateways'}
-            description="Named gateway configurations used to collect subscription payments. Several may be enabled at once; one is the default. A payment is only marked successful after server-side verification."
+            description="Configure multiple payment gateways and manage each one's credentials here (encrypted at rest). Enable as many as you need — customers choose from the enabled ones — and mark one as the default pre-selection. A payment is only marked successful after server-side verification."
             actions={
                 <Button size="sm" onClick={openCreate} icon={<Plus className="h-4 w-4" />}>
                     Add Gateway

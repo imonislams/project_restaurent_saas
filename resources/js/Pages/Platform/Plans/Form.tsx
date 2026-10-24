@@ -32,6 +32,9 @@ interface PlanRow {
     limits: Record<string, number | null>;
     is_active: boolean;
     visibility: string;
+    region: string;
+    region_label?: string;
+    is_featured: boolean;
     version: number;
     archived: boolean;
     subscriptions_count: number;
@@ -55,6 +58,8 @@ export default function PlanForm({
     limit_keys,
     gateways,
     price_providers,
+    regions,
+    region_currencies,
 }: {
     plan: PlanRow | null;
     currencies: Option[];
@@ -64,9 +69,12 @@ export default function PlanForm({
     limit_keys: LimitKey[];
     gateways: Option[];
     price_providers: Option[];
+    regions: Option[];
+    region_currencies: Record<string, string>;
 }) {
     const editing = plan !== null;
-    const initialCurrency = plan?.currency ?? default_currency ?? currencies[0]?.value ?? 'USD';
+    const initialRegion = plan?.region ?? 'international';
+    const initialCurrency = plan?.currency ?? region_currencies[initialRegion] ?? default_currency ?? currencies[0]?.value ?? 'USD';
 
     const [extraPrices, setExtraPrices] = useState<ExtraPrice[]>(
         plan
@@ -84,6 +92,8 @@ export default function PlanForm({
         description: plan?.description ?? '',
         currency: initialCurrency,
         visibility: plan?.visibility ?? 'public',
+        region: initialRegion,
+        is_featured: plan?.is_featured ?? false,
         price_monthly: plan?.price_monthly ?? 0,
         price_yearly: plan?.price_yearly ?? 0,
         trial_days: plan?.trial_days ?? 14,
@@ -106,6 +116,13 @@ export default function PlanForm({
     const toggleGateway = (value: string) => {
         const current: string[] = form.data.gateways ?? [];
         form.setData('gateways', current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
+    };
+
+    // A plan's price currency is tied to its region (Bangladesh ⇒ BDT,
+    // International ⇒ USD), so switching the region switches the currency.
+    const changeRegion = (value: string) => {
+        const nextCurrency = region_currencies[value];
+        form.setData({ ...form.data, region: value, ...(nextCurrency ? { currency: nextCurrency } : {}) });
     };
 
     const setProviderPrice = (currency: string, interval: string, provider: string, field: 'product_id' | 'price_id', value: string) => {
@@ -146,6 +163,8 @@ export default function PlanForm({
             description: data.description,
             currency: data.currency,
             visibility: data.visibility,
+            region: data.region,
+            is_featured: data.is_featured,
             price_monthly: data.price_monthly,
             price_yearly: data.price_yearly,
             trial_days: data.trial_days,
@@ -205,16 +224,31 @@ export default function PlanForm({
                                 <div className="sm:col-span-2">
                                     <TextField label="Description" value={form.data.description} error={form.errors.description} onChange={(v) => form.setData('description', v)} />
                                 </div>
+                                <SelectField
+                                    label="Region"
+                                    value={form.data.region}
+                                    options={regions}
+                                    hint="Bangladesh visitors see BD plans; everyone else sees International."
+                                    onChange={changeRegion}
+                                />
                                 <SelectField label="Visibility" value={form.data.visibility} options={[{ value: 'public', label: 'Public (shown to tenants)' }, { value: 'hidden', label: 'Hidden (internal only)' }]} onChange={(v) => form.setData('visibility', v)} />
-                                <div className="flex items-end pb-2">
+                                <div className="flex flex-col gap-3 pb-1">
                                     <CheckboxField label="Active" hint="Inactive plans cannot be assigned." checked={form.data.is_active} onChange={(v) => form.setData('is_active', v)} />
+                                    <CheckboxField label="Featured" hint="Highlights this plan on the pricing page." checked={form.data.is_featured} onChange={(v) => form.setData('is_featured', v)} />
                                 </div>
                             </div>
                         </FormSection>
 
                         <FormSection title="Pricing" description="Base price in the plan currency, plus optional prices for other currencies.">
                             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                                <SelectField label="Currency" value={form.data.currency} options={currencies} onChange={(v) => form.setData('currency', v)} />
+                                <SelectField
+                                    label="Currency"
+                                    value={form.data.currency}
+                                    options={currencies}
+                                    error={form.errors.currency}
+                                    hint={`Region currency: ${region_currencies[form.data.region] ?? '—'}`}
+                                    onChange={(v) => form.setData('currency', v)}
+                                />
                                 <TextField label={`Monthly (${form.data.currency})`} type="number" value={String(form.data.price_monthly)} error={form.errors.price_monthly} onChange={(v) => form.setData('price_monthly', Number(v))} />
                                 <TextField label={`Yearly (${form.data.currency})`} type="number" value={String(form.data.price_yearly)} error={form.errors.price_yearly} onChange={(v) => form.setData('price_yearly', Number(v))} />
                                 <TextField label="Trial days" type="number" value={String(form.data.trial_days)} error={form.errors.trial_days} onChange={(v) => form.setData('trial_days', Number(v))} />

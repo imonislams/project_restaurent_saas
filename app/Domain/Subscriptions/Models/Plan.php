@@ -3,7 +3,9 @@
 namespace App\Domain\Subscriptions\Models;
 
 use App\Domain\Billing\Models\PaymentGateway;
+use App\Domain\Subscriptions\Enums\PlanRegion;
 use App\Domain\Subscriptions\Enums\PlanVisibility;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -29,6 +31,8 @@ class Plan extends Model
         'limits',
         'is_active',
         'visibility',
+        'region',
+        'is_featured',
         'version',
         'archived_at',
         'sort_order',
@@ -44,10 +48,18 @@ class Plan extends Model
             'limits' => 'array',
             'is_active' => 'boolean',
             'visibility' => PlanVisibility::class,
+            'region' => PlanRegion::class,
+            'is_featured' => 'boolean',
             'version' => 'integer',
             'archived_at' => 'datetime',
             'sort_order' => 'integer',
         ];
+    }
+
+    /** Plans visible to a pricing region: that region's plans plus global ones. */
+    public function scopeForRegion(Builder $query, string $region): Builder
+    {
+        return $query->whereIn('region', PlanRegion::visibleTo($region));
     }
 
     public function hasFeature(string $feature): bool

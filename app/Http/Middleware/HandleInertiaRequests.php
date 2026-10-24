@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\Billing\PricingRegionContext;
 use App\Domain\Communications\AnnouncementService;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Tenancy\TenantContext;
@@ -87,6 +88,12 @@ class HandleInertiaRequests extends Middleware
                 ? app(AnnouncementService::class)->forTenant($tenant)
                 : [],
             'locale' => app()->getLocale(),
+            // Detected pricing region (Bangladesh / International) for the public site.
+            'pricing_region' => fn () => app(PricingRegionContext::class)->region(),
+            'pricing_region_source' => fn () => app(PricingRegionContext::class)->source(),
+            'pricing_country' => fn () => app(PricingRegionContext::class)->country(),
+            'pricing_country_cookie' => (string) config('platform.pricing.country_cookie', 'pricing_country'),
+            'pricing_geo_lookup_url' => (string) config('platform.pricing.geo_lookup_url', ''),
             'version' => [
                 'app' => fn () => app(AppVersion::class)->version(),
                 'commit' => fn () => app(AppVersion::class)->commit(),

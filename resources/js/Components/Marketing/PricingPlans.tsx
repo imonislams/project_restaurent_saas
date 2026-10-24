@@ -35,7 +35,7 @@ const FEATURE_LABELS: Record<string, string> = {
 const limitText = (value: number | null | undefined, singular: string, plural: string) =>
     value === null || value === undefined ? `Unlimited ${plural}` : `${value.toLocaleString()} ${value === 1 ? singular : plural}`;
 
-export default function PricingPlans({ plans }: { plans: PricingPlan[] }) {
+export default function PricingPlans({ plans, regionLabel }: { plans: PricingPlan[]; regionLabel?: string }) {
     const [cycle, setCycle] = useState<'monthly' | 'yearly'>('yearly');
     const yearly = cycle === 'yearly';
 
@@ -44,8 +44,34 @@ export default function PricingPlans({ plans }: { plans: PricingPlan[] }) {
         ...plans.map((p) => (p.price_monthly > 0 ? Math.round((1 - p.price_yearly / (p.price_monthly * 12)) * 100) : 0)),
     );
 
+    // No plans are published for the visitor's region yet — never show another
+    // region's pricing (or fabricated numbers).
+    if (plans.length === 0) {
+        return (
+            <div className="mx-auto max-w-xl rounded-2xl border border-stone-200 bg-stone-50 p-10 text-center">
+                <h3 className="text-lg font-bold tracking-tight text-stone-900">
+                    {regionLabel ? `${regionLabel} pricing is being finalised` : 'Pricing is being finalised'}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-stone-600">
+                    Plans for your region will be available shortly. In the meantime, our team can put together a tailored quote for your restaurant.
+                </p>
+                <Link
+                    href="/contact"
+                    className="mt-6 inline-flex items-center justify-center rounded-xl bg-[#EC3013] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#D02710]"
+                >
+                    Talk to sales
+                </Link>
+            </div>
+        );
+    }
+
     return (
         <div>
+            {regionLabel && (
+                <p className="mb-6 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
+                    Showing {regionLabel} pricing
+                </p>
+            )}
             <div className="flex justify-center">
                 <div className="inline-flex items-center rounded-full border border-stone-200 bg-stone-100 p-1" role="group" aria-label="Billing cycle">
                     {(['monthly', 'yearly'] as const).map((c) => (

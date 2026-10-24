@@ -68,6 +68,8 @@ interface WelcomeProps {
     canRegister?: boolean;
     plans?: Plan[];
     platformCurrency?: string;
+    regionCurrency?: string;
+    regionLabel?: string;
 }
 
 interface MenuItem {
@@ -200,7 +202,11 @@ export default function Welcome({
     canRegister = true,
     plans = [],
     platformCurrency = 'USD',
+    regionCurrency,
+    regionLabel,
 }: WelcomeProps) {
+    // The visitor's billing currency takes precedence for any illustrative money.
+    const displayCurrency = regionCurrency ?? platformCurrency;
     // POS Terminal Interactive State
     const [selectedTable, setSelectedTable] = useState<TableData>(DEMO_TABLES[0]);
     const [selectedCategory, setSelectedCategory] = useState<
@@ -316,12 +322,12 @@ export default function Welcome({
                                 </Link>
                             </p>
                         </div>
-                        <HeroQrScene currency={getCurrencySymbol(platformCurrency)} />
+                        <HeroQrScene currency={getCurrencySymbol(displayCurrency)} />
                     </div>
                 </section>
 
                 {/* 1b. CUSTOMER JOURNEY */}
-                <JourneySection currency={getCurrencySymbol(platformCurrency)} />
+                <JourneySection currency={getCurrencySymbol(displayCurrency)} />
 
                 {/* STATS STRIP */}
                 <section className="w-full border-y border-stone-200 bg-white px-4 py-10 sm:px-6 lg:px-8">
@@ -838,6 +844,7 @@ export default function Welcome({
                 </section>
 
                 {/* 5. PRICING */}
+                {plans.length > 0 && (
                 <section id="pricing" className="w-full bg-white px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
                     <div className="mx-auto max-w-6xl">
                         <Reveal className="mx-auto mb-12 max-w-2xl text-center">
@@ -847,9 +854,10 @@ export default function Welcome({
                                 Real prices, no hidden fees. Upgrade, downgrade or cancel whenever you like.
                             </p>
                         </Reveal>
-                        <PricingPlans plans={plans} />
+                        <PricingPlans plans={plans} regionLabel={regionLabel} />
                     </div>
                 </section>
+                )}
 
                 {/* 6. FAQ */}
                 <FaqSection className="border-t border-stone-200 bg-[#F3F2F2]" />

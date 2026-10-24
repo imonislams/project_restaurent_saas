@@ -2,78 +2,106 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Subscriptions\Enums\PlanRegion;
 use App\Domain\Subscriptions\Models\Plan;
 use Illuminate\Database\Seeder;
 
+/**
+ * Seeds both regional pricing ladders:
+ *
+ *  - International (USD): starter / growth / business
+ *  - Bangladesh   (BDT): starter-bd / growth-bd / business-bd
+ *
+ * Amounts are seed defaults the platform admin can edit in
+ * Platform Configuration → Plans. Existing subscriptions keep their captured
+ * terms; re-running the seeder only updates these plan rows.
+ */
 class PlanSeeder extends Seeder
 {
     public function run(): void
     {
-        $platformCurrency = 'USD';
-        try {
-            $settings = app(\App\Domain\PlatformSettings\PlatformSettings::class);
-            $platformCurrency = (string) (
-                $settings->get('billing.default_currency')
-                ?? $settings->get('general.default_currency')
-                ?? config('platform.reporting_currency', 'USD')
-            );
-        } catch (\Throwable $e) {
-            $platformCurrency = config('platform.reporting_currency', 'USD');
-        }
-
-        $plans = [
-            [
+        // Shared tier attributes (features + limits) used by both ladders.
+        $tiers = [
+            'starter' => [
                 'name' => 'Starter',
-                'slug' => 'starter',
                 'description' => 'Single restaurant, core POS and reporting.',
-                'currency' => $platformCurrency,
-                'price_monthly' => 29,
-                'price_yearly' => 290,
-                'trial_days' => 14,
                 'features' => ['pos', 'kitchen', 'reports'],
                 'limits' => ['branches' => 1, 'users' => 5, 'orders_this_month' => 1000],
                 'sort_order' => 1,
             ],
-            [
+            'growth' => [
                 'name' => 'Growth',
-                'slug' => 'growth',
                 'description' => 'Multi-branch operations with inventory and purchasing.',
-                'currency' => $platformCurrency,
-                'price_monthly' => 79,
-                'price_yearly' => 790,
-                'trial_days' => 14,
                 'features' => ['pos', 'kitchen', 'tables', 'menu', 'qr_dining', 'inventory', 'purchasing', 'waste', 'accounts', 'reports'],
                 'limits' => ['branches' => 3, 'users' => 25, 'orders_this_month' => 10000],
                 'sort_order' => 2,
             ],
-            [
+            'business' => [
                 'name' => 'Business',
-                'slug' => 'business',
                 'description' => 'Unlimited branches and users, all modules.',
-                'currency' => $platformCurrency,
-                'price_monthly' => 199,
-                'price_yearly' => 1990,
-                'trial_days' => 14,
                 'features' => ['pos', 'kitchen', 'tables', 'menu', 'qr_dining', 'inventory', 'purchasing', 'waste', 'transfers', 'accounts', 'reports'],
                 'limits' => ['branches' => null, 'users' => null, 'orders_this_month' => null],
                 'sort_order' => 3,
             ],
         ];
 
-        foreach ($plans as $plan) {
-            $model = Plan::withTrashed()->updateOrCreate(
-                ['slug' => $plan['slug']],
-                $plan + ['is_active' => true, 'visibility' => 'public', 'deleted_at' => null],
-            );
+        $ladders = [
+            PlanRegion::International->value => [
+                'currency' => 'USD',
+                'suffix' => '',
+                'featured' => 'growth',
+                'prices' => [
+                    'starter' => ['monthly' => 29, 'yearly' => 290],
+                    'growth' => ['monthly' => 79, 'yearly' => 790],
+                    'business' => ['monthly' => 199, 'yearly' => 1990],
+                ],
+            ],
+            PlanRegion::Bangladesh->value => [
+                'currency' => 'BDT',
+                'suffix' => '-bd',
+                'featured' => 'growth',
+                'prices' => [
+                    'starter' => ['monthly' => 1500, 'yearly' => 15000],
+                    'growth' => ['monthly' => 3500, 'yearly' => 35000],
+                    'business' => ['monthly' => 7500, 'yearly' => 75000],
+                ],
+            ],
+        ];
 
-            foreach ([
-                ['interval' => 'monthly', 'price' => $plan['price_monthly']],
-                ['interval' => 'yearly', 'price' => $plan['price_yearly']],
-            ] as $row) {
-                $model->prices()->updateOrCreate(
-                    ['currency' => $plan['currency'], 'interval' => $row['interval']],
-                    ['price' => $row['price']],
+        foreach ($ladders as $region => $ladder) {
+            foreach ($tiers as $key => $tier) {
+                $slug = $key.$ladder['suffix'];
+                $price = $ladder['prices'][$key];
+
+                $plan = Plan::withTrashed()->updateOrCreate(
+                    ['slug' => $slug],
+                    [
+                        'name' => $tier['name'],
+                        'description' => $tier['description'],
+                        'currency' => $ladder['currency'],
+                        'price_monthly' => $price['monthly'],
+                        'price_yearly' => $price['yearly'],
+                        'trial_days' => 14,
+                        'features' => $tier['features'],
+                        'limits' => $tier['limits'],
+                        'is_active' => true,
+                        'visibility' => 'public',
+                        'region' => $region,
+                        'is_featured' => $key === $ladder['featured'],
+                        'sort_order' => $tier['sort_order'],
+                        'deleted_at' => null,
+                    ],
                 );
+
+                // Deterministic seed: this plan is priced only in its region currency.
+                $plan->prices()->where('currency', '!=', $ladder['currency'])->delete();
+
+                foreach (['monthly', 'yearly'] as $interval) {
+                    $plan->prices()->updateOrCreate(
+                        ['currency' => $ladder['currency'], 'interval' => $interval],
+                        ['price' => $price[$interval]],
+                    );
+                }
             }
         }
     }

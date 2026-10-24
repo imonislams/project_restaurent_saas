@@ -136,8 +136,11 @@ Run the full suite with `php artisan test`. Relevant coverage includes:
 4. **File/upload backups are not implemented** — the application has no per-tenant file
    storage, so backups are database-only.
 5. **Some settings are captured but not yet enforced**: localization date/number formats,
-   branding colour/logo applied to the shell, `payments.retry_max` (no retry job yet),
-   log/email/audit retention (no pruning jobs yet; only backup retention is enforced).
+   branding colour/logo applied to the shell, log/email/audit retention (no pruning jobs
+   yet; only backup retention is enforced).
+   Payment gateways are **not** configured as a single platform-wide default — several
+   gateways can be enabled at once and each carries its own credentials, under
+   **Platform Configuration → Payment Gateways**.
 6. **SSLCommerz refunds are recorded as pending** — they are issued from the merchant
    panel; there is no automatic refund API call. Settlement reconciliation compares local
    records only (no provider settlement file ingestion).

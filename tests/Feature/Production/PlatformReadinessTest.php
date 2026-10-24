@@ -105,7 +105,7 @@ class PlatformReadinessTest extends TestCase
             '/platform/admins', '/platform/roles', '/platform/sessions', '/platform/security-events',
             '/platform/audit', '/platform/impersonation-history',
             '/platform/settings/general', '/platform/settings/branding', '/platform/settings/localization',
-            '/platform/settings/billing', '/platform/settings/payments', '/platform/settings/operations',
+            '/platform/settings/billing', '/platform/settings/operations',
             '/platform/settings/security', '/platform/settings/retention', '/platform/settings/features',
         ];
 

@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Billing\PricingRegionContext;
+use App\Domain\Subscriptions\Enums\BillingCycle;
 use App\Domain\Subscriptions\Models\Plan;
+use App\Domain\Subscriptions\PricingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -30,80 +33,84 @@ class MarketingController extends Controller
     }
 
     /**
-     * Get verified subscription plans with fallback to defaults.
+     * Public plans for the visitor's region, priced in that region's currency.
+     * Plans without a price in the region currency are omitted — never show a
+     * different region's currency, and never substitute fabricated prices.
+     *
+     * @return list<array<string, mixed>>
      */
     protected function getPlans(): array
     {
-        $platformCurrency = $this->getPlatformCurrency();
+        $region = $this->regionContext()->region();
+        $regionCurrency = $this->regionContext()->currencyFor($region);
 
         try {
-            $plans = Plan::query()
+            return Plan::query()
                 ->where('is_active', true)
                 ->where('visibility', 'public')
+                ->forRegion($region)
                 ->orderBy('sort_order')
-                ->get();
-
-            if ($plans->isNotEmpty()) {
-                return $plans->map(function ($plan) use ($platformCurrency) {
-                    return [
-                        'id' => $plan->id,
-                        'name' => $plan->name,
-                        'slug' => $plan->slug,
-                        'description' => $plan->description,
-                        'currency' => $plan->currency ?? $platformCurrency,
-                        'price_monthly' => (float) $plan->price_monthly,
-                        'price_yearly' => (float) $plan->price_yearly,
-                        'trial_days' => $plan->trial_days ?? 14,
-                        'features' => $plan->features ?? [],
-                        'limits' => $plan->limits ?? [],
-                        'is_popular' => $plan->slug === 'growth',
-                    ];
-                })->toArray();
-            }
+                ->get()
+                ->map(fn (Plan $plan) => $this->shapePlan($plan, $regionCurrency))
+                ->filter()
+                ->values()
+                ->all();
         } catch (\Throwable $e) {
-            // Fallback to verified seed configuration if table unmigrated
+            return [];
+        }
+    }
+
+    protected function regionContext(): PricingRegionContext
+    {
+        return app(PricingRegionContext::class);
+    }
+
+    /**
+     * Shape a plan for the public site, priced in the visitor's region currency
+     * when a price exists for it (falls back to the plan's own currency).
+     *
+     * @return array<string, mixed>
+     */
+    protected function shapePlan(Plan $plan, string $currency): ?array
+    {
+        $pricing = app(PricingService::class);
+
+        $monthly = $pricing->priceFor($plan, $currency, BillingCycle::Monthly);
+        $yearly = $pricing->priceFor($plan, $currency, BillingCycle::Yearly);
+
+        // No price in this region's currency — omit the plan rather than show a
+        // different currency or a guessed price.
+        if ($monthly === null || $yearly === null) {
+            return null;
         }
 
         return [
-            [
-                'id' => 1,
-                'name' => 'Starter',
-                'slug' => 'starter',
-                'description' => 'Single restaurant, core POS and reporting.',
-                'currency' => $platformCurrency,
-                'price_monthly' => 29,
-                'price_yearly' => 290,
-                'trial_days' => 14,
-                'features' => ['pos', 'kitchen', 'reports'],
-                'limits' => ['branches' => 1, 'users' => 5, 'orders_this_month' => 1000],
-                'is_popular' => false,
-            ],
-            [
-                'id' => 2,
-                'name' => 'Growth',
-                'slug' => 'growth',
-                'description' => 'Multi-branch operations with inventory and purchasing.',
-                'currency' => $platformCurrency,
-                'price_monthly' => 79,
-                'price_yearly' => 790,
-                'trial_days' => 14,
-                'features' => ['pos', 'kitchen', 'tables', 'menu', 'inventory', 'purchasing', 'waste', 'accounts', 'reports'],
-                'limits' => ['branches' => 3, 'users' => 25, 'orders_this_month' => 10000],
-                'is_popular' => true,
-            ],
-            [
-                'id' => 3,
-                'name' => 'Business',
-                'slug' => 'business',
-                'description' => 'Unlimited branches and users, all modules.',
-                'currency' => $platformCurrency,
-                'price_monthly' => 199,
-                'price_yearly' => 1990,
-                'trial_days' => 14,
-                'features' => ['pos', 'kitchen', 'tables', 'menu', 'inventory', 'purchasing', 'waste', 'transfers', 'accounts', 'reports'],
-                'limits' => ['branches' => null, 'users' => null, 'orders_this_month' => null],
-                'is_popular' => false,
-            ],
+            'id' => $plan->id,
+            'name' => $plan->name,
+            'slug' => $plan->slug,
+            'description' => $plan->description,
+            'currency' => $currency,
+            'price_monthly' => (float) $monthly,
+            'price_yearly' => (float) $yearly,
+            'trial_days' => $plan->trial_days ?? 14,
+            'features' => $plan->features ?? [],
+            'limits' => $plan->limits ?? [],
+            'is_popular' => (bool) $plan->is_featured,
+        ];
+    }
+
+    /**
+     * Region props shared by the pages that show pricing.
+     *
+     * @return array<string, mixed>
+     */
+    protected function regionProps(): array
+    {
+        $region = $this->regionContext()->region();
+
+        return [
+            'regionCurrency' => $this->regionContext()->currencyFor($region),
+            'regionLabel' => (string) config("platform.pricing.regions.{$region}.label", ucfirst($region)),
         ];
     }
 
@@ -117,6 +124,7 @@ class MarketingController extends Controller
             'canRegister' => Route::has('register'),
             'plans' => $this->getPlans(),
             'platformCurrency' => $this->getPlatformCurrency(),
+            ...$this->regionProps(),
         ]);
     }
 
@@ -268,6 +276,7 @@ class MarketingController extends Controller
         return Inertia::render('Marketing/Pricing', [
             'plans' => $this->getPlans(),
             'platformCurrency' => $this->getPlatformCurrency(),
+            ...$this->regionProps(),
         ]);
     }
 

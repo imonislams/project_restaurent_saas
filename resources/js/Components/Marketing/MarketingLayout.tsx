@@ -1,5 +1,6 @@
 import MarketingFooter from '@/Components/Marketing/MarketingFooter';
 import MarketingNavbar from '@/Components/Marketing/MarketingNavbar';
+import { usePricingRegion } from '@/hooks/use-pricing-region';
 import { PropsWithChildren, ReactNode, useEffect, useRef } from 'react';
 
 export interface MarketingLayoutProps extends PropsWithChildren {
@@ -74,6 +75,8 @@ function useMarketingMotion(main: React.RefObject<HTMLElement>) {
 export default function MarketingLayout({ children, announcement, className = '' }: MarketingLayoutProps) {
     const main = useRef<HTMLElement>(null);
     useMarketingMotion(main);
+    // Fallback location detection when the server has no country header.
+    usePricingRegion();
 
     return (
         <div className={`min-h-screen flex flex-col bg-white mk-root text-stone-900 antialiased selection:bg-[#EC3013] selection:text-white ${className}`}>

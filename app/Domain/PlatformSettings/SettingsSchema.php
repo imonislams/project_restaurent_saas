@@ -62,6 +62,10 @@ class SettingsSchema
                 'description' => 'Subscription billing defaults. Plan pricing and gateways are configured separately.',
                 'fields' => [
                     self::f('default_currency', 'billing.default_currency', 'Default billing currency', 'select', 'USD', null, $currencies),
+                    self::f('default_pricing_region', 'billing.default_pricing_region', 'Default pricing region', 'select', 'international', 'Used on the website when a visitor’s country cannot be detected (e.g. local development).', [
+                        ['value' => 'bd', 'label' => 'Bangladesh'],
+                        ['value' => 'international', 'label' => 'International'],
+                    ]),
                     self::f('trial_days', 'billing.trial_days', 'Default trial days', 'number', 14),
                     self::f('grace_days', 'billing.grace_days', 'Grace period days', 'number', config('platform.billing.grace_days', 7)),
                     self::f('dunning_days', 'billing.dunning_days', 'Dunning days before grace', 'number', config('platform.billing.dunning_days', 7)),
@@ -73,23 +77,9 @@ class SettingsSchema
                     ]),
                 ],
             ],
-            'payments' => [
-                'label' => 'Payments',
-                'description' => 'Default gateway behaviour. Credentials are managed in Payment Infrastructure.',
-                'fields' => [
-                    self::f('default_gateway', 'payments.default_gateway', 'Default gateway', 'select', 'manual', null, [
-                        ['value' => 'manual', 'label' => 'Manual'],
-                        ['value' => 'sslcommerz', 'label' => 'SSLCommerz'],
-                        ['value' => 'bkash', 'label' => 'bKash'],
-                        ['value' => 'paddle', 'label' => 'Paddle'],
-                    ]),
-                    self::f('environment_default', 'payments.environment_default', 'Default environment', 'select', 'sandbox', null, [
-                        ['value' => 'sandbox', 'label' => 'Sandbox'],
-                        ['value' => 'production', 'label' => 'Production'],
-                    ]),
-                    self::f('retry_max', 'payments.retry_max', 'Max payment retries', 'number', 3),
-                ],
-            ],
+            // Payment gateways are configured in one place (Platform Configuration →
+            // Payment Gateways), not as a single default here. Several gateways can
+            // be enabled at once; credentials live on each gateway configuration.
             'operations' => [
                 'label' => 'Operations',
                 'description' => 'Backups and housekeeping. Maintenance mode is managed on its own screen.',

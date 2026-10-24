@@ -71,7 +71,6 @@ const NAV: NavSection[] = [
         key: 'payments',
         label: 'Payment Infrastructure',
         items: [
-            { label: 'Payment Gateways', icon: 'credit-card', permission: 'platform.gateways.configure', routeName: 'platform.gateways.index', pattern: 'platform.gateways.*' },
             { label: 'Payment Webhooks', icon: 'transfer', permission: 'platform.webhooks.manage', routeName: 'platform.payments.webhooks', pattern: 'platform.payments.webhooks' },
         ],
     },
@@ -139,7 +138,7 @@ const NAV: NavSection[] = [
             { label: 'Branding', icon: 'building', permission: 'platform.settings.view', routeName: 'platform.settings.branding', pattern: 'platform.settings.branding' },
             { label: 'Localization', icon: 'sliders', permission: 'platform.settings.view', routeName: 'platform.settings.localization', pattern: 'platform.settings.localization' },
             { label: 'Billing Settings', icon: 'wallet', permission: 'platform.settings.view', routeName: 'platform.settings.billing', pattern: 'platform.settings.billing' },
-            { label: 'Payment Settings', icon: 'credit-card', permission: 'platform.settings.view', routeName: 'platform.settings.payments', pattern: 'platform.settings.payments' },
+            { label: 'Payment Gateways', icon: 'credit-card', permission: 'platform.gateways.configure', routeName: 'platform.gateways.index', pattern: 'platform.gateways.*' },
             { label: 'Operations', icon: 'server', permission: 'platform.settings.view', routeName: 'platform.settings.operations', pattern: 'platform.settings.operations' },
             { label: 'Security Policy', icon: 'shield', permission: 'platform.settings.view', routeName: 'platform.settings.security', pattern: 'platform.settings.security' },
             { label: 'Receipt Branding', icon: 'receipt', permission: 'platform.settings.view', routeName: 'platform.settings.receipts', pattern: 'platform.settings.receipts' },
