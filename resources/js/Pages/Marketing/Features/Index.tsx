@@ -187,7 +187,7 @@ export default function FeaturesIndex() {
                     </div>
 
                     {/* CTA Banner */}
-                    <div className="mt-20 rounded-3xl bg-[#1a1c1a] p-8 sm:p-12 text-white text-center">
+                    <div className="mt-20 rounded-3xl bg-[#201E1D] p-8 sm:p-12 text-white text-center">
                         <h2 className="font-display text-2xl sm:text-3xl font-extrabold">
                             Test Every Module With a 14-Day Free Trial
                         </h2>

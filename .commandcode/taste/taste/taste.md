@@ -59,3 +59,7 @@
 - Wants the agent to clearly distinguish verified project facts from assumptions, and to identify missing/unavailable data honestly instead of filling gaps with invented values. Confidence: 0.7
 - Prefers the simplest maintainable solution and explicitly wants unnecessary complexity avoided. Confidence: 0.65
 - For date-dependent analytics, wants a single global period filter (e.g. Today / Week / Month / Custom) that drives all period-scoped metrics consistently, while genuinely time-independent metrics (point-in-time/lifetime) are explicitly kept out of it rather than being forced into the range. Confidence: 0.6
+
+
+## Design system
+For all UI work follow `docs/DESIGN-SYSTEM.md` (brand colours, logo, fonts, motion, page patterns).

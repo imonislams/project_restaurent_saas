@@ -45,7 +45,7 @@ export default function AcceptInvitation({
                     </div>
                     <Link
                         href={route('login')}
-                        className="text-sm text-indigo-600 hover:text-indigo-700"
+                        className="text-sm text-primary hover:text-primary/80"
                     >
                         Back to sign in
                     </Link>

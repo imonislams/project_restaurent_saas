@@ -49,7 +49,7 @@ export default function ProductMockup({
                         statusBadge
                     ) : (
                         <div className="flex items-center gap-1.5 rounded-md bg-stone-800 px-2 py-0.5 text-stone-300 border border-stone-700">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#B53014] animate-pulse" />
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#EC3013] animate-pulse" />
                             <span>CONNECTED · REALTIME</span>
                         </div>
                     )}

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Domain\Identity\OtpService;
+use App\Domain\Subscriptions\Models\Plan;
 use App\Domain\Tenancy\Actions\RegisterTenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
@@ -21,7 +22,14 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Auth/Register');
+        $plan = request()->string('plan')->toString();
+        $selected = $plan === '' ? null : Plan::query()
+            ->where('slug', $plan)->where('is_active', true)->where('visibility', 'public')
+            ->first(['name', 'slug']);
+
+        return Inertia::render('Auth/Register', [
+            'selectedPlan' => $selected ? ['name' => $selected->name, 'slug' => $selected->slug] : null,
+        ]);
     }
 
     /**

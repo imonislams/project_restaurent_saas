@@ -104,7 +104,7 @@ export default function ResourcesIndex() {
             <section className="pt-14 pb-20 sm:pt-20 sm:pb-28 bg-white">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="text-center max-w-2xl mx-auto mb-10">
-                        <span className="text-xs font-semibold uppercase tracking-wider text-[#B53014] block mb-2">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-[#EC3013] block mb-2">
                             Operations &amp; Education
                         </span>
                         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-900">
@@ -125,7 +125,7 @@ export default function ResourcesIndex() {
                                     onClick={() => setSelectedCategory(cat)}
                                     className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold capitalize whitespace-nowrap transition-colors ${
                                         selectedCategory === cat
-                                            ? 'bg-[#B53014] text-white'
+                                            ? 'bg-[#EC3013] text-white'
                                             : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                                     }`}
                                 >
@@ -154,11 +154,11 @@ export default function ResourcesIndex() {
                             <Link
                                 key={article.slug}
                                 href={`/resources/${article.slug}`}
-                                className="group flex flex-col justify-between rounded-2xl border border-stone-200 bg-white p-7 hover:border-[#B53014] hover:shadow-md transition-all"
+                                className="group flex flex-col justify-between rounded-2xl border border-stone-200 bg-white p-7 hover:border-[#EC3013] hover:shadow-md transition-all"
                             >
                                 <div>
                                     <div className="flex items-center justify-between text-xs font-mono text-stone-500 pb-3">
-                                        <span className="font-bold text-[#B53014]">
+                                        <span className="font-bold text-[#EC3013]">
                                             {article.categoryLabel}
                                         </span>
                                         <span className="flex items-center gap-1">
@@ -167,7 +167,7 @@ export default function ResourcesIndex() {
                                         </span>
                                     </div>
 
-                                    <h3 className="font-display text-lg font-bold text-stone-900 group-hover:text-[#B53014] leading-snug">
+                                    <h3 className="font-display text-lg font-bold text-stone-900 group-hover:text-[#EC3013] leading-snug">
                                         {article.title}
                                     </h3>
 
@@ -176,7 +176,7 @@ export default function ResourcesIndex() {
                                     </p>
                                 </div>
 
-                                <div className="mt-6 pt-4 border-t border-stone-100 flex items-center justify-between text-xs font-semibold text-[#B53014] group-hover:underline">
+                                <div className="mt-6 pt-4 border-t border-stone-100 flex items-center justify-between text-xs font-semibold text-[#EC3013] group-hover:underline">
                                     <span>Read full guide</span>
                                     <ArrowRight className="w-3.5 h-3.5" />
                                 </div>

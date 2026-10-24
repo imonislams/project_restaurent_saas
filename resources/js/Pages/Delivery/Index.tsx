@@ -194,7 +194,7 @@ export default function DeliveryIndex({
                                         placeholder="Search zones or branches..."
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        className="w-full rounded-lg border border-gray-300 py-1.5 pl-3 pr-8 text-sm placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                        className="w-full rounded-lg border border-gray-300 py-1.5 pl-3 pr-8 text-sm placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                     />
                                     {search && (
                                         <button
@@ -285,7 +285,7 @@ export default function DeliveryIndex({
                                                                 {zone.branch}
                                                             </span>
                                                         ) : (
-                                                            <span className="text-xs font-medium text-indigo-600">
+                                                            <span className="text-xs font-medium text-primary">
                                                                 All Branches
                                                             </span>
                                                         )}
@@ -394,7 +394,7 @@ export default function DeliveryIndex({
                                 type="checkbox"
                                 checked={form.data.is_active}
                                 onChange={(e) => form.setData('is_active', e.target.checked)}
-                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                className="rounded border-gray-300 text-primary focus:ring-primary"
                             />
                             <span>Active delivery zone</span>
                         </label>

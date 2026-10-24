@@ -37,18 +37,10 @@ export default function Login({
             heroBadge="RESTAURANT OPERATING SYSTEM"
             heroHeadline="Your restaurant. Running smarter."
             heroSubheadline="Manage your restaurant operations, simplify daily workflows, and keep your team connected from one place."
-            imageUrl="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=1600&q=85"
-            testimonial={{
-                quote:
-                    'Touch Dine cut our peak dinner rush ticket delays by 35% and completely eliminated order confusion between floor and kitchen.',
-                author: 'Elena Rostova',
-                role: 'Managing Director',
-                restaurant: 'Atelier Luminary',
-            }}
             headerAction={
                 <Link
                     href={route('register')}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-container transition-colors"
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-container transition-colors"
                 >
                     <span>{t('auth.create_one')}</span>
                     <svg
@@ -70,14 +62,14 @@ export default function Login({
 
             {/* Form Header */}
             <div className="mb-8">
-                <div className="inline-flex items-center gap-1.5 rounded-md bg-stone-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-stone-600 mb-3">
+                <div className="inline-flex items-center gap-1.5 rounded-md bg-stone-100 px-2.5 py-1 text-[13px] font-semibold uppercase tracking-wider text-stone-600 mb-3">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     <span>Workspace Access</span>
                 </div>
                 <h1 className="font-display text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">
                     {t('auth.welcome_back')}
                 </h1>
-                <p className="mt-2 text-sm text-stone-500 leading-relaxed">
+                <p className="mt-2 text-[15px] text-stone-600 leading-relaxed">
                     {t('auth.signin_to_workspace')}
                 </p>
             </div>
@@ -136,7 +128,7 @@ export default function Login({
                         {canResetPassword && (
                             <Link
                                 href={route('password.request')}
-                                className="text-xs font-medium text-primary hover:text-primary-container hover:underline transition-colors focus:outline-none focus:underline"
+                                className="text-sm font-medium text-primary hover:text-primary-container hover:underline transition-colors focus:outline-none focus:underline"
                             >
                                 {t('auth.forgot')}
                             </Link>
@@ -170,7 +162,7 @@ export default function Login({
                                 )
                             }
                         />
-                        <span className="ms-2.5 text-xs font-medium text-stone-600">
+                        <span className="ms-2.5 text-sm font-medium text-stone-600">
                             {t('auth.remember')}
                         </span>
                     </label>
@@ -203,7 +195,7 @@ export default function Login({
 
             {/* New to Touch Dine Registration Callout */}
             <div className="mt-8 rounded-xl border border-stone-200/80 bg-stone-50/70 p-4 text-center">
-                <p className="text-xs text-stone-600">
+                <p className="text-sm text-stone-600">
                     <span>{t('auth.new_to_touchdine')} </span>
                     <Link
                         href={route('register')}
@@ -212,7 +204,7 @@ export default function Login({
                         {t('auth.create_one')}
                     </Link>
                 </p>
-                <p className="mt-1 text-[11px] text-stone-400">
+                <p className="mt-1 text-[13px] text-stone-400">
                     14-day free trial • Set up your restaurant in under 2 minutes
                 </p>
             </div>

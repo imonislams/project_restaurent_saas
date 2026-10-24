@@ -66,7 +66,7 @@ export default function DateRangePicker({ value, onChange }: { value: DateRange;
                         onClick={() => onChange(resolvePreset(preset.key))}
                         className={cn(
                             'rounded-md border px-2.5 py-1 text-xs font-medium transition',
-                            value.preset === preset.key ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
+                            value.preset === preset.key ? 'border-primary/25 bg-primary/5 text-primary' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
                         )}
                     >
                         {preset.label}

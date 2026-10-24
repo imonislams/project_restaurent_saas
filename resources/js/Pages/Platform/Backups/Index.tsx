@@ -75,7 +75,7 @@ export default function BackupsIndex({
             align: 'right',
             render: (r) => (
                 <div className="flex justify-end gap-2 text-xs">
-                    <button onClick={() => router.post(route('platform.backups.verify', r.id), {}, { preserveScroll: true })} className="font-medium text-indigo-600 hover:text-indigo-700">
+                    <button onClick={() => router.post(route('platform.backups.verify', r.id), {}, { preserveScroll: true })} className="font-medium text-primary hover:text-primary/80">
                         Verify
                     </button>
                     <Link href={route('platform.backups.download', r.id)} className="font-medium text-gray-600 hover:text-gray-800">

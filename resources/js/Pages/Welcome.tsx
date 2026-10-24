@@ -1,4 +1,4 @@
-import { MarketingLayout } from '@/Components/Marketing';
+import { BrandSquares, CountUp, FaqSection, MarketingLayout, PricingPlans, Reveal } from '@/Components/Marketing';
 import {
     Accordion,
     AccordionContent,
@@ -271,11 +271,12 @@ export default function Welcome({
 
             <div className="flex flex-col w-full">
                 {/* 1. HERO SECTION */}
-                <section className="relative w-full px-4 sm:px-6 lg:px-8 pt-14 pb-20 lg:pt-20 lg:pb-28 overflow-hidden bg-white">
-                    <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
+                <section className="relative w-full px-4 sm:px-6 lg:px-8 pt-14 pb-20 lg:pt-20 lg:pb-28 overflow-hidden bg-[#F3F2F2]">
+                    <BrandSquares />
+                    <div className="relative max-w-6xl mx-auto flex flex-col items-center text-center animate-fade-up">
                         {/* Refined Eyebrow */}
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-stone-100 border border-stone-200 text-stone-800 mb-6">
-                            <span className="w-2 h-2 rounded-full bg-[#B53014] animate-pulse" />
+                            <span className="w-2 h-2 rounded-full bg-[#EC3013] animate-pulse" />
                             <span className="text-xs font-semibold tracking-wide uppercase text-stone-700">
                                 Touch Dine OS &bull; Built for High-Performing Hospitality
                             </span>
@@ -284,7 +285,7 @@ export default function Welcome({
                         {/* Main Headline */}
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-stone-900 max-w-4xl leading-[1.12]">
                             Run your restaurant with{' '}
-                            <span className="text-[#B53014]">complete clarity &amp; speed</span>.
+                            <span className="text-[#EC3013]">complete clarity &amp; speed</span>.
                         </h1>
 
                         {/* Subtitle */}
@@ -296,7 +297,7 @@ export default function Welcome({
                         <div className="flex flex-col sm:flex-row items-center gap-3.5 w-full justify-center">
                             <Link
                                 href="/register"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#B53014] hover:bg-[#9E2A11] active:bg-[#85230E] text-white text-sm font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#EC3013] hover:bg-[#D02710] active:bg-[#A81E0C] text-white text-sm font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors"
                             >
                                 <span>Start 14-Day Free Trial</span>
                                 <ArrowRight className="w-4 h-4" />
@@ -305,7 +306,7 @@ export default function Welcome({
                                 href="#terminal-demo"
                                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white hover:bg-stone-50 text-stone-800 text-sm font-semibold px-6 py-3 rounded-lg border border-stone-300 shadow-xs transition-colors"
                             >
-                                <Zap className="w-4 h-4 text-[#B53014]" />
+                                <Zap className="w-4 h-4 text-[#EC3013]" />
                                 <span>Try Interactive Register</span>
                             </a>
                         </div>
@@ -368,7 +369,7 @@ export default function Welcome({
                                                 key={t.id}
                                                 className={`p-3 rounded-lg border transition-all text-xs ${
                                                     selectedTable.id === t.id
-                                                        ? 'border-[#B53014] bg-[#B53014]/5 shadow-xs'
+                                                        ? 'border-[#EC3013] bg-[#EC3013]/5 shadow-xs'
                                                         : 'border-stone-200 bg-stone-50 hover:bg-stone-100'
                                                 }`}
                                             >
@@ -417,7 +418,7 @@ export default function Welcome({
                                         <div className="p-3 rounded-lg border border-stone-200 bg-white shadow-xs">
                                             <div className="flex justify-between items-center text-xs pb-2 border-b border-stone-100">
                                                 <span className="font-bold text-stone-900">#104 &bull; TBL 14</span>
-                                                <span className="text-[#B53014] font-semibold flex items-center gap-1">
+                                                <span className="text-[#EC3013] font-semibold flex items-center gap-1">
                                                     <Flame className="w-3 h-3" /> Firing &bull; 4m
                                                 </span>
                                             </div>
@@ -498,11 +499,30 @@ export default function Welcome({
                     </div>
                 </section>
 
+                {/* STATS STRIP */}
+                <section className="w-full border-y border-stone-200 bg-white px-4 py-10 sm:px-6 lg:px-8">
+                    <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-8 text-center lg:grid-cols-4">
+                        {[
+                            { to: 11, suffix: '', label: 'Connected modules' },
+                            { to: 14, suffix: '-day', label: 'Free trial' },
+                            { to: 0, prefix: '$', label: 'Hardware lock-in' },
+                            { to: 100, suffix: '%', label: 'Browser based' },
+                        ].map((stat) => (
+                            <div key={stat.label}>
+                                <dt className="order-2 mt-1 text-sm text-stone-600">{stat.label}</dt>
+                                <dd className="text-4xl font-extrabold tracking-tight text-[#201E1D]">
+                                    <CountUp to={stat.to} prefix={stat.prefix} suffix={stat.suffix} />
+                                </dd>
+                            </div>
+                        ))}
+                    </dl>
+                </section>
+
                 {/* 2. CORE CAPABILITIES (SHADCN CARD GRID) */}
-                <section className="w-full px-4 sm:px-6 lg:px-8 py-20 bg-stone-50 border-y border-stone-200">
+                <Reveal as="section" className="w-full px-4 sm:px-6 lg:px-8 py-20 bg-stone-50 border-y border-stone-200">
                     <div className="max-w-6xl mx-auto">
                         <div className="text-center max-w-2xl mx-auto mb-14">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-[#B53014] block mb-2">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#EC3013] block mb-2">
                                 Complete Architecture
                             </span>
                             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">
@@ -517,7 +537,7 @@ export default function Welcome({
                             {/* Card 1: POS */}
                             <Card className="bg-white border-stone-200 hover:border-stone-300 transition-shadow hover:shadow-sm">
                                 <CardHeader className="pb-3">
-                                    <div className="w-10 h-10 rounded-lg bg-[#B53014]/10 text-[#B53014] flex items-center justify-center mb-2">
+                                    <div className="w-10 h-10 rounded-lg bg-[#EC3013]/10 text-[#EC3013] flex items-center justify-center mb-2">
                                         <Monitor className="w-5 h-5" />
                                     </div>
                                     <CardTitle className="text-lg font-bold text-stone-900">
@@ -533,7 +553,7 @@ export default function Welcome({
                                 <CardFooter className="pt-0">
                                     <Link
                                         href="/features/restaurant-pos"
-                                        className="text-xs font-semibold text-[#B53014] hover:underline flex items-center gap-1"
+                                        className="text-xs font-semibold text-[#EC3013] hover:underline flex items-center gap-1"
                                     >
                                         POS features &rarr;
                                     </Link>
@@ -543,7 +563,7 @@ export default function Welcome({
                             {/* Card 2: KDS */}
                             <Card className="bg-white border-stone-200 hover:border-stone-300 transition-shadow hover:shadow-sm">
                                 <CardHeader className="pb-3">
-                                    <div className="w-10 h-10 rounded-lg bg-[#B53014]/10 text-[#B53014] flex items-center justify-center mb-2">
+                                    <div className="w-10 h-10 rounded-lg bg-[#EC3013]/10 text-[#EC3013] flex items-center justify-center mb-2">
                                         <ChefHat className="w-5 h-5" />
                                     </div>
                                     <CardTitle className="text-lg font-bold text-stone-900">
@@ -559,7 +579,7 @@ export default function Welcome({
                                 <CardFooter className="pt-0">
                                     <Link
                                         href="/features/kitchen-display"
-                                        className="text-xs font-semibold text-[#B53014] hover:underline flex items-center gap-1"
+                                        className="text-xs font-semibold text-[#EC3013] hover:underline flex items-center gap-1"
                                     >
                                         KDS features &rarr;
                                     </Link>
@@ -569,7 +589,7 @@ export default function Welcome({
                             {/* Card 3: Floor & Tables */}
                             <Card className="bg-white border-stone-200 hover:border-stone-300 transition-shadow hover:shadow-sm">
                                 <CardHeader className="pb-3">
-                                    <div className="w-10 h-10 rounded-lg bg-[#B53014]/10 text-[#B53014] flex items-center justify-center mb-2">
+                                    <div className="w-10 h-10 rounded-lg bg-[#EC3013]/10 text-[#EC3013] flex items-center justify-center mb-2">
                                         <LayoutGrid className="w-5 h-5" />
                                     </div>
                                     <CardTitle className="text-lg font-bold text-stone-900">
@@ -585,7 +605,7 @@ export default function Welcome({
                                 <CardFooter className="pt-0">
                                     <Link
                                         href="/features/table-management"
-                                        className="text-xs font-semibold text-[#B53014] hover:underline flex items-center gap-1"
+                                        className="text-xs font-semibold text-[#EC3013] hover:underline flex items-center gap-1"
                                     >
                                         Floor management &rarr;
                                     </Link>
@@ -595,7 +615,7 @@ export default function Welcome({
                             {/* Card 4: Menu & Modifiers */}
                             <Card className="bg-white border-stone-200 hover:border-stone-300 transition-shadow hover:shadow-sm">
                                 <CardHeader className="pb-3">
-                                    <div className="w-10 h-10 rounded-lg bg-[#B53014]/10 text-[#B53014] flex items-center justify-center mb-2">
+                                    <div className="w-10 h-10 rounded-lg bg-[#EC3013]/10 text-[#EC3013] flex items-center justify-center mb-2">
                                         <UtensilsCrossed className="w-5 h-5" />
                                     </div>
                                     <CardTitle className="text-lg font-bold text-stone-900">
@@ -611,7 +631,7 @@ export default function Welcome({
                                 <CardFooter className="pt-0">
                                     <Link
                                         href="/features"
-                                        className="text-xs font-semibold text-[#B53014] hover:underline flex items-center gap-1"
+                                        className="text-xs font-semibold text-[#EC3013] hover:underline flex items-center gap-1"
                                     >
                                         Menu management &rarr;
                                     </Link>
@@ -621,7 +641,7 @@ export default function Welcome({
                             {/* Card 5: Inventory */}
                             <Card className="bg-white border-stone-200 hover:border-stone-300 transition-shadow hover:shadow-sm">
                                 <CardHeader className="pb-3">
-                                    <div className="w-10 h-10 rounded-lg bg-[#B53014]/10 text-[#B53014] flex items-center justify-center mb-2">
+                                    <div className="w-10 h-10 rounded-lg bg-[#EC3013]/10 text-[#EC3013] flex items-center justify-center mb-2">
                                         <Boxes className="w-5 h-5" />
                                     </div>
                                     <CardTitle className="text-lg font-bold text-stone-900">
@@ -637,7 +657,7 @@ export default function Welcome({
                                 <CardFooter className="pt-0">
                                     <Link
                                         href="/features/inventory-management"
-                                        className="text-xs font-semibold text-[#B53014] hover:underline flex items-center gap-1"
+                                        className="text-xs font-semibold text-[#EC3013] hover:underline flex items-center gap-1"
                                     >
                                         Inventory controls &rarr;
                                     </Link>
@@ -647,7 +667,7 @@ export default function Welcome({
                             {/* Card 6: Multi-Branch Analytics */}
                             <Card className="bg-white border-stone-200 hover:border-stone-300 transition-shadow hover:shadow-sm">
                                 <CardHeader className="pb-3">
-                                    <div className="w-10 h-10 rounded-lg bg-[#B53014]/10 text-[#B53014] flex items-center justify-center mb-2">
+                                    <div className="w-10 h-10 rounded-lg bg-[#EC3013]/10 text-[#EC3013] flex items-center justify-center mb-2">
                                         <Building2 className="w-5 h-5" />
                                     </div>
                                     <CardTitle className="text-lg font-bold text-stone-900">
@@ -663,7 +683,7 @@ export default function Welcome({
                                 <CardFooter className="pt-0">
                                     <Link
                                         href="/features/multi-branch-management"
-                                        className="text-xs font-semibold text-[#B53014] hover:underline flex items-center gap-1"
+                                        className="text-xs font-semibold text-[#EC3013] hover:underline flex items-center gap-1"
                                     >
                                         Multi-branch hub &rarr;
                                     </Link>
@@ -671,13 +691,13 @@ export default function Welcome({
                             </Card>
                         </div>
                     </div>
-                </section>
+                </Reveal>
 
                 {/* 3. HOW IT WORKS / OPERATIONAL FLOW */}
-                <section className="w-full px-4 sm:px-6 lg:px-8 py-20 bg-white">
+                <Reveal as="section" className="w-full px-4 sm:px-6 lg:px-8 py-20 bg-white">
                     <div className="max-w-6xl mx-auto">
                         <div className="text-center max-w-2xl mx-auto mb-14">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-[#B53014] block mb-2">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#EC3013] block mb-2">
                                 Operational Flow
                             </span>
                             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">
@@ -691,7 +711,7 @@ export default function Welcome({
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             {/* Step 1 */}
                             <div className="p-6 rounded-xl border border-stone-200 bg-stone-50/50 space-y-3 relative">
-                                <div className="w-8 h-8 rounded-full bg-[#B53014] text-white flex items-center justify-center font-bold text-xs">
+                                <div className="w-8 h-8 rounded-full bg-[#EC3013] text-white flex items-center justify-center font-bold text-xs">
                                     01
                                 </div>
                                 <h3 className="text-base font-bold text-stone-900">
@@ -742,7 +762,7 @@ export default function Welcome({
                             </div>
                         </div>
                     </div>
-                </section>
+                </Reveal>
 
                 {/* 4. INTERACTIVE POS SANDBOX TERMINAL */}
                 <section
@@ -751,7 +771,7 @@ export default function Welcome({
                 >
                     <div className="max-w-6xl mx-auto">
                         <div className="text-center max-w-2xl mx-auto mb-12">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-[#B53014] block mb-2">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#EC3013] block mb-2">
                                 Hands-On Sandbox
                             </span>
                             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">
@@ -767,7 +787,7 @@ export default function Welcome({
                             {/* Terminal Header */}
                             <div className="bg-stone-900 text-stone-200 px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
                                 <div className="flex items-center gap-3">
-                                    <span className="bg-[#B53014] text-white px-2 py-0.5 rounded font-mono font-bold text-[11px]">
+                                    <span className="bg-[#EC3013] text-white px-2 py-0.5 rounded font-mono font-bold text-[11px]">
                                         REGISTER #01
                                     </span>
                                     <span className="font-semibold text-white">
@@ -797,7 +817,7 @@ export default function Welcome({
                                                     onClick={() => setSelectedTable(table)}
                                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                                                         selectedTable.id === table.id
-                                                            ? 'bg-[#B53014] text-white border-[#B53014]'
+                                                            ? 'bg-[#EC3013] text-white border-[#EC3013]'
                                                             : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
                                                     }`}
                                                 >
@@ -838,11 +858,11 @@ export default function Welcome({
                                                 key={item.id}
                                                 type="button"
                                                 onClick={() => handleAddToCart(item)}
-                                                className="group p-3.5 rounded-xl border border-stone-200 bg-stone-50/50 hover:bg-white hover:border-[#B53014] text-left transition-all hover:shadow-xs flex flex-col justify-between"
+                                                className="group p-3.5 rounded-xl border border-stone-200 bg-stone-50/50 hover:bg-white hover:border-[#EC3013] text-left transition-all hover:shadow-xs flex flex-col justify-between"
                                             >
                                                 <div>
                                                     <div className="flex items-start justify-between gap-2">
-                                                        <span className="font-semibold text-stone-900 text-sm group-hover:text-[#B53014]">
+                                                        <span className="font-semibold text-stone-900 text-sm group-hover:text-[#EC3013]">
                                                             {item.name}
                                                         </span>
                                                         <span className="font-mono text-sm font-bold text-stone-900 shrink-0">
@@ -964,7 +984,7 @@ export default function Welcome({
                                             </div>
                                             <div className="flex justify-between text-sm font-bold text-stone-900 pt-1.5 border-t border-stone-200">
                                                 <span>Total Due:</span>
-                                                <span className="font-mono text-base text-[#B53014]">
+                                                <span className="font-mono text-base text-[#EC3013]">
                                                     ${total.toFixed(2)}
                                                 </span>
                                             </div>
@@ -980,7 +1000,7 @@ export default function Welcome({
                                                 type="button"
                                                 onClick={handleFireTicket}
                                                 disabled={cart.length === 0}
-                                                className="w-full bg-[#B53014] hover:bg-[#9E2A11] active:bg-[#85230E] disabled:opacity-50 disabled:pointer-events-none text-white text-xs font-bold py-3 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
+                                                className="w-full bg-[#EC3013] hover:bg-[#D02710] active:bg-[#A81E0C] disabled:opacity-50 disabled:pointer-events-none text-white text-xs font-bold py-3 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
                                             >
                                                 <Flame className="w-4 h-4" />
                                                 <span>Fire Order to Kitchen ({cart.reduce((a, b) => a + b.count, 0)} items)</span>
@@ -993,282 +1013,27 @@ export default function Welcome({
                     </div>
                 </section>
 
-                {/* 5. TRANSPARENT PRICING PREVIEW */}
-                <section className="w-full px-4 sm:px-6 lg:px-8 py-20 bg-white">
-                    <div className="max-w-6xl mx-auto">
-                        <div className="text-center max-w-2xl mx-auto mb-12">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-[#B53014] block mb-2">
-                                Simple &amp; Predictable
-                            </span>
-                            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">
-                                Honest pricing for every restaurant scale
-                            </h2>
-                            <p className="text-stone-600 mt-3 text-base">
-                                No proprietary hardware penalties, no hidden monthly lock-ins, and no arbitrary per-transaction markup.
+                {/* 5. PRICING */}
+                <section id="pricing" className="w-full bg-white px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
+                    <div className="mx-auto max-w-6xl">
+                        <Reveal className="mx-auto mb-12 max-w-2xl text-center">
+                            <span className="mk-eyebrow">Pricing</span>
+                            <h2 className="mk-h2 mt-3">Pick a plan and start your free trial</h2>
+                            <p className="mt-3 text-base text-stone-600">
+                                Real prices, no hidden fees. Upgrade, downgrade or cancel whenever you like.
                             </p>
-
-                            {/* Billing Cycle Switcher */}
-                            <div className="mt-8 inline-flex items-center p-1 rounded-full bg-stone-100 border border-stone-200">
-                                <button
-                                    type="button"
-                                    onClick={() => setBillingCycle('monthly')}
-                                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                                        billingCycle === 'monthly'
-                                            ? 'bg-white text-stone-900 shadow-xs'
-                                            : 'text-stone-600 hover:text-stone-900'
-                                    }`}
-                                >
-                                    Monthly Billing
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setBillingCycle('yearly')}
-                                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 ${
-                                        billingCycle === 'yearly'
-                                            ? 'bg-white text-stone-900 shadow-xs'
-                                            : 'text-stone-600 hover:text-stone-900'
-                                    }`}
-                                >
-                                    <span>Annual Billing</span>
-                                    <span className="bg-[#B53014]/10 text-[#B53014] text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                                        Save 20%
-                                    </span>
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Pricing Tiers Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            {/* Tier 1: Starter */}
-                            <Card className="bg-white border-stone-200 flex flex-col justify-between">
-                                <CardHeader>
-                                    <div className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1">
-                                        Café &bull; Single Register
-                                    </div>
-                                    <CardTitle className="text-xl font-bold text-stone-900">
-                                        Starter
-                                    </CardTitle>
-                                    <CardDescription className="text-xs text-stone-600 mt-1">
-                                        Essential touch POS and shift sales reporting for small coffee shops and food trucks.
-                                    </CardDescription>
-                                    <div className="mt-4">
-                                        <span className="text-3xl font-extrabold text-stone-900">
-                                            {billingCycle === 'yearly' ? '$55' : '$69'}
-                                        </span>
-                                        <span className="text-xs text-stone-500 ml-1">/ month</span>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-2.5 text-xs text-stone-600">
-                                    <div className="flex items-center gap-2">
-                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
-                                        <span>1 POS Station &amp; Card Reader</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
-                                        <span>Menu &amp; modifier builder</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
-                                        <span>Receipt printer integration</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
-                                        <span>Daily shift closing reports</span>
-                                    </div>
-                                </CardContent>
-                                <CardFooter>
-                                    <Link
-                                        href="/register"
-                                        className="w-full text-center py-2.5 rounded-lg border border-stone-300 hover:bg-stone-50 text-stone-900 text-xs font-semibold transition-colors"
-                                    >
-                                        Start 14-Day Free Trial
-                                    </Link>
-                                </CardFooter>
-                            </Card>
-
-                            {/* Tier 2: Professional (Featured) */}
-                            <Card className="bg-white border-2 border-[#B53014] shadow-md flex flex-col justify-between relative">
-                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#B53014] text-white text-[11px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full">
-                                    Most Popular
-                                </div>
-                                <CardHeader>
-                                    <div className="text-xs font-bold uppercase tracking-wider text-[#B53014] mb-1">
-                                        Full Service &bull; KDS Included
-                                    </div>
-                                    <CardTitle className="text-xl font-bold text-stone-900">
-                                        Professional
-                                    </CardTitle>
-                                    <CardDescription className="text-xs text-stone-600 mt-1">
-                                        Complete floor management, kitchen routing screens, and inventory ledger.
-                                    </CardDescription>
-                                    <div className="mt-4">
-                                        <span className="text-3xl font-extrabold text-stone-900">
-                                            {billingCycle === 'yearly' ? '$119' : '$149'}
-                                        </span>
-                                        <span className="text-xs text-stone-500 ml-1">/ month</span>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-2.5 text-xs text-stone-600">
-                                    <div className="flex items-center gap-2">
-                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
-                                        <span>Unlimited POS terminals &amp; floor maps</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
-                                        <span>Up to 3 Kitchen Display screens (KDS)</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
-                                        <span>Recipe-level gram inventory ledger</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
-                                        <span>Handheld split-by-guest checkout</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
-                                        <span>Staff shift scheduling &amp; role permissions</span>
-                                    </div>
-                                </CardContent>
-                                <CardFooter>
-                                    <Link
-                                        href="/register"
-                                        className="w-full text-center py-2.5 rounded-lg bg-[#B53014] hover:bg-[#9E2A11] text-white text-xs font-semibold shadow-xs transition-colors"
-                                    >
-                                        Start 14-Day Free Trial
-                                    </Link>
-                                </CardFooter>
-                            </Card>
-
-                            {/* Tier 3: Multi-Location */}
-                            <Card className="bg-white border-stone-200 flex flex-col justify-between">
-                                <CardHeader>
-                                    <div className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1">
-                                        Multi-Location &bull; Enterprise
-                                    </div>
-                                    <CardTitle className="text-xl font-bold text-stone-900">
-                                        Hospitality Group
-                                    </CardTitle>
-                                    <CardDescription className="text-xs text-stone-600 mt-1">
-                                        Centralized operations, shared commissary kitchen stock, and group P&amp;L reporting.
-                                    </CardDescription>
-                                    <div className="mt-4">
-                                        <span className="text-3xl font-extrabold text-stone-900">
-                                            {billingCycle === 'yearly' ? '$239' : '$289'}
-                                        </span>
-                                        <span className="text-xs text-stone-500 ml-1">/ mo / branch</span>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-2.5 text-xs text-stone-600">
-                                    <div className="flex items-center gap-2">
-                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
-                                        <span>Centralized multi-branch commissary stock</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
-                                        <span>Consolidated group financial reporting</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
-                                        <span>Unlimited KDS screens &amp; printers</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Check className="w-4 h-4 text-[#B53014] shrink-0" />
-                                        <span>Dedicated restaurant onboarding architect</span>
-                                    </div>
-                                </CardContent>
-                                <CardFooter>
-                                    <Link
-                                        href="/contact"
-                                        className="w-full text-center py-2.5 rounded-lg border border-stone-300 hover:bg-stone-50 text-stone-900 text-xs font-semibold transition-colors"
-                                    >
-                                        Contact Restaurant Sales
-                                    </Link>
-                                </CardFooter>
-                            </Card>
-                        </div>
+                        </Reveal>
+                        <PricingPlans plans={plans} />
                     </div>
                 </section>
 
-                {/* 6. GENUINE SHADCN ACCORDION FAQ */}
-                <section className="w-full px-4 sm:px-6 lg:px-8 py-20 bg-stone-50 border-t border-stone-200">
-                    <div className="max-w-4xl mx-auto">
-                        <div className="text-center max-w-2xl mx-auto mb-12">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-[#B53014] block mb-2">
-                                Clear Answers
-                            </span>
-                            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">
-                                Frequently asked questions
-                            </h2>
-                            <p className="text-stone-600 mt-3 text-base">
-                                Everything you need to know about Touch Dine architecture, hardware, and onboarding.
-                            </p>
-                        </div>
-
-                        <div className="bg-white rounded-xl border border-stone-200 p-6 sm:p-8 shadow-xs">
-                            <Accordion type="single" collapsible className="w-full space-y-2">
-                                <AccordionItem value="item-1">
-                                    <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
-                                        What hardware does Touch Dine support?
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        Touch Dine runs smoothly on standard modern hardware: iPads, Android tablets, touch displays, Mac, Windows, or Linux browsers. We connect seamlessly with standard ESC/POS thermal receipt printers (Epson, Star Micronics), cash drawers, and barcode scanners without proprietary hardware markups.
-                                    </AccordionContent>
-                                </AccordionItem>
-
-                                <AccordionItem value="item-2">
-                                    <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
-                                        What happens if our restaurant internet drops during peak service?
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        Touch Dine includes robust offline-resilient local sync. Even if your internet connection cuts out, registers continue firing tickets directly to kitchen displays and printers across your local Wi-Fi router. All transactions buffer securely and auto-synchronize to the cloud when connectivity returns.
-                                    </AccordionContent>
-                                </AccordionItem>
-
-                                <AccordionItem value="item-3">
-                                    <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
-                                        Can we import our existing menu and nested modifier groups?
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        Yes. You can import menus via CSV spreadsheet or export from Toast, Square, Lightspeed, or Clover. Our onboarding team also provides concierge assistance to structure nested modifiers, coursing sequences, and ingredient recipes before your go-live date.
-                                    </AccordionContent>
-                                </AccordionItem>
-
-                                <AccordionItem value="item-4">
-                                    <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
-                                        How does inventory deduction work with recipes and modifiers?
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        Every menu item and modifier can be tied directly to ingredient batches in your inventory ledger. When a guest orders a burger with extra cheese and gluten-free bread, Touch Dine calculates and deducts the precise gram amounts from raw stock and recalculates plate margin in real time.
-                                    </AccordionContent>
-                                </AccordionItem>
-
-                                <AccordionItem value="item-5">
-                                    <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
-                                        Can I manage multiple restaurant branches or commissary kitchens?
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        Yes. Touch Dine features a centralized multi-branch architecture. You can switch between locations in seconds, push standardized menus or seasonal specials to specific branches, and analyze consolidated sales reports or individual store margins.
-                                    </AccordionContent>
-                                </AccordionItem>
-
-                                <AccordionItem value="item-6">
-                                    <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
-                                        Are there long-term contracts or cancellation fees?
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        No. All standard Touch Dine subscriptions operate on month-to-month or annual terms with zero cancellation fees. You can upgrade, downgrade, or cancel whenever your operational needs change.
-                                    </AccordionContent>
-                                </AccordionItem>
-                            </Accordion>
-                        </div>
-                    </div>
-                </section>
+                {/* 6. FAQ */}
+                <FaqSection className="border-t border-stone-200 bg-[#F3F2F2]" />
 
                 {/* 7. FINAL HIGH-CONVERSION SECTION */}
                 <section className="w-full px-4 sm:px-6 lg:px-8 py-20 bg-stone-900 text-white">
                     <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
-                        <div className="w-12 h-12 rounded-xl bg-[#B53014] text-white flex items-center justify-center mb-6">
+                        <div className="w-12 h-12 rounded-xl bg-[#EC3013] text-white flex items-center justify-center mb-6">
                             <UtensilsCrossed className="w-6 h-6" />
                         </div>
 
@@ -1283,7 +1048,7 @@ export default function Welcome({
                         <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 w-full justify-center">
                             <Link
                                 href="/register"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#B53014] hover:bg-[#9E2A11] active:bg-[#85230E] text-white text-sm font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#EC3013] hover:bg-[#D02710] active:bg-[#A81E0C] text-white text-sm font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors"
                             >
                                 <span>Start 14-Day Free Trial</span>
                                 <ArrowRight className="w-4 h-4" />

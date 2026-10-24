@@ -29,7 +29,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
     ghost: 'text-foreground/80 hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring',
     subtle: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 focus-visible:ring-ring',
     link: 'text-primary underline-offset-4 hover:underline p-0 h-auto focus-visible:ring-ring',
-    indigo: 'bg-indigo-600 text-white shadow-xs hover:bg-indigo-700 focus-visible:ring-indigo-500',
+    indigo: 'bg-primary text-white shadow-xs hover:bg-primary/90 focus-visible:ring-primary',
     brand: 'bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 focus-visible:ring-ring',
 };
 

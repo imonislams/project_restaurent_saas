@@ -29,13 +29,6 @@ export default function VerifyPhone({ phone, status }: { phone?: string | null; 
             heroBadge="MOBILE VERIFICATION"
             heroHeadline="One code away from service."
             heroSubheadline="We sent a one-time code by SMS. Enter it to confirm your mobile number and secure your account."
-            imageUrl="https://images.unsplash.com/photo-1578474846511-04ba529f0b88?auto=format&fit=crop&w=1600&q=85"
-            testimonial={{
-                quote: 'Verification keeps sensitive point-of-sale data limited to authorized team members.',
-                author: 'Sophie Martin',
-                role: 'General Manager',
-                restaurant: 'Brasserie Vence',
-            }}
         >
             <Head title="Mobile Verification" />
 

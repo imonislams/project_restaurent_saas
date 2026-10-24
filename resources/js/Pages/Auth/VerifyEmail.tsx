@@ -18,14 +18,6 @@ export default function VerifyEmail({ status }: { status?: string }) {
             heroBadge="ACCOUNT VERIFICATION"
             heroHeadline="Almost ready for service."
             heroSubheadline="Confirm your work email to ensure seamless communication, receipt delivery, and system alerts."
-            imageUrl="https://images.unsplash.com/photo-1578474846511-04ba529f0b88?auto=format&fit=crop&w=1600&q=85"
-            testimonial={{
-                quote:
-                    'Touch Dine verification and security ensure only authorized team members access sensitive point-of-sale data.',
-                author: 'Sophie Martin',
-                role: 'General Manager',
-                restaurant: 'Brasserie Vence',
-            }}
         >
             <Head title="Email Verification" />
 

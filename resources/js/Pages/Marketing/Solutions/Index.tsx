@@ -95,15 +95,15 @@ export default function SolutionsIndex() {
                             <Link
                                 key={sol.slug}
                                 href={`/solutions/${sol.slug}`}
-                                className="group flex flex-col justify-between rounded-2xl border border-stone-200 bg-white p-8 hover:border-[#B53014] hover:shadow-md transition-all"
+                                className="group flex flex-col justify-between rounded-2xl border border-stone-200 bg-white p-8 hover:border-[#EC3013] hover:shadow-md transition-all"
                                 onClick={() => trackConversion('solution_viewed', { solution: sol.slug })}
                             >
                                 <div>
-                                    <div className="text-[11px] font-mono font-bold tracking-wider text-[#B53014] mb-3">
+                                    <div className="text-[11px] font-mono font-bold tracking-wider text-[#EC3013] mb-3">
                                         {sol.badge}
                                     </div>
 
-                                    <h3 className="font-display text-xl font-bold text-stone-900 group-hover:text-[#B53014]">
+                                    <h3 className="font-display text-xl font-bold text-stone-900 group-hover:text-[#EC3013]">
                                         {sol.title}
                                     </h3>
 
@@ -118,14 +118,14 @@ export default function SolutionsIndex() {
                                     <div className="mt-6 pt-4 border-t border-stone-100 space-y-2 text-xs text-stone-600">
                                         {sol.tailoredFeatures.map((f, i) => (
                                             <div key={i} className="flex items-center gap-2">
-                                                <span className="h-1.5 w-1.5 rounded-full bg-[#B53014]" />
+                                                <span className="h-1.5 w-1.5 rounded-full bg-[#EC3013]" />
                                                 <span>{f}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="mt-8 pt-4 border-t border-stone-100 flex items-center justify-between text-xs font-semibold text-[#B53014] group-hover:underline">
+                                <div className="mt-8 pt-4 border-t border-stone-100 flex items-center justify-between text-xs font-semibold text-[#EC3013] group-hover:underline">
                                     <span>Explore {sol.title}</span>
                                     <span>→</span>
                                 </div>

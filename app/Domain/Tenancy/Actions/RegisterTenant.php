@@ -6,6 +6,7 @@ use App\Domain\Accounting\Actions\ProvisionAccountingDefaults;
 use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
 use App\Domain\Payments\Actions\ProvisionPaymentDefaults;
+use App\Domain\Subscriptions\Models\Plan;
 use App\Domain\Subscriptions\SubscriptionService;
 use App\Domain\Tenancy\Enums\TenantStatus;
 use App\Domain\Tenancy\Models\Tenant;
@@ -21,7 +22,7 @@ class RegisterTenant
     public const TRIAL_DAYS = 14;
 
     /**
-     * @param  array{name: string, email?: ?string, phone?: ?string, password: string, restaurant_name: string}  $data
+     * @param  array{name: string, email?: ?string, phone?: ?string, password: string, restaurant_name: string, plan?: ?string}  $data
      */
     public function execute(array $data): User
     {
@@ -37,7 +38,7 @@ class RegisterTenant
             app(ProvisionInventoryDefaults::class)->forTenant($tenant);
             app(ProvisionPaymentDefaults::class)->forTenant($tenant);
             app(ProvisionAccountingDefaults::class)->forTenant($tenant);
-            app(SubscriptionService::class)->startTrial($tenant);
+            app(SubscriptionService::class)->startTrial($tenant, $this->selectedPlan($data['plan'] ?? null));
 
             $user = User::create([
                 'tenant_id' => $tenant->getKey(),
@@ -52,6 +53,20 @@ class RegisterTenant
 
             return $user;
         });
+    }
+
+    protected function selectedPlan(?string $slug): ?Plan
+    {
+        if (! $slug) {
+            return null;
+        }
+
+        return Plan::query()
+            ->where('slug', $slug)
+            ->where('is_active', true)
+            ->where('visibility', 'public')
+            ->whereNull('archived_at')
+            ->first();
     }
 
     protected function uniqueSlug(string $name): string

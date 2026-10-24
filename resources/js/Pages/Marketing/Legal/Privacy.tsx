@@ -14,7 +14,7 @@ export default function Privacy() {
 
             <section className="pt-12 pb-20 sm:pt-16 sm:pb-28">
                 <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-                    <div className="text-xs font-mono font-bold text-[#B53014] uppercase mb-3">
+                    <div className="text-xs font-mono font-bold text-[#EC3013] uppercase mb-3">
                         LEGAL COMPLIANCE & TRUST
                     </div>
                     <h1 className="font-display text-3xl sm:text-5xl font-extrabold text-stone-900 tracking-tight">
@@ -90,7 +90,7 @@ export default function Privacy() {
                                 7. Contact Us
                             </h2>
                             <p>
-                                For questions concerning this Privacy Policy or your data, contact our Data Protection Team at <a href="mailto:privacy@touchdine.cafe" className="font-bold text-[#B53014] underline">privacy@touchdine.cafe</a>.
+                                For questions concerning this Privacy Policy or your data, contact our Data Protection Team at <a href="mailto:privacy@touchdine.cafe" className="font-bold text-[#EC3013] underline">privacy@touchdine.cafe</a>.
                             </p>
                         </section>
                     </div>

@@ -1,7 +1,8 @@
 import MiseLogo from '@/Components/Brand/MiseLogo';
+import { BrandSquares } from '@/Components/Marketing/Motion';
 import { useT } from '@/i18n';
 import { Link, router, usePage } from '@inertiajs/react';
-import { PropsWithChildren, ReactNode, useState } from 'react';
+import { PropsWithChildren, ReactNode } from 'react';
 
 export interface AuthFeature {
     icon?: 'clock' | 'users' | 'chart' | 'kitchen' | 'shield' | 'check';
@@ -53,10 +54,8 @@ export default function AuthSplitLayout({
     children,
     heroHeadline = 'Your restaurant. Running smarter.',
     heroSubheadline = 'Manage your restaurant operations, simplify daily workflows, and keep your team connected from one place.',
-    heroBadge = 'RESTAURANT MANAGEMENT SAAS',
+    heroBadge = 'Restaurant management',
     features,
-    imageUrl = 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=1600&q=85',
-    testimonial,
     variant = 'login',
     headerAction,
 }: AuthSplitLayoutProps) {
@@ -64,8 +63,6 @@ export default function AuthSplitLayout({
     const locale = page.locale ?? 'en';
     const locales: { value: string; label: string }[] = page.locales ?? [];
     const t = useT();
-
-    const [imageLoaded, setImageLoaded] = useState(false);
 
     // Default features based on variant if none passed
     const defaultFeatures: Record<string, AuthFeature[]> = {
@@ -89,8 +86,8 @@ export default function AuthSplitLayout({
         register: [
             {
                 icon: 'clock',
-                title: 'Ready in 60 seconds',
-                description: 'Instant workspace provisioning with automatic tenant isolation.',
+                title: 'Ready in minutes',
+                description: 'Create your account and get a private workspace for your restaurant right away.',
             },
             {
                 icon: 'kitchen',
@@ -107,198 +104,50 @@ export default function AuthSplitLayout({
 
     const activeFeatures = features || defaultFeatures[variant] || defaultFeatures.login;
 
-    const defaultTestimonial = {
-        quote:
-            variant === 'register'
-                ? 'Setting up our 3 locations took under 15 minutes. Our servers and kitchen staff adopted Touch Dine on day one without training.'
-                : 'Touch Dine cut our peak dinner rush ticket delays by 35% and completely eliminated order confusion between floor and kitchen.',
-        author: variant === 'register' ? 'Marcus Vance' : 'Elena Rostova',
-        role: variant === 'register' ? 'Founder & Operator' : 'Managing Director',
-        restaurant: variant === 'register' ? 'The Copper Bistro Group' : 'Atelier Luminary',
-    };
-
-    const activeTestimonial = testimonial || defaultTestimonial;
-
     return (
-        <div className="flex min-h-screen w-full bg-surface font-sans antialiased text-on-surface selection:bg-primary selection:text-white">
-            {/* ======================================================== */}
-            {/* LEFT COLUMN: EDITORIAL BRAND EXPERIENCE (Desktop lg+)    */}
-            {/* ======================================================== */}
-            <div className="relative hidden lg:flex lg:w-[48%] xl:w-[50%] flex-col justify-between overflow-hidden bg-[#1a1c1a] p-10 xl:p-14 text-white">
-                {/* Background Restaurant Photography with Smooth Load & Art Overlay */}
-                <div className="absolute inset-0 z-0">
-                    <img
-                        src={imageUrl}
-                        alt="Restaurant Ambiance"
-                        onLoad={() => setImageLoaded(true)}
-                        className={`h-full w-full object-cover object-center transition-all duration-1000 ease-out ${
-                            imageLoaded ? 'scale-100 opacity-30' : 'scale-105 opacity-15'
-                        }`}
-                    />
-                    {/* Dark Slate & Rust Multi-Stop Radial & Linear Gradients */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a1c1a] via-[#1a1c1a]/92 to-[#2f312f]/85" />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(174,42,16,0.22),transparent_60%)]" />
+        <div className="flex min-h-screen w-full bg-white mk-root antialiased text-[#201E1D] selection:bg-primary selection:text-white">
+            {/* Brand panel (desktop) */}
+            <div className="relative hidden lg:flex lg:w-[46%] xl:w-[48%] flex-col justify-between overflow-hidden bg-[#201E1D] p-10 xl:p-14 text-[#F3F2F2]">
+                <BrandSquares tone="dark" />
+                <div className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-[#EC3013]/20 blur-3xl" />
 
-                    {/* Subtle Architectural Grid Lines */}
-                    <svg
-                        className="absolute inset-0 h-full w-full stroke-white/[0.04] [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]"
-                        aria-hidden="true"
-                    >
-                        <defs>
-                            <pattern
-                                id="editorial-grid"
-                                width="48"
-                                height="48"
-                                x="0"
-                                y="0"
-                                patternUnits="userSpaceOnUse"
-                            >
-                                <path d="M.5 48V.5H48" fill="none" />
-                            </pattern>
-                        </defs>
-                        <rect width="100%" height="100%" strokeWidth="0" fill="url(#editorial-grid)" />
-                    </svg>
+                <div className="relative z-10 auth-rise">
+                    <MiseLogo variant="full" theme="dark" size="lg" href="/" />
                 </div>
 
-                {/* Left Header: Brand Logo & Wordmark */}
-                <div className="relative z-10 flex items-center justify-between">
-                    <MiseLogo
-                        variant="full"
-                        theme="dark"
-                        size="lg"
-                        withTagline={true}
-                        tagline="SYSTEM KERNEL"
-                        href="/"
-                    />
+                <div className="relative z-10 my-auto py-10">
+                    <span className="auth-rise inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#F3F2F2]/80" style={{ animationDelay: '80ms' }}>
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#EC3013]" />
+                        {heroBadge}
+                    </span>
 
-                    <div className="flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 backdrop-blur-md">
-                        <span className="relative flex h-2 w-2">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-                            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-                        </span>
-                        <span className="text-[11px] font-mono tracking-wide text-primary-fixed">
-                            v2.4 KERNEL ACTIVE
-                        </span>
-                    </div>
-                </div>
-
-                {/* Left Middle: Storytelling, Headline, Features, and Floating Live Cards */}
-                <div className="relative z-10 my-auto py-8">
-                    {/* Category Kicker Badge */}
-                    <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-mono tracking-wider uppercase text-primary-fixed backdrop-blur-sm mb-6">
-                        <span className="material-symbols-outlined text-[14px] text-primary">terminal</span>
-                        <span>{heroBadge}</span>
-                    </div>
-
-                    {/* Editorial Main Headline */}
-                    <h1 className="font-display text-3xl font-extrabold tracking-tight text-white xl:text-4xl leading-[1.15] max-w-xl">
+                    <h1 className="auth-rise mt-6 max-w-xl text-4xl font-extrabold leading-[1.1] tracking-tight xl:text-5xl" style={{ animationDelay: '140ms' }}>
                         {heroHeadline}
                     </h1>
-
-                    <p className="mt-4 text-base text-stone-300/90 leading-relaxed max-w-lg font-normal">
+                    <p className="auth-rise mt-5 max-w-lg text-base leading-relaxed text-[#F3F2F2]/70" style={{ animationDelay: '200ms' }}>
                         {heroSubheadline}
                     </p>
 
-                    {/* Feature Highlights Grid */}
-                    <div className="mt-8 space-y-4 max-w-xl">
+                    <ul className="mt-10 max-w-lg space-y-5">
                         {activeFeatures.map((feat, idx) => (
-                            <div
-                                key={idx}
-                                className="group flex items-start gap-3.5 rounded-xl border border-white/5 bg-white/[0.03] p-3.5 backdrop-blur-sm transition-all duration-200 hover:border-primary/40 hover:bg-white/[0.06]"
-                            >
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary-fixed group-hover:bg-primary/25 group-hover:scale-105 transition-all">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                        className="h-4 w-4"
-                                    >
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-                                            clipRule="evenodd"
-                                        />
+                            <li key={feat.title} className="auth-rise flex items-start gap-4" style={{ animationDelay: `${280 + idx * 90}ms` }}>
+                                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center bg-[#EC3013] text-white">
+                                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5" aria-hidden>
+                                        <path fillRule="evenodd" d="M16.7 4.15a.75.75 0 01.15 1.05l-8 10.5a.75.75 0 01-1.13.07l-4.5-4.5a.75.75 0 011.06-1.06l3.9 3.9 7.47-9.82a.75.75 0 011.05-.14z" clipRule="evenodd" />
                                     </svg>
+                                </span>
+                                <div>
+                                    <h2 className="text-[15px] font-semibold">{feat.title}</h2>
+                                    <p className="mt-0.5 text-sm leading-relaxed text-[#F3F2F2]/60">{feat.description}</p>
                                 </div>
-                                <div className="min-w-0">
-                                    <h2 className="text-sm font-semibold text-white tracking-wide">
-                                        {feat.title}
-                                    </h2>
-                                    <p className="text-xs text-stone-400 leading-relaxed mt-0.5">
-                                        {feat.description}
-                                    </p>
-                                </div>
-                            </div>
+                            </li>
                         ))}
-                    </div>
-
-                    {/* Floating Product Depth Micro-Cards */}
-                    <div className="mt-8 grid grid-cols-2 gap-3.5 max-w-xl">
-                        {/* Micro Card 1: Active Table Ticket */}
-                        <div className="rounded-xl border border-white/10 bg-[#2f312f]/80 p-3.5 backdrop-blur-md shadow-lg">
-                            <div className="flex items-center justify-between">
-                                <span className="inline-flex items-center gap-1.5 rounded-md bg-primary/20 px-2 py-0.5 text-[10px] font-mono font-semibold text-primary-fixed">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                                    Table 14 • 4 Covers
-                                </span>
-                                <span className="text-[10px] text-stone-400 font-mono">14m ago</span>
-                            </div>
-                            <div className="mt-2 text-xs font-semibold text-white truncate">
-                                2x Duck Confit, 2x Risotto
-                            </div>
-                            <div className="mt-1 flex items-center justify-between text-[11px] text-primary-fixed font-medium">
-                                <span>Kitchen: Firing Mains</span>
-                                <span className="text-stone-400 font-normal">Server: Marcus</span>
-                            </div>
-                        </div>
-
-                        {/* Micro Card 2: Service Metrics */}
-                        <div className="rounded-xl border border-white/10 bg-[#2f312f]/80 p-3.5 backdrop-blur-md shadow-lg">
-                            <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-mono font-semibold tracking-wider text-stone-400 uppercase">
-                                    Service Health
-                                </span>
-                                <span className="text-[10px] font-mono font-bold text-secondary-fixed">+18.4%</span>
-                            </div>
-                            <div className="mt-2 text-xs font-semibold text-white">
-                                99.98% POS Uptime
-                            </div>
-                            <div className="mt-1 flex items-center justify-between text-[11px] text-stone-400">
-                                <span className="font-mono text-[10px]">Avg: 42 min</span>
-                                <span className="text-secondary-fixed font-medium">0 delayed</span>
-                            </div>
-                        </div>
-                    </div>
+                    </ul>
                 </div>
 
-                {/* Left Bottom: Testimonial & Social Proof */}
-                <div className="relative z-10 border-t border-white/10 pt-6">
-                    <div className="flex items-start gap-4">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[#8f200b] font-display text-sm font-bold text-white shadow-md border border-white/15">
-                            {activeTestimonial.author
-                                .split(' ')
-                                .map((n) => n[0])
-                                .join('')}
-                        </div>
-                        <div className="min-w-0">
-                            <p className="text-xs italic text-stone-300 leading-relaxed">
-                                “{activeTestimonial.quote}”
-                            </p>
-                            <div className="mt-2 flex items-center gap-2 text-xs">
-                                <span className="font-semibold text-white">
-                                    {activeTestimonial.author}
-                                </span>
-                                <span className="text-stone-500">•</span>
-                                <span className="text-stone-400">
-                                    {activeTestimonial.role},{' '}
-                                    <strong className="text-primary-fixed font-medium">
-                                        {activeTestimonial.restaurant}
-                                    </strong>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <p className="relative z-10 text-xs text-[#F3F2F2]/45">
+                    Point of sale, kitchen display, tables, inventory and reports in one place.
+                </p>
             </div>
 
             {/* ======================================================== */}
@@ -312,14 +161,14 @@ export default function AuthSplitLayout({
                         <MiseLogo variant="full" theme="light" size="md" href="/" />
                     </div>
 
-                    <div className="hidden lg:block">
-                        <span className="text-xs font-mono font-medium text-stone-500 uppercase tracking-widest">
-                            High-Velocity Hospitality POS
+                    <div className="hidden xl:block">
+                        <span className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.14em] text-stone-400">
+                            Restaurant management platform
                         </span>
                     </div>
 
                     {/* Right utilities: Language Selector & Header Action */}
-                    <div className="flex items-center gap-3">
+                    <div className="ml-auto flex items-center gap-3 whitespace-nowrap">
                         {headerAction}
 
                         {locales.length > 1 && (
@@ -360,26 +209,17 @@ export default function AuthSplitLayout({
                 </div>
 
                 {/* Form Container (Center viewport) */}
-                <div className="my-auto mx-auto w-full max-w-[440px] py-8">
+                <div className="auth-form my-auto mx-auto w-full max-w-[480px] py-8">
                     {children}
                 </div>
 
-                {/* Footer Utilities: Security Badges & Legal */}
                 <div className="border-t border-stone-200/70 pt-6 text-center text-xs text-stone-500">
-                    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-2">
-                        <span className="inline-flex items-center gap-1.5 text-stone-600 font-medium">
-                            <span className="material-symbols-outlined text-[15px] text-primary">verified_user</span>
-                            256-bit SSL Encrypted
-                        </span>
-                        <span className="text-stone-300">•</span>
-                        <span>Multi-tenant Isolation</span>
-                        <span className="text-stone-300">•</span>
-                        <span>SOC-2 Certified</span>
+                    <div className="mb-2 flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
+                        <Link href="/privacy-policy" className="hover:text-stone-900">Privacy</Link>
+                        <Link href="/terms-of-service" className="hover:text-stone-900">Terms</Link>
+                        <Link href="/help" className="hover:text-stone-900">Help</Link>
                     </div>
-
-                    <p className="text-[11px] text-stone-400">
-                        &copy; {new Date().getFullYear()} touchdine.cafe. All rights reserved. High-velocity architecture for professional restaurant operations.
-                    </p>
+                    <p className="text-[11px] text-stone-400">&copy; {new Date().getFullYear()} Touch Dine. All rights reserved.</p>
                 </div>
             </div>
         </div>

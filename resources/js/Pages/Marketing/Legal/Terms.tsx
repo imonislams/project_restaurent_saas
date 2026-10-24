@@ -14,7 +14,7 @@ export default function Terms() {
 
             <section className="pt-12 pb-20 sm:pt-16 sm:pb-28">
                 <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-                    <div className="text-xs font-mono font-bold text-[#B53014] uppercase mb-3">
+                    <div className="text-xs font-mono font-bold text-[#EC3013] uppercase mb-3">
                         TERMS OF SERVICE
                     </div>
                     <h1 className="font-display text-3xl sm:text-5xl font-extrabold text-stone-900 tracking-tight">
@@ -42,7 +42,7 @@ export default function Terms() {
                                 Every new restaurant registration includes an initial 14-day free trial. During the trial period, access is granted to all features of your selected plan without requiring credit card details. Continued service past 14 days requires activation of a paid monthly or annual subscription.
                             </p>
                             <p>
-                                Subscriptions renew automatically unless cancelled prior to the end of the current billing cycle. Pricing is billed in advance on either a monthly or annual schedule as displayed on our <Link href="/pricing" className="text-[#B53014] font-bold underline">Pricing Page</Link>.
+                                Subscriptions renew automatically unless cancelled prior to the end of the current billing cycle. Pricing is billed in advance on either a monthly or annual schedule as displayed on our <Link href="/pricing" className="text-[#EC3013] font-bold underline">Pricing Page</Link>.
                             </p>
                         </section>
 

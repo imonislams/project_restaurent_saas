@@ -18,7 +18,7 @@ export default function About() {
             <section className="pt-12 pb-20 sm:pt-20 sm:pb-28">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="max-w-3xl">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-mono font-semibold uppercase tracking-wider text-primary mb-6">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-primary mb-6">
                             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                             <span>OUR MISSION</span>
                         </div>
@@ -93,8 +93,8 @@ export default function About() {
                     </div>
 
                     {/* Architectural Standards */}
-                    <div className="mt-20 rounded-3xl bg-[#1a1c1a] p-8 sm:p-12 text-white space-y-6">
-                        <div className="text-xs font-mono font-bold text-primary-fixed uppercase tracking-wider">
+                    <div className="mt-20 rounded-3xl bg-[#201E1D] p-8 sm:p-12 text-white space-y-6">
+                        <div className="text-xs font-bold text-primary-fixed uppercase tracking-wider">
                             TECHNICAL ARCHITECTURE
                         </div>
                         <h2 className="font-display text-2xl sm:text-3xl font-extrabold">

@@ -59,7 +59,7 @@ export default function InvoiceShow({ invoice, gateways }: { invoice: InvoiceVie
                     </div>
                     <p className="mt-0.5 text-sm text-gray-500">
                         {invoice.tenant && (
-                            <Link href={route('platform.tenants.show', invoice.tenant_id)} className="text-indigo-600 hover:text-indigo-700">
+                            <Link href={route('platform.tenants.show', invoice.tenant_id)} className="text-primary hover:text-primary/80">
                                 {invoice.tenant}
                             </Link>
                         )}

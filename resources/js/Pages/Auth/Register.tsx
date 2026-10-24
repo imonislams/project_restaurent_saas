@@ -9,14 +9,14 @@ import { useT } from '@/i18n';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
-export default function Register() {
+export default function Register({ selectedPlan = null }: { selectedPlan?: { name: string; slug: string } | null }) {
     const t = useT();
     const { data, setData, post, processing, errors, reset } = useForm({
-        identifier_type: 'email' as 'email' | 'phone',
+        plan: selectedPlan?.slug ?? '',
+        identifier_type: 'email' as const,
         name: '',
         restaurant_name: '',
         email: '',
-        phone: '',
         password: '',
         password_confirmation: '',
     });
@@ -39,18 +39,10 @@ export default function Register() {
             heroBadge="START FREE 14-DAY TRIAL"
             heroHeadline="Build a better way to run your restaurant."
             heroSubheadline="Bring your restaurant workflows together with a smarter, more organized workspace built for your business."
-            imageUrl="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1600&q=85"
-            testimonial={{
-                quote:
-                    'Setting up our 3 locations took under 15 minutes. Our servers and kitchen staff adopted Touch Dine on day one without training.',
-                author: 'Marcus Vance',
-                role: 'Founder & Operator',
-                restaurant: 'The Copper Bistro Group',
-            }}
             headerAction={
                 <Link
                     href={route('login')}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-container transition-colors"
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-container transition-colors"
                 >
                     <span>{t('auth.signin_link')}</span>
                     <svg
@@ -72,53 +64,53 @@ export default function Register() {
 
             {/* Form Header */}
             <div className="mb-8">
-                <div className="inline-flex items-center gap-1.5 rounded-md bg-stone-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-stone-600 mb-3">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                    <span>Restaurant Onboarding</span>
-                </div>
                 <h1 className="font-display text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">
                     {t('auth.create_account')}
                 </h1>
-                <p className="mt-2 text-sm text-stone-500 leading-relaxed">
+                <p className="mt-2 text-[15px] text-stone-600 leading-relaxed">
                     {t('auth.create_account_subtitle')}
                 </p>
 
-                {/* 6-Step Onboarding Roadmap */}
-                <div className="mt-4 rounded-xl border border-stone-200 bg-stone-50/80 p-3.5">
-                    <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-primary mb-2">
-                        YOUR 6-STEP PATH TO FIRST SALE:
-                    </div>
-                    <ol className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] text-stone-600 font-medium">
-                        <li className="flex items-center gap-1.5 font-bold text-primary">
-                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[9px] text-white">1</span>
-                            <span>Create account</span>
+                {/* Journey: three clear stages */}
+                <ol className="mt-6 flex items-start" aria-label="Sign-up steps">
+                    {[
+                        { label: 'Create account', hint: 'Takes 1 minute' },
+                        { label: 'Verify', hint: 'Email link' },
+                        { label: 'Set up restaurant', hint: 'Menu, tables, team' },
+                    ].map((stage, i, all) => (
+                        <li key={stage.label} className="relative flex flex-1 flex-col items-center text-center" aria-current={i === 0 ? 'step' : undefined}>
+                            {i < all.length - 1 && (
+                                <span aria-hidden className="absolute left-1/2 top-4 h-0.5 w-full bg-stone-200" />
+                            )}
+                            <span
+                                className={
+                                    'relative z-10 flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ' +
+                                    (i === 0 ? 'bg-primary text-white ring-4 ring-primary/15' : 'border-2 border-stone-300 bg-white text-stone-500')
+                                }
+                            >
+                                {i + 1}
+                            </span>
+                            <span className={'mt-2 text-sm leading-tight ' + (i === 0 ? 'font-semibold text-stone-900' : 'font-medium text-stone-600')}>
+                                {stage.label}
+                            </span>
+                            <span className="mt-0.5 hidden text-sm text-stone-500 sm:block">{stage.hint}</span>
                         </li>
-                        <li className="flex items-center gap-1.5">
-                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-stone-200 text-[9px] text-stone-700">2</span>
-                            <span>Verify email</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-stone-200 text-[9px] text-stone-700">3</span>
-                            <span>Configure venue</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-stone-200 text-[9px] text-stone-700">4</span>
-                            <span>Add menu items</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-stone-200 text-[9px] text-stone-700">5</span>
-                            <span>Ring test sale</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-stone-200 text-[9px] text-stone-700">6</span>
-                            <span>Start live POS</span>
-                        </li>
-                    </ol>
-                </div>
+                    ))}
+                </ol>
             </div>
 
             {/* Registration Form */}
             <form onSubmit={submit} className="space-y-4" noValidate>
+                {selectedPlan && (
+                    <div className="flex items-center justify-between rounded-lg border border-[#EC3013]/25 bg-[#EC3013]/5 px-3.5 py-2.5 text-sm">
+                        <span className="text-stone-700">
+                            Selected plan: <strong className="text-stone-900">{selectedPlan.name}</strong>
+                        </span>
+                        <Link href={route('pricing')} className="text-sm font-semibold text-[#EC3013] hover:underline">
+                            Change
+                        </Link>
+                    </div>
+                )}
                 {/* Full Name Field */}
                 <div>
                     <InputLabel htmlFor="name" value={t('auth.name')} required />
@@ -160,60 +152,23 @@ export default function Register() {
                     <InputError message={errors.restaurant_name} />
                 </div>
 
-                {/* Contact identity — email or mobile */}
+                {/* Work email */}
                 <div>
-                    <InputLabel value={data.identifier_type === 'email' ? t('auth.work_email') : 'Mobile number'} required />
+                    <InputLabel htmlFor="email" value={t('auth.work_email')} required />
 
-                    <div className="mb-2 grid grid-cols-2 gap-1 rounded-lg bg-stone-100 p-1">
-                        {(['email', 'phone'] as const).map((mode) => (
-                            <button
-                                key={mode}
-                                type="button"
-                                onClick={() => setData('identifier_type', mode)}
-                                className={
-                                    'rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ' +
-                                    (data.identifier_type === mode
-                                        ? 'bg-white text-primary shadow-sm'
-                                        : 'text-stone-500 hover:text-stone-700')
-                                }
-                            >
-                                {mode === 'email' ? 'Email address' : 'Mobile number'}
-                            </button>
-                        ))}
-                    </div>
+                    <TextInput
+                        id="email"
+                        type="email"
+                        name="email"
+                        value={data.email}
+                        className="w-full"
+                        autoComplete="username"
+                        placeholder={t('auth.email_placeholder')}
+                        onChange={(e) => setData('email', e.target.value)}
+                        required
+                    />
 
-                    {data.identifier_type === 'email' ? (
-                        <>
-                            <TextInput
-                                id="email"
-                                type="email"
-                                name="email"
-                                value={data.email}
-                                className="w-full"
-                                autoComplete="username"
-                                placeholder={t('auth.email_placeholder')}
-                                onChange={(e) => setData('email', e.target.value)}
-                                required
-                            />
-                            <InputError message={errors.email} />
-                        </>
-                    ) : (
-                        <>
-                            <TextInput
-                                id="phone"
-                                type="tel"
-                                name="phone"
-                                value={data.phone}
-                                className="w-full"
-                                autoComplete="tel"
-                                placeholder="+8801XXXXXXXXX"
-                                onChange={(e) => setData('phone', e.target.value)}
-                                required
-                            />
-                            <p className="mt-1 text-[11px] text-stone-500">We'll text you a 6-digit code to verify this number.</p>
-                            <InputError message={errors.phone} />
-                        </>
-                    )}
+                    <InputError message={errors.email} />
                 </div>
 
                 {/* Password Field with Strength Meter */}
@@ -246,7 +201,7 @@ export default function Register() {
                             required
                         />
                         {passwordsMatch && (
-                            <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-600">
+                            <span className="flex items-center gap-1 text-[13px] font-medium text-emerald-600">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 16 16"
@@ -281,7 +236,7 @@ export default function Register() {
                 </div>
 
                 {/* Terms Notice */}
-                <p className="pt-1 text-[11px] text-stone-500 leading-normal">
+                <p className="pt-1 text-[13px] text-stone-500 leading-normal">
                     {t('auth.terms_notice')}
                 </p>
 
@@ -312,7 +267,7 @@ export default function Register() {
 
             {/* Already have an account callout */}
             <div className="mt-8 rounded-xl border border-stone-200/80 bg-stone-50/70 p-4 text-center">
-                <p className="text-xs text-stone-600">
+                <p className="text-sm text-stone-600">
                     <span>{t('auth.already_registered')} </span>
                     <Link
                         href={route('login')}
@@ -321,7 +276,7 @@ export default function Register() {
                         {t('auth.signin_link')}
                     </Link>
                 </p>
-                <p className="mt-1 text-[11px] text-stone-400">
+                <p className="mt-1 text-[13px] text-stone-400">
                     Instant access to live POS, table management, and reports
                 </p>
             </div>

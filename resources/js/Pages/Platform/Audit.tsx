@@ -60,7 +60,7 @@ export default function PlatformAudit({
             render: (r) =>
                 r.metadata ? (
                     <details className="text-xs">
-                        <summary className="cursor-pointer text-indigo-600">view</summary>
+                        <summary className="cursor-pointer text-primary">view</summary>
                         <pre className="mt-1 max-w-md overflow-x-auto whitespace-pre-wrap break-all rounded bg-gray-50 p-2 text-[11px] text-gray-600">{JSON.stringify(r.metadata, null, 2)}</pre>
                     </details>
                 ) : (

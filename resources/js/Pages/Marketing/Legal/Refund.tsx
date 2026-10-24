@@ -14,7 +14,7 @@ export default function Refund() {
 
             <section className="pt-12 pb-20 sm:pt-16 sm:pb-28">
                 <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-                    <div className="text-xs font-mono font-bold text-[#B53014] uppercase mb-3">
+                    <div className="text-xs font-mono font-bold text-[#EC3013] uppercase mb-3">
                         BILLING POLICY
                     </div>
                     <h1 className="font-display text-3xl sm:text-5xl font-extrabold text-stone-900 tracking-tight">
@@ -69,7 +69,7 @@ export default function Refund() {
                                 5. Requesting a Refund
                             </h2>
                             <p>
-                                To request a refund or inquire about an invoice adjustment, email our billing team at <a href="mailto:billing@touchdine.cafe" className="font-bold text-[#B53014] underline">billing@touchdine.cafe</a> with your restaurant account name and invoice number. We process all refund reviews within 2 business days.
+                                To request a refund or inquire about an invoice adjustment, email our billing team at <a href="mailto:billing@touchdine.cafe" className="font-bold text-[#EC3013] underline">billing@touchdine.cafe</a> with your restaurant account name and invoice number. We process all refund reviews within 2 business days.
                             </p>
                         </section>
                     </div>

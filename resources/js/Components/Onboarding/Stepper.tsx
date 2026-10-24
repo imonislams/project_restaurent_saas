@@ -39,7 +39,13 @@ export default function Stepper({ steps, current }: { steps: OnboardingStepInfo[
                 const StepIcon = STEP_ICONS[step.value];
 
                 return (
-                    <li key={step.value} style={{ animationDelay: `${index * 35}ms` }} className="animate-fade-up">
+                    <li key={step.value} style={{ animationDelay: `${index * 35}ms` }} className="relative animate-fade-up">
+                        {index < steps.length - 1 && (
+                            <span
+                                aria-hidden
+                                className={cn('absolute left-[26px] top-[38px] h-[calc(100%-26px)] w-px', isComplete ? 'bg-emerald-600/60' : 'bg-border')}
+                            />
+                        )}
                         <Link
                             href={route('onboarding.show', step.value)}
                             aria-current={isCurrent ? 'step' : undefined}

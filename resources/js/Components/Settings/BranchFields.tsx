@@ -25,8 +25,8 @@ export default function BranchFields({ data, setData, errors, options }: FieldPr
                 <span className="mb-1.5 block text-xs font-medium text-gray-600">{t('settings.service_types')}</span>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {options.service_types.map((service) => (
-                        <label key={service.value} className={'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ' + (selected.includes(service.value) ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-700')}>
-                            <input type="checkbox" className="rounded border-gray-300 text-indigo-600" checked={selected.includes(service.value)} onChange={() => toggle(service.value)} />
+                        <label key={service.value} className={'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ' + (selected.includes(service.value) ? 'border-primary/25 bg-primary/5 text-primary' : 'border-gray-200 text-gray-700')}>
+                            <input type="checkbox" className="rounded border-gray-300 text-primary" checked={selected.includes(service.value)} onChange={() => toggle(service.value)} />
                             {service.label}
                         </label>
                     ))}

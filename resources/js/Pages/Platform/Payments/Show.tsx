@@ -49,14 +49,14 @@ export default function PaymentShow({ payment }: { payment: PaymentView }) {
                     </div>
                     <p className="mt-0.5 text-sm text-gray-500">
                         {payment.tenant && (
-                            <Link href={route('platform.tenants.show', payment.tenant_id)} className="text-indigo-600 hover:text-indigo-700">
+                            <Link href={route('platform.tenants.show', payment.tenant_id)} className="text-primary hover:text-primary/80">
                                 {payment.tenant}
                             </Link>
                         )}
                         {payment.invoice && (
                             <>
                                 {' · '}
-                                <Link href={route('platform.billing.invoices.show', payment.invoice_id as number)} className="text-indigo-600 hover:text-indigo-700">
+                                <Link href={route('platform.billing.invoices.show', payment.invoice_id as number)} className="text-primary hover:text-primary/80">
                                     {payment.invoice}
                                 </Link>
                             </>

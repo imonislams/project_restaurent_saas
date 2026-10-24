@@ -57,7 +57,7 @@ export default function PasswordStrengthMeter({
 
     return (
         <div className="mt-2 space-y-2">
-            <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between text-sm">
                 <span className="text-stone-500">Password strength</span>
                 <span className={getLabelColor()}>{activeLabel}</span>
             </div>
@@ -87,7 +87,7 @@ export default function PasswordStrengthMeter({
             </div>
 
             {showRequirements && (
-                <div className="grid grid-cols-2 gap-x-2 gap-y-1 pt-1 text-[11px] text-stone-500">
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 pt-1 text-[13px] text-stone-500">
                     <div
                         className={`flex items-center gap-1.5 ${
                             analysis.hasMinLength ? 'text-emerald-700' : ''

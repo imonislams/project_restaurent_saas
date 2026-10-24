@@ -63,7 +63,7 @@ export default function InvoicesIndex({
             key: 'number',
             label: 'Invoice',
             render: (r) => (
-                <Link href={route('platform.billing.invoices.show', r.id)} className="font-medium text-indigo-600 hover:text-indigo-700">
+                <Link href={route('platform.billing.invoices.show', r.id)} className="font-medium text-primary hover:text-primary/80">
                     {r.number}
                 </Link>
             ),

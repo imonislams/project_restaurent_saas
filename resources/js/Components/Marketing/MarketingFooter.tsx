@@ -95,7 +95,7 @@ export default function MarketingFooter() {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/features" className="text-[#B53014] font-medium hover:underline text-xs mt-1">
+                                    <Link href="/features" className="text-[#EC3013] font-medium hover:underline text-xs mt-1">
                                         View All Features &rarr;
                                     </Link>
                                 </li>

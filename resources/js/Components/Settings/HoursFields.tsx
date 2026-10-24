@@ -26,7 +26,7 @@ export default function HoursFields({ data, setData, errors }: FieldProps) {
                     <div key={day.day_of_week} className="flex flex-wrap items-center gap-4 px-4 py-3">
                         <div className="w-24 text-sm font-medium text-gray-700">{DAYS[day.day_of_week]}</div>
                         <label className="flex items-center gap-2 text-sm text-gray-600">
-                            <input type="checkbox" className="rounded border-gray-300 text-indigo-600" checked={day.is_closed} onChange={(e) => updateDay(index, { is_closed: e.target.checked })} />
+                            <input type="checkbox" className="rounded border-gray-300 text-primary" checked={day.is_closed} onChange={(e) => updateDay(index, { is_closed: e.target.checked })} />
                             {t('settings.closed')}
                         </label>
                         <div className="flex items-center gap-2">

@@ -242,7 +242,7 @@ export default function ReportsIndex({
                                         key={group.group}
                                         className={`rounded-xl border p-2.5 transition ${
                                             isGroupActive
-                                                ? 'border-indigo-400 bg-indigo-50/50 shadow-xs'
+                                                ? 'border-primary/25 bg-primary/5 shadow-xs'
                                                 : 'border-gray-200 bg-white hover:border-gray-300'
                                         }`}
                                     >
@@ -263,7 +263,7 @@ export default function ReportsIndex({
                                                         onClick={() => apply({ type: reportKey })}
                                                         className={`rounded-md px-2 py-1 text-xs font-medium transition ${
                                                             isActive
-                                                                ? 'bg-indigo-600 text-white shadow-xs font-semibold'
+                                                                ? 'bg-primary text-white shadow-xs font-semibold'
                                                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                                         }`}
                                                     >
@@ -329,14 +329,14 @@ export default function ReportsIndex({
                                             type="date"
                                             value={from}
                                             onChange={(e) => setFrom(e.target.value)}
-                                            className="h-8 rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            className="h-8 rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-primary focus:ring-primary"
                                         />
                                         <span className="text-gray-400 text-xs">to</span>
                                         <input
                                             type="date"
                                             value={to}
                                             onChange={(e) => setTo(e.target.value)}
-                                            className="h-8 rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            className="h-8 rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-primary focus:ring-primary"
                                         />
                                     </div>
 
@@ -346,7 +346,7 @@ export default function ReportsIndex({
                                             setBranchId(e.target.value);
                                             apply({ branch_id: e.target.value && e.target.value !== 'all' ? Number(e.target.value) : 'all' });
                                         }}
-                                        className="h-8 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="h-8 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     >
                                         {canViewAllBranches && <option value="all">All Branches</option>}
                                         {branches.map((b) => (
@@ -416,7 +416,7 @@ export default function ReportsIndex({
                                             </div>
                                             <div className="h-3.5 w-full overflow-hidden rounded-full bg-gray-100 p-0.5">
                                                 <div
-                                                    className="h-full rounded-full bg-linear-to-r from-indigo-500 to-indigo-600 transition-all duration-500"
+                                                    className="h-full rounded-full bg-linear-to-r from-primary to-primary transition-all duration-500"
                                                     style={{ width: `${Math.min(100, Math.max(3, (bar.value / maxChart) * 100))}%` }}
                                                 />
                                             </div>
@@ -440,7 +440,7 @@ export default function ReportsIndex({
                                             placeholder="Search table rows…"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="h-8 w-44 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:w-60"
+                                            className="h-8 w-44 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary sm:w-60"
                                         />
                                     </div>
                                 }

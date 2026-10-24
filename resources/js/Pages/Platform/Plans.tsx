@@ -79,7 +79,7 @@ export default function PlatformPlans({
                     />
                 </Card>
             ) : (
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
                     {plans.map((plan) => {
                         const extraPricesForPlan = plan.prices.filter((p) => p.currency !== plan.currency);
                         const priced = new Set(plan.prices.map((p) => p.currency));
@@ -87,8 +87,8 @@ export default function PlatformPlans({
                         const missing = enabled_currencies.filter((c) => !priced.has(c));
 
                         return (
-                            <Card key={plan.id} className="flex flex-col">
-                                <div className="flex items-start justify-between gap-3 border-b border-border/60 px-5 py-4">
+                            <Card key={plan.id} className="flex h-full flex-col">
+                                <div className="flex min-h-[4.5rem] items-start justify-between gap-3 border-b border-border/60 px-5 py-4">
                                     <div className="min-w-0">
                                         <h2 className="truncate text-base font-semibold tracking-tight text-foreground">
                                             {plan.name}
@@ -105,64 +105,67 @@ export default function PlatformPlans({
                                     </div>
                                 </div>
 
-                                <div className="px-5 py-4">
-                                    <div className="flex items-baseline gap-1.5">
-                                        <span className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
-                                            {plan.currency} {plan.price_monthly.toFixed(2)}
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">/ month</span>
-                                    </div>
-                                    <p className="mt-0.5 text-xs text-muted-foreground">
-                                        or {plan.currency} {plan.price_yearly.toFixed(2)} / year
-                                    </p>
-
-                                    {extraPricesForPlan.length > 0 && (
-                                        <div className="mt-2.5 flex flex-wrap gap-1.5">
-                                            {extraPricesForPlan.map((price) => (
-                                                <span
-                                                    key={price.currency + price.interval}
-                                                    className="rounded border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground"
-                                                >
-                                                    {price.currency} {price.price.toFixed(2)}/{price.interval === 'yearly' ? 'yr' : 'mo'}
-                                                </span>
-                                            ))}
+                                <div className="flex flex-1 flex-col px-5 py-4">
+                                    <div className="min-h-[5.25rem]">
+                                        <div className="flex items-baseline gap-1.5">
+                                            <span className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+                                                {plan.currency} {plan.price_monthly.toFixed(2)}
+                                            </span>
+                                            <span className="text-xs text-muted-foreground">/ month</span>
                                         </div>
-                                    )}
+                                        <p className="mt-0.5 text-xs text-muted-foreground">
+                                            or {plan.currency} {plan.price_yearly.toFixed(2)} / year
+                                        </p>
+                                        <p className="mt-0.5 text-xs text-muted-foreground">
+                                            {plan.trial_days}-day trial{plan.visibility === 'hidden' ? ' · Hidden from checkout' : ''}
+                                        </p>
+                                    </div>
 
-                                    <dl className="mt-4 grid grid-cols-3 gap-2 rounded-md border border-border/80 bg-muted/20 p-2.5 text-center">
+                                    <dl className="grid grid-cols-3 gap-2 rounded-md border border-border/80 bg-muted/20 p-2.5 text-center">
                                         {[
                                             ['Branches', format(plan.limits.branches)],
                                             ['Users', format(plan.limits.users)],
                                             ['Orders/mo', format(plan.limits.orders_this_month)],
                                         ].map(([label, value]) => (
                                             <div key={label}>
-                                                <dt className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground">{label}</dt>
+                                                <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</dt>
                                                 <dd className="mt-0.5 text-sm font-bold text-foreground tabular-nums">{value}</dd>
                                             </div>
                                         ))}
                                     </dl>
 
-                                    {plan.features.length > 0 && (
-                                        <div className="mt-4 flex flex-wrap gap-1.5">
-                                            {plan.features.map((feature) => (
-                                                <span
-                                                    key={feature}
-                                                    className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-0.5 text-xs text-foreground/80"
-                                                >
-                                                    <Check className="h-3 w-3 text-primary stroke-[2.5]" />
-                                                    <span>{feature}</span>
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
+                                    <div className="mt-4 flex flex-1 flex-wrap content-start gap-1.5">
+                                        {plan.features.map((feature) => (
+                                            <span
+                                                key={feature}
+                                                className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-0.5 text-xs text-foreground/80"
+                                            >
+                                                <Check className="h-3 w-3 stroke-[2.5] text-primary" />
+                                                <span>{feature}</span>
+                                            </span>
+                                        ))}
+                                    </div>
 
-                                    <p className="mt-3 text-xs text-muted-foreground">
-                                        {plan.trial_days}-day trial {plan.visibility === 'hidden' ? '· Hidden from checkout' : ''}
-                                    </p>
-                                    {missing.length > 0 && (
-                                        <p className="mt-2 rounded-md border border-amber-500/20 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-700">
-                                            No price for {missing.join(', ')} — billed in {plan.currency}.
-                                        </p>
+                                    {(extraPricesForPlan.length > 0 || missing.length > 0) && (
+                                        <div className="mt-4 space-y-2 border-t border-border/60 pt-3">
+                                            {extraPricesForPlan.length > 0 && (
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {extraPricesForPlan.map((price) => (
+                                                        <span
+                                                            key={price.currency + price.interval}
+                                                            className="rounded border border-border bg-muted/40 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground"
+                                                        >
+                                                            {price.currency} {price.price.toFixed(2)}/{price.interval === 'yearly' ? 'yr' : 'mo'}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {missing.length > 0 && (
+                                                <p className="rounded-md border border-amber-500/20 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-700">
+                                                    No price for {missing.join(', ')} — billed in {plan.currency}.
+                                                </p>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
 

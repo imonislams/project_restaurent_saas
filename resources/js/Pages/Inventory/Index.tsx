@@ -511,12 +511,12 @@ export default function InventoryIndex({
                                             placeholder="Search items or locations…"
                                             value={balanceSearch}
                                             onChange={(e) => setBalanceSearch(e.target.value)}
-                                            className="h-9 w-48 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:w-64"
+                                            className="h-9 w-48 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary sm:w-64"
                                         />
                                         <select
                                             value={selectedBranchFilter}
                                             onChange={(e) => setSelectedBranchFilter(e.target.value)}
-                                            className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                         >
                                             <option value="all">All Branches</option>
                                             {branchNames.map((name) => (
@@ -528,7 +528,7 @@ export default function InventoryIndex({
                                         <select
                                             value={selectedLocationFilter}
                                             onChange={(e) => setSelectedLocationFilter(e.target.value)}
-                                            className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                         >
                                             <option value="all">All Locations</option>
                                             {locationNames.map((name) => (
@@ -607,7 +607,7 @@ export default function InventoryIndex({
                                                             </td>
                                                             <td className="px-6 py-4 text-gray-600">
                                                                 <span className="inline-flex items-center gap-1.5 font-medium text-gray-800">
-                                                                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                                                                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                                                                     {b.location_name ?? 'General'}
                                                                 </span>
                                                             </td>
@@ -676,12 +676,12 @@ export default function InventoryIndex({
                                             placeholder="Search movement items, users, notes…"
                                             value={movementSearch}
                                             onChange={(e) => setMovementSearch(e.target.value)}
-                                            className="h-9 w-60 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            className="h-9 w-60 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                         />
                                         <select
                                             value={movementReasonFilter}
                                             onChange={(e) => setMovementReasonFilter(e.target.value)}
-                                            className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                         >
                                             <option value="all">All Movement Reasons</option>
                                             <option value="opening">Opening Stock</option>
@@ -785,7 +785,7 @@ export default function InventoryIndex({
                                             placeholder="Search ingredients…"
                                             value={ingredientSearch}
                                             onChange={(e) => setIngredientSearch(e.target.value)}
-                                            className="h-9 w-52 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:w-64"
+                                            className="h-9 w-52 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary sm:w-64"
                                         />
                                         {canManage && (
                                             <Button
@@ -850,7 +850,7 @@ export default function InventoryIndex({
                                                             {i.name}
                                                         </td>
                                                         <td className="px-6 py-4 text-gray-600">
-                                                            <span className="font-mono text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                                                            <span className="font-mono text-xs font-semibold text-primary bg-primary/5 px-2 py-0.5 rounded border border-primary/25">
                                                                 {i.unit_code ?? 'None'}
                                                             </span>
                                                         </td>
@@ -1081,7 +1081,7 @@ export default function InventoryIndex({
                                             stock_location_id: '',
                                         });
                                     }}
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 >
                                     {branches.map((b) => (
@@ -1105,7 +1105,7 @@ export default function InventoryIndex({
                                             Number(e.target.value)
                                         )
                                     }
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 >
                                     <option value="">Select storage location…</option>
@@ -1138,7 +1138,7 @@ export default function InventoryIndex({
                                             item_id: '',
                                         });
                                     }}
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                 >
                                     <option value="ingredient">Ingredient</option>
                                     <option value="product">Sellable Product</option>
@@ -1155,7 +1155,7 @@ export default function InventoryIndex({
                                     onChange={(e) =>
                                         stockForm.setData('item_id', Number(e.target.value))
                                     }
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 >
                                     <option value="">Select an item…</option>
@@ -1175,17 +1175,17 @@ export default function InventoryIndex({
 
                         {/* Live System Comparison for Adjustment mode */}
                         {stockModalMode === 'adjust' && currentSystemBalance !== null && (
-                            <div className="rounded-lg border border-indigo-100 bg-indigo-50/70 p-3.5 text-xs text-indigo-900">
+                            <div className="rounded-lg border border-primary/25 bg-primary/5 p-3.5 text-xs text-primary">
                                 <div className="flex items-center justify-between">
-                                    <span className="font-medium text-indigo-700">
+                                    <span className="font-medium text-primary">
                                         Current System Stock:
                                     </span>
-                                    <span className="font-mono font-bold text-sm text-indigo-950">
+                                    <span className="font-mono font-bold text-sm text-primary">
                                         {currentSystemBalance.toFixed(3)}
                                     </span>
                                 </div>
                                 {adjustmentDelta !== null && (
-                                    <div className="mt-2 flex items-center justify-between border-t border-indigo-200/60 pt-2 font-medium">
+                                    <div className="mt-2 flex items-center justify-between border-t border-primary/25 pt-2 font-medium">
                                         <span>Resulting Movement Delta:</span>
                                         <span
                                             className={`font-mono text-xs font-bold ${
@@ -1224,7 +1224,7 @@ export default function InventoryIndex({
                                     onChange={(e) =>
                                         stockForm.setData('quantity', Number(e.target.value))
                                     }
-                                    className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 />
                                 {stockForm.errors.quantity && (
@@ -1247,7 +1247,7 @@ export default function InventoryIndex({
                                         onChange={(e) =>
                                             stockForm.setData('unit_cost', Number(e.target.value))
                                         }
-                                        className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-primary focus:ring-primary"
                                     />
                                 </div>
                             ) : (
@@ -1260,7 +1260,7 @@ export default function InventoryIndex({
                                         placeholder="e.g. Monthly stocktake"
                                         value={stockForm.data.note}
                                         onChange={(e) => stockForm.setData('note', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     />
                                 </div>
                             )}
@@ -1339,7 +1339,7 @@ export default function InventoryIndex({
                                 placeholder="e.g. Whole Milk, Mozzarella, Olive Oil"
                                 value={ingredientForm.data.name}
                                 onChange={(e) => ingredientForm.setData('name', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary focus:ring-primary"
                                 required
                             />
                             {ingredientForm.errors.name && (
@@ -1362,7 +1362,7 @@ export default function InventoryIndex({
                                             e.target.value ? Number(e.target.value) : ''
                                         )
                                     }
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary focus:ring-primary"
                                 >
                                     <option value="">No unit</option>
                                     {units.map((u) => (
@@ -1387,7 +1387,7 @@ export default function InventoryIndex({
                                             Number(e.target.value)
                                         )
                                     }
-                                    className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-primary focus:ring-primary"
                                 />
                             </div>
                         </div>
@@ -1400,7 +1400,7 @@ export default function InventoryIndex({
                                     onChange={(e) =>
                                         ingredientForm.setData('track_inventory', e.target.checked)
                                     }
-                                    className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                    className="rounded border-gray-300 text-primary shadow-sm focus:ring-primary"
                                 />
                                 <span className="text-xs font-medium text-gray-700">
                                     Track inventory balance for this ingredient
@@ -1414,7 +1414,7 @@ export default function InventoryIndex({
                                     onChange={(e) =>
                                         ingredientForm.setData('is_active', e.target.checked)
                                     }
-                                    className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                    className="rounded border-gray-300 text-primary shadow-sm focus:ring-primary"
                                 />
                                 <span className="text-xs font-medium text-gray-700">
                                     Active for recipe usage and purchasing
@@ -1472,7 +1472,7 @@ export default function InventoryIndex({
                                 placeholder="e.g. Kilogram, Liter, Piece"
                                 value={unitForm.data.name}
                                 onChange={(e) => unitForm.setData('name', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary focus:ring-primary"
                                 required
                             />
                             {unitForm.errors.name && (
@@ -1489,7 +1489,7 @@ export default function InventoryIndex({
                                 placeholder="e.g. kg, L, pcs, g"
                                 value={unitForm.data.code}
                                 onChange={(e) => unitForm.setData('code', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-primary focus:ring-primary"
                                 required
                             />
                             {unitForm.errors.code && (

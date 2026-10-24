@@ -42,7 +42,7 @@ export default function Contact() {
             <section className="pt-14 pb-20 sm:pt-20 sm:pb-28 bg-white">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                     <div className="text-center max-w-2xl mx-auto mb-14">
-                        <span className="text-xs font-semibold uppercase tracking-wider text-[#B53014] block mb-2">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-[#EC3013] block mb-2">
                             Talk To A Restaurant Specialist
                         </span>
                         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-900">
@@ -67,7 +67,7 @@ export default function Contact() {
                                 </CardHeader>
                                 <CardContent className="space-y-4 text-xs sm:text-sm text-stone-600">
                                     <div className="flex items-start gap-3">
-                                        <div className="rounded-lg bg-[#B53014]/10 p-2 text-[#B53014] shrink-0">
+                                        <div className="rounded-lg bg-[#EC3013]/10 p-2 text-[#EC3013] shrink-0">
                                             <Mail className="w-4 h-4" />
                                         </div>
                                         <div>
@@ -93,7 +93,7 @@ export default function Contact() {
                             <Card className="bg-stone-50 border-stone-200">
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-sm font-bold text-stone-900 flex items-center gap-2">
-                                        <HelpCircle className="w-4 h-4 text-[#B53014]" />
+                                        <HelpCircle className="w-4 h-4 text-[#EC3013]" />
                                         <span>Immediate Answers &amp; Guides</span>
                                     </CardTitle>
                                 </CardHeader>
@@ -101,7 +101,7 @@ export default function Contact() {
                                     <p className="leading-relaxed">
                                         Check our searchable Help Center for printer setup tutorials, cash drawer pairings, and CSV menu import templates.
                                     </p>
-                                    <div className="pt-2 flex flex-col gap-2 font-semibold text-xs text-[#B53014]">
+                                    <div className="pt-2 flex flex-col gap-2 font-semibold text-xs text-[#EC3013]">
                                         <Link href="/help" className="hover:underline flex items-center gap-1">
                                             <span>Visit the Help Center</span>
                                             <ArrowRight className="w-3.5 h-3.5" />
@@ -198,7 +198,7 @@ export default function Contact() {
                                                         id="venue_type"
                                                         value={data.venue_type}
                                                         onChange={(e) => setData('venue_type', e.target.value)}
-                                                        className="w-full rounded-md border border-stone-300 px-3 py-2 text-xs sm:text-sm focus:border-[#B53014] focus:ring-1 focus:ring-[#B53014] bg-white h-10"
+                                                        className="w-full rounded-md border border-stone-300 px-3 py-2 text-xs sm:text-sm focus:border-[#EC3013] focus:ring-1 focus:ring-[#EC3013] bg-white h-10"
                                                     >
                                                         <option value="restaurant">Casual or Fine Dining</option>
                                                         <option value="cafe">Café or Bakery</option>
@@ -220,7 +220,7 @@ export default function Contact() {
                                                         id="branches_count"
                                                         value={data.branches_count}
                                                         onChange={(e) => setData('branches_count', e.target.value)}
-                                                        className="w-full rounded-md border border-stone-300 px-3 py-2 text-xs sm:text-sm focus:border-[#B53014] focus:ring-1 focus:ring-[#B53014] bg-white h-10"
+                                                        className="w-full rounded-md border border-stone-300 px-3 py-2 text-xs sm:text-sm focus:border-[#EC3013] focus:ring-1 focus:ring-[#EC3013] bg-white h-10"
                                                     >
                                                         <option value="1">1 Location (Single Store)</option>
                                                         <option value="2-5">2 – 5 Locations</option>
@@ -237,7 +237,7 @@ export default function Contact() {
                                                         id="inquiry_category"
                                                         value={data.inquiry_category}
                                                         onChange={(e) => setData('inquiry_category', e.target.value)}
-                                                        className="w-full rounded-md border border-stone-300 px-3 py-2 text-xs sm:text-sm focus:border-[#B53014] focus:ring-1 focus:ring-[#B53014] bg-white h-10"
+                                                        className="w-full rounded-md border border-stone-300 px-3 py-2 text-xs sm:text-sm focus:border-[#EC3013] focus:ring-1 focus:ring-[#EC3013] bg-white h-10"
                                                     >
                                                         <option value="sales">Sales &amp; Pricing Inquiry</option>
                                                         <option value="demo">Book a Guided Video Demo</option>
@@ -267,7 +267,7 @@ export default function Contact() {
                                             <div className="pt-2">
                                                 <Button
                                                     type="submit"
-                                                    className="w-full bg-[#B53014] hover:bg-[#9E2A11] active:bg-[#85230E] text-white text-sm font-semibold h-11"
+                                                    className="w-full bg-[#EC3013] hover:bg-[#D02710] active:bg-[#A81E0C] text-white text-sm font-semibold h-11"
                                                     disabled={processing}
                                                 >
                                                     <Send className="w-4 h-4 mr-2" />

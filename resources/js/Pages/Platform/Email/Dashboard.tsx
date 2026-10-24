@@ -39,7 +39,7 @@ export default function EmailDashboard({
                     <CardHeader
                         title="Recent email"
                         action={
-                            <Link href={route('platform.email.logs')} className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
+                            <Link href={route('platform.email.logs')} className="text-xs font-medium text-primary hover:text-primary/80">
                                 View all
                             </Link>
                         }

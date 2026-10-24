@@ -201,9 +201,7 @@ export default function AppShell({
                                         className="h-7 w-7 shrink-0 rounded-md object-cover border border-sidebar-border shadow-xs"
                                     />
                                 ) : (
-                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-xs">
-                                        <ApplicationLogo className="h-4 w-4 fill-current text-white" />
-                                    </div>
+                                    <ApplicationLogo className="h-7 w-7 shrink-0" />
                                 )}
                                 <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
                                     <div className="truncate text-[15px] font-bold tracking-tight text-sidebar-foreground">
@@ -246,9 +244,9 @@ export default function AppShell({
                                                         isActive={item.active}
                                                         tooltip={item.label}
                                                         className={cn(
-                                                            'h-9 px-2.5 text-[13.5px] font-medium rounded-md transition-colors',
+                                                            'relative h-9 px-2.5 text-[13.5px] font-medium rounded-md transition-all duration-200',
                                                             item.active
-                                                                ? 'bg-sidebar-accent font-semibold text-sidebar-accent-foreground shadow-2xs'
+                                                                ? 'bg-primary/[0.07] font-semibold text-sidebar-accent-foreground before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-primary'
                                                                 : 'text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground'
                                                         )}
                                                     >

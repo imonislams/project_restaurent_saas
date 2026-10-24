@@ -1,0 +1,8 @@
+---
+description: Touch Dine UI and design rules
+globs: resources/js/**/*.tsx,resources/css/**/*.css
+alwaysApply: false
+---
+Follow docs/DESIGN-SYSTEM.md for all UI work: brand red #EC3013, ink #201E1D, paper #F3F2F2,
+Plus Jakarta Sans, text never below 13px, real plan data via PricingPlans, no invented
+testimonials or stats, subtle motion that respects prefers-reduced-motion.

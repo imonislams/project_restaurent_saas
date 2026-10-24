@@ -231,7 +231,7 @@ const SOLUTION_DATA: Record<string, SolutionDetail> = {
             <div className="p-6 bg-stone-50 text-xs font-mono space-y-3">
                 <div className="flex justify-between font-bold text-stone-800">
                     <span>DELIVERY #0142 · ZONE: NORTH (5km)</span>
-                    <span className="text-indigo-700 font-bold">OUT WITH DRIVER</span>
+                    <span className="text-primary font-bold">OUT WITH DRIVER</span>
                 </div>
                 <div className="bg-white p-3 rounded-xl border border-stone-200 text-stone-700 font-sans space-y-1">
                     <div className="font-bold">Customer: Sarah Jenkins (555-0192)</div>
@@ -316,8 +316,8 @@ export default function SolutionShow({ solutionKey }: { solutionKey: string }) {
             <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="max-w-3xl">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3.5 py-1 text-xs font-mono font-semibold uppercase tracking-wider text-[#B53014] mb-6">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#B53014]" />
+                        <div className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3.5 py-1 text-xs font-mono font-semibold uppercase tracking-wider text-[#EC3013] mb-6">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#EC3013]" />
                             <span>{solution.badge}</span>
                         </div>
 
@@ -382,7 +382,7 @@ export default function SolutionShow({ solutionKey }: { solutionKey: string }) {
                                     {item.pain}
                                 </h3>
                                 <div className="pt-4 border-t border-stone-200/80">
-                                    <div className="text-xs font-mono font-bold text-[#B53014] uppercase">
+                                    <div className="text-xs font-mono font-bold text-[#EC3013] uppercase">
                                         HOW RESTRY SOLVES IT
                                     </div>
                                     <p className="mt-1 text-xs sm:text-sm text-stone-600 leading-relaxed">
@@ -410,7 +410,7 @@ export default function SolutionShow({ solutionKey }: { solutionKey: string }) {
                                  key={idx}
                                  className="rounded-2xl border border-stone-200/90 bg-white p-8 space-y-3 shadow-xs"
                              >
-                                 <div className="text-xs font-mono font-bold text-[#B53014]">
+                                 <div className="text-xs font-mono font-bold text-[#EC3013]">
                                      STEP {step.step}
                                  </div>
                                  <h3 className="font-display text-xl font-bold text-stone-900">
@@ -444,15 +444,15 @@ export default function SolutionShow({ solutionKey }: { solutionKey: string }) {
                              <Link
                                  key={m.slug}
                                  href={`/features/${m.slug}`}
-                                 className="group block rounded-xl border border-stone-200 bg-stone-50 p-6 hover:border-[#B53014] transition-all"
+                                 className="group block rounded-xl border border-stone-200 bg-stone-50 p-6 hover:border-[#EC3013] transition-all"
                              >
-                                 <div className="font-display font-bold text-stone-900 text-base group-hover:text-[#B53014]">
+                                 <div className="font-display font-bold text-stone-900 text-base group-hover:text-[#EC3013]">
                                      {m.title}
                                  </div>
                                  <p className="mt-2 text-xs text-stone-600 leading-relaxed">
                                      {m.desc}
                                  </p>
-                                 <div className="mt-4 text-xs font-semibold text-[#B53014] group-hover:underline flex items-center gap-1">
+                                 <div className="mt-4 text-xs font-semibold text-[#EC3013] group-hover:underline flex items-center gap-1">
                                      <span>Learn more</span>
                                      <span>→</span>
                                  </div>
@@ -480,7 +480,7 @@ export default function SolutionShow({ solutionKey }: { solutionKey: string }) {
                                  <button
                                      type="button"
                                      onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                                     className="flex w-full items-center justify-between p-5 text-left font-display font-bold text-stone-900 text-sm sm:text-base hover:text-[#B53014]"
+                                     className="flex w-full items-center justify-between p-5 text-left font-display font-bold text-stone-900 text-sm sm:text-base hover:text-[#EC3013]"
                                  >
                                      <span>{faq.q}</span>
                                      <span className="ml-4 font-mono text-stone-400">

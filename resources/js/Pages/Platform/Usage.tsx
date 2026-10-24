@@ -32,7 +32,7 @@ export default function UsagePage({ tenants }: { tenants: Paginated<Row> }) {
             key: 'name',
             label: 'Tenant',
             render: (r) => (
-                <Link href={route('platform.tenants.show', r.id)} className="font-medium text-indigo-600 hover:text-indigo-700">
+                <Link href={route('platform.tenants.show', r.id)} className="font-medium text-primary hover:text-primary/80">
                     {r.name}
                 </Link>
             ),

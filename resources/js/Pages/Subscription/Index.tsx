@@ -111,7 +111,7 @@ export default function SubscriptionIndex({
                     {plans.map((plan) => {
                         const isCurrent = subscription?.plan_id === plan.id;
                         return (
-                            <Card key={plan.id} className={isCurrent ? 'ring-2 ring-indigo-500' : ''}>
+                            <Card key={plan.id} className={isCurrent ? 'ring-2 ring-primary' : ''}>
                                 <CardBody>
                                     <div className="flex items-start justify-between">
                                         <h3 className="text-base font-semibold text-gray-900">{plan.name}</h3>
@@ -125,7 +125,7 @@ export default function SubscriptionIndex({
                                     {plan.features.length > 0 && (
                                         <div className="mt-3 flex flex-wrap gap-1">
                                             {plan.features.map((feature) => (
-                                                <span key={feature} className="rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">{feature}</span>
+                                                <span key={feature} className="rounded-md bg-primary/5 px-2 py-0.5 text-xs font-medium text-primary">{feature}</span>
                                             ))}
                                         </div>
                                     )}

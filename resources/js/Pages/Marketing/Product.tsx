@@ -3,6 +3,7 @@ import {
     MarketingHead,
     MarketingLayout,
     ProductMockup,
+    FaqSection,
     SectionHeading,
     trackConversion,
 } from '@/Components/Marketing';
@@ -23,7 +24,7 @@ export default function Product() {
             <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="max-w-3xl">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-mono font-semibold uppercase tracking-wider text-primary mb-6">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-primary mb-6">
                             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                             <span>PLATFORM BLUEPRINT</span>
                         </div>
@@ -84,7 +85,7 @@ export default function Product() {
                             </div>
 
                             <div className="rounded-2xl border border-stone-200 bg-white p-5 space-y-3 shadow-xs">
-                                <div className="text-indigo-600 font-bold">
+                                <div className="text-primary font-bold">
                                     02 / KITCHEN KDS
                                 </div>
                                 <div className="font-bold text-stone-900 text-sm font-sans">
@@ -235,8 +236,8 @@ export default function Product() {
                                             <span>ACTIVE ORDERS: 5</span>
                                             <span className="text-amber-400 font-bold">HOT LINE QUEUE</span>
                                         </div>
-                                        <div className="rounded-lg bg-stone-800 p-3 border border-indigo-500">
-                                            <div className="flex justify-between font-bold text-indigo-300">
+                                        <div className="rounded-lg bg-stone-800 p-3 border border-primary">
+                                            <div className="flex justify-between font-bold text-primary">
                                                 <span>#0481 (T-04)</span>
                                                 <span>6 MINS</span>
                                             </div>
@@ -336,8 +337,10 @@ export default function Product() {
                 </div>
             </section>
 
+            <FaqSection className="bg-[#F3F2F2]" />
+
             {/* Final Product CTA */}
-            <section className="bg-[#1a1c1a] py-16 text-white text-center">
+            <section className="bg-[#201E1D] py-16 text-white text-center">
                 <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-6">
                     <h2 className="font-display text-3xl sm:text-4xl font-extrabold">
                         Ready to Connect Your Whole Restaurant?

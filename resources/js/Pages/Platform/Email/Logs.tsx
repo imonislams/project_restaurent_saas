@@ -56,7 +56,7 @@ export default function EmailLogs({
             align: 'right',
             render: (r) =>
                 r.retryable ? (
-                    <button onClick={() => router.post(route('platform.email.retry', r.id), {}, { preserveScroll: true })} className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
+                    <button onClick={() => router.post(route('platform.email.retry', r.id), {}, { preserveScroll: true })} className="text-xs font-medium text-primary hover:text-primary/80">
                         Retry
                     </button>
                 ) : (

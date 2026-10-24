@@ -6,6 +6,7 @@ import { OnboardingProgress } from '@/types/onboarding';
 import { Head, usePage } from '@inertiajs/react';
 import { CheckCircle2, Sparkles } from 'lucide-react';
 import { PropsWithChildren, ReactNode } from 'react';
+import { BrandSquares } from '@/Components/Marketing/Motion';
 
 export default function OnboardingLayout({
     step,
@@ -27,7 +28,7 @@ export default function OnboardingLayout({
     const index = Math.max(1, progress.steps.findIndex((s) => s.value === step) + 1);
 
     return (
-        <div className="app-type min-h-screen bg-muted/40">
+        <div className="app-type min-h-screen bg-[#F3F2F2]">
             <Head title={`${title} — ${t('onboarding.title')}`} />
 
             <header className="sticky top-0 z-20 border-b border-border bg-card/90 backdrop-blur-md animate-fade-down">
@@ -35,10 +36,11 @@ export default function OnboardingLayout({
                     <div className="flex min-w-0 items-center gap-3">
                         <ApplicationLogo className="h-8 w-8" />
                         <div className="min-w-0">
-                            <div className="truncate font-display text-sm font-semibold tracking-tight text-foreground">
-                                {tenant?.name ?? 'Restrly'}
+                            <div className="truncate font-display text-sm font-bold tracking-tight text-foreground">Touch Dine</div>
+                            <div className="truncate text-xs text-muted-foreground">
+                                {tenant?.name ? `${tenant.name} · ` : ''}
+                                {t('onboarding.title')}
                             </div>
-                            <div className="truncate text-xs text-muted-foreground">{t('onboarding.title')}</div>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -51,9 +53,30 @@ export default function OnboardingLayout({
                         </Button>
                     </div>
                 </div>
+                <div className="h-[3px] w-full bg-border/60" role="progressbar" aria-valuenow={progress.percent} aria-valuemin={0} aria-valuemax={100}>
+                    <div
+                        className="h-full bg-primary transition-[width] duration-700 ease-out-expo"
+                        style={{ width: `${Math.max(4, progress.percent)}%` }}
+                    />
+                </div>
             </header>
 
             <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+                {progress.completed === 0 && (
+                    <div className="relative mb-6 overflow-hidden rounded-2xl bg-[#201E1D] p-6 text-[#F3F2F2] sm:p-8 animate-fade-up">
+                        <BrandSquares tone="dark" />
+                        <div className="relative max-w-2xl">
+                            <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#EC3013]">Welcome</span>
+                            <h2 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
+                                {auth?.user?.name ? `Welcome, ${String(auth.user.name).split(' ')[0]}.` : 'Welcome.'} Let&apos;s set up {tenant?.name ?? 'your restaurant'}.
+                            </h2>
+                            <p className="mt-2 text-sm leading-relaxed text-[#F3F2F2]/70 sm:text-base">
+                                {progress.total} short steps, about {Math.max(5, Math.round(progress.total * 0.8))} minutes. Optional steps can be skipped, and your progress saves automatically so you can finish later.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
                     {/* Setup rail (desktop) */}
                     <aside className="hidden lg:block">
@@ -113,7 +136,7 @@ export default function OnboardingLayout({
                         {flash?.error && (
                             <div className="animate-fade-in rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{flash.error}</div>
                         )}
-                        {progress.completed > 0 && !flash?.success && (
+                        {progress.completed > 0 && progress.percent < 100 && !flash?.success && (
                             <div className="animate-fade-in rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
                                 Welcome back — resuming where you left off.
                             </div>

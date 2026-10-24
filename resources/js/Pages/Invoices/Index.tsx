@@ -116,12 +116,12 @@ export default function InvoicesIndex({
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && apply({ q: search || undefined, status: status || undefined })}
-                                        className="h-9 w-44 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="h-9 w-44 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     />
                                     <select
                                         value={status}
                                         onChange={(e) => { setStatus(e.target.value); apply({ status: e.target.value || undefined }); }}
-                                        className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     >
                                         <option value="">All statuses</option>
                                         {statuses.map((s) => (
@@ -132,7 +132,7 @@ export default function InvoicesIndex({
                                         <select
                                             value={filters.branch_id ?? 'all'}
                                             onChange={(e) => apply({ branch_id: e.target.value })}
-                                            className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                         >
                                             <option value="all">All branches</option>
                                             {branches.map((b) => (

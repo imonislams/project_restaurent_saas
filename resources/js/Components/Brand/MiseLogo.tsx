@@ -45,7 +45,7 @@ export default function MiseLogo({
     const content = (
         <span className={`inline-flex items-center select-none ${sizeClasses.gap} ${className}`}>
             <span className="shrink-0 transition-transform group-hover:scale-105 duration-200">
-                <ApplicationLogo className={`${sizeClasses.icon} drop-shadow-xs`} />
+                <ApplicationLogo tone={isDark ? 'paper' : 'ink'} className={sizeClasses.icon} />
             </span>
             {!markOnly && (
                 <span className="inline-flex flex-col">
@@ -55,7 +55,7 @@ export default function MiseLogo({
                                 sizeClasses.title
                             } ${isDark ? 'text-white' : 'text-foreground'}`}
                         >
-                            Touch Dine<span className="text-primary">.</span>
+                            Touch Dine
                         </span>
                     </span>
                     {withTagline && tagline && (

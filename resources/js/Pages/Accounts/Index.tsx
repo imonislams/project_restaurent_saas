@@ -312,7 +312,7 @@ export default function AccountsIndex({
                                             placeholder="Search accounts…"
                                             value={accountSearch}
                                             onChange={(e) => setAccountSearch(e.target.value)}
-                                            className="h-9 w-48 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:w-60"
+                                            className="h-9 w-48 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary sm:w-60"
                                         />
                                     </div>
                                 }
@@ -451,7 +451,7 @@ export default function AccountsIndex({
                                             placeholder="Search transfer ref or account…"
                                             value={transferSearch}
                                             onChange={(e) => setTransferSearch(e.target.value)}
-                                            className="h-9 w-52 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:w-60"
+                                            className="h-9 w-52 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary sm:w-60"
                                         />
                                         {canManage && (
                                             <Button
@@ -497,7 +497,7 @@ export default function AccountsIndex({
                                                             {t.from ?? 'Unknown Account'}
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <span className="font-bold text-indigo-600">➔</span>
+                                                            <span className="font-bold text-primary">➔</span>
                                                         </td>
                                                         <td className="px-6 py-4 font-medium text-gray-900">
                                                             {t.to ?? 'Unknown Account'}
@@ -553,7 +553,7 @@ export default function AccountsIndex({
                                 placeholder="e.g. Main Kitchen Petty Cash, Stripe Wallet, Chase Checking"
                                 value={accountForm.data.name}
                                 onChange={(e) => accountForm.setData('name', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary focus:ring-primary"
                                 required
                             />
                             {accountForm.errors.name && (
@@ -569,7 +569,7 @@ export default function AccountsIndex({
                                 <select
                                     value={accountForm.data.type}
                                     onChange={(e) => accountForm.setData('type', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 >
                                     {accountTypes.map((t) => (
@@ -589,7 +589,7 @@ export default function AccountsIndex({
                                     onChange={(e) =>
                                         accountForm.setData('branch_id', e.target.value ? Number(e.target.value) : '')
                                     }
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                 >
                                     <option value="">Company-wide (All Branches)</option>
                                     {branches.map((b) => (
@@ -612,7 +612,7 @@ export default function AccountsIndex({
                                 onChange={(e) =>
                                     accountForm.setData('opening_balance', Number(e.target.value))
                                 }
-                                className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-primary focus:ring-primary"
                             />
                             {accountForm.errors.opening_balance && (
                                 <p className="mt-1 text-xs text-rose-600">
@@ -677,7 +677,7 @@ export default function AccountsIndex({
                                     onChange={(e) =>
                                         transferForm.setData('from_account_id', Number(e.target.value))
                                     }
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 >
                                     {accounts.map((a) => (
@@ -697,7 +697,7 @@ export default function AccountsIndex({
                                     onChange={(e) =>
                                         transferForm.setData('to_account_id', Number(e.target.value))
                                     }
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 >
                                     {accounts.map((a) => (
@@ -727,7 +727,7 @@ export default function AccountsIndex({
                                 onChange={(e) =>
                                     transferForm.setData('amount', Number(e.target.value))
                                 }
-                                className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-primary focus:ring-primary"
                                 required
                             />
                             {transferForm.errors.amount && (
@@ -737,8 +737,8 @@ export default function AccountsIndex({
 
                         {/* Live Balance Impact Preview */}
                         {fromAccount && toAccount && !sameAccountError && transferForm.data.amount > 0 && (
-                            <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-3 text-xs text-indigo-900 space-y-1.5">
-                                <span className="font-semibold text-indigo-950 block">
+                            <div className="rounded-lg border border-primary/25 bg-primary/5 p-3 text-xs text-primary space-y-1.5">
+                                <span className="font-semibold text-primary block">
                                     Projected Post-Transfer Balances:
                                 </span>
                                 <div className="flex justify-between">
@@ -768,7 +768,7 @@ export default function AccountsIndex({
                                     onChange={(e) =>
                                         transferForm.setData('reference', e.target.value)
                                     }
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                 />
                             </div>
 
@@ -781,7 +781,7 @@ export default function AccountsIndex({
                                     placeholder="e.g. End of day cash drop"
                                     value={transferForm.data.notes}
                                     onChange={(e) => transferForm.setData('notes', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                 />
                             </div>
                         </div>

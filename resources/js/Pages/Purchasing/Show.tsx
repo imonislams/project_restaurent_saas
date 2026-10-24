@@ -348,7 +348,7 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
                                         <button
                                             type="button"
                                             onClick={fillAllOutstanding}
-                                            className="rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
+                                            className="rounded-md bg-primary/5 px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/10 border border-primary/25"
                                         >
                                             Receive All Outstanding
                                         </button>
@@ -396,7 +396,7 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
                                                         };
                                                         setReceiveLines(next);
                                                     }}
-                                                    className="h-9 w-28 rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                    className="h-9 w-28 rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-primary focus:ring-primary"
                                                 />
                                                 <span className="text-gray-400">
                                                     / {item.outstanding.toFixed(3)} max
@@ -433,7 +433,7 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
                                             key={r.id}
                                             className="flex items-center justify-between px-6 py-3.5 hover:bg-gray-50"
                                         >
-                                            <span className="font-mono font-semibold text-indigo-700">
+                                            <span className="font-mono font-semibold text-primary">
                                                 {r.number}
                                             </span>
                                             <span className="text-gray-500">
@@ -519,7 +519,7 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
                                                     onChange={(e) =>
                                                         paymentForm.setData('amount', Number(e.target.value))
                                                     }
-                                                    className="h-9 w-32 rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                    className="h-9 w-32 rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-primary focus:ring-primary"
                                                 />
                                             </div>
 
@@ -532,7 +532,7 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
                                                     onChange={(e) =>
                                                         paymentForm.setData('method', e.target.value)
                                                     }
-                                                    className="h-9 w-36 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                    className="h-9 w-36 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                                 >
                                                     <option value="bank_transfer">Bank Transfer</option>
                                                     <option value="cash">Cash</option>
@@ -552,7 +552,7 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
                                                     onChange={(e) =>
                                                         paymentForm.setData('reference', e.target.value)
                                                     }
-                                                    className="h-9 w-44 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                    className="h-9 w-44 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                                 />
                                             </div>
 

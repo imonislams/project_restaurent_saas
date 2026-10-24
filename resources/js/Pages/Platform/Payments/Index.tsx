@@ -70,7 +70,7 @@ export default function PaymentsIndex({
             key: 'provider_ref',
             label: 'Reference',
             render: (r) => (
-                <Link href={route('platform.billing.payments.show', r.id)} className="font-medium text-indigo-600 hover:text-indigo-700">
+                <Link href={route('platform.billing.payments.show', r.id)} className="font-medium text-primary hover:text-primary/80">
                     {r.provider_ref ?? `#${r.id}`}
                 </Link>
             ),

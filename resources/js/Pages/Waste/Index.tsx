@@ -264,12 +264,12 @@ export default function WasteIndex({
                                         placeholder="Search item, notes, recorder…"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="h-9 w-48 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:w-60"
+                                        className="h-9 w-48 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary sm:w-60"
                                     />
                                     <select
                                         value={reasonFilter}
                                         onChange={(e) => setReasonFilter(e.target.value)}
-                                        className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     >
                                         <option value="all">All Waste Reasons</option>
                                         {reasons.map((r) => (
@@ -483,7 +483,7 @@ export default function WasteIndex({
                                 <select
                                     value={form.data.branch_id}
                                     onChange={(e) => form.setData('branch_id', Number(e.target.value))}
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 >
                                     {branches.map((b) => (
@@ -502,7 +502,7 @@ export default function WasteIndex({
                                 <select
                                     value={form.data.reason}
                                     onChange={(e) => form.setData('reason', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 >
                                     {reasons.map((r) => (
@@ -522,7 +522,7 @@ export default function WasteIndex({
                             <select
                                 value={form.data.item}
                                 onChange={(e) => form.setData('item', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary focus:ring-primary"
                                 required
                             >
                                 {items.map((i) => (
@@ -544,7 +544,7 @@ export default function WasteIndex({
                                 min="0.001"
                                 value={form.data.quantity}
                                 onChange={(e) => form.setData('quantity', Number(e.target.value))}
-                                className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-primary focus:ring-primary"
                                 required
                             />
                             {form.errors.quantity && (
@@ -586,7 +586,7 @@ export default function WasteIndex({
                                 placeholder="Explain how or why this spoilage occurred (e.g. Fridge unit 2 temp spiked overnight)"
                                 value={form.data.notes}
                                 onChange={(e) => form.setData('notes', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                             />
                         </div>
                     </div>

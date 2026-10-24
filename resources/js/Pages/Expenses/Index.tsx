@@ -519,7 +519,7 @@ export default function ExpensesIndex({
                                 placeholder="e.g. Weekly vegetable restock, Electricity bill, Cleaning supplies"
                                 value={expenseForm.data.description}
                                 onChange={(e) => expenseForm.setData('description', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary focus:ring-primary"
                                 required
                             />
                             {expenseForm.errors.description && (
@@ -538,7 +538,7 @@ export default function ExpensesIndex({
                                     min="0.01"
                                     value={expenseForm.data.amount}
                                     onChange={(e) => expenseForm.setData('amount', Number(e.target.value))}
-                                    className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 />
                                 {expenseForm.errors.amount && (
@@ -554,7 +554,7 @@ export default function ExpensesIndex({
                                     type="date"
                                     value={expenseForm.data.expense_date}
                                     onChange={(e) => expenseForm.setData('expense_date', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 />
                                 {expenseForm.errors.expense_date && (
@@ -571,7 +571,7 @@ export default function ExpensesIndex({
                                 <select
                                     value={expenseForm.data.expense_category_id === '' ? '' : String(expenseForm.data.expense_category_id)}
                                     onChange={(e) => expenseForm.setData('expense_category_id', e.target.value ? Number(e.target.value) : '')}
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                 >
                                     <option value="">No category</option>
                                     {categories.map((c) => (
@@ -589,7 +589,7 @@ export default function ExpensesIndex({
                                 <select
                                     value={expenseForm.data.branch_id === '' ? '' : String(expenseForm.data.branch_id)}
                                     onChange={(e) => expenseForm.setData('branch_id', e.target.value ? Number(e.target.value) : '')}
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                 >
                                     {branches.map((b) => (
                                         <option key={b.id} value={b.id}>
@@ -606,7 +606,7 @@ export default function ExpensesIndex({
                                 <select
                                     value={expenseForm.data.financial_account_id === '' ? '' : String(expenseForm.data.financial_account_id)}
                                     onChange={(e) => expenseForm.setData('financial_account_id', e.target.value ? Number(e.target.value) : '')}
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                 >
                                     {accounts.map((a) => (
                                         <option key={a.id} value={a.id}>
@@ -625,7 +625,7 @@ export default function ExpensesIndex({
                                 <select
                                     value={expenseForm.data.payment_method}
                                     onChange={(e) => expenseForm.setData('payment_method', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                 >
                                     <option value="cash">Cash</option>
                                     <option value="bank_transfer">Bank Transfer</option>
@@ -643,7 +643,7 @@ export default function ExpensesIndex({
                                     placeholder="e.g. REC-8492"
                                     value={expenseForm.data.reference}
                                     onChange={(e) => expenseForm.setData('reference', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                 />
                             </div>
                         </div>
@@ -665,7 +665,7 @@ export default function ExpensesIndex({
                                 placeholder="Extra justification, tax notes, or invoice comments"
                                 value={expenseForm.data.notes}
                                 onChange={(e) => expenseForm.setData('notes', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                             />
                         </div>
                     </div>
@@ -719,7 +719,7 @@ export default function ExpensesIndex({
                                 placeholder="e.g. Kitchen Supplies, Marketing, Utilities"
                                 value={categoryForm.data.name}
                                 onChange={(e) => categoryForm.setData('name', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary focus:ring-primary"
                                 required
                             />
                             {categoryForm.errors.name && (
@@ -734,7 +734,7 @@ export default function ExpensesIndex({
                             <select
                                 value={categoryForm.data.type}
                                 onChange={(e) => categoryForm.setData('type', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                             >
                                 <option value="expense">Expense (Operational Cost)</option>
                                 <option value="income">Income (Miscellaneous Credit)</option>

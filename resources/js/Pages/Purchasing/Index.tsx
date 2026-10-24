@@ -318,12 +318,12 @@ export default function PurchasingIndex({
                                             placeholder="Search PO #, supplier, branch…"
                                             value={orderSearch}
                                             onChange={(e) => setOrderSearch(e.target.value)}
-                                            className="h-9 w-52 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:w-64"
+                                            className="h-9 w-52 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary sm:w-64"
                                         />
                                         <select
                                             value={statusFilter}
                                             onChange={(e) => setStatusFilter(e.target.value)}
-                                            className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            className="h-9 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                         >
                                             <option value="all">All Statuses</option>
                                             <option value="draft">Draft</option>
@@ -375,7 +375,7 @@ export default function PurchasingIndex({
                                                         <td className="px-6 py-4 font-mono font-bold whitespace-nowrap">
                                                             <Link
                                                                 href={route('purchasing.orders.show', o.id)}
-                                                                className="text-indigo-600 hover:text-indigo-800"
+                                                                className="text-primary hover:text-primary/80"
                                                             >
                                                                 {o.number}
                                                             </Link>
@@ -401,7 +401,7 @@ export default function PurchasingIndex({
                                                             <div className="flex items-center justify-end gap-2">
                                                                 <Link
                                                                     href={route('purchasing.orders.show', o.id)}
-                                                                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+                                                                    className="text-xs font-semibold text-primary hover:text-primary/80"
                                                                 >
                                                                     View Details
                                                                 </Link>
@@ -438,7 +438,7 @@ export default function PurchasingIndex({
                                             placeholder="Search suppliers…"
                                             value={supplierSearch}
                                             onChange={(e) => setSupplierSearch(e.target.value)}
-                                            className="h-9 w-48 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:w-60"
+                                            className="h-9 w-48 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary sm:w-60"
                                         />
                                         {canManage && (
                                             <Button
@@ -548,7 +548,7 @@ export default function PurchasingIndex({
                                     onChange={(e) =>
                                         orderForm.setData('supplier_id', Number(e.target.value))
                                     }
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 >
                                     {suppliers.map((s) => (
@@ -569,7 +569,7 @@ export default function PurchasingIndex({
                                     onChange={(e) =>
                                         orderForm.setData('branch_id', Number(e.target.value))
                                     }
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 >
                                     {branches.map((b) => (
@@ -590,7 +590,7 @@ export default function PurchasingIndex({
                                 <button
                                     type="button"
                                     onClick={addLine}
-                                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+                                    className="text-xs font-semibold text-primary hover:text-primary/80"
                                 >
                                     + Add Item Row
                                 </button>
@@ -606,7 +606,7 @@ export default function PurchasingIndex({
                                             <select
                                                 value={row.value}
                                                 onChange={(e) => updateLineItem(idx, e.target.value)}
-                                                className="block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                className="block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                                 required
                                             >
                                                 <option value="">Select item…</option>
@@ -628,7 +628,7 @@ export default function PurchasingIndex({
                                                 onChange={(e) =>
                                                     updateLineQty(idx, Number(e.target.value))
                                                 }
-                                                className="block w-full rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                className="block w-full rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-primary focus:ring-primary"
                                                 required
                                             />
                                         </div>
@@ -642,7 +642,7 @@ export default function PurchasingIndex({
                                                 onChange={(e) =>
                                                     updateLineCost(idx, Number(e.target.value))
                                                 }
-                                                className="block w-full rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                className="block w-full rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-primary focus:ring-primary"
                                                 required
                                             />
                                         </div>
@@ -679,7 +679,7 @@ export default function PurchasingIndex({
                                 placeholder="Delivery specifications, terms, or reference notes"
                                 value={orderForm.data.notes}
                                 onChange={(e) => orderForm.setData('notes', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                             />
                         </div>
                     </div>
@@ -733,7 +733,7 @@ export default function PurchasingIndex({
                                 placeholder="e.g. Metro Produce Co."
                                 value={supplierForm.data.name}
                                 onChange={(e) => supplierForm.setData('name', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary focus:ring-primary"
                                 required
                             />
                             {supplierForm.errors.name && (
@@ -750,7 +750,7 @@ export default function PurchasingIndex({
                                 placeholder="e.g. John Doe"
                                 value={supplierForm.data.contact_name}
                                 onChange={(e) => supplierForm.setData('contact_name', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary focus:ring-primary"
                             />
                         </div>
 
@@ -763,7 +763,7 @@ export default function PurchasingIndex({
                                 placeholder="+1 (555) 000-0000"
                                 value={supplierForm.data.phone}
                                 onChange={(e) => supplierForm.setData('phone', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 font-mono text-sm shadow-sm focus:border-primary focus:ring-primary"
                             />
                         </div>
 
@@ -776,7 +776,7 @@ export default function PurchasingIndex({
                                 placeholder="orders@supplier.com"
                                 value={supplierForm.data.email}
                                 onChange={(e) => supplierForm.setData('email', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary focus:ring-primary"
                             />
                         </div>
                     </div>

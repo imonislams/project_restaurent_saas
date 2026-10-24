@@ -81,8 +81,8 @@ const STATUS_CONFIG: Record<
     billing: {
         label: 'Billing',
         tone: 'info',
-        bg: 'bg-indigo-50/60 hover:bg-indigo-50',
-        border: 'border-indigo-200',
+        bg: 'bg-primary/5 hover:bg-primary/5',
+        border: 'border-primary/25',
         badgeTone: 'info',
     },
     cleaning: {
@@ -952,7 +952,7 @@ export default function TablesIndex({
                                                 onClick={() => setStatus(activeTable, s.value)}
                                                 className={`flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition ${
                                                     isCurrent
-                                                        ? 'border-indigo-600 bg-indigo-600 text-white shadow-xs'
+                                                        ? 'border-primary bg-primary text-white shadow-xs'
                                                         : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                                                 }`}
                                             >
@@ -994,7 +994,7 @@ export default function TablesIndex({
                                             <div>
                                                 <button
                                                     onClick={() => router.get(route('orders.show', o.id))}
-                                                    className="font-bold text-indigo-600 hover:text-indigo-800 hover:underline"
+                                                    className="font-bold text-primary hover:text-primary/80 hover:underline"
                                                 >
                                                     {o.order_number}
                                                 </button>
@@ -1035,7 +1035,7 @@ export default function TablesIndex({
                                 ) : (
                                     <div className="mt-3 space-y-2">
                                         <select
-                                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs shadow-xs focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs shadow-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                             value={transferOrder}
                                             onChange={(e) => setTransferOrder(Number(e.target.value))}
                                         >

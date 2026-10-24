@@ -25,14 +25,6 @@ export default function ForgotPassword({ status }: { status?: string }) {
             heroBadge="ACCOUNT SECURITY"
             heroHeadline="Secure access to your restaurant."
             heroSubheadline="Reset your credentials with encrypted verification links to keep your dining operations protected."
-            imageUrl="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=85"
-            testimonial={{
-                quote:
-                    'Touch Dine security and role-based permissions give our owners peace of mind across all shifts and registers.',
-                author: 'Liam Chen',
-                role: 'Director of Technology',
-                restaurant: 'Koji Hospitality Group',
-            }}
             headerAction={
                 <Link
                     href={route('login')}

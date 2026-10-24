@@ -29,6 +29,7 @@ class RegisterRequest extends FormRequest
     {
         return [
             'identifier_type' => ['required', Rule::in(['email', 'phone'])],
+            'plan' => ['nullable', 'string', 'max:64'],
             'name' => ['required', 'string', 'max:255'],
             'restaurant_name' => ['required', 'string', 'max:255'],
             'email' => ['required_if:identifier_type,email', 'nullable', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],

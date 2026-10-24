@@ -119,8 +119,8 @@ const FEATURE_DATA: Record<string, FeatureDetail> = {
                     <span>TICKET #0482 · TABLE 04</span>
                     <span className="text-amber-400 font-bold">ELAPSED: 8m</span>
                 </div>
-                <div className="rounded-lg bg-stone-800 p-3 border border-indigo-500 space-y-1">
-                    <div className="font-bold text-indigo-300">2x Pan-Seared Salmon</div>
+                <div className="rounded-lg bg-stone-800 p-3 border border-primary space-y-1">
+                    <div className="font-bold text-primary">2x Pan-Seared Salmon</div>
                     <div className="text-[11px] text-stone-300">↳ Rare / Sauce on side</div>
                     <div className="font-bold text-stone-200">1x Heirloom Salad</div>
                 </div>
@@ -722,7 +722,7 @@ const FEATURE_DATA: Record<string, FeatureDetail> = {
             <div className="p-6 bg-stone-50 text-xs font-mono space-y-2">
                 <div className="flex justify-between font-bold text-stone-800">
                     <span>ELENA ROSTOVA · VIP DINER</span>
-                    <span className="text-[#B53014]">340 POINTS</span>
+                    <span className="text-[#EC3013]">340 POINTS</span>
                 </div>
                 <div className="rounded bg-white p-2.5 border border-stone-200 text-stone-600">
                     <div>Total Orders: 18 · Lifetime Spend: $840.00</div>
@@ -764,8 +764,8 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
             <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="max-w-3xl">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3.5 py-1 text-xs font-mono font-semibold uppercase tracking-wider text-[#B53014] mb-6">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#B53014]" />
+                        <div className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3.5 py-1 text-xs font-mono font-semibold uppercase tracking-wider text-[#EC3013] mb-6">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#EC3013]" />
                             <span>{feature.badge}</span>
                         </div>
 
@@ -856,7 +856,7 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
                                 key={idx}
                                 className="rounded-2xl border border-stone-200/90 bg-white p-8 space-y-3 shadow-xs"
                             >
-                                <div className="text-xs font-mono font-bold text-[#B53014]">
+                                <div className="text-xs font-mono font-bold text-[#EC3013]">
                                     STEP {step.step}
                                 </div>
                                 <h3 className="font-display text-xl font-bold text-stone-900">
@@ -887,7 +887,7 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
                                 className="rounded-2xl border border-stone-200/80 bg-stone-50/60 p-7 space-y-2 hover:border-stone-300 transition-all"
                             >
                                 <h3 className="font-display text-lg font-bold text-stone-900 flex items-center gap-2">
-                                    <span className="h-2 w-2 rounded-full bg-[#B53014]" />
+                                    <span className="h-2 w-2 rounded-full bg-[#EC3013]" />
                                     <span>{b.title}</span>
                                 </h3>
                                 <p className="text-xs sm:text-sm text-stone-600 leading-relaxed pl-4">
@@ -911,7 +911,7 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
                                 {feature.title} operates seamlessly alongside other Touch Dine modules.
                             </p>
                         </div>
-                        <Link href="/features" className="text-xs font-semibold text-[#B53014] hover:underline">
+                        <Link href="/features" className="text-xs font-semibold text-[#EC3013] hover:underline">
                             View all 13 modules →
                         </Link>
                     </div>
@@ -921,12 +921,12 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
                             <Link
                                 key={r.slug}
                                 href={`/features/${r.slug}`}
-                                className="group block rounded-xl border border-stone-200 bg-white p-5 hover:border-[#B53014] transition-all"
+                                className="group block rounded-xl border border-stone-200 bg-white p-5 hover:border-[#EC3013] transition-all"
                             >
-                                <div className="font-display font-bold text-stone-900 text-sm group-hover:text-[#B53014]">
+                                <div className="font-display font-bold text-stone-900 text-sm group-hover:text-[#EC3013]">
                                     {r.title}
                                 </div>
-                                <div className="mt-1 text-xs text-stone-500 flex items-center gap-1 group-hover:text-[#B53014]">
+                                <div className="mt-1 text-xs text-stone-500 flex items-center gap-1 group-hover:text-[#EC3013]">
                                     <span>Explore module</span>
                                     <span>→</span>
                                 </div>
@@ -954,7 +954,7 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
                                 <button
                                     type="button"
                                     onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                                    className="flex w-full items-center justify-between p-5 text-left font-display font-bold text-stone-900 text-sm sm:text-base hover:text-[#B53014]"
+                                    className="flex w-full items-center justify-between p-5 text-left font-display font-bold text-stone-900 text-sm sm:text-base hover:text-[#EC3013]"
                                 >
                                     <span>{faq.q}</span>
                                     <span className="ml-4 font-mono text-stone-400">

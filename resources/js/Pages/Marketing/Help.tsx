@@ -116,7 +116,7 @@ export default function Help() {
             <section className="pt-14 pb-20 sm:pt-20 sm:pb-28 bg-white">
                 <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                     <div className="text-center max-w-2xl mx-auto mb-10">
-                        <span className="text-xs font-semibold uppercase tracking-wider text-[#B53014] block mb-2">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-[#EC3013] block mb-2">
                             Support &amp; Documentation
                         </span>
                         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-900">
@@ -158,7 +158,7 @@ export default function Help() {
                                 onClick={() => setSelectedCategory(cat.key as any)}
                                 className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors ${
                                     selectedCategory === cat.key
-                                        ? 'bg-[#B53014] text-white'
+                                        ? 'bg-[#EC3013] text-white'
                                         : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                                     }`}
                             >
@@ -178,9 +178,9 @@ export default function Help() {
                             <Accordion type="single" collapsible defaultValue="doc-1" className="w-full space-y-2">
                                 {filtered.map((doc) => (
                                     <AccordionItem key={doc.id} value={`doc-${doc.id}`}>
-                                        <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
+                                        <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#EC3013]">
                                             <div className="text-left">
-                                                <span className="text-[10px] font-mono font-bold text-[#B53014] uppercase tracking-wider block mb-0.5">
+                                                <span className="text-[10px] font-mono font-bold text-[#EC3013] uppercase tracking-wider block mb-0.5">
                                                     {doc.categoryLabel}
                                                 </span>
                                                 <span>{doc.title}</span>
@@ -206,7 +206,7 @@ export default function Help() {
                         <div className="pt-2">
                             <Link
                                 href="/contact"
-                                className="inline-flex items-center justify-center gap-2 bg-[#B53014] hover:bg-[#9E2A11] active:bg-[#85230E] text-white text-xs font-semibold px-5 py-2.5 rounded-lg transition-colors"
+                                className="inline-flex items-center justify-center gap-2 bg-[#EC3013] hover:bg-[#D02710] active:bg-[#A81E0C] text-white text-xs font-semibold px-5 py-2.5 rounded-lg transition-colors"
                             >
                                 <Mail className="w-4 h-4" />
                                 <span>Contact Hospitality Support</span>

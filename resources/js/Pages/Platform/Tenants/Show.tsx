@@ -543,7 +543,7 @@ export default function TenantShow({ tenant, tabs, plans }: { tenant: TenantHead
                             <CardHeader
                                 title="Restore history"
                                 action={
-                                    <Link href={route('platform.restores.index')} className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
+                                    <Link href={route('platform.restores.index')} className="text-xs font-medium text-primary hover:text-primary/80">
                                         Restore center
                                     </Link>
                                 }

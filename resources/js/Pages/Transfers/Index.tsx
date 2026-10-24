@@ -311,25 +311,25 @@ export default function TransfersIndex({
                     </div>
 
                     {/* Workflow Explanation Banner */}
-                    <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-4 text-xs text-indigo-900">
+                    <div className="rounded-lg border border-primary/25 bg-primary/5 p-4 text-xs text-primary">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                            <span className="font-semibold text-indigo-950">
+                            <span className="font-semibold text-primary">
                                 📦 Inter-Branch Transfer Lifecycle:
                             </span>
                             <div className="flex flex-wrap items-center gap-1.5 font-medium">
-                                <span className="rounded bg-white px-2 py-0.5 shadow-xs border border-indigo-200 text-indigo-800">
+                                <span className="rounded bg-white px-2 py-0.5 shadow-xs border border-primary/25 text-primary">
                                     1. Draft
                                 </span>
                                 <span>➔</span>
-                                <span className="rounded bg-white px-2 py-0.5 shadow-xs border border-indigo-200 text-indigo-800">
+                                <span className="rounded bg-white px-2 py-0.5 shadow-xs border border-primary/25 text-primary">
                                     2. Approved
                                 </span>
                                 <span>➔</span>
-                                <span className="rounded bg-white px-2 py-0.5 shadow-xs border border-indigo-200 text-indigo-800">
+                                <span className="rounded bg-white px-2 py-0.5 shadow-xs border border-primary/25 text-primary">
                                     3. Dispatched (Deducted from Origin)
                                 </span>
                                 <span>➔</span>
-                                <span className="rounded bg-white px-2 py-0.5 shadow-xs border border-indigo-200 text-emerald-800">
+                                <span className="rounded bg-white px-2 py-0.5 shadow-xs border border-primary/25 text-emerald-800">
                                     4. Received (Credited to Destination)
                                 </span>
                             </div>
@@ -348,7 +348,7 @@ export default function TransfersIndex({
                                         placeholder="Search transfer # or branch…"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="h-9 w-48 rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:w-60"
+                                        className="h-9 w-48 rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary sm:w-60"
                                     />
                                 </div>
                             }
@@ -384,8 +384,8 @@ export default function TransfersIndex({
                                 onClick={() => setStatusFilter('dispatched')}
                                 className={`rounded-full px-2.5 py-1 font-medium transition ${
                                     statusFilter === 'dispatched'
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'bg-indigo-50 text-indigo-800 hover:bg-indigo-100 border border-indigo-200'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-primary/5 text-primary hover:bg-primary/10 border border-primary/25'
                                 }`}
                             >
                                 In Transit ({inTransitCount})
@@ -453,7 +453,7 @@ export default function TransfersIndex({
                                                                 {t.from_branch ?? 'Origin'}
                                                             </span>
                                                             <span className="text-gray-400 font-bold">➔</span>
-                                                            <span className="font-semibold text-indigo-900 bg-indigo-50 px-2.5 py-1 rounded border border-indigo-200">
+                                                            <span className="font-semibold text-primary bg-primary/5 px-2.5 py-1 rounded border border-primary/25">
                                                                 {t.to_branch ?? 'Destination'}
                                                             </span>
                                                         </div>
@@ -556,7 +556,7 @@ export default function TransfersIndex({
                                 <select
                                     value={form.data.from_branch_id}
                                     onChange={(e) => form.setData('from_branch_id', Number(e.target.value))}
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 >
                                     {branches.map((b) => (
@@ -574,7 +574,7 @@ export default function TransfersIndex({
                                 <select
                                     value={form.data.to_branch_id}
                                     onChange={(e) => form.setData('to_branch_id', Number(e.target.value))}
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                     required
                                 >
                                     {branches.map((b) => (
@@ -601,7 +601,7 @@ export default function TransfersIndex({
                                 <button
                                     type="button"
                                     onClick={addLine}
-                                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+                                    className="text-xs font-semibold text-primary hover:text-primary/80"
                                 >
                                     + Add Another Item
                                 </button>
@@ -617,7 +617,7 @@ export default function TransfersIndex({
                                             <select
                                                 value={line.item}
                                                 onChange={(e) => updateLineItem(idx, e.target.value)}
-                                                className="block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                className="block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                                                 required
                                             >
                                                 {items.map((i) => (
@@ -636,7 +636,7 @@ export default function TransfersIndex({
                                                 placeholder="Qty"
                                                 value={line.quantity}
                                                 onChange={(e) => updateLineQty(idx, Number(e.target.value))}
-                                                className="block w-full rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                className="block w-full rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-primary focus:ring-primary"
                                                 required
                                             />
                                         </div>
@@ -665,7 +665,7 @@ export default function TransfersIndex({
                                 placeholder="e.g. Frozen goods, transport with cold box"
                                 value={form.data.notes}
                                 onChange={(e) => form.setData('notes', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-primary focus:ring-primary"
                             />
                         </div>
                     </div>
