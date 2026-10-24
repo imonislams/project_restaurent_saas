@@ -55,7 +55,7 @@ export default function MiseLogo({
                                 sizeClasses.title
                             } ${isDark ? 'text-white' : 'text-foreground'}`}
                         >
-                            Restrly<span className="text-primary">.</span>
+                            Touch Dine<span className="text-primary">.</span>
                         </span>
                     </span>
                     {withTagline && tagline && (
@@ -77,7 +77,7 @@ export default function MiseLogo({
             <Link
                 href={href}
                 className="inline-flex items-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg"
-                aria-label="Restrly"
+                aria-label="Touch Dine"
             >
                 {content}
             </Link>

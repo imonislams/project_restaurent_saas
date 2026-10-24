@@ -122,7 +122,7 @@ export default function EmailSettings({ settings, mailers }: { settings: Setting
                                 <Input 
                                     id="from_address"
                                     value={form.data.from_address} 
-                                    placeholder="noreply@restrly.com"
+                                    placeholder="noreply@touchdine.cafe"
                                     onChange={(e) => form.setData('from_address', e.target.value)} 
                                 />
                             </div>
@@ -132,7 +132,7 @@ export default function EmailSettings({ settings, mailers }: { settings: Setting
                                 <Input 
                                     id="from_name"
                                     value={form.data.from_name} 
-                                    placeholder="Restrly Platform"
+                                    placeholder="Touch Dine Platform"
                                     onChange={(e) => form.setData('from_name', e.target.value)} 
                                 />
                             </div>

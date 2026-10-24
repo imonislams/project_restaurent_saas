@@ -75,7 +75,7 @@ const SidebarProvider = React.forwardRef<
         // Internal open state for uncontrolled component
         const [_open, _setOpen] = React.useState(() => {
             if (typeof window !== 'undefined') {
-                const saved = localStorage.getItem('restrly_sidebar');
+                const saved = localStorage.getItem('touchdine_sidebar');
                 if (saved !== null) {
                     return saved !== '1'; // '1' was previously collapsed
                 }
@@ -93,7 +93,7 @@ const SidebarProvider = React.forwardRef<
                 }
 
                 if (typeof window !== 'undefined') {
-                    localStorage.setItem('restrly_sidebar', openState ? '0' : '1');
+                    localStorage.setItem('touchdine_sidebar', openState ? '0' : '1');
                     document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
                 }
             },
@@ -214,7 +214,7 @@ const Sidebar = React.forwardRef<
                     >
                         <SheetHeader className="sr-only">
                             <SheetTitle>Navigation Menu</SheetTitle>
-                            <SheetDescription>Restrly workspace navigation</SheetDescription>
+                            <SheetDescription>Touch Dine workspace navigation</SheetDescription>
                         </SheetHeader>
                         <div className="flex h-full w-full flex-col">{children}</div>
                     </SheetContent>

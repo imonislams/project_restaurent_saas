@@ -174,7 +174,7 @@ export default function QrTracking({ token, restaurant, table, participant_token
                                         ? 'bg-red-50 text-red-700'
                                         : order.status.key === 'completed'
                                           ? 'bg-emerald-50 text-emerald-700'
-                                          : 'bg-restrly-50 text-restrly-700'
+                                          : 'bg-touchdine-50 text-touchdine-700'
                                 }`}
                             >
                                 {order.status.label}
@@ -189,13 +189,13 @@ export default function QrTracking({ token, restaurant, table, participant_token
                                     return (
                                         <div key={step.key} className="flex flex-1 items-center last:flex-none">
                                             <div className="flex flex-col items-center">
-                                                <span className={`h-3 w-3 rounded-full ${done ? 'bg-restrly-600' : 'bg-gray-200'}`} />
-                                                <span className={`mt-1 w-14 text-center text-[9px] font-semibold ${done ? 'text-restrly-700' : 'text-gray-400'}`}>
+                                                <span className={`h-3 w-3 rounded-full ${done ? 'bg-touchdine-600' : 'bg-gray-200'}`} />
+                                                <span className={`mt-1 w-14 text-center text-[9px] font-semibold ${done ? 'text-touchdine-700' : 'text-gray-400'}`}>
                                                     {step.label}
                                                 </span>
                                             </div>
                                             {i < order.status.steps.length - 1 && (
-                                                <div className={`mx-0.5 h-1 flex-1 rounded ${i < order.status.index ? 'bg-restrly-600' : 'bg-gray-200'}`} />
+                                                <div className={`mx-0.5 h-1 flex-1 rounded ${i < order.status.index ? 'bg-touchdine-600' : 'bg-gray-200'}`} />
                                             )}
                                         </div>
                                     );

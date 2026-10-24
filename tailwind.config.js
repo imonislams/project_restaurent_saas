@@ -147,8 +147,8 @@ export default {
                     border: 'hsl(var(--sidebar-border))',
                     ring: 'hsl(var(--sidebar-ring))',
                 },
-                // Restrly theme brand palette
-                restrly: {
+                // Touch Dine theme brand palette
+                touchdine: {
                     50: '#FFF5F2',
                     100: '#FFE8E2',
                     200: '#FFD3C7',

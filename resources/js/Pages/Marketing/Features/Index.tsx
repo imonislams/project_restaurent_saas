@@ -133,7 +133,7 @@ export default function FeaturesIndex() {
         <MarketingLayout>
             <MarketingHead
                 title="All 13 Restaurant Modules — Features Directory"
-                description="Explore all 13 core modules of Restrly: POS terminal, kitchen display (KDS), table management, recipe costing, inventory, multi-branch control, and reports."
+                description="Explore all 13 core modules of Touch Dine: POS terminal, kitchen display (KDS), table management, recipe costing, inventory, multi-branch control, and reports."
             />
 
             <section className="pt-12 pb-20 sm:pt-20 sm:pb-28">
@@ -141,7 +141,7 @@ export default function FeaturesIndex() {
                     <SectionHeading
                         badge="COMPLETE SYSTEM DIRECTORY"
                         title="13 Modules. One Connected Platform."
-                        description="Every feature in Restrly is designed to solve a specific operational bottleneck. Click into any module to explore its capabilities, workflows, and specifications."
+                        description="Every feature in Touch Dine is designed to solve a specific operational bottleneck. Click into any module to explore its capabilities, workflows, and specifications."
                     />
 
                     {/* Features Grid */}

@@ -2,207 +2,207 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Core Landing Pages -->
   <url>
-    <loc>https://restrly.com/</loc>
+    <loc>https://touchdine.cafe/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://restrly.com/product</loc>
+    <loc>https://touchdine.cafe/product</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://restrly.com/pricing</loc>
+    <loc>https://touchdine.cafe/pricing</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <!-- Features Hub & 13 Specialized Modules -->
   <url>
-    <loc>https://restrly.com/features</loc>
+    <loc>https://touchdine.cafe/features</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://restrly.com/features/restaurant-pos</loc>
+    <loc>https://touchdine.cafe/features/restaurant-pos</loc>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://restrly.com/features/kitchen-display</loc>
+    <loc>https://touchdine.cafe/features/kitchen-display</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/features/table-management</loc>
+    <loc>https://touchdine.cafe/features/table-management</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/features/menu-management</loc>
+    <loc>https://touchdine.cafe/features/menu-management</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/features/inventory-management</loc>
+    <loc>https://touchdine.cafe/features/inventory-management</loc>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://restrly.com/features/order-management</loc>
+    <loc>https://touchdine.cafe/features/order-management</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/features/cash-management</loc>
+    <loc>https://touchdine.cafe/features/cash-management</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/features/expense-management</loc>
+    <loc>https://touchdine.cafe/features/expense-management</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/features/reports-analytics</loc>
+    <loc>https://touchdine.cafe/features/reports-analytics</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/features/staff-management</loc>
+    <loc>https://touchdine.cafe/features/staff-management</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/features/multi-branch-management</loc>
+    <loc>https://touchdine.cafe/features/multi-branch-management</loc>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://restrly.com/features/purchasing-suppliers</loc>
+    <loc>https://touchdine.cafe/features/purchasing-suppliers</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/features/customer-management</loc>
+    <loc>https://touchdine.cafe/features/customer-management</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Solutions Hub & 6 Hospitality Venue Types -->
   <url>
-    <loc>https://restrly.com/solutions</loc>
+    <loc>https://touchdine.cafe/solutions</loc>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://restrly.com/solutions/restaurants</loc>
+    <loc>https://touchdine.cafe/solutions/restaurants</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/solutions/cafes</loc>
+    <loc>https://touchdine.cafe/solutions/cafes</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/solutions/cloud-kitchens</loc>
+    <loc>https://touchdine.cafe/solutions/cloud-kitchens</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/solutions/quick-service-restaurants</loc>
+    <loc>https://touchdine.cafe/solutions/quick-service-restaurants</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/solutions/takeaway-delivery</loc>
+    <loc>https://touchdine.cafe/solutions/takeaway-delivery</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/solutions/multi-location-restaurants</loc>
+    <loc>https://touchdine.cafe/solutions/multi-location-restaurants</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Company, Contact & Knowledge Hub -->
   <url>
-    <loc>https://restrly.com/about</loc>
+    <loc>https://touchdine.cafe/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://restrly.com/contact</loc>
+    <loc>https://touchdine.cafe/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://restrly.com/resources</loc>
+    <loc>https://touchdine.cafe/resources</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://restrly.com/resources/restaurant-pos-buying-guide-2026</loc>
+    <loc>https://touchdine.cafe/resources/restaurant-pos-buying-guide-2026</loc>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://restrly.com/resources/food-waste-recipe-costing-guide</loc>
+    <loc>https://touchdine.cafe/resources/food-waste-recipe-costing-guide</loc>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://restrly.com/resources/multi-branch-centralized-kitchen-sop</loc>
+    <loc>https://touchdine.cafe/resources/multi-branch-centralized-kitchen-sop</loc>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://restrly.com/resources/speed-of-service-kds-optimization</loc>
+    <loc>https://touchdine.cafe/resources/speed-of-service-kds-optimization</loc>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://restrly.com/resources/opening-closing-cash-drawer-audit-checklist</loc>
+    <loc>https://touchdine.cafe/resources/opening-closing-cash-drawer-audit-checklist</loc>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://restrly.com/help</loc>
+    <loc>https://touchdine.cafe/help</loc>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
 
   <!-- Legal & Transparency -->
   <url>
-    <loc>https://restrly.com/privacy-policy</loc>
+    <loc>https://touchdine.cafe/privacy-policy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://restrly.com/terms-of-service</loc>
+    <loc>https://touchdine.cafe/terms-of-service</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://restrly.com/cookie-policy</loc>
+    <loc>https://touchdine.cafe/cookie-policy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://restrly.com/refund-policy</loc>
+    <loc>https://touchdine.cafe/refund-policy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
 
   <!-- Conversion Portals -->
   <url>
-    <loc>https://restrly.com/register</loc>
+    <loc>https://touchdine.cafe/register</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://restrly.com/login</loc>
+    <loc>https://touchdine.cafe/login</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

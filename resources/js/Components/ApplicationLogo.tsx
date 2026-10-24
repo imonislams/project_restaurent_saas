@@ -1,8 +1,9 @@
 import { SVGAttributes } from 'react';
 
 /**
- * Restrly Application Brand Mark (SVG).
- * Used throughout app shells, headers, and guest authentication layouts.
+ * Touch Dine Application Brand Mark (SVG).
+ * Bold 'TD' monogram on a squircle — used throughout app shells, headers,
+ * and guest authentication layouts.
  */
 export default function ApplicationLogo({
     className = 'w-9 h-9',
@@ -30,28 +31,25 @@ export default function ApplicationLogo({
             />
 
             {/* Ambient culinary glow */}
-            <circle cx="36" cy="28" r="22" fill="#FFFFFF" fillOpacity="0.12" />
+            <circle cx="32" cy="30" r="24" fill="#FFFFFF" fillOpacity="0.1" />
 
-            {/* Cloche Dome Top Knob Accent */}
-            <circle cx="34" cy="15" r="3" fill="#FFFFFF" />
+            {/* T — crossbar */}
+            <rect x="10" y="17" width="20" height="7" rx="3.5" fill="#FFFFFF" />
 
-            {/* Left foundational pillar of R */}
-            <rect x="15" y="18" width="7" height="30" rx="3.5" fill="#FFFFFF" />
+            {/* T — stem */}
+            <rect x="16.5" y="17" width="7" height="30" rx="3.5" fill="#FFFFFF" />
 
-            {/* Cloche Dome & Upper Bowl of R */}
+            {/* D — stem */}
+            <rect x="35" y="17" width="7" height="30" rx="3.5" fill="#FFFFFF" />
+
+            {/* D — bowl */}
             <path
-                d="M22 18H34C40.6274 18 46 23.3726 46 30C46 36.6274 40.6274 42 34 42H22V35H33.5C36.5376 35 39 32.5376 39 29.5C39 26.4624 36.5376 24 33.5 24H22V18Z"
+                d="M42 17C49 17 55 22 55 32C55 42 49 47 42 47V40C46 40 48 36.5 48 32C48 27.5 46 24 42 24V17Z"
                 fill="#FFFFFF"
             />
 
-            {/* Dynamic serving sweep / leg of R */}
-            <path
-                d="M30 35L42.5 47.5C43.5 48.5 42.8 50 41.4 50H34.5C33.4 50 32.4 49.5 31.7 48.7L22 38L30 35Z"
-                fill="#FFFFFF"
-            />
-
-            {/* Digital Service Pulse Dot */}
-            <circle cx="30" cy="30" r="2.5" fill="#FFFFFF" fillOpacity="0.9" />
+            {/* Digital service pulse dot */}
+            <circle cx="45" cy="32" r="2" fill="#FFFFFF" fillOpacity="0.9" />
         </svg>
     );
 }

@@ -265,7 +265,7 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                 <button
                     type="button"
                     onClick={() => setShowCart(true)}
-                    className="relative rounded-xl bg-restrly-600 px-3 py-2 text-xs font-bold text-white shadow-subtle"
+                    className="relative rounded-xl bg-touchdine-600 px-3 py-2 text-xs font-bold text-white shadow-subtle"
                 >
                     Cart
                     {cartCount > 0 && (
@@ -305,7 +305,7 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search the menu"
-                    className="h-11 w-full rounded-xl border-gray-300 px-3 text-sm focus:border-restrly-500 focus:ring-restrly-500"
+                    className="h-11 w-full rounded-xl border-gray-300 px-3 text-sm focus:border-touchdine-500 focus:ring-touchdine-500"
                 />
             </div>
 
@@ -314,7 +314,7 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                     type="button"
                     onClick={() => setActiveCategory('all')}
                     className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                        activeCategory === 'all' ? 'bg-restrly-600 text-white' : 'bg-white text-gray-600 ring-1 ring-gray-200'
+                        activeCategory === 'all' ? 'bg-touchdine-600 text-white' : 'bg-white text-gray-600 ring-1 ring-gray-200'
                     }`}
                 >
                     All
@@ -325,7 +325,7 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                         type="button"
                         onClick={() => setActiveCategory(category.id)}
                         className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                            activeCategory === category.id ? 'bg-restrly-600 text-white' : 'bg-white text-gray-600 ring-1 ring-gray-200'
+                            activeCategory === category.id ? 'bg-touchdine-600 text-white' : 'bg-white text-gray-600 ring-1 ring-gray-200'
                         }`}
                     >
                         {category.name}
@@ -344,7 +344,7 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                         {product.image_url ? (
                             <img src={product.image_url} alt={product.name} className="h-28 w-full object-cover" loading="lazy" />
                         ) : (
-                            <div className="flex h-28 w-full items-center justify-center bg-restrly-50 text-2xl">🍽️</div>
+                            <div className="flex h-28 w-full items-center justify-center bg-touchdine-50 text-2xl">🍽️</div>
                         )}
                         <div className="p-3">
                             <p className="line-clamp-2 min-h-[2.25rem] text-sm font-semibold text-gray-900">{product.name}</p>
@@ -390,7 +390,7 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                                                 type="button"
                                                 onClick={() => setVariantId(variant.id)}
                                                 className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold ${
-                                                    variantId === variant.id ? 'border-restrly-500 bg-restrly-50 text-restrly-800' : 'border-gray-200 text-gray-700'
+                                                    variantId === variant.id ? 'border-touchdine-500 bg-touchdine-50 text-touchdine-800' : 'border-gray-200 text-gray-700'
                                                 }`}
                                             >
                                                 {variant.name} · {money(variant.price)}
@@ -420,7 +420,7 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                                                         type="button"
                                                         onClick={() => toggleModifier(group, option.id)}
                                                         className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold ${
-                                                            active ? 'border-restrly-500 bg-restrly-50 text-restrly-800' : 'border-gray-200 text-gray-700'
+                                                            active ? 'border-touchdine-500 bg-touchdine-50 text-touchdine-800' : 'border-gray-200 text-gray-700'
                                                         }`}
                                                     >
                                                         {option.name}
@@ -439,7 +439,7 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                                     <input
                                         value={detailNote}
                                         onChange={(e) => setDetailNote(e.target.value)}
-                                        className="h-10 w-full rounded-xl border-gray-300 px-3 text-sm focus:border-restrly-500 focus:ring-restrly-500"
+                                        className="h-10 w-full rounded-xl border-gray-300 px-3 text-sm focus:border-touchdine-500 focus:ring-touchdine-500"
                                         placeholder="e.g. no onions"
                                     />
                                 </label>
@@ -460,7 +460,7 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                                 type="button"
                                 disabled={!detailValid}
                                 onClick={addToCart}
-                                className="h-11 flex-1 rounded-xl bg-restrly-600 text-sm font-bold text-white shadow-card hover:bg-restrly-700 disabled:opacity-50"
+                                className="h-11 flex-1 rounded-xl bg-touchdine-600 text-sm font-bold text-white shadow-card hover:bg-touchdine-700 disabled:opacity-50"
                             >
                                 Add · {money((detailBasePrice + detailDelta) * detailQty)}
                             </button>
@@ -515,7 +515,7 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                                     <input
                                         value={orderNotes}
                                         onChange={(e) => setOrderNotes(e.target.value)}
-                                        className="h-10 w-full rounded-xl border-gray-300 px-3 text-sm focus:border-restrly-500 focus:ring-restrly-500"
+                                        className="h-10 w-full rounded-xl border-gray-300 px-3 text-sm focus:border-touchdine-500 focus:ring-touchdine-500"
                                     />
                                 </label>
                             )}
@@ -533,7 +533,7 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                                 type="button"
                                 disabled={cart.length === 0 || submitting}
                                 onClick={submitOrder}
-                                className="h-12 w-full rounded-xl bg-restrly-600 text-sm font-bold text-white shadow-card hover:bg-restrly-700 disabled:opacity-50"
+                                className="h-12 w-full rounded-xl bg-touchdine-600 text-sm font-bold text-white shadow-card hover:bg-touchdine-700 disabled:opacity-50"
                             >
                                 {submitting ? 'Placing order…' : 'Place order'}
                             </button>

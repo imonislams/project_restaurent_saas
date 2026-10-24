@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { SVGAttributes } from 'react';
 
-export interface RestrlyLogoProps {
+export interface TouchDineLogoProps {
     variant?: 'full' | 'mark' | 'vertical';
     theme?: 'dark' | 'light' | 'auto';
     size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -12,11 +12,11 @@ export interface RestrlyLogoProps {
 }
 
 /**
- * Pure SVG Restrly Mark:
- * Architectural 'R' monogram gracefully fused with a luxury dining cloche (plate cover),
- * dynamic serving leg, and real-time operations pulse node.
+ * Pure SVG Touch Dine Mark:
+ * Bold 'TD' monogram with rounded terminals, a cloche dome knob accent,
+ * ambient culinary glow, and a real-time operations pulse node.
  */
-export function RestrlyMark({
+export function TouchDineMark({
     className = 'w-9 h-9',
     theme = 'dark',
     ...props
@@ -48,33 +48,30 @@ export function RestrlyMark({
             />
 
             {/* Ambient culinary glow */}
-            <circle cx="36" cy="28" r="22" fill={accentFill} fillOpacity="0.14" />
+            <circle cx="32" cy="30" r="24" fill={accentFill} fillOpacity="0.14" />
 
-            {/* Cloche Dome Top Knob Accent */}
-            <circle cx="34" cy="15" r="3" fill={accentFill} />
+            {/* T — crossbar */}
+            <rect x="10" y="17" width="20" height="7" rx="3.5" fill={primaryFill} />
 
-            {/* Foundational pillar of R */}
-            <rect x="15" y="18" width="7" height="30" rx="3.5" fill={primaryFill} />
+            {/* T — stem */}
+            <rect x="16.5" y="17" width="7" height="30" rx="3.5" fill={primaryFill} />
 
-            {/* Cloche Dome & Upper Bowl of R */}
+            {/* D — stem */}
+            <rect x="35" y="17" width="7" height="30" rx="3.5" fill={primaryFill} />
+
+            {/* D — bowl */}
             <path
-                d="M22 18H34C40.6274 18 46 23.3726 46 30C46 36.6274 40.6274 42 34 42H22V35H33.5C36.5376 35 39 32.5376 39 29.5C39 26.4624 36.5376 24 33.5 24H22V18Z"
+                d="M42 17C49 17 55 22 55 32C55 42 49 47 42 47V40C46 40 48 36.5 48 32C48 27.5 46 24 42 24V17Z"
                 fill={primaryFill}
             />
 
-            {/* Dynamic serving sweep / leg of R */}
-            <path
-                d="M30 35L42.5 47.5C43.5 48.5 42.8 50 41.4 50H34.5C33.4 50 32.4 49.5 31.7 48.7L22 38L30 35Z"
-                fill={primaryFill}
-            />
-
-            {/* Digital Service Pulse Dot */}
-            <circle cx="30" cy="30" r="2.5" fill={accentFill} />
+            {/* Digital service pulse dot */}
+            <circle cx="45" cy="32" r="2" fill={accentFill} />
         </svg>
     );
 }
 
-export default function RestrlyLogo({
+export default function TouchDineLogo({
     variant = 'full',
     theme = 'light',
     size = 'md',
@@ -82,7 +79,7 @@ export default function RestrlyLogo({
     withTagline = false,
     tagline = 'RESTAURANT OS',
     href = '/',
-}: RestrlyLogoProps) {
+}: TouchDineLogoProps) {
     const isDark = theme === 'dark';
 
     const sizeStyles = {
@@ -118,7 +115,7 @@ export default function RestrlyLogo({
                 variant === 'vertical' ? 'flex-col text-center gap-2' : sizeStyles.gap
             } ${className}`}
         >
-            <RestrlyMark
+            <TouchDineMark
                 className={`${sizeStyles.mark} drop-shadow-sm hover:scale-[1.03] transition-transform`}
                 theme={theme}
             />
@@ -131,14 +128,14 @@ export default function RestrlyLogo({
                                 sizeStyles.title
                             } ${isDark ? 'text-white' : 'text-[#0B271F]'}`}
                         >
-                            Restr
+                            Touch
                         </span>
                         <span
                             className={`font-semibold tracking-tight ${
                                 sizeStyles.title
                             } ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}
                         >
-                            ly
+                            {' '}Dine
                         </span>
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 ml-0.5 mb-1" />
                     </div>
@@ -162,7 +159,7 @@ export default function RestrlyLogo({
             <Link
                 href={href}
                 className="inline-flex items-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 rounded-lg"
-                aria-label="Restrly - Home"
+                aria-label="Touch Dine - Home"
             >
                 {content}
             </Link>

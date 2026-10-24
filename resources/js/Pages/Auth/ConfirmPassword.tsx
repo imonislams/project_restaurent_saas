@@ -51,7 +51,7 @@ export default function ConfirmPassword() {
                     Confirm your password
                 </h1>
                 <p className="mt-2 text-sm text-stone-500 leading-relaxed">
-                    This is a secure area of Restrly. Please confirm your account password
+                    This is a secure area of Touch Dine. Please confirm your account password
                     before continuing.
                 </p>
             </div>

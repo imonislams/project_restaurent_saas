@@ -67,7 +67,7 @@ export function trackConversion(
 
     // Dispatch DOM custom event for app-level listeners
     try {
-        const customEvent = new CustomEvent('restrly:conversion', {
+        const customEvent = new CustomEvent('touchdine:conversion', {
             detail: sanitizedPayload,
         });
         window.dispatchEvent(customEvent);
@@ -76,6 +76,6 @@ export function trackConversion(
     }
 
     if (process.env.NODE_ENV === 'development') {
-        console.debug('[Restrly Telemetry]', eventName, sanitizedPayload);
+        console.debug('[Touch Dine Telemetry]', eventName, sanitizedPayload);
     }
 }

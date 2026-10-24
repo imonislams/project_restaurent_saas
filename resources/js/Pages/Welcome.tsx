@@ -262,10 +262,10 @@ export default function Welcome({
     return (
         <MarketingLayout>
             <Head>
-                <title>Restrly — Complete Restaurant Management Software & POS</title>
+                <title>Touch Dine — Complete Restaurant Management Software & POS</title>
                 <meta
                     name="description"
-                    content="Restrly is the modern restaurant management system built for high-velocity operations: sub-second POS, kitchen display system, table management, and inventory."
+                    content="Touch Dine is the modern restaurant management system built for high-velocity operations: sub-second POS, kitchen display system, table management, and inventory."
                 />
             </Head>
 
@@ -277,7 +277,7 @@ export default function Welcome({
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-stone-100 border border-stone-200 text-stone-800 mb-6">
                             <span className="w-2 h-2 rounded-full bg-[#B53014] animate-pulse" />
                             <span className="text-xs font-semibold tracking-wide uppercase text-stone-700">
-                                Restrly OS &bull; Built for High-Performing Hospitality
+                                Touch Dine OS &bull; Built for High-Performing Hospitality
                             </span>
                         </div>
 
@@ -337,7 +337,7 @@ export default function Welcome({
                                         <span className="w-2.5 h-2.5 rounded-full bg-stone-700" />
                                     </div>
                                     <span className="text-stone-300 font-mono text-[11px] ml-2">
-                                        Restrly POS Terminal &bull; Downtown Branch #01
+                                        Touch Dine POS Terminal &bull; Downtown Branch #01
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-4 text-[11px] font-mono">
@@ -509,7 +509,7 @@ export default function Welcome({
                                 Every restaurant station in harmony
                             </h2>
                             <p className="text-stone-600 mt-3 text-base">
-                                Eliminate disjointed point solutions. Restrly coordinates orders, kitchen stations, floor layouts, and multi-branch inventory.
+                                Eliminate disjointed point solutions. Touch Dine coordinates orders, kitchen stations, floor layouts, and multi-branch inventory.
                             </p>
                         </div>
 
@@ -681,7 +681,7 @@ export default function Welcome({
                                 Operational Flow
                             </span>
                             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">
-                                How hospitality moves through Restrly
+                                How hospitality moves through Touch Dine
                             </h2>
                             <p className="text-stone-600 mt-3 text-base">
                                 From guest seating to kitchen pacing and end-of-day reconciliation.
@@ -1201,7 +1201,7 @@ export default function Welcome({
                                 Frequently asked questions
                             </h2>
                             <p className="text-stone-600 mt-3 text-base">
-                                Everything you need to know about Restrly architecture, hardware, and onboarding.
+                                Everything you need to know about Touch Dine architecture, hardware, and onboarding.
                             </p>
                         </div>
 
@@ -1209,10 +1209,10 @@ export default function Welcome({
                             <Accordion type="single" collapsible className="w-full space-y-2">
                                 <AccordionItem value="item-1">
                                     <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
-                                        What hardware does Restrly support?
+                                        What hardware does Touch Dine support?
                                     </AccordionTrigger>
                                     <AccordionContent>
-                                        Restrly runs smoothly on standard modern hardware: iPads, Android tablets, touch displays, Mac, Windows, or Linux browsers. We connect seamlessly with standard ESC/POS thermal receipt printers (Epson, Star Micronics), cash drawers, and barcode scanners without proprietary hardware markups.
+                                        Touch Dine runs smoothly on standard modern hardware: iPads, Android tablets, touch displays, Mac, Windows, or Linux browsers. We connect seamlessly with standard ESC/POS thermal receipt printers (Epson, Star Micronics), cash drawers, and barcode scanners without proprietary hardware markups.
                                     </AccordionContent>
                                 </AccordionItem>
 
@@ -1221,7 +1221,7 @@ export default function Welcome({
                                         What happens if our restaurant internet drops during peak service?
                                     </AccordionTrigger>
                                     <AccordionContent>
-                                        Restrly includes robust offline-resilient local sync. Even if your internet connection cuts out, registers continue firing tickets directly to kitchen displays and printers across your local Wi-Fi router. All transactions buffer securely and auto-synchronize to the cloud when connectivity returns.
+                                        Touch Dine includes robust offline-resilient local sync. Even if your internet connection cuts out, registers continue firing tickets directly to kitchen displays and printers across your local Wi-Fi router. All transactions buffer securely and auto-synchronize to the cloud when connectivity returns.
                                     </AccordionContent>
                                 </AccordionItem>
 
@@ -1239,7 +1239,7 @@ export default function Welcome({
                                         How does inventory deduction work with recipes and modifiers?
                                     </AccordionTrigger>
                                     <AccordionContent>
-                                        Every menu item and modifier can be tied directly to ingredient batches in your inventory ledger. When a guest orders a burger with extra cheese and gluten-free bread, Restrly calculates and deducts the precise gram amounts from raw stock and recalculates plate margin in real time.
+                                        Every menu item and modifier can be tied directly to ingredient batches in your inventory ledger. When a guest orders a burger with extra cheese and gluten-free bread, Touch Dine calculates and deducts the precise gram amounts from raw stock and recalculates plate margin in real time.
                                     </AccordionContent>
                                 </AccordionItem>
 
@@ -1248,7 +1248,7 @@ export default function Welcome({
                                         Can I manage multiple restaurant branches or commissary kitchens?
                                     </AccordionTrigger>
                                     <AccordionContent>
-                                        Yes. Restrly features a centralized multi-branch architecture. You can switch between locations in seconds, push standardized menus or seasonal specials to specific branches, and analyze consolidated sales reports or individual store margins.
+                                        Yes. Touch Dine features a centralized multi-branch architecture. You can switch between locations in seconds, push standardized menus or seasonal specials to specific branches, and analyze consolidated sales reports or individual store margins.
                                     </AccordionContent>
                                 </AccordionItem>
 
@@ -1257,7 +1257,7 @@ export default function Welcome({
                                         Are there long-term contracts or cancellation fees?
                                     </AccordionTrigger>
                                     <AccordionContent>
-                                        No. All standard Restrly subscriptions operate on month-to-month or annual terms with zero cancellation fees. You can upgrade, downgrade, or cancel whenever your operational needs change.
+                                        No. All standard Touch Dine subscriptions operate on month-to-month or annual terms with zero cancellation fees. You can upgrade, downgrade, or cancel whenever your operational needs change.
                                     </AccordionContent>
                                 </AccordionItem>
                             </Accordion>
@@ -1277,7 +1277,7 @@ export default function Welcome({
                         </h2>
 
                         <p className="text-stone-300 mt-4 max-w-xl text-base leading-relaxed">
-                            Join leading restaurateurs who rely on Restrly for sub-second POS velocity, real-time kitchen coordination, and inventory precision.
+                            Join leading restaurateurs who rely on Touch Dine for sub-second POS velocity, real-time kitchen coordination, and inventory precision.
                         </p>
 
                         <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 w-full justify-center">

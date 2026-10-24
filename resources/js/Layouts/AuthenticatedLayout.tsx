@@ -145,7 +145,7 @@ export default function Authenticated({
 
     return (
         <AppShell
-            brand={{ title: tenant?.name ?? 'Restrly POS', subtitle: t('shell.management'), logoUrl: tenant?.logo_url ?? null }}
+            brand={{ title: tenant?.name ?? 'Touch Dine POS', subtitle: t('shell.management'), logoUrl: tenant?.logo_url ?? null }}
             nav={nav}
             header={header}
             banner={banner}

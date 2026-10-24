@@ -8,7 +8,7 @@ export default function Refund() {
     return (
         <MarketingLayout>
             <MarketingHead
-                title="Refund & Subscription Policy — Restrly"
+                title="Refund & Subscription Policy — Touch Dine"
                 description="Our 14-day free trial terms, monthly and annual subscription conditions, and refund procedures."
             />
 
@@ -21,7 +21,7 @@ export default function Refund() {
                         Refund & Billing Policy
                     </h1>
                     <div className="mt-2 text-xs font-mono text-stone-400 pb-8 border-b border-stone-200">
-                        Effective Date: October 2026 · Restrly Inc.
+                        Effective Date: October 2026 · Touch Dine Inc.
                     </div>
 
                     <div className="mt-8 space-y-8 text-stone-700 text-xs sm:text-sm leading-relaxed font-sans">
@@ -30,7 +30,7 @@ export default function Refund() {
                                 1. 14-Day Free Trial Terms
                             </h2>
                             <p>
-                                Every new restaurant registered on Restrly begins with a 14-day free trial of your selected plan (Starter, Growth, or Business). During the trial, you have complete access to all included modules without providing a credit card. You will never be automatically charged upon trial expiration unless you choose to activate a paid plan.
+                                Every new restaurant registered on Touch Dine begins with a 14-day free trial of your selected plan (Starter, Growth, or Business). During the trial, you have complete access to all included modules without providing a credit card. You will never be automatically charged upon trial expiration unless you choose to activate a paid plan.
                             </p>
                         </section>
 
@@ -48,7 +48,7 @@ export default function Refund() {
                                 3. Annual Subscriptions & 30-Day Money-Back Guarantee
                             </h2>
                             <p>
-                                Annual subscriptions provide a discount equivalent to approximately two months free. If within the first 30 days of purchasing an annual plan you find that Restrly does not meet your operational requirements, contact our support team to receive a full refund.
+                                Annual subscriptions provide a discount equivalent to approximately two months free. If within the first 30 days of purchasing an annual plan you find that Touch Dine does not meet your operational requirements, contact our support team to receive a full refund.
                             </p>
                             <p>
                                 After 30 days, annual subscriptions cancelled mid-term are eligible for a prorated credit toward future services.
@@ -69,7 +69,7 @@ export default function Refund() {
                                 5. Requesting a Refund
                             </h2>
                             <p>
-                                To request a refund or inquire about an invoice adjustment, email our billing team at <a href="mailto:billing@restrly.com" className="font-bold text-[#B53014] underline">billing@restrly.com</a> with your restaurant account name and invoice number. We process all refund reviews within 2 business days.
+                                To request a refund or inquire about an invoice adjustment, email our billing team at <a href="mailto:billing@touchdine.cafe" className="font-bold text-[#B53014] underline">billing@touchdine.cafe</a> with your restaurant account name and invoice number. We process all refund reviews within 2 business days.
                             </p>
                         </section>
                     </div>

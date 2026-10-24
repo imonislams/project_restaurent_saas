@@ -40,7 +40,7 @@ export default function Login({
             imageUrl="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=1600&q=85"
             testimonial={{
                 quote:
-                    'Restrly cut our peak dinner rush ticket delays by 35% and completely eliminated order confusion between floor and kitchen.',
+                    'Touch Dine cut our peak dinner rush ticket delays by 35% and completely eliminated order confusion between floor and kitchen.',
                 author: 'Elena Rostova',
                 role: 'Managing Director',
                 restaurant: 'Atelier Luminary',
@@ -201,10 +201,10 @@ export default function Login({
                 </div>
             </form>
 
-            {/* New to Restrly Registration Callout */}
+            {/* New to Touch Dine Registration Callout */}
             <div className="mt-8 rounded-xl border border-stone-200/80 bg-stone-50/70 p-4 text-center">
                 <p className="text-xs text-stone-600">
-                    <span>{t('auth.new_to_restrly')} </span>
+                    <span>{t('auth.new_to_touchdine')} </span>
                     <Link
                         href={route('register')}
                         className="font-semibold text-primary hover:text-primary-container hover:underline transition-colors"

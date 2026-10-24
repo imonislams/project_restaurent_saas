@@ -10,8 +10,8 @@ export default function About() {
     return (
         <MarketingLayout>
             <MarketingHead
-                title="About Restrly — Our Mission & Philosophy"
-                description="Learn about Restrly’s mission to give food and beverage operators complete clarity over sales, kitchen pacing, recipe food costing, and multi-branch operations."
+                title="About Touch Dine — Our Mission & Philosophy"
+                description="Learn about Touch Dine’s mission to give food and beverage operators complete clarity over sales, kitchen pacing, recipe food costing, and multi-branch operations."
             />
 
             {/* About Hero */}
@@ -28,7 +28,7 @@ export default function About() {
                         </h1>
 
                         <p className="mt-6 text-base sm:text-xl text-stone-600 leading-relaxed">
-                            Restrly was built to solve a simple, stubborn problem: restaurants were drowning in disconnected tools—one app for POS, paper slips for the kitchen, spreadsheets for food costs, and hand-counted cash drawers that never quite matched up.
+                            Touch Dine was built to solve a simple, stubborn problem: restaurants were drowning in disconnected tools—one app for POS, paper slips for the kitchen, spreadsheets for food costs, and hand-counted cash drawers that never quite matched up.
                         </p>
                     </div>
 
@@ -50,7 +50,7 @@ export default function About() {
                                     Speed Above All During Service
                                 </h3>
                                 <p className="text-sm text-stone-600 leading-relaxed">
-                                    When the dining room is full and the pass is lined with tickets, software must never be the bottleneck. Every tap, modifier select, and bump action in Restrly is optimized to complete in milliseconds.
+                                    When the dining room is full and the pass is lined with tickets, software must never be the bottleneck. Every tap, modifier select, and bump action in Touch Dine is optimized to complete in milliseconds.
                                 </p>
                             </div>
 
@@ -62,7 +62,7 @@ export default function About() {
                                     Zero Hardware Lock-In
                                 </h3>
                                 <p className="text-sm text-stone-600 leading-relaxed">
-                                    We reject proprietary terminal leases with exorbitant cancellation fees. Restrly runs on standard iPads, Android tablets, touch monitors, laptops, and off-the-shelf thermal printers.
+                                    We reject proprietary terminal leases with exorbitant cancellation fees. Touch Dine runs on standard iPads, Android tablets, touch monitors, laptops, and off-the-shelf thermal printers.
                                 </p>
                             </div>
 
@@ -101,11 +101,11 @@ export default function About() {
                             Built on Mature, Resilient Web Standards
                         </h2>
                         <p className="text-sm sm:text-base text-stone-300 max-w-2xl leading-relaxed">
-                            Restrly is engineered on Laravel 12 and Inertia.js with React and TypeScript. We prioritize rock-solid tenant database isolation, comprehensive automated test suites (350+ automated unit and feature tests covering all critical operations), and sub-millisecond local printer communication.
+                            Touch Dine is engineered on Laravel 12 and Inertia.js with React and TypeScript. We prioritize rock-solid tenant database isolation, comprehensive automated test suites (350+ automated unit and feature tests covering all critical operations), and sub-millisecond local printer communication.
                         </p>
                         <div className="pt-4 flex flex-wrap gap-4">
                             <Button href="/register" variant="accent" size="md">
-                                Try Restrly Free for 14 Days
+                                Try Touch Dine Free for 14 Days
                             </Button>
                             <Button href="/contact" variant="secondary" size="md">
                                 Contact Our Team

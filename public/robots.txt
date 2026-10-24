@@ -1,4 +1,4 @@
-# Restrly Robots.txt - SEO & Crawler Access Configuration
+# Touch Dine Robots.txt - SEO & Crawler Access Configuration
 User-agent: *
 Allow: /
 Allow: /product
@@ -38,4 +38,4 @@ Disallow: /api/
 Disallow: /webhooks/
 
 # Sitemap
-Sitemap: https://restrly.com/sitemap.xml
+Sitemap: https://touchdine.cafe/sitemap.xml

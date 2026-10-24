@@ -38,13 +38,13 @@ class ReceiptBrandingTest extends TestCase
 
         // The SaaS provider's own branding (not the restaurant's).
         $platform = app(PlatformSettings::class);
-        $platform->set('general.platform_name', 'Restrly', 'general');
-        $platform->set('general.support_email', 'support@restrly.test', 'general');
+        $platform->set('general.platform_name', 'Touch Dine', 'general');
+        $platform->set('general.support_email', 'support@touchdine.test', 'general');
         $platform->set('general.support_phone', '555-9000', 'general');
         $platform->set('branding.logo_url', 'https://cdn.test/logo.png', 'branding');
         $platform->set('branding.tagline', 'Restaurant OS', 'branding');
-        $platform->set('branding.support_url', 'https://restrly.test', 'branding');
-        $platform->set('receipts.website', 'https://restrly.test', 'receipts');
+        $platform->set('branding.support_url', 'https://touchdine.test', 'branding');
+        $platform->set('receipts.website', 'https://touchdine.test', 'receipts');
 
         $this->tenant = Tenant::factory()->create();
         $this->tenant->mergeSettings(['tax' => ['rate' => 0, 'inclusive' => false]]);
@@ -120,11 +120,11 @@ class ReceiptBrandingTest extends TestCase
                 ->component('Orders/Receipt')
                 ->where('receipt.branding.show_logo', true)
                 ->where('receipt.branding.show_details', true)
-                ->where('receipt.branding.company_name', 'Restrly')
+                ->where('receipt.branding.company_name', 'Touch Dine')
                 ->where('receipt.branding.logo_url', 'https://cdn.test/logo.png')
-                ->where('receipt.branding.email', 'support@restrly.test')
+                ->where('receipt.branding.email', 'support@touchdine.test')
                 ->where('receipt.branding.phone', '555-9000')
-                ->where('receipt.branding.website', 'https://restrly.test'));
+                ->where('receipt.branding.website', 'https://touchdine.test'));
     }
 
     public function test_the_platform_admin_can_hide_the_provider_logo_on_all_receipts(): void

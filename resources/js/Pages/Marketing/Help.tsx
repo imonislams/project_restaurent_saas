@@ -80,7 +80,7 @@ const HELP_DOCS: HelpArticle[] = [
         category: 'hardware',
         categoryLabel: 'HARDWARE & PRINTERS',
         content:
-            'Restrly prints using standard ESC/POS commands. Connect your thermal printer to your local Wi-Fi or router via Ethernet. In browser print dialogs, select your 80mm or 58mm printer as default, disable headers/footers, and set margins to None for perfect receipt formatting.',
+            'Touch Dine prints using standard ESC/POS commands. Connect your thermal printer to your local Wi-Fi or router via Ethernet. In browser print dialogs, select your 80mm or 58mm printer as default, disable headers/footers, and set margins to None for perfect receipt formatting.',
     },
     {
         id: 8,
@@ -109,8 +109,8 @@ export default function Help() {
     return (
         <MarketingLayout>
             <MarketingHead
-                title="Help Center & Setup Documentation — Restrly"
-                description="Searchable documentation, hardware setup tutorials, register shift guides, and recipe configuration steps for Restrly."
+                title="Help Center & Setup Documentation — Touch Dine"
+                description="Searchable documentation, hardware setup tutorials, register shift guides, and recipe configuration steps for Touch Dine."
             />
 
             <section className="pt-14 pb-20 sm:pt-20 sm:pb-28 bg-white">
@@ -123,7 +123,7 @@ export default function Help() {
                             Knowledge Base &amp; Guides
                         </h1>
                         <p className="text-stone-600 mt-3 text-base">
-                            Clear, accurate documentation reflecting the actual Restrly interface, hardware pairings, and workflows.
+                            Clear, accurate documentation reflecting the actual Touch Dine interface, hardware pairings, and workflows.
                         </p>
                     </div>
 

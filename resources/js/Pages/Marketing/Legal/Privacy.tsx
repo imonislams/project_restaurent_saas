@@ -8,7 +8,7 @@ export default function Privacy() {
     return (
         <MarketingLayout>
             <MarketingHead
-                title="Privacy Policy — Restrly"
+                title="Privacy Policy — Touch Dine"
                 description="Our privacy commitments, tenant data isolation practices, cookie usage, and customer data protections."
             />
 
@@ -21,7 +21,7 @@ export default function Privacy() {
                         Privacy Policy
                     </h1>
                     <div className="mt-2 text-xs font-mono text-stone-400 pb-8 border-b border-stone-200">
-                        Effective Date: October 2026 · Restrly Inc.
+                        Effective Date: October 2026 · Touch Dine Inc.
                     </div>
 
                     <div className="mt-8 space-y-8 text-stone-700 text-xs sm:text-sm leading-relaxed font-sans">
@@ -30,7 +30,7 @@ export default function Privacy() {
                                 1. Overview and Core Commitments
                             </h2>
                             <p>
-                                Restrly Inc. (“Restrly”, “we”, “our”, or “us”) provides cloud-based point-of-sale, kitchen management, and inventory software for food and beverage establishments. This Privacy Policy describes how we collect, store, isolate, and protect information when you visit our website or access our restaurant operating platform.
+                                Touch Dine Inc. (“Touch Dine”, “we”, “our”, or “us”) provides cloud-based point-of-sale, kitchen management, and inventory software for food and beverage establishments. This Privacy Policy describes how we collect, store, isolate, and protect information when you visit our website or access our restaurant operating platform.
                             </p>
                             <p>
                                 We believe your business data belongs entirely to you. We do not sell your customer information, transaction histories, or menu recipes to third-party advertisers or data brokers.
@@ -54,7 +54,7 @@ export default function Privacy() {
                                 3. Multi-Tenant Data Isolation
                             </h2>
                             <p>
-                                Restrly enforces architectural database isolation. Every customer record, order, and recipe is permanently scoped to your unique tenant ID. Technical safeguards prevent any tenant from querying, accessing, or viewing data belonging to another restaurant.
+                                Touch Dine enforces architectural database isolation. Every customer record, order, and recipe is permanently scoped to your unique tenant ID. Technical safeguards prevent any tenant from querying, accessing, or viewing data belonging to another restaurant.
                             </p>
                         </section>
 
@@ -90,7 +90,7 @@ export default function Privacy() {
                                 7. Contact Us
                             </h2>
                             <p>
-                                For questions concerning this Privacy Policy or your data, contact our Data Protection Team at <a href="mailto:privacy@restrly.com" className="font-bold text-[#B53014] underline">privacy@restrly.com</a>.
+                                For questions concerning this Privacy Policy or your data, contact our Data Protection Team at <a href="mailto:privacy@touchdine.cafe" className="font-bold text-[#B53014] underline">privacy@touchdine.cafe</a>.
                             </p>
                         </section>
                     </div>

@@ -106,7 +106,7 @@ export default function Receipt({
                     {/* Header */}
                     <div className="text-center pb-3 border-b-2 border-dashed border-gray-300">
                         <h1 className="text-base font-extrabold uppercase tracking-tight text-gray-950">
-                            {receipt.header || 'Restrly Restaurant'}
+                            {receipt.header || 'Touch Dine Restaurant'}
                         </h1>
                         <p className="mt-0.5 text-[11px] text-gray-500 font-sans">
                             {order.branch_name ?? 'Main Branch'}

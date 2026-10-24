@@ -64,7 +64,7 @@ const SOLUTION_DATA: Record<string, SolutionDetail> = {
         ),
         faqs: [
             { q: 'Can waiters transfer bar tabs to dining tables?', a: 'Yes. With one tap, bar tabs move to dining tables with all drinks and items intact.' },
-            { q: 'Can we track average spend per cover?', a: 'Yes. Restrly calculates revenue per cover across meal periods and servers.' },
+            { q: 'Can we track average spend per cover?', a: 'Yes. Touch Dine calculates revenue per cover across meal periods and servers.' },
             { q: 'Does it support tipping and service charges?', a: 'Yes. Configure automatic service charge percentages or optional gratuity lines on receipts.' },
         ],
     },
@@ -113,7 +113,7 @@ const SOLUTION_DATA: Record<string, SolutionDetail> = {
         faqs: [
             { q: 'Do we need table management features?', a: 'No. Cafes can disable table management entirely to keep the screen purely focused on counter velocity.' },
             { q: 'Can we track coffee bean consumption?', a: 'Yes. Associate 18g of espresso beans per shot in the recipe BOM for live bag deductions.' },
-            { q: 'Does it support contactless tap-to-pay?', a: 'Yes. Restrly works with standard integrated or external card terminals.' },
+            { q: 'Does it support contactless tap-to-pay?', a: 'Yes. Touch Dine works with standard integrated or external card terminals.' },
         ],
     },
 
@@ -197,7 +197,7 @@ const SOLUTION_DATA: Record<string, SolutionDetail> = {
             </div>
         ),
         faqs: [
-            { q: 'Can we configure combo meals with automatic side and drink prompts?', a: 'Yes. Restrly’s modifier engine allows multi-step required selections.' },
+            { q: 'Can we configure combo meals with automatic side and drink prompts?', a: 'Yes. Touch Dine’s modifier engine allows multi-step required selections.' },
             { q: 'How fast can a cashier complete a cash transaction?', a: 'With quick-tender cash buttons ($10, $20, $50, exact), a cash sale takes under 5 seconds.' },
             { q: 'Can managers approve voids without walking to the terminal?', a: 'Managers enter their 4-digit PIN directly on the screen to authorize the void.' },
         ],
@@ -241,7 +241,7 @@ const SOLUTION_DATA: Record<string, SolutionDetail> = {
             </div>
         ),
         faqs: [
-            { q: 'Can we define different delivery fees for different areas?', a: 'Yes. Restrly includes a Delivery Zones module where you set minimum orders and fees by zone.' },
+            { q: 'Can we define different delivery fees for different areas?', a: 'Yes. Touch Dine includes a Delivery Zones module where you set minimum orders and fees by zone.' },
             { q: 'Does it support cash on delivery (COD)?', a: 'Yes. Orders can be dispatched as unpaid COD and settled when the driver returns with cash.' },
             { q: 'Can we schedule orders for pickup later in the day?', a: 'Yes. You can record scheduled pickup times on each order.' },
         ],
@@ -270,7 +270,7 @@ const SOLUTION_DATA: Record<string, SolutionDetail> = {
             { title: 'Reports & Analytics', desc: 'Consolidated chain revenue and margin reports', slug: 'reports-analytics' },
         ],
         uiPreviewTitle: 'Corporate Chain Overview',
-        uiPreviewSubtitle: 'Restrly Hospitality Group (3 Branches)',
+        uiPreviewSubtitle: 'Touch Dine Hospitality Group (3 Branches)',
         uiPreviewContent: (
             <div className="p-6 bg-stone-50 text-xs font-mono space-y-3">
                 <div className="flex justify-between font-bold text-stone-800">
@@ -294,8 +294,8 @@ const SOLUTION_DATA: Record<string, SolutionDetail> = {
             </div>
         ),
         faqs: [
-            { q: 'How many locations can we run on Restrly?', a: 'The Growth plan supports up to 3 branches, and the Business plan supports unlimited locations.' },
-            { q: 'Can store managers be restricted to only their branch?', a: 'Yes. Restrly enforces strict branch-level scoping for store managers, cashiers, and cooks.' },
+            { q: 'How many locations can we run on Touch Dine?', a: 'The Growth plan supports up to 3 branches, and the Business plan supports unlimited locations.' },
+            { q: 'Can store managers be restricted to only their branch?', a: 'Yes. Touch Dine enforces strict branch-level scoping for store managers, cashiers, and cooks.' },
             { q: 'How do inter-branch stock transfers work?', a: 'Branch A dispatches the stock; Branch B confirms receipt with count verification before stock shifts.' },
         ],
     },
@@ -308,7 +308,7 @@ export default function SolutionShow({ solutionKey }: { solutionKey: string }) {
     return (
         <MarketingLayout>
             <MarketingHead
-                title={`${solution.title} — Restrly Restaurant OS`}
+                title={`${solution.title} — Touch Dine Restaurant OS`}
                 description={solution.heroSubheadline}
             />
 
@@ -366,7 +366,7 @@ export default function SolutionShow({ solutionKey }: { solutionKey: string }) {
                     <SectionHeading
                         badge="PAIN POINTS ELIMINATED"
                         title="Designed Around Your Specific Challenges"
-                        description="Here is how Restrly tackles the unique operational headaches of your venue type."
+                        description="Here is how Touch Dine tackles the unique operational headaches of your venue type."
                     />
 
                     <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -434,7 +434,7 @@ export default function SolutionShow({ solutionKey }: { solutionKey: string }) {
                                  Key Modules for {solution.title}
                              </h3>
                              <p className="text-xs text-stone-500 mt-1">
-                                 Restrly activates the modules you need and hides what you don’t.
+                                 Touch Dine activates the modules you need and hides what you don’t.
                              </p>
                          </div>
                      </div>
@@ -468,7 +468,7 @@ export default function SolutionShow({ solutionKey }: { solutionKey: string }) {
                      <SectionHeading
                          badge="FAQS"
                          title="Frequently Asked Questions"
-                         description={`Answers specific to operating ${solution.title.toLowerCase()} on Restrly.`}
+                         description={`Answers specific to operating ${solution.title.toLowerCase()} on Touch Dine.`}
                      />
 
                      <div className="mt-12 space-y-4">

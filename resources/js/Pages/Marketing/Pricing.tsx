@@ -62,15 +62,15 @@ export default function Pricing({
     // Processing calculator calculations
     // Approx 2.4% + 10c on average ticket of $45
     const txCount = cardVolume / 45;
-    const restrlyProcessingFee = cardVolume * 0.024 + txCount * 0.1;
+    const touchdineProcessingFee = cardVolume * 0.024 + txCount * 0.1;
     // Legacy competitor closed bundle benchmark ~3.2% + 15c
     const compProcessingFee = cardVolume * 0.032 + txCount * 0.15;
-    const monthlySavings = Math.max(0, compProcessingFee - restrlyProcessingFee);
+    const monthlySavings = Math.max(0, compProcessingFee - touchdineProcessingFee);
 
     return (
         <MarketingLayout>
             <Head>
-                <title>Pricing &amp; Plans — Restrly Restaurant Management</title>
+                <title>Pricing &amp; Plans — Touch Dine Restaurant Management</title>
                 <meta
                     name="description"
                     content="Transparent, scale-tested restaurant POS pricing. Zero hidden transaction fees, no proprietary hardware lock-in, and 14-day unrestricted trial."
@@ -341,7 +341,7 @@ export default function Pricing({
                                     Stop paying proprietary hardware processing gouges
                                 </h2>
                                 <p className="text-sm text-stone-600 leading-relaxed">
-                                    Legacy restaurant POS vendors force you into locked merchant processing rates of 3.2% + 15¢. Restrly lets you connect transparent merchant accounts (2.4% + 10¢), saving thousands every month.
+                                    Legacy restaurant POS vendors force you into locked merchant processing rates of 3.2% + 15¢. Touch Dine lets you connect transparent merchant accounts (2.4% + 10¢), saving thousands every month.
                                 </p>
 
                                 <div className="space-y-2 pt-2">
@@ -375,15 +375,15 @@ export default function Pricing({
 
                                 <div className="space-y-3 text-xs">
                                     <div className="flex justify-between pb-2 border-b border-stone-100">
-                                        <span className="text-stone-600">Restrly Software Tier</span>
+                                        <span className="text-stone-600">Touch Dine Software Tier</span>
                                         <span className="font-mono font-semibold text-stone-900">
                                             ${isAnnual ? '119.00' : '149.00'}
                                         </span>
                                     </div>
                                     <div className="flex justify-between pb-2 border-b border-stone-100">
-                                        <span className="text-stone-600">Restrly Card Processing (~2.4% + 10¢)</span>
+                                        <span className="text-stone-600">Touch Dine Card Processing (~2.4% + 10¢)</span>
                                         <span className="font-mono font-semibold text-stone-900">
-                                            ${Math.round(restrlyProcessingFee).toLocaleString()}.00
+                                            ${Math.round(touchdineProcessingFee).toLocaleString()}.00
                                         </span>
                                     </div>
                                     <div className="flex justify-between pb-2 border-b border-stone-100 text-stone-500">
@@ -429,7 +429,7 @@ export default function Pricing({
                                     Is there any long-term contract or cancellation penalty?
                                 </AccordionTrigger>
                                 <AccordionContent>
-                                    Never. Restrly operates on standard monthly or annual terms with zero cancellation fees. If your restaurant closes or changes platforms, you can export all historical data, receipts, and inventory logs in one click.
+                                    Never. Touch Dine operates on standard monthly or annual terms with zero cancellation fees. If your restaurant closes or changes platforms, you can export all historical data, receipts, and inventory logs in one click.
                                 </AccordionContent>
                             </AccordionItem>
 
@@ -444,7 +444,7 @@ export default function Pricing({
 
                             <AccordionItem value="faq-3">
                                 <AccordionTrigger className="text-base font-semibold text-stone-900 hover:text-[#B53014]">
-                                    Do I need to buy proprietary hardware to switch to Restrly?
+                                    Do I need to buy proprietary hardware to switch to Touch Dine?
                                 </AccordionTrigger>
                                 <AccordionContent>
                                     In over 90% of transitions, restaurants repurpose their existing iPads, Android tablets, touch displays, or PCs. Standard thermal receipt printers (Epson, Star Micronics) and RJ12 cash drawers pair directly over your local Wi-Fi router.

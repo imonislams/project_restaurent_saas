@@ -48,7 +48,7 @@ const FEATURE_DATA: Record<string, FeatureDetail> = {
             { step: '02', title: 'Route to Kitchen', desc: 'Ticket routes instantly to designated KDS stations before payment completes.' },
             { step: '03', title: 'Settle & Print', desc: 'Accept cash, card, or split payment and generate crisp thermal receipts.' },
         ],
-        uiPreviewTitle: 'Restrly POS Terminal v2.4',
+        uiPreviewTitle: 'Touch Dine POS Terminal v2.4',
         uiPreviewSubtitle: 'Main Counter Register #01',
         uiPreviewContent: (
             <div className="p-6 bg-stone-100 text-xs font-mono space-y-3">
@@ -85,7 +85,7 @@ const FEATURE_DATA: Record<string, FeatureDetail> = {
             { slug: 'table-management', title: 'Table Management' },
         ],
         faqs: [
-            { q: 'Can we use our existing receipt printer?', a: 'Yes. Restrly connects with standard thermal receipt printers supporting ESC/POS over USB, Ethernet LAN, or Bluetooth.' },
+            { q: 'Can we use our existing receipt printer?', a: 'Yes. Touch Dine connects with standard thermal receipt printers supporting ESC/POS over USB, Ethernet LAN, or Bluetooth.' },
             { q: 'Can staff give discounts without authorization?', a: 'No. You can configure discount thresholds in Settings. Any discount exceeding the threshold requires an authorizing manager PIN.' },
             { q: 'Does it support takeout and delivery orders?', a: 'Yes. You can switch between Dine-in, Takeaway, Counter, and Delivery with one tap.' },
         ],
@@ -142,7 +142,7 @@ const FEATURE_DATA: Record<string, FeatureDetail> = {
             { slug: 'table-management', title: 'Table Management' },
         ],
         faqs: [
-            { q: 'Can we run multiple kitchen screens for different stations?', a: 'Yes. Restrly allows you to set up distinct KDS screens for Grill, Fry, Salad, Expo, and Bar.' },
+            { q: 'Can we run multiple kitchen screens for different stations?', a: 'Yes. Touch Dine allows you to set up distinct KDS screens for Grill, Fry, Salad, Expo, and Bar.' },
             { q: 'Do we need special bump bars?', a: 'No. You can use standard touchscreens, or standard keyboard shortcuts (spacebar, numbers) to bump tickets.' },
             { q: 'Can tickets be recalled if bumped by mistake?', a: 'Yes. The KDS includes a completed ticket drawer where bumped tickets can be recalled with one click.' },
         ],
@@ -263,7 +263,7 @@ const FEATURE_DATA: Record<string, FeatureDetail> = {
             { slug: 'expense-management', title: 'Waste & Loss Management' },
         ],
         faqs: [
-            { q: 'Can ingredients use fractional quantities (e.g. 0.25 kg)?', a: 'Yes. Restrly supports exact decimal measurements across metric and imperial units.' },
+            { q: 'Can ingredients use fractional quantities (e.g. 0.25 kg)?', a: 'Yes. Touch Dine supports exact decimal measurements across metric and imperial units.' },
             { q: 'How does wastage affect inventory?', a: 'Recorded waste entries (burnt, expired, dropped) immediately reduce stock with an audited reason.' },
             { q: 'Can we track supplier prices over time?', a: 'Yes. Each goods receipt logs the unit price, updating the moving average cost of the ingredient.' },
         ],
@@ -321,7 +321,7 @@ const FEATURE_DATA: Record<string, FeatureDetail> = {
         faqs: [
             { q: 'Can a manager open multiple shifts simultaneously?', a: 'Each physical terminal or drawer maintains an independent open shift with its own float.' },
             { q: 'What happens if there is a till discrepancy?', a: 'The variance is logged with the cashier’s timestamp and included in the end-of-day audit report.' },
-            { q: 'Can cashiers see the expected cash before counting?', a: 'No. Restrly enforces blind counting so staff must count actual bills and coins first.' },
+            { q: 'Can cashiers see the expected cash before counting?', a: 'No. Touch Dine enforces blind counting so staff must count actual bills and coins first.' },
         ],
     },
 
@@ -561,7 +561,7 @@ const FEATURE_DATA: Record<string, FeatureDetail> = {
             { step: '03', title: 'Consolidated Reporting', desc: 'View chain-wide gross revenue alongside branch-by-branch comparisons.' },
         ],
         uiPreviewTitle: 'Multi-Branch Control Center',
-        uiPreviewSubtitle: 'Restrly Hospitality Group (3 Branches)',
+        uiPreviewSubtitle: 'Touch Dine Hospitality Group (3 Branches)',
         uiPreviewContent: (
             <div className="p-6 bg-stone-50 text-xs font-mono space-y-2">
                 <div className="flex justify-between p-2 rounded bg-white border border-stone-200">
@@ -638,7 +638,7 @@ const FEATURE_DATA: Record<string, FeatureDetail> = {
             { slug: 'reports-analytics', title: 'Reports & Analytics' },
         ],
         faqs: [
-            { q: 'Can we receive partial deliveries?', a: 'Yes. Restrly supports partial receipts, keeping the remainder of the PO open until delivered.' },
+            { q: 'Can we receive partial deliveries?', a: 'Yes. Touch Dine supports partial receipts, keeping the remainder of the PO open until delivered.' },
             { q: 'Does receiving goods update our cost prices?', a: 'Yes. The recorded purchase price updates the ingredient’s unit cost.' },
             { q: 'Can we log payments made directly to suppliers?', a: 'Yes. Supplier payments reduce the outstanding balance and can be recorded from cash or bank accounts.' },
         ],
@@ -756,7 +756,7 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
     return (
         <MarketingLayout>
             <MarketingHead
-                title={`${feature.title} — Restrly Restaurant OS`}
+                title={`${feature.title} — Touch Dine Restaurant OS`}
                 description={feature.heroSubheadline}
             />
 
@@ -908,7 +908,7 @@ export default function FeatureShow({ featureKey }: { featureKey: string }) {
                                 Integrated Platform Modules
                             </h3>
                             <p className="text-xs text-stone-500 mt-1">
-                                {feature.title} operates seamlessly alongside other Restrly modules.
+                                {feature.title} operates seamlessly alongside other Touch Dine modules.
                             </p>
                         </div>
                         <Link href="/features" className="text-xs font-semibold text-[#B53014] hover:underline">

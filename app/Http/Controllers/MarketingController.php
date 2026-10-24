@@ -244,7 +244,7 @@ class MarketingController extends Controller
             'message' => 'required|string|min:10|max:2000',
         ]);
 
-        return back()->with('success', 'Thank you! Your message has been received. A Restrly restaurant specialist will contact you within 2 business hours.');
+        return back()->with('success', 'Thank you! Your message has been received. A Touch Dine restaurant specialist will contact you within 2 business hours.');
     }
 
     /**

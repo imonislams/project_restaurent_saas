@@ -130,7 +130,7 @@ export default function AppShell({
         const element = navRef.current;
         if (!element) return;
 
-        const saved = navScrollMemory || Number(sessionStorage.getItem('restrly_nav_scroll') ?? '0');
+        const saved = navScrollMemory || Number(sessionStorage.getItem('touchdine_nav_scroll') ?? '0');
         element.scrollTop = saved > 0 ? saved : 0;
 
         const active = element.querySelector<HTMLElement>('[data-active="true"]');
@@ -146,7 +146,7 @@ export default function AppShell({
     const handleNavScroll = (e: React.UIEvent<HTMLDivElement>) => {
         const target = e.currentTarget;
         navScrollMemory = target.scrollTop;
-        sessionStorage.setItem('restrly_nav_scroll', String(target.scrollTop));
+        sessionStorage.setItem('touchdine_nav_scroll', String(target.scrollTop));
     };
 
     const groupKey = (group: NavGroup, index: number) => group.key ?? group.label ?? `group-${index}`;
@@ -207,7 +207,7 @@ export default function AppShell({
                                 )}
                                 <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
                                     <div className="truncate text-[15px] font-bold tracking-tight text-sidebar-foreground">
-                                        Restrly
+                                        Touch Dine
                                     </div>
                                     <div className="truncate text-[10.5px] font-semibold tracking-wide uppercase text-muted-foreground">
                                         {brand.title}

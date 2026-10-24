@@ -110,8 +110,8 @@ export default function AuthSplitLayout({
     const defaultTestimonial = {
         quote:
             variant === 'register'
-                ? 'Setting up our 3 locations took under 15 minutes. Our servers and kitchen staff adopted Restrly on day one without training.'
-                : 'Restrly cut our peak dinner rush ticket delays by 35% and completely eliminated order confusion between floor and kitchen.',
+                ? 'Setting up our 3 locations took under 15 minutes. Our servers and kitchen staff adopted Touch Dine on day one without training.'
+                : 'Touch Dine cut our peak dinner rush ticket delays by 35% and completely eliminated order confusion between floor and kitchen.',
         author: variant === 'register' ? 'Marcus Vance' : 'Elena Rostova',
         role: variant === 'register' ? 'Founder & Operator' : 'Managing Director',
         restaurant: variant === 'register' ? 'The Copper Bistro Group' : 'Atelier Luminary',
@@ -378,7 +378,7 @@ export default function AuthSplitLayout({
                     </div>
 
                     <p className="text-[11px] text-stone-400">
-                        &copy; {new Date().getFullYear()} mise.pos. All rights reserved. High-velocity architecture for professional restaurant operations.
+                        &copy; {new Date().getFullYear()} touchdine.cafe. All rights reserved. High-velocity architecture for professional restaurant operations.
                     </p>
                 </div>
             </div>

@@ -21,7 +21,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
             imageUrl="https://images.unsplash.com/photo-1578474846511-04ba529f0b88?auto=format&fit=crop&w=1600&q=85"
             testimonial={{
                 quote:
-                    'Restrly verification and security ensure only authorized team members access sensitive point-of-sale data.',
+                    'Touch Dine verification and security ensure only authorized team members access sensitive point-of-sale data.',
                 author: 'Sophie Martin',
                 role: 'General Manager',
                 restaurant: 'Brasserie Vence',
@@ -48,7 +48,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
                     Verify your email address
                 </h1>
                 <p className="mt-2 text-sm text-stone-600 leading-relaxed">
-                    Thanks for signing up for Restrly! Before getting started,
+                    Thanks for signing up for Touch Dine! Before getting started,
                     please verify your work email address by clicking on the link
                     we just sent to your inbox.
                 </p>

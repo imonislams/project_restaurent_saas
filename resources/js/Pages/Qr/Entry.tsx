@@ -45,7 +45,7 @@ export default function QrEntry({ token, restaurant, table, enabled, policy }: E
 
             <div className="mt-6 rounded-2xl bg-white p-6 shadow-card">
                 <div className="text-center">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-restrly-600">Welcome</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-touchdine-600">Welcome</p>
                     <h1 className="mt-1 text-2xl font-bold text-gray-900">{restaurant.name}</h1>
                     <p className="mt-1 text-sm text-gray-500">
                         {restaurant.branch} · Table {table.name}
@@ -73,7 +73,7 @@ export default function QrEntry({ token, restaurant, table, enabled, policy }: E
                             <input
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="h-11 w-full rounded-xl border-gray-300 px-3 text-sm focus:border-restrly-500 focus:ring-restrly-500"
+                                className="h-11 w-full rounded-xl border-gray-300 px-3 text-sm focus:border-touchdine-500 focus:ring-touchdine-500"
                                 placeholder="e.g. Alex"
                             />
                         </label>
@@ -86,7 +86,7 @@ export default function QrEntry({ token, restaurant, table, enabled, policy }: E
                                 value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
                                 inputMode="tel"
-                                className="h-11 w-full rounded-xl border-gray-300 px-3 text-sm focus:border-restrly-500 focus:ring-restrly-500"
+                                className="h-11 w-full rounded-xl border-gray-300 px-3 text-sm focus:border-touchdine-500 focus:ring-touchdine-500"
                                 placeholder="Phone number"
                             />
                         </label>
@@ -99,7 +99,7 @@ export default function QrEntry({ token, restaurant, table, enabled, policy }: E
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 type="email"
-                                className="h-11 w-full rounded-xl border-gray-300 px-3 text-sm focus:border-restrly-500 focus:ring-restrly-500"
+                                className="h-11 w-full rounded-xl border-gray-300 px-3 text-sm focus:border-touchdine-500 focus:ring-touchdine-500"
                                 placeholder="you@example.com"
                             />
                         </label>
@@ -112,7 +112,7 @@ export default function QrEntry({ token, restaurant, table, enabled, policy }: E
                             type="button"
                             onClick={start}
                             disabled={loading}
-                            className="h-12 w-full rounded-xl bg-restrly-600 text-sm font-bold text-white shadow-card transition hover:bg-restrly-700 active:scale-[0.99] disabled:opacity-60"
+                            className="h-12 w-full rounded-xl bg-touchdine-600 text-sm font-bold text-white shadow-card transition hover:bg-touchdine-700 active:scale-[0.99] disabled:opacity-60"
                         >
                             {loading ? 'Starting…' : 'Start dining'}
                         </button>
