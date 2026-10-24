@@ -35,7 +35,7 @@ class InvitationService
      */
     public function invite(Tenant $tenant, array $data, ?User $inviter = null): Invitation
     {
-        $roles = $this->tenantRoleSlugs($data['roles']);
+        $roles = $this->tenantRoleSlugs($data['roles'], $tenant->getKey());
 
         if ($roles === []) {
             throw ValidationException::withMessages([
@@ -121,7 +121,9 @@ class InvitationService
             $user->forceFill(['email_verified_at' => now()])->save();
 
             $roleIds = Role::whereIn('slug', $invitation->roles)
-                ->whereNull('tenant_id')
+                ->where(function ($query) use ($invitation) {
+                    $query->whereNull('tenant_id')->orWhere('tenant_id', $invitation->tenant_id);
+                })
                 ->pluck('id')
                 ->all();
             $user->roles()->sync($roleIds);
@@ -164,15 +166,19 @@ class InvitationService
     }
 
     /**
-     * Only tenant roles may be assigned through invitations; platform roles are rejected.
+     * Only tenant roles may be assigned through invitations: the global tenant
+     * roles plus the inviting tenant's own custom roles. Platform roles and other
+     * tenants' roles are rejected.
      *
      * @param  list<string>  $slugs
      * @return list<string>
      */
-    protected function tenantRoleSlugs(array $slugs): array
+    protected function tenantRoleSlugs(array $slugs, int $tenantId): array
     {
         return Role::whereIn('slug', $slugs)
-            ->whereNull('tenant_id')
+            ->where(function ($query) use ($tenantId) {
+                $query->whereNull('tenant_id')->orWhere('tenant_id', $tenantId);
+            })
             ->pluck('slug')
             ->reject(fn (string $slug) => in_array($slug, RoleName::platformValues(), true))
             ->values()

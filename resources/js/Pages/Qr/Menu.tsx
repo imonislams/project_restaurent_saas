@@ -61,17 +61,25 @@ interface CartLine {
     modifiers: CartModifier[];
 }
 
+interface TrackedOrder {
+    id: number;
+    number: string;
+    status_key: string;
+    status_label: string;
+}
+
 interface MenuProps {
     token: string;
     restaurant: { name: string; branch: string; currency: string; logo_url?: string | null };
     table: { id: number; name: string };
     session: { id: number; status: string; billing_mode: string };
     policy: { allow_additional_orders: boolean; allow_notes: boolean };
+    tracking: { available: boolean; orders: TrackedOrder[] };
     categories: Category[];
     products: MenuProduct[];
 }
 
-export default function QrMenu({ token, restaurant, table, policy, categories, products }: MenuProps) {
+export default function QrMenu({ token, restaurant, table, policy, tracking: initialTracking, categories, products }: MenuProps) {
     const currency = restaurant.currency;
     const cartKey = `qr_cart_${token}`;
     const money = (n: number) => `${currency} ${Number(n || 0).toFixed(2)}`;
@@ -89,6 +97,9 @@ export default function QrMenu({ token, restaurant, table, policy, categories, p
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [placed, setPlaced] = useState<{ number: string; total: number } | null>(null);
+    // Seeded from the server so the "Track order" affordance survives every
+    // navigation (Menu ↔ Tracking ↔ Categories) and any reload.
+    const [tracking, setTracking] = useState<{ available: boolean; orders: TrackedOrder[] }>(initialTracking);
 
     // Restore cart across refreshes.
     useEffect(() => {
@@ -219,6 +230,20 @@ export default function QrMenu({ token, restaurant, table, policy, categories, p
             );
 
             setPlaced({ number: data.order.number, total: data.order.total });
+            setTracking((prev) => ({
+                available: true,
+                orders: prev.orders.some((o) => o.number === data.order.number)
+                    ? prev.orders
+                    : [
+                          {
+                              id: data.order.id ?? 0,
+                              number: data.order.number,
+                              status_key: 'received',
+                              status_label: 'Order received',
+                          },
+                          ...prev.orders,
+                      ],
+            }));
             setCart([]);
             setOrderNotes('');
             setShowCart(false);
@@ -253,19 +278,25 @@ export default function QrMenu({ token, restaurant, table, policy, categories, p
         >
             <Head title={`${restaurant.name} · Menu`} />
 
-            {placed && (
+            {(placed || tracking.available) && (
                 <div className="mb-4 rounded-2xl bg-emerald-50 p-4 text-emerald-800">
-                    <p className="text-sm font-bold">Order {placed.number} received 🎉</p>
-                    <p className="mt-1 text-xs">
-                        Total {money(placed.total)}. The kitchen has been notified.
-                        {policy.allow_additional_orders ? ' You can keep ordering from the menu.' : ''}
-                    </p>
-                    <a
-                        href={route('qr.tracking', { token })}
-                        className="mt-3 inline-block rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white"
-                    >
-                        Track your order
-                    </a>
+                    {placed && <p className="text-sm font-bold">Order {placed.number} received 🎉</p>}
+                    {tracking.available && (
+                        <>
+                            <p className="mt-1 text-xs">
+                                {tracking.orders.length === 1
+                                    ? `Order ${tracking.orders[0].number} · ${tracking.orders[0].status_label}.`
+                                    : `${tracking.orders.length} active orders at this table.`}
+                                {placed && policy.allow_additional_orders ? ' You can keep ordering from the menu.' : ''}
+                            </p>
+                            <a
+                                href={route('qr.tracking', { token })}
+                                className="mt-3 inline-block rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white"
+                            >
+                                Track your order
+                            </a>
+                        </>
+                    )}
                 </div>
             )}
 

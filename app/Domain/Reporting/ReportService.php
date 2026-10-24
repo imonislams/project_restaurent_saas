@@ -12,8 +12,10 @@ use App\Domain\Inventory\Models\StockMovement;
 use App\Domain\Loyalty\Models\LoyaltyAccount;
 use App\Domain\Loyalty\Models\LoyaltyTransaction;
 use App\Domain\Menu\Models\Product;
+use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Orders\Models\OrderItem;
+use App\Domain\Payments\Enums\PaymentStatus;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Purchasing\Models\GoodsReceiptItem;
 use App\Domain\Purchasing\Models\PurchaseOrder;
@@ -38,14 +40,7 @@ class ReportService
     public function sales(ReportPeriod $period): array
     {
         $orders = $this->completedOrders($period)->get(['id', 'placed_at', 'subtotal', 'discount_total', 'tax_total', 'service_charge', 'total']);
-
-        $gross = (float) $orders->sum('subtotal');
-        $discounts = (float) $orders->sum('discount_total');
-        $tax = (float) $orders->sum('tax_total');
-        $service = (float) $orders->sum('service_charge');
-        $total = (float) $orders->sum('total');
-        $net = round($total - $tax, 2);
-        $refunds = (float) $this->voidedOrders($period)->sum('total');
+        $metrics = $this->metricsFrom($orders, $period);
 
         $byDay = [];
         foreach ($period->localDates() as $date) {
@@ -69,13 +64,13 @@ class ReportService
 
         return [
             'summary' => [
-                ['label' => 'Gross sales', 'value' => round($gross, 2), 'format' => 'money'],
-                ['label' => 'Discounts', 'value' => round($discounts, 2), 'format' => 'money'],
-                ['label' => 'Net sales (excl. tax)', 'value' => $net, 'format' => 'money'],
-                ['label' => 'Tax collected', 'value' => round($tax, 2), 'format' => 'money'],
-                ['label' => 'Service charge', 'value' => round($service, 2), 'format' => 'money'],
-                ['label' => 'Refunds (voids)', 'value' => round($refunds, 2), 'format' => 'money'],
-                ['label' => 'Orders', 'value' => $orders->count(), 'format' => 'number'],
+                ['label' => 'Gross sales', 'value' => $metrics['gross'], 'format' => 'money'],
+                ['label' => 'Discounts', 'value' => $metrics['discounts'], 'format' => 'money'],
+                ['label' => 'Net sales (excl. tax)', 'value' => $metrics['net'], 'format' => 'money'],
+                ['label' => 'Tax collected', 'value' => $metrics['tax'], 'format' => 'money'],
+                ['label' => 'Service charge', 'value' => $metrics['service_charge'], 'format' => 'money'],
+                ['label' => 'Refunds (voids)', 'value' => $metrics['refunds'], 'format' => 'money'],
+                ['label' => 'Orders', 'value' => $metrics['orders'], 'format' => 'number'],
             ],
             'columns' => [
                 ['key' => 'date', 'label' => 'Date'],
@@ -86,6 +81,166 @@ class ReportService
             'rows' => $rows,
             'chart' => array_map(fn ($r) => ['label' => $r['date'], 'value' => $r['total']], $rows),
         ];
+    }
+
+    /**
+     * Raw sales metrics for a period — the single source of truth shared by the
+     * sales report and the dashboard KPI cards.
+     *
+     * @return array{gross: float, discounts: float, net: float, tax: float, service_charge: float, refunds: float, orders: int, average_ticket: float}
+     */
+    public function salesMetrics(ReportPeriod $period): array
+    {
+        return $this->metricsFrom(
+            $this->completedOrders($period)->get(['id', 'placed_at', 'subtotal', 'discount_total', 'tax_total', 'service_charge', 'total']),
+            $period,
+        );
+    }
+
+    /** @return array{gross: float, discounts: float, net: float, tax: float, service_charge: float, refunds: float, orders: int, average_ticket: float} */
+    protected function metricsFrom(Collection $orders, ReportPeriod $period): array
+    {
+        $total = (float) $orders->sum('total');
+        $tax = (float) $orders->sum('tax_total');
+        $net = round($total - $tax, 2);
+        $count = $orders->count();
+
+        return [
+            'gross' => round((float) $orders->sum('subtotal'), 2),
+            'discounts' => round((float) $orders->sum('discount_total'), 2),
+            'net' => $net,
+            'tax' => round($tax, 2),
+            'service_charge' => round((float) $orders->sum('service_charge'), 2),
+            'refunds' => round((float) $this->voidedOrders($period)->sum('total'), 2),
+            'orders' => $count,
+            'average_ticket' => $count > 0 ? round($net / $count, 2) : 0.0,
+        ];
+    }
+
+    /**
+     * Payments actually collected in the period (cash basis) — keyed to the
+     * payment's own paid_at and limited to successful payments. This is
+     * deliberately distinct from sales, which follow the order's placed date.
+     */
+    public function collectedTotal(ReportPeriod $period): float
+    {
+        return round((float) $this->collectedQuery($period)->sum('amount'), 2);
+    }
+
+    public function collected(ReportPeriod $period): array
+    {
+        $payments = $this->collectedQuery($period)->with('method:id,name')->get(['payment_method_id', 'amount']);
+
+        $rows = $payments
+            ->groupBy(fn (Payment $payment) => $payment->method?->name ?? 'Unknown')
+            ->map(fn (Collection $group, string $method) => [
+                'method' => $method,
+                'count' => $group->count(),
+                'amount' => round((float) $group->sum('amount'), 2),
+            ])
+            ->sortByDesc('amount')
+            ->values();
+
+        return [
+            'summary' => [
+                ['label' => 'Payments', 'value' => $payments->count(), 'format' => 'number'],
+                ['label' => 'Collected', 'value' => round((float) $payments->sum('amount'), 2), 'format' => 'money'],
+            ],
+            'columns' => [
+                ['key' => 'method', 'label' => 'Method'],
+                ['key' => 'count', 'label' => 'Count', 'align' => 'right', 'format' => 'number'],
+                ['key' => 'amount', 'label' => 'Amount', 'align' => 'right', 'format' => 'money'],
+            ],
+            'rows' => $rows->all(),
+            'chart' => $rows->map(fn ($r) => ['label' => $r['method'], 'value' => $r['amount']])->all(),
+        ];
+    }
+
+    protected function collectedQuery(ReportPeriod $period)
+    {
+        return Payment::query()
+            ->where('status', PaymentStatus::Succeeded->value)
+            ->whereBetween('paid_at', [$period->utcStart(), $period->utcEnd()])
+            ->when($period->branchId, fn ($q) => $q->whereHas('order', fn ($o) => $o->where('branch_id', $period->branchId)));
+    }
+
+    /**
+     * Net sales (excluding tax) bucketed by tenant-local hour for a single-day
+     * window, or by day otherwise. Drives the dashboard sales trend.
+     *
+     * @return array<int, array{label: string, value: float}>
+     */
+    public function netTrend(ReportPeriod $period): array
+    {
+        $orders = $this->completedOrders($period)->get(['placed_at', 'total', 'tax_total']);
+        $value = fn (Order $order) => (float) $order->total - (float) $order->tax_total;
+
+        if ($period->from->isSameDay($period->to)) {
+            $buckets = [];
+            for ($hour = 0; $hour < 24; $hour++) {
+                $buckets[sprintf('%02d:00', $hour)] = 0.0;
+            }
+            foreach ($orders as $order) {
+                $hour = (int) $order->placed_at->copy()->setTimezone($period->timezone)->format('G');
+                $buckets[sprintf('%02d:00', $hour)] += $value($order);
+            }
+        } else {
+            $buckets = [];
+            foreach ($period->localDates() as $date) {
+                $buckets[$date] = 0.0;
+            }
+            foreach ($orders as $order) {
+                $key = $period->localDate($order->placed_at);
+                if (isset($buckets[$key])) {
+                    $buckets[$key] += $value($order);
+                }
+            }
+        }
+
+        return array_map(
+            fn ($label, $amount) => ['label' => (string) $label, 'value' => round((float) $amount, 2)],
+            array_keys($buckets),
+            array_values($buckets),
+        );
+    }
+
+    /**
+     * Order analytics for the period: volumes plus breakdowns by source, type
+     * and fulfilment. Counts every order placed in the window (all statuses),
+     * so this is operational volume rather than booked revenue.
+     *
+     * @return array{total: int, completed: int, voided: int, by_source: array, by_type: array, by_fulfillment: array}
+     */
+    public function orders(ReportPeriod $period): array
+    {
+        $orders = Order::query()
+            ->whereBetween('placed_at', [$period->utcStart(), $period->utcEnd()])
+            ->when($period->branchId, fn ($q) => $q->where('branch_id', $period->branchId))
+            ->get(['id', 'placed_at', 'status', 'source', 'order_type', 'fulfillment_status']);
+
+        return [
+            'total' => $orders->count(),
+            'completed' => $orders->filter(fn (Order $order) => $order->status === OrderStatus::Completed)->count(),
+            'voided' => $orders->filter(fn (Order $order) => $order->status === OrderStatus::Voided)->count(),
+            'by_source' => $this->breakdown($orders, fn (Order $order) => $order->source?->label() ?? 'Unknown'),
+            'by_type' => $this->breakdown($orders, fn (Order $order) => $order->order_type?->label() ?? 'Unknown'),
+            'by_fulfillment' => $this->breakdown($orders, fn (Order $order) => $order->fulfillment_status?->label() ?? 'Unknown'),
+        ];
+    }
+
+    /**
+     * @param  Collection<int, Order>  $orders
+     * @param  callable(Order): string  $key
+     * @return array<int, array{label: string, value: int}>
+     */
+    protected function breakdown(Collection $orders, callable $key): array
+    {
+        return $orders
+            ->groupBy($key)
+            ->map(fn (Collection $group, string $label) => ['label' => $label, 'value' => $group->count()])
+            ->sortByDesc('value')
+            ->values()
+            ->all();
     }
 
     public function products(ReportPeriod $period): array
@@ -327,7 +482,8 @@ class ReportService
             ->with('item')
             ->get();
 
-        $byReason = $records->groupBy(fn (WasteRecord $r) => $r->reason->label())
+        $byReason = $records->where('status', 'approved')
+            ->groupBy(fn (WasteRecord $r) => $r->reason->label())
             ->map(fn (Collection $g) => round((float) $g->sum('cost'), 2));
 
         $rows = $records->map(fn (WasteRecord $r) => [
@@ -341,7 +497,8 @@ class ReportService
         return [
             'summary' => [
                 ['label' => 'Records', 'value' => $records->count(), 'format' => 'number'],
-                ['label' => 'Total cost', 'value' => round((float) $records->sum('cost'), 2), 'format' => 'money'],
+                // Only approved write-offs have actually left stock.
+                ['label' => 'Total cost', 'value' => round((float) $records->where('status', 'approved')->sum('cost'), 2), 'format' => 'money'],
                 ['label' => 'Pending approval', 'value' => $records->where('status', 'pending')->count(), 'format' => 'number'],
             ],
             'columns' => [

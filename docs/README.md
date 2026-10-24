@@ -13,6 +13,7 @@ application built on Laravel + Inertia + React + TypeScript.
 | [DATABASE.md](./DATABASE.md) | Schema inventory by domain, critical relationships and mandatory data-integrity rules |
 | [UI-UX.md](./UI-UX.md) | Desktop application shell, screen-by-screen requirements and POS interaction principles |
 | [SECURITY.md](./SECURITY.md) | Tenant isolation, roles/permissions matrix, impersonation rules, payment safety |
+| [custom-roles.md](./custom-roles.md) | Tenant-defined custom roles: data model, permission catalog, server-side rules, screens |
 | [ROADMAP.md](./ROADMAP.md) | 14-phase build plan with per-phase exit requirements and approval gates |
 | [PHASES.md](./PHASES.md) | Per-phase status and audit reports (scope, changes, tests, risks) |
 | [PRODUCTION.md](./PRODUCTION.md) | Production readiness runbook — deploy, processes, monitoring, backups, rollback, go-live checklist |

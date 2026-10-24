@@ -6,6 +6,7 @@ use App\Domain\Branches\Models\Branch;
 use App\Domain\Inventory\Models\Ingredient;
 use App\Domain\Inventory\Models\StockTransfer;
 use App\Domain\Inventory\TransferService;
+use App\Domain\Menu\Models\Product;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockTransferRequest;
 use Illuminate\Http\RedirectResponse;
@@ -24,14 +25,7 @@ class TransferController extends Controller
         return Inertia::render('Transfers/Index', [
             'branches' => $tenant->branches()->whereIn('id', $request->user()->accessibleBranchIds())->orderBy('name')->get()
                 ->map(fn (Branch $b) => ['id' => $b->getKey(), 'name' => $b->name]),
-            'items' => Ingredient::query()->orderBy('name')->get()
-                ->map(fn (Ingredient $i) => [
-                    'value' => 'ingredient:'.$i->getKey(),
-                    'label' => $i->name,
-                    'type' => 'ingredient',
-                    'id' => $i->getKey(),
-                    'cost' => (float) $i->cost_per_unit,
-                ]),
+            'items' => $this->itemOptions(),
             'transfers' => StockTransfer::query()
                 ->with(['fromBranch:id,name', 'toBranch:id,name'])
                 ->withCount('items')
@@ -89,5 +83,31 @@ class TransferController extends Controller
         $this->transfers->cancel($transfer, $request->user());
 
         return back()->with('success', 'Transfer cancelled.');
+    }
+
+    /**
+     * Stockable items a transfer may move (ingredients and products).
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    protected function itemOptions(): \Illuminate\Support\Collection
+    {
+        $ingredients = Ingredient::query()->orderBy('name')->get()->map(fn (Ingredient $ingredient) => [
+            'value' => 'ingredient:'.$ingredient->getKey(),
+            'label' => $ingredient->name,
+            'type' => 'ingredient',
+            'id' => $ingredient->getKey(),
+            'cost' => (float) $ingredient->cost_per_unit,
+        ]);
+
+        $products = Product::query()->orderBy('name')->get()->map(fn (Product $product) => [
+            'value' => 'product:'.$product->getKey(),
+            'label' => $product->name,
+            'type' => 'product',
+            'id' => $product->getKey(),
+            'cost' => (float) $product->cost_price,
+        ]);
+
+        return $ingredients->concat($products)->values();
     }
 }

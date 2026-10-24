@@ -181,4 +181,65 @@ class KitchenDisplayTest extends TestCase
             ->patch("/kitchen/tickets/{$ticket->id}", ['status' => 'preparing'])
             ->assertForbidden();
     }
+
+    public function test_the_backfill_command_opens_missing_tickets_idempotently(): void
+    {
+        $product = Product::factory()->create(['tenant_id' => $this->tenant->id]);
+        $this->sell($product);
+
+        // Simulate a lost ticket (e.g. a dropped queued job).
+        KitchenTicket::query()->delete();
+        $this->assertSame(0, KitchenTicket::count());
+
+        $this->artisan('kitchen:backfill-tickets')->assertSuccessful();
+        $this->assertSame(1, KitchenTicket::count());
+
+        $this->artisan('kitchen:backfill-tickets')->assertSuccessful();
+        $this->assertSame(1, KitchenTicket::count());
+    }
+
+    public function test_illegal_ticket_transitions_are_rejected(): void
+    {
+        $product = Product::factory()->create(['tenant_id' => $this->tenant->id]);
+        $this->sell($product);
+        $ticket = KitchenTicket::firstOrFail();
+
+        // new → served is not allowed.
+        $this->actingAs($this->owner)
+            ->patch("/kitchen/tickets/{$ticket->id}", ['status' => 'served'])
+            ->assertSessionHasErrors('status');
+
+        $this->assertSame(KitchenTicketStatus::New, $ticket->fresh()->status);
+    }
+
+    public function test_handed_over_is_a_valid_step_towards_served(): void
+    {
+        $product = Product::factory()->create(['tenant_id' => $this->tenant->id]);
+        $this->sell($product);
+        $ticket = KitchenTicket::firstOrFail();
+
+        $this->actingAs($this->owner)->patch("/kitchen/tickets/{$ticket->id}", ['status' => 'preparing'])->assertRedirect();
+        $this->actingAs($this->owner)->patch("/kitchen/tickets/{$ticket->id}", ['status' => 'ready'])->assertRedirect();
+        $this->actingAs($this->owner)->patch("/kitchen/tickets/{$ticket->id}", ['status' => 'handed_over'])->assertRedirect();
+
+        $ticket->refresh();
+        $this->assertSame(KitchenTicketStatus::HandedOver, $ticket->status);
+        $this->assertNotNull($ticket->handed_over_at);
+
+        $this->actingAs($this->owner)->patch("/kitchen/tickets/{$ticket->id}", ['status' => 'served'])->assertRedirect();
+        $this->assertSame(KitchenTicketStatus::Served, $ticket->fresh()->status);
+    }
+
+    public function test_kitchen_status_changes_sync_to_order_fulfillment(): void
+    {
+        $product = Product::factory()->create(['tenant_id' => $this->tenant->id]);
+        $order = $this->sell($product);
+        $ticket = KitchenTicket::firstOrFail();
+
+        $this->actingAs($this->owner)->patch("/kitchen/tickets/{$ticket->id}", ['status' => 'preparing'])->assertRedirect();
+        $this->assertSame('preparing', $order->fresh()->fulfillment_status->value);
+
+        $this->actingAs($this->owner)->patch("/kitchen/tickets/{$ticket->id}", ['status' => 'ready'])->assertRedirect();
+        $this->assertSame('ready', $order->fresh()->fulfillment_status->value);
+    }
 }

@@ -36,11 +36,10 @@ const STATUS_TONES: Record<string, BadgeTone> = {
 };
 
 const REASON_COLORS: Record<string, string> = {
+    expiry: 'bg-orange-100 text-orange-800 border-orange-200',
+    preparation_error: 'bg-blue-100 text-blue-800 border-blue-200',
+    damage: 'bg-rose-100 text-rose-800 border-rose-200',
     spoilage: 'bg-amber-100 text-amber-800 border-amber-200',
-    expired: 'bg-orange-100 text-orange-800 border-orange-200',
-    breakage: 'bg-rose-100 text-rose-800 border-rose-200',
-    prep_error: 'bg-blue-100 text-blue-800 border-blue-200',
-    overcooked: 'bg-purple-100 text-purple-800 border-purple-200',
     other: 'bg-gray-100 text-gray-800 border-gray-200',
 };
 
@@ -118,8 +117,9 @@ export default function WasteIndex({
         });
     };
 
-    // KPI Metrics
-    const totalCost = useMemo(() => records.reduce((sum, r) => sum + r.cost, 0), [records]);
+    // KPI Metrics — loss reflects only approved write-offs (pending/rejected
+    // records have not left stock and must not inflate reported loss).
+    const totalCost = useMemo(() => records.filter((r) => r.status === 'approved').reduce((sum, r) => sum + r.cost, 0), [records]);
     const pendingCount = useMemo(() => records.filter((r) => r.status === 'pending').length, [records]);
     const approvedCount = useMemo(() => records.filter((r) => r.status === 'approved').length, [records]);
     const rejectedCount = useMemo(() => records.filter((r) => r.status === 'rejected').length, [records]);
@@ -228,7 +228,7 @@ export default function WasteIndex({
                             label="Total Waste Cost"
                             value={`$${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                             tone={totalCost > 0 ? 'warning' : 'neutral'}
-                            hint="Calculated loss across all approved and pending records"
+                            hint="Reported loss across approved write-offs only"
                         />
                         <KpiCard
                             label="Total Incidents"

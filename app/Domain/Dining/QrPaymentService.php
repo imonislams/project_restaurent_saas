@@ -143,6 +143,12 @@ class QrPaymentService
             'payload' => ['provider' => $gateway->name(), 'amount' => $outstanding],
         ]);
 
+        try {
+            app(\App\Domain\Invoicing\OrderInvoiceService::class)->linkPayment($payment);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         if ($succeeded) {
             $this->reconcile($order);
         }
@@ -190,6 +196,19 @@ class QrPaymentService
         });
 
         app(TableService::class)->refreshForOrder($order);
+
+        // Reflect the verified payment on the invoice, and tell billing staff.
+        try {
+            app(\App\Domain\Invoicing\OrderInvoiceService::class)->refreshForOrder($order->fresh());
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        try {
+            app(\App\Domain\Notifications\NotificationService::class)->onlinePaymentReceived($order->fresh(), $paid);
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         if ($order->dining_session_id && $session = $order->diningSession) {
             $this->sessions->maybeCloseAfterSettlement($session);

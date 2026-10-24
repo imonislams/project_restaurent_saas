@@ -98,6 +98,9 @@ class TransferService
             $location = $this->defaults->defaultLocationFor(Branch::query()->findOrFail($transfer->from_branch_id));
 
             foreach ($transfer->items()->with('item')->get() as $line) {
+                // Respect the tenant's negative-stock setting: a dispatch that
+                // exceeds the source branch's on-hand stock is rejected rather
+                // than creating phantom stock at the destination.
                 $this->stock->record(
                     $line->item,
                     $location,
@@ -106,7 +109,6 @@ class TransferService
                     (float) $line->unit_cost,
                     $transfer,
                     'Transfer '.$transfer->number.' out',
-                    true,
                 );
             }
 
@@ -140,7 +142,6 @@ class TransferService
                     (float) $line->unit_cost,
                     $transfer,
                     'Transfer '.$transfer->number.' in',
-                    true,
                 );
             }
 

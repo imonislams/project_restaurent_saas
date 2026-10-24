@@ -18,7 +18,7 @@ interface TicketItem {
 
 interface Ticket {
     id: number;
-    status: string; // 'new' | 'accepted' | 'preparing' | 'ready' | 'served'
+    status: string; // 'new' | 'accepted' | 'preparing' | 'ready' | 'handed_over' | 'served' | 'cancelled'
     priority: string; // 'normal' | 'urgent'
     notes: string | null;
     elapsed_minutes: number;
@@ -416,9 +416,9 @@ export default function KitchenIndex({
                 </div>
             </header>
 
-            {/* --- KDS BOARD: 3-COLUMN WORKFLOW --- */}
+            {/* --- KDS BOARD: 4-COLUMN WORKFLOW --- */}
             <main className="flex-1 p-3 sm:p-4 overflow-y-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 items-start">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 items-start">
                     {/* COLUMN 1: NEW & PENDING */}
                     <KdsColumn
                         title="New Tickets"
@@ -474,13 +474,36 @@ export default function KitchenIndex({
                         onItemStatus={handleItemStatus}
                         onTogglePriority={handleTogglePriority}
                         primaryAction={{
+                            label: 'Hand Over',
+                            targetStatus: 'handed_over',
+                            btnClass: 'bg-teal-600 hover:bg-teal-500 text-white',
+                        }}
+                        secondaryAction={{
+                            label: '← Prep',
+                            targetStatus: 'preparing',
+                        }}
+                    />
+
+                    {/* COLUMN 4: HANDED OVER / SERVE */}
+                    <KdsColumn
+                        title="Handed Over"
+                        dotColor="bg-teal-500"
+                        badgeColor="bg-teal-500/20 text-teal-300 border border-teal-500/30"
+                        tickets={filteredTickets.filter((t) => t.status === 'handed_over')}
+                        isDarkMode={isDarkMode}
+                        canManage={canManage}
+                        getElapsedData={getElapsedData}
+                        onTicketStatus={handleTicketStatus}
+                        onItemStatus={handleItemStatus}
+                        onTogglePriority={handleTogglePriority}
+                        primaryAction={{
                             label: 'Serve & Bump',
                             targetStatus: 'served',
                             btnClass: 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600',
                         }}
                         secondaryAction={{
-                            label: '← Prep',
-                            targetStatus: 'preparing',
+                            label: '← Ready',
+                            targetStatus: 'ready',
                         }}
                     />
                 </div>

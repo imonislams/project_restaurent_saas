@@ -184,7 +184,7 @@ class DiningFoundationTest extends TestCase
 
         $this->assertSame('voided', $voided->status->value);
         $this->assertSame(TableStatus::Available, $table->fresh()->status);
-        $this->assertSame(KitchenTicketStatus::Served, $order->fresh()->kitchenTicket->status);
+        $this->assertSame(KitchenTicketStatus::Cancelled, $order->fresh()->kitchenTicket->status);
     }
 
     public function test_tenant_scope_hides_other_tenants_dining_sessions(): void

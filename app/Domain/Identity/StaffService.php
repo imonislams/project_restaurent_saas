@@ -23,7 +23,7 @@ class StaffService
      */
     public function updateAccess(User $staff, array $roleSlugs, array $branchIds, User $actor): void
     {
-        $roleIds = $this->resolvableRoleIds($roleSlugs);
+        $roleIds = $this->resolvableRoleIds($roleSlugs, $staff->tenant_id);
 
         $staff->roles()->sync($roleIds);
         $staff->unsetRelation('roles');
@@ -71,13 +71,22 @@ class StaffService
     }
 
     /**
+     * Resolves assignable role ids: global tenant roles plus the tenant's own
+     * custom roles. Platform roles (and other tenants' roles) are never matched.
+     *
      * @param  list<string>  $slugs
      * @return list<int>
      */
-    protected function resolvableRoleIds(array $slugs): array
+    protected function resolvableRoleIds(array $slugs, ?int $tenantId = null): array
     {
         return Role::whereIn('slug', $slugs)
-            ->whereNull('tenant_id')
+            ->where(function ($query) use ($tenantId) {
+                $query->whereNull('tenant_id');
+
+                if ($tenantId !== null) {
+                    $query->orWhere('tenant_id', $tenantId);
+                }
+            })
             ->whereNotIn('slug', RoleName::platformValues())
             ->pluck('id')
             ->all();

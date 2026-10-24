@@ -3,8 +3,15 @@
 namespace App\Domain\Notifications;
 
 use App\Domain\CashManagement\Models\Shift;
+use App\Domain\Dining\Models\BillRequest;
 use App\Domain\Inventory\Models\StockBalance;
+use App\Domain\Invoicing\Models\Invoice;
+use App\Domain\Notifications\Notifications\BillRequestedNotification;
 use App\Domain\Notifications\Notifications\LowStockNotification;
+use App\Domain\Notifications\Notifications\OnlinePaymentReceivedNotification;
+use App\Domain\Notifications\Notifications\OrderHandedOverNotification;
+use App\Domain\Notifications\Notifications\OrderReadyNotification;
+use App\Domain\Notifications\Notifications\OrderServedForBillingNotification;
 use App\Domain\Notifications\Notifications\QrOrderPlacedNotification;
 use App\Domain\Notifications\Notifications\SalesSummaryNotification;
 use App\Domain\Notifications\Notifications\ShiftVarianceNotification;
@@ -18,8 +25,11 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Notification;
 
 /**
- * Sends operational notifications to the tenant's owners/admins.
- * Delivery is best-effort — a failure here must never affect a committed sale.
+ * Sends operational notifications. Delivery is best-effort — a failure here must
+ * never affect a committed sale.
+ *
+ * Order/kitchen/billing notifications are scoped to a single branch: a user only
+ * receives them if they hold the relevant permission AND may access that branch.
  */
 class NotificationService
 {
@@ -32,17 +42,48 @@ class NotificationService
             ->get();
     }
 
-    /** Active users allowed to approve orders (holders of orders.update). */
-    public function approvalRecipients(Tenant $tenant): Collection
+    /**
+     * Active users in the tenant who hold the permission and can access the branch.
+     *
+     * @return Collection<int, User>
+     */
+    public function branchRecipients(Tenant $tenant, int $branchId, string $permission): Collection
     {
         return $tenant->users()
             ->where('status', 'active')
             ->get()
-            ->filter(fn (User $user) => $user->hasPermission('orders.update'))
+            ->filter(fn (User $user) => $user->hasPermission($permission)
+                && ($user->hasTenantWideBranchAccess() || in_array($branchId, $user->accessibleBranchIds(), true)))
             ->values();
     }
 
-    /** Notify approvers that a QR order is waiting for confirmation. */
+    /** Active branch-scoped users allowed to approve orders. */
+    public function approvalRecipients(Tenant $tenant, int $branchId): Collection
+    {
+        return $this->branchRecipients($tenant, $branchId, 'orders.approve');
+    }
+
+    /**
+     * Staff responsible for fulfilling an order: the table's assigned staff,
+     * falling back to the branch's approvers when none are assigned.
+     *
+     * @return Collection<int, User>
+     */
+    public function staffForOrder(Order $order): Collection
+    {
+        $assigned = $order->staff()
+            ->where('status', 'active')
+            ->where('users.tenant_id', $order->tenant_id)
+            ->get();
+
+        if ($assigned->isNotEmpty()) {
+            return $assigned->values();
+        }
+
+        return $order->tenant ? $this->approvalRecipients($order->tenant, $order->branch_id) : collect();
+    }
+
+    /** Notify branch approvers that a QR order is waiting for confirmation. */
     public function newQrOrder(Order $order): int
     {
         $tenant = $order->tenant;
@@ -51,7 +92,7 @@ class NotificationService
             return 0;
         }
 
-        $recipients = $this->approvalRecipients($tenant);
+        $recipients = $this->approvalRecipients($tenant, $order->branch_id);
 
         Notification::send($recipients, new QrOrderPlacedNotification(
             $order->order_number,
@@ -59,6 +100,99 @@ class NotificationService
             (float) $order->total,
             $order->currency,
             $order->getKey(),
+        ));
+
+        return $recipients->count();
+    }
+
+    /** Notify assigned staff that the kitchen marked the food ready. */
+    public function orderReady(Order $order): int
+    {
+        $recipients = $this->staffForOrder($order);
+
+        Notification::send($recipients, new OrderReadyNotification(
+            $order->order_number,
+            $order->table?->name,
+            $order->getKey(),
+        ));
+
+        return $recipients->count();
+    }
+
+    /** Notify assigned staff that the kitchen handed the order over. */
+    public function orderHandedOver(Order $order): int
+    {
+        $recipients = $this->staffForOrder($order);
+
+        Notification::send($recipients, new OrderHandedOverNotification(
+            $order->order_number,
+            $order->table?->name,
+            $order->getKey(),
+        ));
+
+        return $recipients->count();
+    }
+
+    /** Notify branch billing users that a served order entered the invoice workflow. */
+    public function orderServedForBilling(Order $order, Invoice $invoice): int
+    {
+        $tenant = $order->tenant;
+
+        if (! $tenant) {
+            return 0;
+        }
+
+        $recipients = $this->branchRecipients($tenant, $order->branch_id, 'invoices.view');
+
+        Notification::send($recipients, new OrderServedForBillingNotification(
+            $invoice->number,
+            $order->table?->name,
+            (float) $invoice->total,
+            $invoice->currency,
+            $invoice->getKey(),
+        ));
+
+        return $recipients->count();
+    }
+
+    /** Notify branch billing users that a verified online payment landed. */
+    public function onlinePaymentReceived(Order $order, float $amount): int
+    {
+        $tenant = $order->tenant;
+
+        if (! $tenant) {
+            return 0;
+        }
+
+        $recipients = $this->branchRecipients($tenant, $order->branch_id, 'invoices.view');
+
+        Notification::send($recipients, new OnlinePaymentReceivedNotification(
+            $order->order_number,
+            $order->table?->name,
+            $amount,
+            $order->currency,
+            $order->getKey(),
+        ));
+
+        return $recipients->count();
+    }
+
+    /** Notify branch staff that a customer requested the bill. */
+    public function billRequested(BillRequest $request): int
+    {
+        $session = $request->session;
+
+        if (! $session || ! $tenant = $session->tenant) {
+            return 0;
+        }
+
+        $recipients = $this->branchRecipients($tenant, $session->branch_id, 'invoices.view');
+
+        Notification::send($recipients, new BillRequestedNotification(
+            $session->table?->name,
+            (float) ($request->payable_total ?? 0),
+            $session->orders()->value('currency') ?? 'USD',
+            $session->getKey(),
         ));
 
         return $recipients->count();

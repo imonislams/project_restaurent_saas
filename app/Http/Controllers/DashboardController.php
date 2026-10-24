@@ -7,6 +7,8 @@ use App\Domain\Customers\Models\Customer;
 use App\Domain\Menu\Models\Product;
 use App\Domain\Onboarding\OnboardingService;
 use App\Domain\Reporting\DashboardAnalyticsService;
+use App\Domain\Reporting\DashboardOverviewService;
+use App\Domain\Reporting\ReportPeriod;
 use App\Domain\Tenancy\Models\Tenant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +19,7 @@ class DashboardController extends Controller
 {
     public function __construct(
         protected OnboardingService $onboarding,
+        protected DashboardOverviewService $overview,
         protected DashboardAnalyticsService $analytics,
     ) {}
 
@@ -38,13 +41,16 @@ class DashboardController extends Controller
                 'warnings' => [],
                 'progress' => null,
                 'stats' => [],
+                'period' => null,
                 'analytics' => null,
+                'customerAnalytics' => null,
                 'business360' => null,
             ]);
         }
 
         $branch = $this->onboarding->branchForOnboarding($tenant);
         $completed = $tenant->hasCompletedOnboarding();
+        $period = $this->resolvePeriod($request, $tenant, $branch);
 
         return Inertia::render('Dashboard', [
             'tenant' => [
@@ -67,10 +73,34 @@ class DashboardController extends Controller
                 'branches' => $tenant->branches()->count(),
                 'users' => $tenant->users()->count(),
             ],
-            'analytics' => $completed ? $this->analytics->summary($tenant) : null,
+            'period' => [
+                'preset' => $period->preset ?? 'custom',
+                'from' => $period->from->toDateString(),
+                'to' => $period->to->toDateString(),
+                'timezone' => $period->timezone,
+            ],
+            'analytics' => $completed ? $this->overview->build($tenant, $period, $user->hasTenantWideBranchAccess()) : null,
             'customerAnalytics' => $completed ? $this->analytics->customerAnalytics($tenant) : null,
             'business360' => $completed ? $this->business360($tenant) : null,
         ]);
+    }
+
+    /**
+     * Resolve the requested reporting window. Branch scoping is implicit (the
+     * BranchScope global scope), so no branch id is forced here.
+     */
+    protected function resolvePeriod(Request $request, Tenant $tenant, ?Branch $branch): ReportPeriod
+    {
+        $from = $request->string('from')->toString();
+        $to = $request->string('to')->toString();
+
+        if ($from !== '' && $to !== '') {
+            return ReportPeriod::make($from, $to, null, $tenant, $branch);
+        }
+
+        $preset = $request->string('preset')->toString();
+
+        return ReportPeriod::forPreset($preset !== '' ? $preset : 'today', null, $tenant, $branch);
     }
 
     /**
@@ -84,6 +114,7 @@ class DashboardController extends Controller
             'products' => Product::withoutGlobalScopes()->where('tenant_id', $tenant->getKey())->count(),
             'customers' => Customer::withoutGlobalScopes()->where('tenant_id', $tenant->getKey())->count(),
             'active_customers' => Customer::withoutGlobalScopes()->where('tenant_id', $tenant->getKey())->where('is_active', true)->count(),
+            'active_guests' => $this->analytics->activeGuestsCount($tenant),
             'low_stock' => $this->analytics->lowStockCount($tenant),
             'pending_approvals' => $this->analytics->pendingApprovals($tenant),
         ];

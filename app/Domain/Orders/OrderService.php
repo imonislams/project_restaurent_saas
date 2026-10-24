@@ -142,37 +142,65 @@ class OrderService
 
     /**
      * Confirm a pending order (QR or table-staff) and send it to the kitchen.
+     * Locked and idempotent: confirming an order that is no longer pending is
+     * rejected rather than silently reporting success.
      */
     public function accept(Order $order, User $user): Order
     {
-        if ($order->acceptance_status !== AcceptanceStatus::Pending) {
-            return $order;
-        }
+        $accepted = DB::transaction(function () use ($order, $user) {
+            $locked = Order::query()->whereKey($order->getKey())->lockForUpdate()->firstOrFail();
 
-        $order->forceFill([
-            'acceptance_status' => AcceptanceStatus::Accepted,
-            'accepted_at' => now(),
-            'confirmed_by_user_id' => $user->getKey(),
-        ])->save();
+            if ($locked->acceptance_status !== AcceptanceStatus::Pending) {
+                throw ValidationException::withMessages([
+                    'order' => 'This order is no longer awaiting confirmation.',
+                ]);
+            }
 
-        $order->statusHistory()->create([
-            'tenant_id' => $order->tenant_id,
-            'status' => $order->status,
-            'user_id' => $user->getKey(),
-            'note' => 'Order confirmed',
-        ]);
+            $locked->forceFill([
+                'acceptance_status' => AcceptanceStatus::Accepted,
+                'accepted_at' => now(),
+                'confirmed_by_user_id' => $user->getKey(),
+            ])->save();
+
+            $locked->statusHistory()->create([
+                'tenant_id' => $locked->tenant_id,
+                'status' => $locked->status,
+                'user_id' => $user->getKey(),
+                'note' => 'Order confirmed',
+            ]);
+
+            $this->audit->log('order.accepted', $locked, ['order_number' => $locked->order_number], $user, $locked->tenant_id);
+
+            return $locked;
+        });
 
         if ($this->confirmation->sendConfirmedToKitchen()) {
-            try {
-                OpenKitchenTicket::dispatch($order->getKey());
-            } catch (\Throwable $e) {
-                report($e);
-            }
+            $this->openKitchenTicket($accepted);
         }
 
-        $this->audit->log('order.accepted', $order, ['order_number' => $order->order_number], $user, $order->tenant_id);
+        return $accepted->fresh();
+    }
 
-        return $order->fresh();
+    /**
+     * Send a confirmed order to the kitchen immediately (so the ticket appears
+     * without waiting for a queue worker or an application restart). If the
+     * synchronous creation fails, fall back to the queued job so the failure is
+     * retried rather than lost — the job and the service are both idempotent
+     * per order, so a retry never duplicates the ticket.
+     */
+    protected function openKitchenTicket(Order $order): void
+    {
+        try {
+            $this->kitchen->openTicketFor($order);
+        } catch (\Throwable $e) {
+            report($e);
+
+            try {
+                OpenKitchenTicket::dispatch($order->getKey());
+            } catch (\Throwable $dispatchError) {
+                report($dispatchError);
+            }
+        }
     }
 
     /**
@@ -239,6 +267,15 @@ class OrderService
         ]);
 
         $this->audit->log('order.fulfillment_changed', $order, ['fulfillment_status' => $status->value], $user, $order->tenant_id);
+
+        // Serving feeds the Bill/Invoice workflow (idempotent, best-effort).
+        if ($status === FulfillmentStatus::Served) {
+            try {
+                app(\App\Domain\Invoicing\OrderInvoiceService::class)->forServedOrder($order);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
 
         return $order;
     }

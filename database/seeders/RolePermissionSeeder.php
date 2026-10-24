@@ -130,6 +130,7 @@ class RolePermissionSeeder extends Seeder
                 'waste.view', 'waste.create',
                 'customers.view', 'customers.manage',
                 'cash.view', 'cash.manage', 'expenses.view', 'expenses.manage',
+                'invoices.view', 'invoices.manage',
                 'reports.view', 'staff.view', 'branches.view', 'settings.view',
             ],
 
@@ -141,6 +142,7 @@ class RolePermissionSeeder extends Seeder
                 'qr.view', 'qr.manage',
                 'inventory.view', 'waste.view', 'waste.create',
                 'customers.view', 'cash.view', 'reports.view',
+                'invoices.view', 'invoices.manage',
             ],
 
             RoleName::Cashier->value => [
@@ -148,6 +150,7 @@ class RolePermissionSeeder extends Seeder
                 'orders.view', 'orders.create', 'orders.update',
                 'tables.view', 'kitchen.view', 'customers.view',
                 'qr.view', 'modifiers.view',
+                'invoices.view',
             ],
 
             // Service-facing role: takes table orders and submits them for
@@ -176,13 +179,15 @@ class RolePermissionSeeder extends Seeder
                 'dashboard.view', 'expenses.view', 'expenses.manage', 'expenses.approve',
                 'accounts.view', 'cash.view', 'reports.view', 'reports.export',
                 'inventory.view', 'purchasing.view',
+                'invoices.view', 'invoices.manage',
             ],
 
             RoleName::Auditor->value => array_merge(
                 $views('dashboard'), $views('orders'), $views('tables'), $views('kitchen'),
                 $views('menu'), $views('modifiers'), $views('qr'),
                 $views('inventory'), $views('purchasing'), $views('waste'),
-                $views('customers'), $views('cash'), $views('accounts'), $views('expenses'),
+                $views('customers'), $views('cash'), $views('accounts'), $views('invoices'),
+                $views('expenses'),
                 $views('reports'), $views('staff'), $views('branches'), $views('settings'),
                 $views('subscription'),
             ),

@@ -128,10 +128,19 @@ class DiningSessionService
             return $existing;
         }
 
+        $outstanding = (float) $session->orders()
+            ->whereNotIn('status', [OrderStatus::Voided->value])
+            ->selectRaw('COALESCE(SUM(total - paid_total), 0) as due')
+            ->value('due');
+
+        $invoice = app(\App\Domain\Invoicing\OrderInvoiceService::class)->openInvoiceForSession($session);
+
         $request = $session->billRequests()->create([
             'tenant_id' => $session->tenant_id,
+            'invoice_id' => $invoice?->getKey(),
             'requested_by_participant_id' => $participant?->getKey(),
             'status' => BillRequestStatus::Pending,
+            'payable_total' => round(max(0.0, $outstanding), 2),
             'requested_at' => now(),
         ]);
 
@@ -140,6 +149,13 @@ class DiningSessionService
         }
 
         $this->record($session, 'bill.requested', 'participant', [], $participant?->getKey());
+
+        // Notify the branch's billing staff once, on the newly created request.
+        try {
+            app(\App\Domain\Notifications\NotificationService::class)->billRequested($request);
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return $request;
     }

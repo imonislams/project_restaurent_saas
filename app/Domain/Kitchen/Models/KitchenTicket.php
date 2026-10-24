@@ -23,7 +23,9 @@ class KitchenTicket extends Model
         'notes',
         'accepted_at',
         'ready_at',
+        'handed_over_at',
         'served_at',
+        'cancelled_at',
         'printed_at',
     ];
 
@@ -33,7 +35,9 @@ class KitchenTicket extends Model
             'status' => KitchenTicketStatus::class,
             'accepted_at' => 'datetime',
             'ready_at' => 'datetime',
+            'handed_over_at' => 'datetime',
             'served_at' => 'datetime',
+            'cancelled_at' => 'datetime',
             'printed_at' => 'datetime',
         ];
     }

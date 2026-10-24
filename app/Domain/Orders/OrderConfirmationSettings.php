@@ -18,17 +18,18 @@ class OrderConfirmationSettings
     public function __construct(protected TenantContext $context) {}
 
     /**
-     * Table-staff order confirmation mode: `central` (approval required) or
-     * `direct` (staff confirm immediately). Defaults to `direct` so existing
-     * behaviour is unchanged until an owner opts in.
+     * Order confirmation mode: `central` (approval required) or `direct`
+     * (authorized staff confirm immediately). Defaults to `central` so staff
+     * orders await confirmation unless an owner explicitly opts into direct
+     * branch order-taking.
      */
     public function mode(): string
     {
-        $value = (string) $this->get('orders.staff_confirmation_mode', self::MODE_DIRECT);
+        $value = (string) $this->get('orders.staff_confirmation_mode', self::MODE_CENTRAL);
 
         return in_array($value, [self::MODE_CENTRAL, self::MODE_DIRECT], true)
             ? $value
-            : self::MODE_DIRECT;
+            : self::MODE_CENTRAL;
     }
 
     public function isCentralApproval(): bool
@@ -39,7 +40,7 @@ class OrderConfirmationSettings
     /** Whether branch staff may take orders without central approval. */
     public function branchDirectOrderTaking(): bool
     {
-        return (bool) $this->get('orders.branch_direct_order_taking', true);
+        return (bool) $this->get('orders.branch_direct_order_taking', false);
     }
 
     /** Whether confirmed orders are dispatched to the kitchen. */

@@ -66,6 +66,21 @@ approve, refund, export, manage**.
 
 `✔` full · `▲` scoped/limited · `–` none. Final matrix is configurable per tenant.
 
+### 3.1 Tenant-defined custom roles
+
+Owners/admins holding `roles.manage` may define **custom roles** scoped to their own tenant
+(`roles.tenant_id` set, `is_system = false`); see [custom-roles.md](./custom-roles.md).
+
+- Only permissions from the tenant catalog (`Permissions::tenant()`) may be granted — never
+  `platform.*`.
+- A manager may only grant permissions they themselves hold (no privilege escalation).
+- Global/system roles (`tenant_id = NULL`, `is_system = true`) and all platform roles are
+  immutable here; the platform role screen owns them.
+- A custom role is assignable only to users of the same tenant; branch access is a separate
+  axis and is never widened by a role.
+- A custom role still assigned to users cannot be deleted. Changes are audited
+  (`role.created`, `role.permissions_updated`, `role.deleted`).
+
 ---
 
 ## 4. Sensitive-action controls

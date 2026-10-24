@@ -16,6 +16,7 @@ class Payment extends Model
     protected $fillable = [
         'tenant_id',
         'order_id',
+        'invoice_id',
         'payment_method_id',
         'amount',
         'tendered',
@@ -40,6 +41,11 @@ class Payment extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function invoice(): BelongsTo
+    {
+        return $this->belongsTo(\App\Domain\Invoicing\Models\Invoice::class);
     }
 
     public function method(): BelongsTo

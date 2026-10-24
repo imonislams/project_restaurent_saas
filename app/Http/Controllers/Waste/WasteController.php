@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Waste;
 
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Inventory\Models\Ingredient;
+use App\Domain\Menu\Models\Product;
 use App\Domain\Waste\Enums\WasteReason;
 use App\Domain\Waste\Models\WasteRecord;
 use App\Domain\Waste\WasteService;
@@ -25,13 +26,7 @@ class WasteController extends Controller
         return Inertia::render('Waste/Index', [
             'branches' => $tenant->branches()->whereIn('id', $request->user()->accessibleBranchIds())->orderBy('name')->get()
                 ->map(fn (Branch $b) => ['id' => $b->getKey(), 'name' => $b->name]),
-            'items' => Ingredient::query()->orderBy('name')->get()
-                ->map(fn (Ingredient $i) => [
-                    'value' => 'ingredient:'.$i->getKey(),
-                    'label' => $i->name,
-                    'type' => 'ingredient',
-                    'id' => $i->getKey(),
-                ]),
+            'items' => $this->itemOptions(),
             'reasons' => collect(WasteReason::cases())
                 ->map(fn ($r) => ['value' => $r->value, 'label' => $r->label()])->values(),
             'records' => WasteRecord::query()
@@ -79,5 +74,32 @@ class WasteController extends Controller
         $this->waste->reject($record, $request->user());
 
         return back()->with('success', 'Waste rejected.');
+    }
+
+    /**
+     * Stockable items a waste record may target, with unit cost so the UI can
+     * show an accurate loss valuation / approval preview.
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    protected function itemOptions(): \Illuminate\Support\Collection
+    {
+        $ingredients = Ingredient::query()->orderBy('name')->get()->map(fn (Ingredient $ingredient) => [
+            'value' => 'ingredient:'.$ingredient->getKey(),
+            'label' => $ingredient->name,
+            'type' => 'ingredient',
+            'id' => $ingredient->getKey(),
+            'cost' => (float) $ingredient->cost_per_unit,
+        ]);
+
+        $products = Product::query()->orderBy('name')->get()->map(fn (Product $product) => [
+            'value' => 'product:'.$product->getKey(),
+            'label' => $product->name,
+            'type' => 'product',
+            'id' => $product->getKey(),
+            'cost' => (float) $product->cost_price,
+        ]);
+
+        return $ingredients->concat($products)->values();
     }
 }

@@ -65,7 +65,7 @@ class StaffController extends Controller
                     'branch_ids' => $invitation->branch_ids ?? [],
                     'expires_at' => $invitation->expires_at->toIso8601String(),
                 ]),
-            'roles' => $this->roleOptions(),
+            'roles' => $this->roleOptions($actor->tenant_id),
             'branches' => $tenant->branches()->whereIn('id', $request->user()->accessibleBranchIds())->active()->orderBy('name')->get()
                 ->map(fn ($branch) => ['id' => $branch->getKey(), 'name' => $branch->name]),
         ]);
@@ -152,12 +152,22 @@ class StaffController extends Controller
     }
 
     /**
+     * Assignable roles: global tenant roles plus the tenant's own custom roles.
+     *
      * @return Collection<int, array{value: string, label: string}>
      */
-    protected function roleOptions(): Collection
+    protected function roleOptions(?int $tenantId): Collection
     {
-        return Role::whereNull('tenant_id')
+        return Role::query()
+            ->where(function ($query) use ($tenantId) {
+                $query->whereNull('tenant_id');
+
+                if ($tenantId !== null) {
+                    $query->orWhere('tenant_id', $tenantId);
+                }
+            })
             ->whereNotIn('slug', RoleName::platformValues())
+            ->orderByDesc('is_system')
             ->orderBy('name')
             ->get()
             ->map(fn (Role $role) => ['value' => $role->slug, 'label' => $role->name]);

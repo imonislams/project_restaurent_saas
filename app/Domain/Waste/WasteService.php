@@ -124,6 +124,9 @@ class WasteService
 
     protected function deduct(WasteRecord $record, object $item, $location, User $user): void
     {
+        // Respect the tenant's negative-stock setting: waste must not silently
+        // drive a balance below zero (that is how stock gets "lost" beyond what
+        // is actually on hand).
         $this->stock->record(
             $item,
             $location,
@@ -132,7 +135,6 @@ class WasteService
             (float) $record->unit_cost,
             $record,
             'Waste: '.$record->reason->label(),
-            true,
         );
     }
 }

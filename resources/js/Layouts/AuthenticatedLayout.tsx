@@ -54,12 +54,14 @@ export default function Authenticated({
         group(t('nav.section.business'), [
             can('customers.view') && item(t('nav.customers'), route('customers.index'), 'users', 'customers.*'),
             can('staff.view') && item(t('nav.staff'), route('staff.index'), 'user', 'staff.*'),
+            can('roles.view') && item(t('nav.roles'), route('roles.index'), 'key', 'roles.*'),
             can('inventory.view') && entitled('inventory') && item(t('nav.inventory'), route('inventory.index'), 'cube', 'inventory.*'),
             can('purchasing.view') && entitled('purchasing') && item(t('nav.purchasing'), route('purchasing.orders.index'), 'store', 'purchasing.*'),
             can('waste.view') && entitled('waste') && item(t('nav.waste'), route('waste.index'), 'trash', 'waste.*'),
             can('inventory.view') && entitled('transfers') && item(t('nav.transfers'), route('transfers.index'), 'transfer', 'transfers.*'),
             can('expenses.view') && item(t('nav.expenses'), route('expenses.index'), 'wallet', 'expenses.*'),
             can('accounts.view') && entitled('accounts') && item(t('nav.accounts'), route('accounts.index'), 'credit-card', 'accounts.*'),
+            can('invoices.view') && item(t('nav.invoices'), route('invoices.index'), 'receipt', 'invoices.*'),
             can('reports.view') && entitled('reports') && item(t('nav.reports'), route('reports.index'), 'chart', 'reports.*'),
         ]),
         group(t('nav.section.settings'), [

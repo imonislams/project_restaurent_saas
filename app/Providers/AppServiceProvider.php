@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Branches\Policies\BranchPolicy;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Policies\RolePolicy;
 use App\Domain\Identity\Policies\UserPolicy;
 use App\Domain\Inventory\Models\Ingredient;
 use App\Domain\Menu\Models\Product;
@@ -66,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Tenant::class, TenantPolicy::class);
         Gate::policy(Branch::class, BranchPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Role::class, RolePolicy::class);
 
         Gate::define('platform.access', fn (User $user) => $user->isPlatformAdmin());
 

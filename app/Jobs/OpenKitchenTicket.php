@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Domain\Auditing\AuditLogger;
 use App\Domain\Kitchen\KitchenService;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Tenancy\TenantContext;
@@ -23,7 +24,7 @@ class OpenKitchenTicket implements ShouldQueue
     public int $tries = 3;
 
     /** @var list<int> */
-    public array $backoff = [5, 30];
+    public array $backoff = [5, 30, 120];
 
     public function __construct(public int $orderId)
     {
@@ -43,5 +44,25 @@ class OpenKitchenTicket implements ShouldQueue
         }
 
         $kitchen->openTicketFor($order);
+    }
+
+    /**
+     * Record a durable failure marker so a lost ticket can be backfilled later
+     * (`kitchen:backfill-tickets`) without losing or duplicating the order.
+     */
+    public function failed(\Throwable $e): void
+    {
+        report($e);
+
+        try {
+            $tenantId = Order::withoutGlobalScopes()->whereKey($this->orderId)->value('tenant_id');
+
+            app(AuditLogger::class)->log('kitchen.ticket_open_failed', null, [
+                'order_id' => $this->orderId,
+                'error' => $e->getMessage(),
+            ], null, $tenantId);
+        } catch (\Throwable $inner) {
+            report($inner);
+        }
     }
 }

@@ -43,6 +43,7 @@ class KitchenDisplayController extends Controller
                 KitchenTicketStatus::Accepted->value,
                 KitchenTicketStatus::Preparing->value,
                 KitchenTicketStatus::Ready->value,
+                KitchenTicketStatus::HandedOver->value,
             ])
             ->when($stationId, fn ($q) => $q->whereHas('items', fn ($i) => $i->where('station_id', $stationId)))
             ->orderByDesc('priority')
@@ -95,6 +96,15 @@ class KitchenDisplayController extends Controller
 
     public function setItemStatus(ItemStatusRequest $request, KitchenTicketItem $item): RedirectResponse
     {
+        $item->loadMissing('ticket');
+
+        // A ticket item is reachable only when its ticket's branch is one the
+        // user may access (the item itself carries no branch column).
+        abort_unless(
+            $item->ticket && $request->user()->canAccessBranch($item->ticket->branch_id),
+            404,
+        );
+
         $this->kitchen->setItemStatus($item, KitchenItemStatus::from($request->validated('status')));
 
         return back();

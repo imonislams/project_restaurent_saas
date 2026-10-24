@@ -192,3 +192,79 @@ context**, never from a client-supplied identifier alone. See [SECURITY.md](./SE
 10. Dispatch secondary jobs after commit with a reliable dispatch strategy.
 11. Make queued jobs retry-safe and monitor failed jobs.
 12. Use DB constraints, indexes and automated tests.
+
+---
+
+## 10. Order → Kitchen → Billing state ownership
+
+Each concern has a single authoritative owner; every other module reads (never
+writes) another owner's state.
+
+| Concern | Authoritative owner | Notes |
+|---------|---------------------|-------|
+| Staff/QR order confirmation | Order System (`orders.acceptance_status`) | Staff orders default to Pending; an `orders.approve` holder confirms (or the tenant opts into direct taking). |
+| Kitchen processing status | Kitchen (`kitchen_tickets.status`) | Enforced state machine: `new → accepted → preparing → ready → handed_over → served`, plus `cancelled`. Order System mirrors this into `orders.fulfillment_status` (read-only `KitchenStatusSynchronizer`). |
+| Invoice & payment records | Invoicing / billing (`invoices`, `invoice_orders`, `payments`) | Served orders join an open invoice per table/session (`invoice_orders.order_id` unique → no double charge). Finalized (paid/void) invoices are never modified. |
+| Customer QR tracking | Read-only view | `CustomerStatusMapper` projects order + kitchen state onto the customer timeline. |
+
+Synchronization rules:
+
+- Kitchen is authoritative for processing; it publishes to the Order System and to QR tracking.
+- Serving (`kitchen_tickets.status = served`, or `orders.fulfillment_status = served`) idempotently triggers invoice creation — there is no separate manual "send to billing" step.
+- Confirmation, serving, bill requests and payment callbacks are all safe against repetition (DB unique constraints, row locks, idempotency keys).
+- Notification recipients are always branch-scoped and permission-filtered.
+- Failures are recorded (`kitchen.ticket_open_failed` audit marker, `kitchen:backfill-tickets` command) and recoverable without losing or duplicating data.
+
+---
+
+## 11. Tenant Overview dashboard & reporting periods
+
+The business **Overview** (`GET /dashboard`, `DashboardController@index` →
+`DashboardOverviewService`) is period-driven. A global period filter
+(`Today · Week · Month · Custom`, `resources/js/Components/ui/PeriodFilter.tsx`)
+re-drives every date-dependent widget via an Inertia `router.get` round-trip.
+
+### Reporting window
+
+`App\Domain\Reporting\ReportPeriod` is the single source of truth for a window:
+
+- `ReportPeriod::forPreset('today'|'week'|'month', …)` resolves boundaries in the
+  tenant/branch timezone (**Asia/Dhaka**); weeks start **Monday** and presets are
+  week/month-to-date. `ReportPeriod::make($from, $to, …)` handles custom ranges.
+- `ReportPeriod::previous()` returns the equivalent preceding window (yesterday /
+  previous week / previous month / equal-length custom) for KPI deltas and the
+  trend overlay.
+
+### Period vs. "right now"
+
+| Zone | Driven by the period filter | Source |
+|------|-----------------------------|--------|
+| KPI cards (+ deltas), sales trend, orders by source/type/status, top products, busiest hours, payment mix, profitability, branch comparison, staff | Yes | `ReportService` (via `DashboardOverviewService`) |
+| Right-now strip, lifetime customer segments / top customers, plan & subscription | No | `DashboardAnalyticsService` + tenant data |
+
+### Money semantics (never conflated)
+
+- **Sales** follow the order's `placed_at`; **Payments collected** and the payment
+  mix follow each payment's own `paid_at` and count only `status = succeeded`
+  (`ReportService::collected*`).
+- Net sales exclude tax: `Σ (order.total − order.tax_total)`; refunds are voided
+  orders; profit = net sales − COGS (immutable `order_items.unit_cost`) − approved
+  expenses.
+
+### Access & scoping
+
+- Single gate `dashboard.view` (route: `auth + verified + onboarding.completed`);
+  onboarding mode is unchanged.
+- All queries run under `BelongsToTenant` + `BranchScope` (fail-closed). **Branch
+  comparison** is only returned when the user has tenant-wide branch access; no
+  cross-branch data is sent otherwise.
+
+### Frontend
+
+- `resources/js/Pages/Dashboard.tsx` renders the sections above; KPI labels are
+  translation keys (`dash.kpi.*`) resolved with `useT()` (`resources/js/i18n`).
+- Print uses the browser print dialog; CSV export is generated client-side from
+  the KPI summary.
+
+Tests: `tests/Feature/Dashboard/OverviewDashboardTest.php`,
+`tests/Feature/Reporting/ReportPeriodTest.php`.

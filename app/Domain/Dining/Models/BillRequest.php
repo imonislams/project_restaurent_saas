@@ -15,6 +15,7 @@ class BillRequest extends Model
     protected $fillable = [
         'tenant_id',
         'dining_session_id',
+        'invoice_id',
         'requested_by_participant_id',
         'status',
         'payable_total',
@@ -39,6 +40,11 @@ class BillRequest extends Model
     public function session(): BelongsTo
     {
         return $this->belongsTo(DiningSession::class, 'dining_session_id');
+    }
+
+    public function invoice(): BelongsTo
+    {
+        return $this->belongsTo(\App\Domain\Invoicing\Models\Invoice::class);
     }
 
     public function requestedBy(): BelongsTo

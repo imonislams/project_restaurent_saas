@@ -62,8 +62,9 @@ class CustomerStatusMapper
 
         return match ($ticket?->status) {
             KitchenTicketStatus::Preparing => 'preparing',
-            KitchenTicketStatus::Ready => 'ready',
+            KitchenTicketStatus::Ready, KitchenTicketStatus::HandedOver => 'ready',
             KitchenTicketStatus::Served => 'served',
+            KitchenTicketStatus::Cancelled => 'cancelled',
             default => 'confirmed',
         };
     }

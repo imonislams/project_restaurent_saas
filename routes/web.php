@@ -74,7 +74,9 @@ use App\Http\Controllers\Subscription\SubscriptionController as TenantSubscripti
 use App\Http\Controllers\Tables\TableController;
 use App\Http\Controllers\Tenant\BranchController as TenantBranchController;
 use App\Http\Controllers\Tenant\BranchSwitchController;
+use App\Http\Controllers\Tenant\InvoiceController as TenantInvoiceController;
 use App\Http\Controllers\Tenant\PaymentGatewayController as TenantPaymentGatewayController;
+use App\Http\Controllers\Tenant\RoleController as TenantRoleController;
 use App\Http\Controllers\Tenant\SettingsController as TenantSettingsController;
 use App\Http\Controllers\Tenant\TenantBrandingController;
 use App\Http\Controllers\Waste\WasteController;
@@ -195,6 +197,17 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->group(function 
         });
     });
 
+    Route::prefix('roles')->name('roles.')->group(function () {
+        Route::get('/', [TenantRoleController::class, 'index'])
+            ->middleware('permission:roles.view')->name('index');
+
+        Route::middleware('permission:roles.manage')->group(function () {
+            Route::post('/', [TenantRoleController::class, 'store'])->name('store');
+            Route::patch('/{role}', [TenantRoleController::class, 'update'])->name('update');
+            Route::delete('/{role}', [TenantRoleController::class, 'destroy'])->name('destroy');
+        });
+    });
+
     Route::prefix('menu')->name('menu.')->group(function () {
         Route::get('/', [MenuController::class, 'index'])
             ->middleware('permission:menu.view')->name('index');
@@ -271,7 +284,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->group(function 
     Route::post('/pos/orders', [PosController::class, 'store'])
         ->middleware(['permission:pos.use', 'permission:orders.update'])->name('pos.orders.store');
     Route::post('/pos/orders/open', [PosController::class, 'open'])
-        ->middleware('permission:pos.use')->name('pos.orders.open');
+        ->middleware(['permission:pos.use', 'permission:orders.create'])->name('pos.orders.open');
 
     Route::middleware('permission:pos.use')->group(function () {
         Route::post('/shifts/open', [ShiftController::class, 'open'])->name('shifts.open');
@@ -295,6 +308,13 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->group(function 
         ->middleware('permission:orders.approve')->name('orders.accept');
     Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])
         ->middleware('permission:orders.approve')->name('orders.reject');
+
+    Route::prefix('invoices')->name('invoices.')->group(function () {
+        Route::get('/', [TenantInvoiceController::class, 'index'])
+            ->middleware('permission:invoices.view')->name('index');
+        Route::get('/{invoice}', [TenantInvoiceController::class, 'show'])
+            ->middleware('permission:invoices.view')->name('show');
+    });
 
     Route::prefix('kitchen')->name('kitchen.')->middleware('feature:kitchen')->group(function () {
         Route::middleware('permission:kitchen.view')->group(function () {
@@ -355,7 +375,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->group(function 
             ->middleware('permission:waste.approve')->name('reject');
     });
 
-    Route::prefix('transfers')->name('transfers.')->group(function () {
+    Route::prefix('transfers')->name('transfers.')->middleware('feature:transfers')->group(function () {
         Route::get('/', [TransferController::class, 'index'])
             ->middleware('permission:inventory.view')->name('index');
 

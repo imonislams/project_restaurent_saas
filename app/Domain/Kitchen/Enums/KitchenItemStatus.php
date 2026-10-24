@@ -8,6 +8,7 @@ enum KitchenItemStatus: string
     case Preparing = 'preparing';
     case Ready = 'ready';
     case Served = 'served';
+    case Cancelled = 'cancelled';
 
     public function label(): string
     {

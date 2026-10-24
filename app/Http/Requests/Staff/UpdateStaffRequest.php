@@ -21,7 +21,13 @@ class UpdateStaffRequest extends FormRequest
             'roles' => ['required', 'array', 'min:1'],
             'roles.*' => [
                 'string',
-                Rule::exists('roles', 'slug')->whereNull('tenant_id'),
+                Rule::exists('roles', 'slug')->where(function ($query) use ($tenantId) {
+                    $query->whereNull('tenant_id');
+
+                    if ($tenantId !== null) {
+                        $query->orWhere('tenant_id', $tenantId);
+                    }
+                }),
                 Rule::notIn(RoleName::platformValues()),
             ],
             'branch_ids' => ['nullable', 'array'],

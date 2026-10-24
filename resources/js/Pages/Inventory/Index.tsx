@@ -80,7 +80,8 @@ const REASON_TONES: Record<string, BadgeTone> = {
     waste: 'danger',
     transfer_in: 'success',
     transfer_out: 'warning',
-    received: 'success',
+    purchase: 'success',
+    return: 'info',
 };
 
 const ADJUSTMENT_PRESETS = [
@@ -687,9 +688,10 @@ export default function InventoryIndex({
                                             <option value="adjustment">Stock Count / Adjustment</option>
                                             <option value="sale">Sale Deduction</option>
                                             <option value="waste">Wastage / Spoilage</option>
-                                            <option value="received">Purchase Receipt</option>
+                                            <option value="purchase">Purchase Receipt</option>
                                             <option value="transfer_in">Transfer In</option>
                                             <option value="transfer_out">Transfer Out</option>
+                                            <option value="return">Return / Reversal</option>
                                         </select>
                                     </div>
                                 }

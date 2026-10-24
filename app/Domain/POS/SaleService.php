@@ -12,7 +12,6 @@ use App\Domain\Delivery\DeliveryService;
 use App\Domain\Dining\Models\DiningParticipant;
 use App\Domain\Dining\Models\DiningSession;
 use App\Domain\Dining\QrDiningSettings;
-use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Identity\ManagerPinService;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
 use App\Domain\Inventory\Enums\StockMovementReason;
@@ -115,11 +114,16 @@ class SaleService
      */
     public function openOrder(array $data, User $cashier, Branch $branch): Order
     {
+        if ($existing = $this->findByKey($data['idempotency_key'] ?? null)) {
+            return $existing;
+        }
+
         $tenant = $this->context->tenant() ?? $cashier->tenant;
         $prepared = $this->prepare($data, $branch, $tenant, false);
 
-        // Table-staff table orders may need central approval before the kitchen.
-        $requiresApproval = $this->requiresCentralApproval($cashier, $prepared['type']);
+        // Staff-submitted orders await confirmation unless the taker is
+        // authorized to confirm orders (or the tenant opted into direct).
+        $requiresApproval = $this->requiresCentralApproval($cashier);
 
         $order = DB::transaction(function () use ($data, $cashier, $branch, $tenant, $prepared, $requiresApproval) {
             $order = $this->createOrder($data, $cashier, $branch, $tenant, $prepared, OrderStatus::Held, $requiresApproval ? [
@@ -143,17 +147,23 @@ class SaleService
     }
 
     /**
-     * Whether an order taken by this user must await central approval. Only
-     * table-staff, dine-in orders are ever routed to approval.
+     * Whether an order taken by this user must await confirmation. A user who
+     * is authorized to confirm orders (`orders.approve`) may take orders
+     * directly; everyone else is gated by the tenant's confirmation settings.
+     * This keys off the permission (not a fixed role) so custom roles cannot
+     * slip past the required confirmation.
      */
-    protected function requiresCentralApproval(?User $cashier, OrderType $type): bool
+    protected function requiresCentralApproval(?User $cashier): bool
     {
-        if ($cashier === null || $type !== OrderType::DineIn) {
+        if ($cashier === null) {
             return false;
         }
 
-        return $cashier->hasRole(RoleName::TableStaff)
-            && $this->confirmation->centralApprovalRequired();
+        if ($cashier->hasPermission('orders.approve')) {
+            return false;
+        }
+
+        return $this->confirmation->centralApprovalRequired();
     }
 
     /**
@@ -234,6 +244,13 @@ class SaleService
         });
 
         $this->tables->refreshForOrder($order);
+
+        // Reflect the settlement on the order's invoice (if it is billed).
+        try {
+            app(\App\Domain\Invoicing\OrderInvoiceService::class)->refreshForOrder($order->fresh());
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         try {
             app(LoyaltyService::class)->earnForOrder($order->fresh());
@@ -386,6 +403,13 @@ class SaleService
                 'reference' => $pay['reference'],
                 'payload' => ['method' => $pay['method']->code, 'amount' => $pay['amount']],
             ]);
+
+            // Tie the payment to the order's invoice, when one exists.
+            try {
+                app(\App\Domain\Invoicing\OrderInvoiceService::class)->linkPayment($payment);
+            } catch (\Throwable $e) {
+                report($e);
+            }
 
             if ($pay['method']->isCash()) {
                 $this->cash->record($shift, CashMovementType::Sale, $pay['amount'], $order, 'Cash sale');
