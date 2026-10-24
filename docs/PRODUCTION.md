@@ -33,6 +33,22 @@ LOG_CHANNEL=stack           # structured logs
 
 ## 2. Deploy procedure
 
+### One-command deploy (recommended)
+
+```
+./scripts/release.sh patch        # on develop: checks, bump VERSION, merge to main, tag, push
+./scripts/deploy.sh v0.1.1        # on the server: deploy a tag (also the rollback command)
+./scripts/deploy.sh               # on the server: deploy latest main
+```
+
+`scripts/deploy.sh` runs composer, `npm ci && npm run build`, then `php artisan app:deploy`
+(maintenance mode, migrate, config/route/view/event cache, `queue:restart`) and probes `/health`.
+GitLab CI (`.gitlab-ci.yml`) tests every branch and, on a `vX.Y.Z` tag, offers a manual
+`deploy:production` job that SSHes in and runs the same script. Each release changes `VERSION`,
+so installed PWAs fetch the new service worker and show the update prompt.
+
+### Manual steps (what the script does)
+
 ```
 composer install --no-dev --optimize-autoloader
 npm ci && npm run build

@@ -1,0 +1,76 @@
+# Touch Dine CI/CD.
+# Pipelines: test on every branch/MR; deploy to production on a v* tag (manual gate).
+# Required CI/CD variables (Settings > CI/CD > Variables, masked/protected):
+#   DEPLOY_HOST, DEPLOY_USER, DEPLOY_PATH, DEPLOY_SSH_KEY (private key), APP_URL
+
+stages: [test, build, deploy]
+
+default:
+  image: php:8.4-cli
+
+variables:
+  COMPOSER_CACHE_DIR: $CI_PROJECT_DIR/.composer-cache
+  npm_config_cache: $CI_PROJECT_DIR/.npm-cache
+
+cache:
+  key: $CI_COMMIT_REF_SLUG
+  paths: [.composer-cache, .npm-cache]
+
+.setup: &setup
+  - apt-get update -qq && apt-get install -y -qq git unzip libzip-dev nodejs npm >/dev/null
+  - docker-php-ext-install zip pdo_mysql bcmath >/dev/null
+  - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+  - composer install --no-interaction --prefer-dist
+  - cp .env.example .env && php artisan key:generate
+
+test:php:
+  stage: test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+  script:
+    - *setup
+    - vendor/bin/pint --test
+    - php artisan test
+
+test:frontend:
+  stage: test
+  image: node:22
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+  script:
+    - npm ci
+    - npx tsc --noEmit
+    - npm run test:js
+
+build:assets:
+  stage: build
+  image: node:22
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths: [public/build]
+    expire_in: 1 week
+
+deploy:production:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+      when: manual
+  environment:
+    name: production
+    url: $APP_URL
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq openssh-client >/dev/null
+    - eval "$(ssh-agent -s)"
+    - echo "$DEPLOY_SSH_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && ssh-keyscan "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+  script:
+    - ssh "$DEPLOY_USER@$DEPLOY_HOST" "cd $DEPLOY_PATH && APP_URL=$APP_URL ./scripts/deploy.sh $CI_COMMIT_TAG"
