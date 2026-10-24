@@ -8,7 +8,9 @@ use App\Domain\Billing\InvoiceService;
 use App\Domain\Billing\Models\PaymentGateway;
 use App\Domain\Billing\Models\PlatformPayment;
 use App\Domain\Billing\PlatformPaymentService;
+use App\Domain\Billing\PricingRegionContext;
 use App\Domain\Subscriptions\Enums\BillingCycle;
+use App\Domain\Subscriptions\Enums\PlanRegion;
 use App\Domain\Subscriptions\Models\Plan;
 use App\Domain\Subscriptions\Models\SubscriptionInvoice;
 use App\Domain\Subscriptions\PricingService;
@@ -42,6 +44,7 @@ class SubscriptionController extends Controller
         protected GatewayEligibilityService $eligibility,
         protected InvoiceService $invoices,
         protected PricingService $pricing,
+        protected PricingRegionContext $pricingRegion,
     ) {}
 
     public function index(Request $request): Response
@@ -49,21 +52,32 @@ class SubscriptionController extends Controller
         $tenant = $request->user()->tenant;
         $subscription = $tenant?->subscription?->load('plan');
 
+        // Offer only the tenant's regional ladder (Bangladesh or International),
+        // exactly like the public pricing page.
+        $planRegion = $tenant
+            ? $this->pricingRegion->regionForTenant($tenant)
+            : $this->pricingRegion->region();
+
         $plans = Plan::query()
             ->where('is_active', true)
             ->whereNull('archived_at')
             ->where('visibility', 'public')
+            ->whereIn('region', PlanRegion::visibleTo($planRegion))
             ->with('prices')
             ->orderBy('sort_order')
             ->get();
 
         $plan = $subscription?->plan;
 
-        // The currency the tenant is actually billed in — the same source of
-        // truth used to issue invoices (PricingService::subscriptionPrice).
-        $currency = $subscription
-            ? $this->pricing->subscriptionPrice($subscription)['currency']
-            : strtoupper((string) ($plan?->currency ?? 'USD'));
+        // The tenant's billing currency — not the current plan's fallback — so
+        // the whole page reflects what the tenant is billed in.
+        $currency = $tenant
+            ? strtoupper((string) (
+                $tenant->getSetting('billing.currency')
+                ?? $tenant->getSetting('region.currency')
+                ?? $this->pricingRegion->currencyFor($planRegion)
+            ))
+            : $this->pricingRegion->currencyFor($planRegion);
 
         $invoiceRows = $subscription
             ? $subscription->invoices()->latest('id')->limit(24)->get()
@@ -175,6 +189,14 @@ class SubscriptionController extends Controller
         $plan = Plan::query()->findOrFail($data['plan_id']);
         abort_if($plan->isArchived(), 422, 'That plan is not available.');
 
+        // A tenant can only switch within their regional ladder (or to a global plan).
+        $planRegion = $this->pricingRegion->regionForTenant($tenant);
+        abort_unless(
+            in_array($plan->region?->value, PlanRegion::visibleTo($planRegion), true),
+            422,
+            'That plan is not available for your region.',
+        );
+
         $subscription = $tenant->subscription;
 
         $this->subscriptions->changePlan($subscription, $plan, BillingCycle::from($data['billing_cycle']), $request->user());
@@ -200,8 +222,11 @@ class SubscriptionController extends Controller
             }
 
             if ($result['payment']->status === PlatformPaymentStatus::Failed) {
-                return back()->with('error', 'Your plan was updated, but the gateway could not start the checkout. '
-                    ."Please retry invoice {$invoice->number} from the list below.");
+                $reason = $result['payment']->failure_reason;
+
+                return back()->with('error', 'Your plan was updated, but the checkout could not start'
+                    .($reason ? ': '.$reason : '.')
+                    ." Please retry invoice {$invoice->number} from the list below.");
             }
 
             return back()->with('success', "Your plan is now {$plan->name}. Complete the payment for invoice {$invoice->number}.");
@@ -235,7 +260,11 @@ class SubscriptionController extends Controller
         }
 
         if ($result['payment']->status === PlatformPaymentStatus::Failed) {
-            return back()->with('error', 'We could not start the checkout at the gateway. Please try again or contact support.');
+            $reason = $result['payment']->failure_reason;
+
+            return back()->with('error', $reason
+                ? "We could not start the checkout: {$reason}"
+                : 'We could not start the checkout at the gateway. Please try again or contact support.');
         }
 
         return back()->with('success', 'Payment initiated. It will be confirmed once the payment is verified.');

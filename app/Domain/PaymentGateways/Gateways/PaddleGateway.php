@@ -73,11 +73,17 @@ class PaddleGateway implements PlatformGateway
             $data = is_array($data) ? $data : [];
 
             $transaction = $data['data'] ?? [];
-            $url = $transaction['checkout']['url'] ?? null;
+            $transactionId = $transaction['id'] ?? null;
+
+            // Paddle Billing has no hosted checkout URL: `checkout.url` is the
+            // account's default payment link with `?_ptxn=<id>` appended. Send
+            // the customer to our own page that opens Paddle.js Checkout for
+            // this transaction instead.
+            $url = $transactionId ? route('payments.paddle.checkout', ['_ptxn' => $transactionId]) : null;
 
             return [
                 'status' => $url ? 'pending' : 'failed',
-                'reference' => $transaction['id'] ?? ($payload['reference'] ?? null),
+                'reference' => $transactionId ?? ($payload['reference'] ?? null),
                 'redirect_url' => $url,
                 'raw' => $data,
             ];
@@ -97,12 +103,19 @@ class PaddleGateway implements PlatformGateway
 
             $transaction = $data['data'] ?? [];
             $status = strtolower((string) ($transaction['status'] ?? ''));
-            $grandTotal = data_get($transaction, 'details.totals.grand_total');
+
+            $totals = (array) data_get($transaction, 'details.totals', []);
+            $grand = isset($totals['grand_total']) ? (float) $totals['grand_total'] : null;
+            $tax = isset($totals['tax']) ? (float) $totals['tax'] : 0.0;
+            $subtotal = isset($totals['subtotal']) ? (float) $totals['subtotal'] : null;
+
+            // Our invoices are pre-tax, so compare the amount net of tax.
+            $net = $grand !== null ? max(0, $grand - $tax) : $subtotal;
 
             return [
                 'valid' => in_array($status, ['completed', 'billed', 'paid'], true),
                 'status' => $status !== '' ? $status : null,
-                'amount' => $grandTotal !== null ? round(((float) $grandTotal) / 100, 2) : null,
+                'amount' => $net !== null ? round($net / 100, 2) : null,
                 'currency' => isset($transaction['currency_code']) ? strtoupper((string) $transaction['currency_code']) : null,
                 'reference' => $transaction['id'] ?? $transactionId,
                 'raw' => $data,

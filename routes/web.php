@@ -19,6 +19,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Onboarding\OnboardingController;
 use App\Http\Controllers\Orders\OrderController;
 use App\Http\Controllers\Orders\ReceiptController;
+use App\Http\Controllers\Payments\PaddleCheckoutController;
 use App\Http\Controllers\Payments\PaymentWebhookController;
 use App\Http\Controllers\Payments\PlatformCallbackController;
 use App\Http\Controllers\Payments\PlatformWebhookController;
@@ -129,6 +130,10 @@ Route::post('/webhooks/payments/{provider}', PaymentWebhookController::class)->n
 Route::get('/payments/result', [PlatformCallbackController::class, 'result'])->name('payments.result');
 Route::match(['get', 'post'], '/payments/callback/{provider}/{result}', [PlatformCallbackController::class, 'callback'])->name('payments.callback');
 Route::post('/payments/ipn/{provider}', [PlatformCallbackController::class, 'ipn'])->name('payments.ipn');
+
+// Paddle Billing checkout (Paddle.js) + server-side verification return.
+Route::get('/payments/paddle', PaddleCheckoutController::class)->name('payments.paddle.checkout');
+Route::get('/payments/paddle/return', [PaddleCheckoutController::class, 'return'])->name('payments.paddle.return');
 
 // Provider-agnostic platform billing webhooks (e.g. Paddle, bKash).
 Route::post('/webhooks/platform-payments/{provider}', PlatformWebhookController::class)->name('webhooks.platform-payments');

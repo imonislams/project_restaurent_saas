@@ -274,7 +274,7 @@ export default function PlanForm({
                         </FormSection>
 
                         {price_providers.length > 0 && (
-                            <FormSection title="Provider price mapping" description="Map each plan price to the provider's product/price IDs so hosted checkout can be created.">
+                            <FormSection title="Provider price mapping" description="Required for Paddle: copy the product and price IDs (pri_…) from your Paddle catalog for each currency/interval. Checkout cannot start without a price ID.">
                                 <div className="space-y-3">
                                     {priceRows.map((row) => (
                                         <div key={priceKey(row.currency, row.interval)} className="rounded-lg border border-border bg-card p-3.5 shadow-2xs">

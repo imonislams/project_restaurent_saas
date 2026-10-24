@@ -76,9 +76,12 @@ class PlatformPaymentService
         ])->save();
 
         if (! $result['redirect_url'] && ($result['status'] ?? null) === 'failed') {
+            // Keep the provider's reason (e.g. "No Paddle price configured for
+            // this plan.") so the platform admin can see what to fix. Providers
+            // may return `error` as a string or as a structured object.
             $payment->forceFill([
                 'status' => PlatformPaymentStatus::Failed,
-                'failure_reason' => 'Checkout could not be created at the gateway.',
+                'failure_reason' => $this->failureReason($result['raw'] ?? []),
             ])->save();
         }
 
@@ -178,6 +181,74 @@ class PlatformPaymentService
         return ['processed' => true, 'duplicate' => false, 'reason' => null];
     }
 
+    /**
+     * Verify a pending payment directly with the provider (used on a return URL).
+     * A browser redirect is never proof of payment — the transaction is confirmed
+     * against the provider API, and amount/currency are re-checked.
+     */
+    public function verifyPending(string $provider, string $providerRef): bool
+    {
+        $payment = PlatformPayment::query()->where('provider_ref', $providerRef)->first();
+
+        if (! $payment) {
+            return false;
+        }
+
+        if ($payment->status === PlatformPaymentStatus::Succeeded) {
+            return true;
+        }
+
+        $config = $this->resolveConfig($provider, $payment);
+
+        if (! $config) {
+            return false;
+        }
+
+        $verification = $this->gateways->driverFor($config)->verifyTransaction($config, $providerRef);
+
+        if (! $verification['valid']) {
+            // Not settled yet (eventual consistency) — leave it pending for the
+            // webhook rather than failing a payment that may be completing.
+            $status = strtolower((string) ($verification['status'] ?? ''));
+
+            if (in_array($status, ['ready', 'draft', 'processing', 'created', 'pending'], true)) {
+                return false;
+            }
+
+            $this->fail($payment, 'Transaction could not be verified with the gateway.');
+
+            return false;
+        }
+
+        if ($verification['amount'] !== null && abs($verification['amount'] - (float) $payment->amount) > 0.01) {
+            $gatewayAmount = (float) $verification['amount'];
+            $hint = $gatewayAmount <= 0
+                ? ' The provider returned a zero-value transaction — check for a trial period on the gateway price.'
+                : '';
+
+            $this->fail($payment, sprintf(
+                'Amount mismatch: gateway %s %s vs invoice %s %s.%s',
+                number_format($gatewayAmount, 2, '.', ''),
+                $verification['currency'] ?? $payment->currency,
+                number_format((float) $payment->amount, 2, '.', ''),
+                $payment->currency,
+                $hint,
+            ));
+
+            return false;
+        }
+
+        if ($verification['currency'] !== null && $verification['currency'] !== strtoupper((string) $payment->currency)) {
+            $this->fail($payment, 'Currency mismatch between gateway and local record.');
+
+            return false;
+        }
+
+        $this->succeed($payment, [], $verification['raw'] ?? []);
+
+        return true;
+    }
+
     /** Settle a pending manual payment (no external gateway to confirm). */
     public function settleManually(PlatformPayment $payment, User $actor): void
     {
@@ -233,6 +304,32 @@ class PlatformPaymentService
         $payment->attempts()->create(['status' => 'failed', 'reference' => $payment->provider_ref, 'payload' => ['reason' => $reason]]);
 
         $this->audit->log('platform.payment_failed', $payment, ['reason' => $reason], null, $payment->tenant_id);
+    }
+
+    /**
+     * A readable failure reason from a driver's raw response. Providers return
+     * `error` either as a string or as a structured object (e.g. Paddle:
+     * `{type, code, detail, documentation_url}`).
+     *
+     * @param  array<string, mixed>  $raw
+     */
+    protected function failureReason(array $raw, string $fallback = 'Checkout could not be created at the gateway.'): string
+    {
+        $error = $raw['error'] ?? null;
+
+        if (is_string($error) && trim($error) !== '') {
+            return $error;
+        }
+
+        if (is_array($error)) {
+            $message = $error['detail'] ?? $error['message'] ?? $error['code'] ?? null;
+
+            if (is_string($message) && trim($message) !== '') {
+                return $message;
+            }
+        }
+
+        return $fallback;
     }
 
     protected function findPayment(?string $reference): ?PlatformPayment

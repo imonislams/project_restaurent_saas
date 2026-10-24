@@ -4,6 +4,7 @@ namespace App\Domain\Billing;
 
 use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Subscriptions\Enums\PlanRegion;
+use App\Domain\Tenancy\Models\Tenant;
 
 /**
  * The visitor's resolved pricing region for the current request. Set by
@@ -141,5 +142,31 @@ class PricingRegionContext
         }
 
         return PlanRegion::International->value;
+    }
+
+    /**
+     * The pricing region that applies to a tenant: their billing currency picks
+     * the ladder (BDT ⇒ Bangladesh), falling back to their billing/region
+     * country, then the default region.
+     */
+    public function regionForTenant(Tenant $tenant): string
+    {
+        $currency = strtoupper((string) (
+            $tenant->getSetting('billing.currency')
+            ?? $tenant->getSetting('region.currency')
+            ?? ''
+        ));
+
+        if ($currency !== '') {
+            foreach ((array) config('platform.pricing.regions', []) as $region => $meta) {
+                if (strtoupper((string) ($meta['currency'] ?? '')) === $currency) {
+                    return (string) $region;
+                }
+            }
+        }
+
+        return $this->regionForCountry(
+            $tenant->getSetting('billing.country') ?? $tenant->getSetting('region.country')
+        );
     }
 }
