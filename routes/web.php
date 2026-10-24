@@ -619,6 +619,7 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
     Route::middleware('platform.permission:platform.email.view')->group(function () {
         Route::get('/email', [PlatformEmailController::class, 'index'])->name('email.dashboard');
         Route::get('/email/logs', [PlatformEmailController::class, 'logs'])->name('email.logs');
+        Route::get('/email/logs/{log}/preview', [PlatformEmailController::class, 'preview'])->name('email.preview');
         Route::get('/email/failed', [PlatformEmailController::class, 'failed'])->name('email.failed');
     });
     Route::middleware('platform.permission:platform.email.manage')->group(function () {

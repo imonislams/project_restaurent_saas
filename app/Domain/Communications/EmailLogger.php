@@ -4,6 +4,7 @@ namespace App\Domain\Communications;
 
 use App\Domain\Communications\Models\EmailLog;
 use App\Mail\Concerns\RetryableMail;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\Mime\Email;
 
 /**
@@ -32,12 +33,15 @@ class EmailLogger
             }
 
             $retry = $data instanceof RetryableMail ? $data : null;
+            [$body, $contentType] = $this->content($email);
 
             return EmailLog::create([
                 'tenant_id' => $this->tenantId($data),
                 'to_email' => $this->address($email->getTo()),
                 'from_email' => $this->address($email->getFrom()),
                 'subject' => $email->getSubject(),
+                'body' => $body,
+                'content_type' => $contentType,
                 'mailer' => config('mail.default'),
                 'status' => $status,
                 'attempts' => 1,
@@ -47,7 +51,11 @@ class EmailLogger
                 'sent_at' => $status === 'sent' ? now() : null,
                 'failed_at' => $status === 'failed' ? now() : null,
             ]);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            // Recording must never break delivery — but a failure here must not
+            // be silent either, or the email log quietly loses every message.
+            Log::warning('Failed to record outbound email.', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -59,6 +67,28 @@ class EmailLogger
         }
 
         return $message;
+    }
+
+    /**
+     * Capture the rendered body so it can be previewed later. HTML wins when
+     * present, otherwise the plain-text alternative is stored.
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    protected function content(Email $email): array
+    {
+        $html = $email->getHtmlBody();
+        $text = $email->getTextBody();
+
+        if (is_string($html) && trim($html) !== '') {
+            return [$html, 'html'];
+        }
+
+        if (is_string($text) && trim($text) !== '') {
+            return [$text, 'text'];
+        }
+
+        return [null, null];
     }
 
     /** @param list<\Symfony\Component\Mime\Address> $addresses */

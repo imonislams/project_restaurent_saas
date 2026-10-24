@@ -18,28 +18,41 @@ class MailConfigurator
             return;
         }
 
-        if (! empty($mail['mailer'])) {
-            config(['mail.default' => $mail['mailer']]);
+        // group() keys carry the group prefix, e.g. "mail.host".
+        $value = fn (string $key) => $mail['mail.'.$key] ?? null;
+
+        if (! empty($value('mailer'))) {
+            config(['mail.default' => $value('mailer')]);
         }
 
+        $port = $value('port');
+
+        // The UI's encryption choice maps to a transport scheme; Symfony only
+        // accepts "smtp" (STARTTLS) or "smtps" (implicit TLS).
+        $scheme = match (strtolower((string) $value('encryption'))) {
+            'ssl' => 'smtps',
+            'tls' => 'smtp',
+            default => null,
+        };
+
         $smtp = array_filter([
-            'host' => $mail['host'] ?? null,
-            'port' => isset($mail['port']) && $mail['port'] !== '' ? (int) $mail['port'] : null,
-            'username' => $mail['username'] ?? null,
-            'password' => $mail['password'] ?? null,
-            'scheme' => $mail['encryption'] ?? null,
+            'host' => $value('host'),
+            'port' => $port !== null && $port !== '' ? (int) $port : null,
+            'username' => $value('username'),
+            'password' => $value('password'),
+            'scheme' => $scheme,
         ], fn ($value) => $value !== null && $value !== '');
 
         if ($smtp !== []) {
             config(['mail.mailers.smtp' => array_merge(config('mail.mailers.smtp'), $smtp)]);
         }
 
-        if (! empty($mail['from_address'])) {
-            config(['mail.from.address' => $mail['from_address']]);
+        if (! empty($value('from_address'))) {
+            config(['mail.from.address' => $value('from_address')]);
         }
 
-        if (! empty($mail['from_name'])) {
-            config(['mail.from.name' => $mail['from_name']]);
+        if (! empty($value('from_name'))) {
+            config(['mail.from.name' => $value('from_name')]);
         }
     }
 }

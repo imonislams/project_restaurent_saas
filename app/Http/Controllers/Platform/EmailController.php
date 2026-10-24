@@ -6,6 +6,7 @@ use App\Domain\Auditing\AuditLogger;
 use App\Domain\Communications\Models\EmailLog;
 use App\Domain\PlatformSettings\PlatformSettings;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -61,6 +62,25 @@ class EmailController extends Controller
                 ->through(fn (EmailLog $log) => $this->row($log)),
             'filters' => $filters,
             'title' => $forcedStatus === 'failed' ? 'Failed Emails' : 'Email Logs',
+        ]);
+    }
+
+    public function preview(EmailLog $log): JsonResponse
+    {
+        return response()->json([
+            'id' => $log->getKey(),
+            'to' => $log->to_email,
+            'from' => $log->from_email,
+            'subject' => $log->subject,
+            'status' => $log->status,
+            'mailer' => $log->mailer,
+            'error' => $log->error,
+            'content_type' => $log->content_type,
+            'body' => $log->body,
+            'retryable' => $log->isRetryable(),
+            'sent_at' => $log->sent_at?->toIso8601String(),
+            'failed_at' => $log->failed_at?->toIso8601String(),
+            'created_at' => $log->created_at?->toIso8601String(),
         ]);
     }
 
@@ -141,6 +161,7 @@ class EmailController extends Controller
             'mailer' => $log->mailer,
             'attempts' => $log->attempts,
             'error' => $log->error,
+            'has_body' => filled($log->body),
             'retryable' => $log->isRetryable(),
             'sent_at' => $log->sent_at?->toIso8601String(),
             'failed_at' => $log->failed_at?->toIso8601String(),

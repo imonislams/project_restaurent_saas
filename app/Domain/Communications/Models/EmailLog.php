@@ -18,6 +18,8 @@ class EmailLog extends Model
         'to_email',
         'from_email',
         'subject',
+        'body',
+        'content_type',
         'mailer',
         'status',
         'attempts',
