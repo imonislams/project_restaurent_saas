@@ -28,7 +28,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
             imageUrl="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=85"
             testimonial={{
                 quote:
-                    'Restrly security and role-based permissions give our owners peace of mind across all shifts and registers.',
+                    'Touch Dine security and role-based permissions give our owners peace of mind across all shifts and registers.',
                 author: 'Liam Chen',
                 role: 'Director of Technology',
                 restaurant: 'Koji Hospitality Group',

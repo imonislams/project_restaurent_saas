@@ -42,7 +42,7 @@ export default function Register() {
             imageUrl="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1600&q=85"
             testimonial={{
                 quote:
-                    'Setting up our 3 locations took under 15 minutes. Our servers and kitchen staff adopted Restrly on day one without training.',
+                    'Setting up our 3 locations took under 15 minutes. Our servers and kitchen staff adopted Touch Dine on day one without training.',
                 author: 'Marcus Vance',
                 role: 'Founder & Operator',
                 restaurant: 'The Copper Bistro Group',

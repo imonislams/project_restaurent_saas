@@ -135,7 +135,7 @@ export default function CommandPalette({
                         <span>↑↓ to navigate</span>
                         <span>↵ to select</span>
                     </div>
-                    <span>Restrly Command Palette</span>
+                    <span>Touch Dine Command Palette</span>
                 </div>
             </div>
         </Modal>

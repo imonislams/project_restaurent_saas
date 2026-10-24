@@ -97,7 +97,7 @@ export default function ResourcesIndex() {
     return (
         <MarketingLayout>
             <MarketingHead
-                title="Restaurant Operations Guides & Resources — Restrly"
+                title="Restaurant Operations Guides & Resources — Touch Dine"
                 description="Educational guides, POS hardware advice, prime food costing formulas, and shift management best practices for independent restaurateurs and operators."
             />
 

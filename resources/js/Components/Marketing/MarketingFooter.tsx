@@ -175,7 +175,7 @@ export default function MarketingFooter() {
                             <ul className="flex flex-col gap-2.5 text-sm text-stone-600">
                                 <li>
                                     <Link href="/about" className="hover:text-stone-900 transition-colors">
-                                        About Restrly
+                                        About Touch Dine
                                     </Link>
                                 </li>
                                 <li>
@@ -206,7 +206,7 @@ export default function MarketingFooter() {
                 {/* Sub-footer status bar */}
                 <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex flex-wrap items-center gap-6 text-xs text-stone-500">
-                        <span>&copy; {new Date().getFullYear()} Restrly, Inc. All rights reserved.</span>
+                        <span>&copy; {new Date().getFullYear()} Touch Dine, Inc. All rights reserved.</span>
                         <Link href="/privacy-policy" className="hover:text-stone-900 transition-colors">
                             Privacy
                         </Link>

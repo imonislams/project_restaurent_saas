@@ -19,8 +19,8 @@ export default function MarketingHead({
     schema,
     noindex = false,
 }: MarketingHeadProps) {
-    const fullTitle = `${title} | Restrly — Restaurant OS`;
-    const canonicalUrl = canonical || (typeof window !== 'undefined' ? window.location.href : 'https://restrly.com');
+    const fullTitle = `${title} | Touch Dine — Restaurant OS`;
+    const canonicalUrl = canonical || (typeof window !== 'undefined' ? window.location.href : 'https://touchdine.cafe');
 
     return (
         <Head>
@@ -40,7 +40,7 @@ export default function MarketingHead({
             <meta property="og:description" content={description} />
             <meta property="og:type" content={ogType} />
             <meta property="og:url" content={canonicalUrl} />
-            <meta property="og:site_name" content="Restrly — Restaurant OS" />
+            <meta property="og:site_name" content="Touch Dine — Restaurant OS" />
             <meta property="og:image" content={ogImage} />
 
             {/* Twitter Card */}

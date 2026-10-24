@@ -7,8 +7,8 @@ export default function Cookies() {
     return (
         <MarketingLayout>
             <MarketingHead
-                title="Cookie Policy — Restrly"
-                description="Information on essential session, security, and locale preference cookies utilized by Restrly."
+                title="Cookie Policy — Touch Dine"
+                description="Information on essential session, security, and locale preference cookies utilized by Touch Dine."
             />
 
             <section className="pt-12 pb-20 sm:pt-16 sm:pb-28">
@@ -20,7 +20,7 @@ export default function Cookies() {
                         Cookie Policy
                     </h1>
                     <div className="mt-2 text-xs font-mono text-stone-400 pb-8 border-b border-stone-200">
-                        Effective Date: October 2026 · Restrly Inc.
+                        Effective Date: October 2026 · Touch Dine Inc.
                     </div>
 
                     <div className="mt-8 space-y-8 text-stone-700 text-xs sm:text-sm leading-relaxed font-sans">
@@ -55,7 +55,7 @@ export default function Cookies() {
                                 3. No Third-Party Tracking Cookies
                             </h2>
                             <p>
-                                Restrly does not deploy intrusive cross-site ad retargeting cookies or sell browsing histories to advertising networks. Our cookies are strictly functional to ensure fast, secure restaurant operations.
+                                Touch Dine does not deploy intrusive cross-site ad retargeting cookies or sell browsing histories to advertising networks. Our cookies are strictly functional to ensure fast, secure restaurant operations.
                             </p>
                         </section>
                     </div>

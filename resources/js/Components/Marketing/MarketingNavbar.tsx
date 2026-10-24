@@ -82,7 +82,7 @@ export default function MarketingNavbar() {
                                         <div className="grid w-[600px] grid-cols-2 gap-3 p-4 bg-white rounded-xl shadow-lg border border-stone-200">
                                             <div className="col-span-2 pb-2 border-b border-stone-100 flex items-center justify-between">
                                                 <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
-                                                    Restrly Platform Modules
+                                                    Touch Dine Platform Modules
                                                 </span>
                                                 <Link
                                                     href="/product"
@@ -336,7 +336,7 @@ export default function MarketingNavbar() {
                                                 <Store className="w-4 h-4 text-stone-500 group-hover:text-[#B53014]" />
                                                 <div>
                                                     <div className="text-sm font-semibold text-stone-900 group-hover:text-[#B53014]">
-                                                        About Restrly
+                                                        About Touch Dine
                                                     </div>
                                                     <div className="text-xs text-stone-500">
                                                         Our mission & architecture

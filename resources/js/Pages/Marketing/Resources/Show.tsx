@@ -75,7 +75,7 @@ export default function ResourceShow({ slug }: { slug: string }) {
     return (
         <MarketingLayout>
             <MarketingHead
-                title={`${article.title} — Restrly Operations Guide`}
+                title={`${article.title} — Touch Dine Operations Guide`}
                 description={article.summary}
                 ogType="article"
             />
@@ -100,7 +100,7 @@ export default function ResourceShow({ slug }: { slug: string }) {
                         <span>•</span>
                         <span>{article.readTime}</span>
                         <span>•</span>
-                        <span>Restrly Restaurant Engineering Team</span>
+                        <span>Touch Dine Restaurant Engineering Team</span>
                     </div>
 
                     {/* Summary Lead */}
@@ -145,7 +145,7 @@ export default function ResourceShow({ slug }: { slug: string }) {
                         </Link>
 
                         <Button href="/register" variant="primary" size="md">
-                            Try Restrly Free for 14 Days
+                            Try Touch Dine Free for 14 Days
                         </Button>
                     </div>
                 </div>

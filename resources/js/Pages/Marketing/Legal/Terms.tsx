@@ -8,8 +8,8 @@ export default function Terms() {
     return (
         <MarketingLayout>
             <MarketingHead
-                title="Terms of Service — Restrly"
-                description="Terms governing the use of the Restrly restaurant operating system, subscription agreements, and user responsibilities."
+                title="Terms of Service — Touch Dine"
+                description="Terms governing the use of the Touch Dine restaurant operating system, subscription agreements, and user responsibilities."
             />
 
             <section className="pt-12 pb-20 sm:pt-16 sm:pb-28">
@@ -21,7 +21,7 @@ export default function Terms() {
                         Terms of Service
                     </h1>
                     <div className="mt-2 text-xs font-mono text-stone-400 pb-8 border-b border-stone-200">
-                        Last Updated: October 2026 · Restrly Inc.
+                        Last Updated: October 2026 · Touch Dine Inc.
                     </div>
 
                     <div className="mt-8 space-y-8 text-stone-700 text-xs sm:text-sm leading-relaxed font-sans">
@@ -30,7 +30,7 @@ export default function Terms() {
                                 1. Acceptance of Terms
                             </h2>
                             <p>
-                                By creating an account, accessing, or using the Restrly platform (“Service”), you agree to be bound by these Terms of Service. If you are entering into this agreement on behalf of a restaurant or corporate entity, you represent that you possess the authority to bind such entity.
+                                By creating an account, accessing, or using the Touch Dine platform (“Service”), you agree to be bound by these Terms of Service. If you are entering into this agreement on behalf of a restaurant or corporate entity, you represent that you possess the authority to bind such entity.
                             </p>
                         </section>
 

@@ -35,8 +35,8 @@ export default function Contact() {
     return (
         <MarketingLayout>
             <MarketingHead
-                title="Contact Restrly — Sales, Demos & Migration Support"
-                description="Get in touch with a Restrly restaurant specialist. Book a personalized demo, discuss menu data migration, or request custom enterprise rollouts."
+                title="Contact Touch Dine — Sales, Demos & Migration Support"
+                description="Get in touch with a Touch Dine restaurant specialist. Book a personalized demo, discuss menu data migration, or request custom enterprise rollouts."
             />
 
             <section className="pt-14 pb-20 sm:pt-20 sm:pb-28 bg-white">
@@ -72,7 +72,7 @@ export default function Contact() {
                                         </div>
                                         <div>
                                             <div className="font-bold text-stone-900">Email Sales &amp; Support</div>
-                                            <div className="text-stone-600">support@restrly.com</div>
+                                            <div className="text-stone-600">support@touchdine.cafe</div>
                                             <div className="text-[11px] text-stone-400 mt-0.5">Average response: &lt; 2 hours</div>
                                         </div>
                                     </div>
@@ -134,7 +134,7 @@ export default function Contact() {
                                                 <span>Message Received Successfully!</span>
                                             </div>
                                             <p className="text-xs sm:text-sm text-emerald-800 leading-relaxed">
-                                                Thank you for reaching out. A Restrly restaurant solutions specialist will review your request and get back to you within 2 business hours.
+                                                Thank you for reaching out. A Touch Dine restaurant solutions specialist will review your request and get back to you within 2 business hours.
                                             </p>
                                         </div>
                                     ) : (

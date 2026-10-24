@@ -163,7 +163,7 @@ class MarketingRoutesTest extends TestCase
     {
         $sitemapResponse = $this->get('/sitemap.xml');
         $sitemapResponse->assertStatus(200);
-        $this->assertStringContainsString('https://restrly.com/', $sitemapResponse->getContent());
+        $this->assertStringContainsString('https://touchdine.cafe/', $sitemapResponse->getContent());
 
         $robotsResponse = $this->get('/robots.txt');
         $robotsResponse->assertStatus(200);

@@ -10,7 +10,7 @@ export interface ProductMockupProps extends PropsWithChildren {
 
 export default function ProductMockup({
     children,
-    title = 'Restrly POS — Live Register',
+    title = 'Touch Dine POS — Live Register',
     subtitle = 'Branch 01 · Downtown Flagship',
     statusBadge,
     variant = 'browser',

@@ -140,13 +140,13 @@ export default function QrClosed({ token, restaurant, table, receipt, feedback_e
                                 onChange={(e) => setComment(e.target.value)}
                                 rows={2}
                                 placeholder="Anything to add? (optional)"
-                                className="mt-2 w-full rounded-xl border-gray-300 text-sm focus:border-restrly-500 focus:ring-restrly-500"
+                                className="mt-2 w-full rounded-xl border-gray-300 text-sm focus:border-touchdine-500 focus:ring-touchdine-500"
                             />
                             <button
                                 type="button"
                                 disabled={rating < 1 || busy}
                                 onClick={submitFeedback}
-                                className="mt-2 h-10 w-full rounded-xl bg-restrly-600 text-sm font-bold text-white disabled:opacity-50"
+                                className="mt-2 h-10 w-full rounded-xl bg-touchdine-600 text-sm font-bold text-white disabled:opacity-50"
                             >
                                 {busy ? 'Sending…' : 'Send feedback'}
                             </button>

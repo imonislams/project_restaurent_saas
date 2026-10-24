@@ -16,7 +16,7 @@ export default function Product() {
         <MarketingLayout>
             <MarketingHead
                 title="Product Architecture — Unified Restaurant Operating System"
-                description="Explore the connected architecture of Restrly. Point of sale, kitchen display, table floorplans, recipe food costing, and multi-branch management in unified sync."
+                description="Explore the connected architecture of Touch Dine. Point of sale, kitchen display, table floorplans, recipe food costing, and multi-branch management in unified sync."
             />
 
             {/* Product Hero */}
@@ -35,7 +35,7 @@ export default function Product() {
                         </h1>
 
                         <p className="mt-6 text-base sm:text-xl text-stone-600 leading-relaxed">
-                            Most restaurant software forces you to string together separate apps for POS, kitchen slips, inventory spreadsheets, and shift reconciliations. Restrly unifies every workflow into a single, responsive platform.
+                            Most restaurant software forces you to string together separate apps for POS, kitchen slips, inventory spreadsheets, and shift reconciliations. Touch Dine unifies every workflow into a single, responsive platform.
                         </p>
 
                         <div className="mt-8 flex flex-wrap gap-4">
@@ -129,7 +129,7 @@ export default function Product() {
                     <SectionHeading
                         badge="MODULAR ARCHITECTURE"
                         title="The Four Operational Engines"
-                        description="Restrly is organized into four interconnected operational domains, built from the ground up for food and beverage businesses."
+                        description="Touch Dine is organized into four interconnected operational domains, built from the ground up for food and beverage businesses."
                     />
 
                     <div className="mt-12 flex justify-center gap-2 border-b border-stone-200 pb-4 overflow-x-auto">
