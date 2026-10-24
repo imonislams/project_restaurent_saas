@@ -87,7 +87,7 @@ class SslCommerzGateway implements PlatformGateway
         ];
     }
 
-    public function verifyWebhook(PaymentGateway $config, array $payload): bool
+    public function verifyWebhook(PaymentGateway $config, array $payload, ?string $rawBody = null, array $headers = []): bool
     {
         // SSLCommerz IPNs are not HMAC-signed; authenticity is established by
         // validating the transaction server-side (verifyTransaction).
@@ -101,5 +101,44 @@ class SslCommerzGateway implements PlatformGateway
             'reference' => null,
             'raw' => ['note' => 'SSLCommerz refunds are issued from the merchant panel; recorded for manual processing.'],
         ];
+    }
+
+    public function notificationReference(array $payload): ?string
+    {
+        return isset($payload['tran_id']) ? (string) $payload['tran_id'] : null;
+    }
+
+    public function notificationEventId(array $payload): ?string
+    {
+        $id = $payload['val_id'] ?? $payload['bank_tran_id'] ?? $payload['tran_id'] ?? null;
+
+        return $id !== null ? (string) $id : null;
+    }
+
+    public function notificationEventType(array $payload): ?string
+    {
+        return isset($payload['status']) ? (string) $payload['status'] : null;
+    }
+
+    public function verificationId(array $payload): ?string
+    {
+        return isset($payload['val_id']) ? (string) $payload['val_id'] : null;
+    }
+
+    public function isSubscriptionEvent(array $payload): bool
+    {
+        return false;
+    }
+
+    public function testConnection(PaymentGateway $config): array
+    {
+        // SSLCommerz has no cheap credential endpoint; validate the stored set.
+        $credentials = $this->credentials($config);
+
+        if ($credentials['store_id'] === '' || $credentials['store_passwd'] === '') {
+            return ['ok' => false, 'error' => 'Store ID and store password are required.'];
+        }
+
+        return ['ok' => true, 'error' => null];
     }
 }

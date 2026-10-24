@@ -121,12 +121,38 @@ class MarketingController extends Controller
     }
 
     /**
-     * Product overview.
+     * Legacy singular product URL, kept for inbound links.
      */
-    public function product(): Response
+    public function product(): RedirectResponse
     {
-        return Inertia::render('Marketing/Product', [
-            'plans' => $this->getPlans(),
+        return redirect()->route('products.index', [], 301);
+    }
+
+    /**
+     * Products overview.
+     */
+    public function products(): Response
+    {
+        return Inertia::render('Marketing/Products/Index', [
+            'canonical' => route('products.index'),
+        ]);
+    }
+
+    /**
+     * Individual product page. Slugs mirror resources/js/Components/Marketing/Catalog/catalog.ts.
+     */
+    public function productPage(string $product): Response
+    {
+        $valid = [
+            'qr-ordering', 'digital-menu', 'table-management', 'order-management', 'kitchen-display',
+            'billing-payments', 'reports', 'branch-management', 'staff-roles', 'inventory',
+        ];
+
+        abort_unless(in_array($product, $valid, true), 404);
+
+        return Inertia::render('Marketing/Products/Show', [
+            'slug' => $product,
+            'canonical' => route('products.show', $product),
             'platformCurrency' => $this->getPlatformCurrency(),
         ]);
     }
@@ -142,8 +168,24 @@ class MarketingController extends Controller
     /**
      * Individual feature page.
      */
-    public function feature(string $feature): Response
+    public function feature(string $feature): Response|RedirectResponse
     {
+        // Modules that now have a dedicated product page.
+        $moved = [
+            'kitchen-display' => 'kitchen-display',
+            'table-management' => 'table-management',
+            'menu-management' => 'digital-menu',
+            'order-management' => 'order-management',
+            'reports-analytics' => 'reports',
+            'staff-management' => 'staff-roles',
+            'multi-branch-management' => 'branch-management',
+            'inventory-management' => 'inventory',
+        ];
+
+        if (isset($moved[$feature])) {
+            return redirect()->route('products.show', $moved[$feature], 301);
+        }
+
         $validFeatures = [
             'restaurant-pos',
             'kitchen-display',
@@ -175,7 +217,9 @@ class MarketingController extends Controller
      */
     public function solutions(): Response
     {
-        return Inertia::render('Marketing/Solutions/Index');
+        return Inertia::render('Marketing/Solutions/Index', [
+            'canonical' => route('solutions.index'),
+        ]);
     }
 
     /**
@@ -183,6 +227,20 @@ class MarketingController extends Controller
      */
     public function solution(string $solution): Response
     {
+        // Workflow solutions; slugs mirror SOLUTION_WORKFLOWS in the frontend catalog.
+        $workflows = [
+            'dine-in-qr-ordering', 'table-order-management', 'kitchen-workflow',
+            'faster-restaurant-service', 'restaurant-billing-checkout', 'restaurant-reporting',
+        ];
+
+        if (in_array($solution, $workflows, true)) {
+            return Inertia::render('Marketing/Solutions/Workflow', [
+                'slug' => $solution,
+                'canonical' => route('solutions.show', $solution),
+                'platformCurrency' => $this->getPlatformCurrency(),
+            ]);
+        }
+
         $validSolutions = [
             'restaurants',
             'cafes',

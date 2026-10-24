@@ -67,5 +67,15 @@
 - Not averse to adding dev-only tooling when it buys real correctness: approved introducing a JavaScript test runner (Vitest + a `npm run test:js` script) so the offline client's pricing logic is proven against the same specification as the server, rather than reviewed by hand. Confidence: 0.55
 
 
+- Prefers **security over convenience** at trust boundaries: when a plan called for caching (hashed) credential material in the browser so staff could start an offline login, they chose to drop that capability and harden within the already-authenticated session with fail-closed limits instead — a narrower feature is preferred to one that would store paper credential material on a shared terminal. Confidence: 0.55
+- Treats git **commits and release tags as human steps**: the agent implements, verifies and reports what remains uncommitted/untagged (e.g. "v0.1.0 is still yours to create"), but does not commit or tag on their behalf. Confidence: 0.5
+- Treats the application's own records as the **source of truth**: internal subscription/billing records govern application access, while third-party provider/webhook events are synchronization signals — the external provider must not become the system of record. Confidence: 0.55
+- Wants the final deliverable to be actual working functionality, not planning artefacts: explicitly "do not stop after creating a plan or frontend mockup" — a plan or mockup alone is not an acceptable output. Confidence: 0.6
+
+- Wants the app localised for both **English and Bengali** — every new user-facing string must be added to both locales in `resources/js/i18n/translations.ts` (EN + BN), never English-only. Confidence: 0.6
+- Wants financial reporting split **per currency**: billing/invoice/payment dashboards show a per-currency breakdown and never a single cross-currency aggregate total — different currencies are never combined into one figure. Confidence: 0.7
+- Wants **multi-currency billing with region-appropriate gateways**: local Bangladeshi methods (SSLCommerz/bKash, BDT) for domestic tenants alongside an international gateway (Paddle, USD) for foreign customers, with each tenant billed in its own billing currency — every plan should be priced in both currencies so either rail works. Confidence: 0.55
+- Treats **plan pricing and commercial figures as their own decision**: the agent should not invent or unilaterally change prices/amounts — build the mechanism, then ask for the figures or let them enter them in the admin UI. Confidence: 0.55
+
 ## Design system
 For all UI work follow `docs/DESIGN-SYSTEM.md` (brand colours, logo, fonts, motion, page patterns).

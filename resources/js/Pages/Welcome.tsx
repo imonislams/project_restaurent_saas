@@ -1,4 +1,6 @@
-import { BrandSquares, CountUp, FaqSection, MarketingLayout, PricingPlans, Reveal } from '@/Components/Marketing';
+import { BrandSquares, CountUp, FaqSection, MarketingLayout, PricingPlans, Reveal, getCurrencySymbol, trackConversion } from '@/Components/Marketing';
+import HeroQrScene from '@/Components/Marketing/Journey/HeroQrScene';
+import JourneySection from '@/Components/Marketing/Journey/JourneySection';
 import {
     Accordion,
     AccordionContent,
@@ -271,233 +273,55 @@ export default function Welcome({
 
             <div className="flex flex-col w-full">
                 {/* 1. HERO SECTION */}
-                <section className="relative w-full px-4 sm:px-6 lg:px-8 pt-14 pb-20 lg:pt-20 lg:pb-28 overflow-hidden bg-[#F3F2F2]">
-                    <BrandSquares />
-                    <div className="relative max-w-6xl mx-auto flex flex-col items-center text-center animate-fade-up">
-                        {/* Refined Eyebrow */}
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-stone-100 border border-stone-200 text-stone-800 mb-6">
-                            <span className="w-2 h-2 rounded-full bg-[#EC3013] animate-pulse" />
-                            <span className="text-xs font-semibold tracking-wide uppercase text-stone-700">
-                                Touch Dine OS &bull; Built for High-Performing Hospitality
-                            </span>
-                        </div>
-
-                        {/* Main Headline */}
-                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-stone-900 max-w-4xl leading-[1.12]">
-                            Run your restaurant with{' '}
-                            <span className="text-[#EC3013]">complete clarity &amp; speed</span>.
-                        </h1>
-
-                        {/* Subtitle */}
-                        <p className="text-lg sm:text-xl text-stone-600 max-w-2xl mt-5 mb-8 leading-relaxed">
-                            Sub-second POS terminals, live kitchen display routing, interactive floor tables, and recipe-level inventory control in one unified platform.
-                        </p>
-
-                        {/* Action Row */}
-                        <div className="flex flex-col sm:flex-row items-center gap-3.5 w-full justify-center">
-                            <Link
-                                href="/register"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#EC3013] hover:bg-[#D02710] active:bg-[#A81E0C] text-white text-sm font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors"
-                            >
-                                <span>Start 14-Day Free Trial</span>
-                                <ArrowRight className="w-4 h-4" />
-                            </Link>
-                            <a
-                                href="#terminal-demo"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white hover:bg-stone-50 text-stone-800 text-sm font-semibold px-6 py-3 rounded-lg border border-stone-300 shadow-xs transition-colors"
-                            >
-                                <Zap className="w-4 h-4 text-[#EC3013]" />
-                                <span>Try Interactive Register</span>
-                            </a>
-                        </div>
-
-                        {/* Factual Trust Indicators */}
-                        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 mt-8 text-xs text-stone-500 font-medium">
-                            <span className="inline-flex items-center gap-1.5">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                                14-day zero-risk trial
-                            </span>
-                            <span className="inline-flex items-center gap-1.5">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                                No proprietary hardware lock-in
-                            </span>
-                            <span className="inline-flex items-center gap-1.5">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                                Fast menu import &amp; onboarding
-                            </span>
-                        </div>
-
-                        {/* REALISTIC APPLICATION PREVIEW MOCKUP */}
-                        <div className="w-full mt-14 rounded-2xl border border-stone-200 bg-stone-900 p-2 sm:p-3 shadow-xl">
-                            {/* Device Frame Bar */}
-                            <div className="flex items-center justify-between px-3 py-2 text-xs text-stone-400 border-b border-stone-800 mb-2">
-                                <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-stone-700" />
-                                        <span className="w-2.5 h-2.5 rounded-full bg-stone-700" />
-                                        <span className="w-2.5 h-2.5 rounded-full bg-stone-700" />
-                                    </div>
-                                    <span className="text-stone-300 font-mono text-[11px] ml-2">
-                                        Touch Dine POS Terminal &bull; Downtown Branch #01
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-4 text-[11px] font-mono">
-                                    <span className="inline-flex items-center gap-1 text-emerald-400">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                        CLOUD SYNC ACTIVE
-                                    </span>
-                                    <span className="text-stone-400 hidden sm:inline">DRAWER: $1,840.00</span>
-                                </div>
+                <section className="relative w-full overflow-hidden bg-[#F3F2F2] px-4 pb-16 pt-12 sm:px-6 lg:px-8 lg:pb-24 lg:pt-20">
+                    <div aria-hidden className="mk-grid pointer-events-none absolute inset-0" />
+                    <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.02fr_1fr] lg:gap-10">
+                        <div className="animate-fade-up text-left">
+                            <span className="mk-eyebrow">Smarter restaurant management</span>
+                            <h1 className="mt-4 text-4xl font-extrabold leading-[1.08] tracking-tight text-stone-900 sm:text-5xl lg:text-6xl">
+                                Your Restaurant.
+                                <br />
+                                Every Order.
+                                <br />
+                                <span className="text-[#EC3013]">Under Control.</span>
+                            </h1>
+                            <p className="mt-6 max-w-xl text-lg leading-relaxed text-stone-600">
+                                Simplify restaurant operations with Touch Dine. Let customers order directly from their tables, streamline kitchen workflows, and manage your restaurant from one connected platform.
+                            </p>
+                            <div className="mt-8 flex flex-col gap-3.5 sm:flex-row">
+                                <Link
+                                    href="/contact?topic=demo"
+                                    onClick={() => trackConversion('hero_cta_clicked', { location: 'hero_book_demo' })}
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#EC3013] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#D02710] active:bg-[#A81E0C] sm:w-auto"
+                                >
+                                    <span>Book a Demo</span>
+                                    <ArrowRight className="h-4 w-4" />
+                                </Link>
+                                <a
+                                    href="#how-it-works"
+                                    onClick={() => trackConversion('hero_cta_clicked', { location: 'hero_how_it_works' })}
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-stone-300 bg-white px-6 py-3 text-sm font-semibold text-stone-800 shadow-xs transition-colors hover:bg-stone-50 sm:w-auto"
+                                >
+                                    <span>Explore How It Works</span>
+                                </a>
                             </div>
-
-                            {/* Inner Application Screen */}
-                            <div className="bg-white rounded-xl p-4 sm:p-6 text-left grid grid-cols-1 lg:grid-cols-12 gap-6">
-                                {/* Left: Active Floor Tables Overview */}
-                                <div className="lg:col-span-4 border-r-0 lg:border-r border-stone-200 pr-0 lg:pr-6 space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
-                                            Active Dining Room
-                                        </span>
-                                        <span className="text-xs font-medium text-stone-700 bg-stone-100 px-2 py-0.5 rounded">
-                                            18 / 24 Seated
-                                        </span>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2.5">
-                                        {DEMO_TABLES.map((t) => (
-                                            <div
-                                                key={t.id}
-                                                className={`p-3 rounded-lg border transition-all text-xs ${
-                                                    selectedTable.id === t.id
-                                                        ? 'border-[#EC3013] bg-[#EC3013]/5 shadow-xs'
-                                                        : 'border-stone-200 bg-stone-50 hover:bg-stone-100'
-                                                }`}
-                                            >
-                                                <div className="flex items-center justify-between font-semibold text-stone-900">
-                                                    <span>{t.label}</span>
-                                                    <span className="text-[10px] text-stone-500">{t.guests}p</span>
-                                                </div>
-                                                <div className="mt-2 flex items-center justify-between text-[11px]">
-                                                    <span className="text-stone-500">{t.status}</span>
-                                                    <span className="font-semibold text-stone-900">
-                                                        ${t.total.toFixed(2)}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="pt-2 border-t border-stone-100 text-xs text-stone-500 space-y-2">
-                                        <div className="flex justify-between">
-                                            <span>Shift Volume:</span>
-                                            <span className="font-semibold text-stone-900">84 Checks</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Average Ticket:</span>
-                                            <span className="font-semibold text-stone-900">$57.40</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Avg Table Turn:</span>
-                                            <span className="font-semibold text-stone-900">42 mins</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Center: Live Order Tickets & Coursing */}
-                                <div className="lg:col-span-5 space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
-                                            Live Kitchen Expediter (KDS)
-                                        </span>
-                                        <span className="text-xs text-emerald-700 font-medium flex items-center gap-1">
-                                            <Clock className="w-3.5 h-3.5" /> 3 Tickets in Prep
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-2.5">
-                                        <div className="p-3 rounded-lg border border-stone-200 bg-white shadow-xs">
-                                            <div className="flex justify-between items-center text-xs pb-2 border-b border-stone-100">
-                                                <span className="font-bold text-stone-900">#104 &bull; TBL 14</span>
-                                                <span className="text-[#EC3013] font-semibold flex items-center gap-1">
-                                                    <Flame className="w-3 h-3" /> Firing &bull; 4m
-                                                </span>
-                                            </div>
-                                            <div className="mt-2 text-xs space-y-1 text-stone-700">
-                                                <div className="flex justify-between">
-                                                    <span>2x Prime Ribeye (Med-Rare)</span>
-                                                    <span className="font-mono text-stone-500">GRILL</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span>1x Morel Mushroom Tagliolini</span>
-                                                    <span className="font-mono text-stone-500">PASTA</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-3 rounded-lg border border-stone-200 bg-white shadow-xs">
-                                            <div className="flex justify-between items-center text-xs pb-2 border-b border-stone-100">
-                                                <span className="font-bold text-stone-900">#102 &bull; TBL 08</span>
-                                                <span className="text-amber-700 font-semibold flex items-center gap-1">
-                                                    <Clock className="w-3 h-3" /> Course 2 &bull; 11m
-                                                </span>
-                                            </div>
-                                            <div className="mt-2 text-xs space-y-1 text-stone-700">
-                                                <div className="flex justify-between">
-                                                    <span>1x Line-Caught Black Cod</span>
-                                                    <span className="font-mono text-stone-500">FISH</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span>1x Heritage Pork Chop</span>
-                                                    <span className="font-mono text-stone-500">GRILL</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Right: Shift Sales & Real-Time Performance */}
-                                <div className="lg:col-span-3 border-l-0 lg:border-l border-stone-200 pl-0 lg:pl-6 space-y-4">
-                                    <span className="text-xs font-semibold uppercase tracking-wider text-stone-500 block">
-                                        Shift Summary
-                                    </span>
-                                    <div className="p-3.5 rounded-lg bg-stone-50 border border-stone-200 space-y-1">
-                                        <span className="text-xs text-stone-500">Gross Sales Today</span>
-                                        <div className="text-2xl font-extrabold text-stone-900">
-                                            $4,820.50
-                                        </div>
-                                        <span className="text-[11px] text-emerald-600 font-medium">
-                                            &uarr; 14% vs. last Friday
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-2 text-xs">
-                                        <div className="flex items-center justify-between text-stone-600">
-                                            <span>Card Payments</span>
-                                            <span className="font-semibold text-stone-900">$4,310.00</span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-stone-600">
-                                            <span>Cash Drawer</span>
-                                            <span className="font-semibold text-stone-900">$510.50</span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-stone-600">
-                                            <span>Tax Collected</span>
-                                            <span className="font-semibold text-stone-900">$428.14</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-2">
-                                        <Link
-                                            href="/register"
-                                            className="w-full text-center block text-xs font-semibold bg-stone-900 hover:bg-stone-800 text-white py-2 rounded-lg transition-colors"
-                                        >
-                                            Explore Platform
-                                        </Link>
-                                    </div>
-                                </div>
-                            </div>
+                            <p className="mt-5 text-[14px] font-medium text-stone-500">
+                                Prefer to try it yourself?{' '}
+                                <Link
+                                    href="/register"
+                                    onClick={() => trackConversion('hero_cta_clicked', { location: 'hero_start_trial' })}
+                                    className="font-semibold text-[#EC3013] underline-offset-2 hover:underline"
+                                >
+                                    Start the 14-day free trial
+                                </Link>
+                            </p>
                         </div>
+                        <HeroQrScene currency={getCurrencySymbol(platformCurrency)} />
                     </div>
                 </section>
+
+                {/* 1b. CUSTOMER JOURNEY */}
+                <JourneySection currency={getCurrencySymbol(platformCurrency)} />
 
                 {/* STATS STRIP */}
                 <section className="w-full border-y border-stone-200 bg-white px-4 py-10 sm:px-6 lg:px-8">

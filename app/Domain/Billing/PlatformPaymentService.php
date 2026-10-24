@@ -21,6 +21,9 @@ use Illuminate\Validation\ValidationException;
  * A payment is only marked succeeded after the gateway transaction has been
  * verified server-side (amount, currency and reference all checked). Browser
  * return URLs and provider notifications are treated as untrusted input.
+ *
+ * Notifications are provider-agnostic: each driver describes how to read its own
+ * payload, and subscription lifecycle events are handed to SubscriptionSyncService.
  */
 class PlatformPaymentService
 {
@@ -28,6 +31,7 @@ class PlatformPaymentService
         protected PlatformGatewayManager $gateways,
         protected AuditLogger $audit,
         protected SubscriptionService $subscriptions,
+        protected SubscriptionSyncService $sync,
     ) {}
 
     /**
@@ -87,35 +91,29 @@ class PlatformPaymentService
     }
 
     /**
-     * Process a provider notification (IPN or return URL) idempotently.
+     * Process a provider notification (IPN, webhook or return URL) idempotently.
      *
      * @param  array<string, mixed>  $payload
+     * @param  array<string, string>  $headers
      * @return array{processed: bool, duplicate: bool, reason: ?string}
      */
-    public function handleNotification(string $provider, array $payload, ?User $actor = null): array
+    public function handleNotification(string $provider, array $payload, ?string $rawBody = null, array $headers = [], ?User $actor = null): array
     {
-        $reference = (string) ($payload['tran_id'] ?? '');
-        $eventId = (string) ($payload['val_id'] ?? $payload['bank_tran_id'] ?? $reference);
+        $driver = $this->gateways->driver($provider);
+        $reference = $driver->notificationReference($payload);
+        $eventId = $driver->notificationEventId($payload) ?? $reference;
 
-        $payment = PlatformPayment::query()->where('provider_ref', $reference)->first();
+        $payment = $this->findPayment($reference);
+        $config = $this->resolveConfig($provider, $payment);
+        $effectiveDriver = $config ? $this->gateways->driverFor($config) : $driver;
 
-        if (! $payment && $reference !== '') {
-            $payment = PlatformPayment::query()->where('idempotency_key', $reference)->first();
-        }
-
-        // Resolve the exact gateway configuration the payment was created with,
-        // falling back to any enabled config for the provider.
-        $configId = $payment?->meta['gateway_config_id'] ?? null;
-        $config = ($configId ? PaymentGateway::query()->find($configId) : null) ?? $this->gateways->config($provider);
-        $driver = $config ? $this->gateways->driverFor($config) : $this->gateways->driver($provider);
-
-        $signatureValid = $config ? $driver->verifyWebhook($config, $payload) : false;
+        $signatureValid = $config ? $effectiveDriver->verifyWebhook($config, $payload, $rawBody, $headers) : false;
 
         $event = PlatformPaymentEvent::firstOrCreate(
             ['provider' => $provider, 'event_id' => $eventId],
             [
                 'tenant_id' => $payment?->tenant_id,
-                'event_type' => $payload['status'] ?? null,
+                'event_type' => $driver->notificationEventType($payload),
                 'payload' => $payload,
                 'signature_valid' => $signatureValid,
             ],
@@ -125,15 +123,29 @@ class PlatformPaymentService
             return ['processed' => false, 'duplicate' => true, 'reason' => 'Duplicate notification'];
         }
 
+        // Subscription lifecycle events (Paddle subscription.* / renewal transactions).
+        if ($payment === null && $this->sync->handles($provider, $payload)) {
+            $outcome = $this->sync->handleProviderEvent($provider, $payload, $config, $signatureValid, $actor);
+
+            $event->forceFill([
+                'tenant_id' => $event->tenant_id ?? $outcome['tenant_id'],
+                'processed' => true,
+                'processed_at' => now(),
+                'note' => $outcome['reason'] ?? 'Subscription event applied',
+            ])->save();
+
+            return ['processed' => $outcome['processed'], 'duplicate' => false, 'reason' => $outcome['reason']];
+        }
+
         if (! $payment) {
             $event->forceFill(['processed' => true, 'processed_at' => now(), 'note' => 'No matching payment'])->save();
 
             return ['processed' => false, 'duplicate' => false, 'reason' => 'No matching payment'];
         }
 
-        $valId = (string) ($payload['val_id'] ?? '');
-        $verification = $config && $valId !== ''
-            ? $driver->verifyTransaction($config, $valId)
+        $verificationId = $effectiveDriver->verificationId($payload);
+        $verification = $config && $verificationId !== null && $verificationId !== ''
+            ? $effectiveDriver->verifyTransaction($config, $verificationId)
             : ['valid' => false, 'amount' => null, 'currency' => null, 'raw' => []];
 
         $event->forceFill(['signature_valid' => $signatureValid && $verification['valid']])->save();
@@ -223,30 +235,94 @@ class PlatformPaymentService
         $this->audit->log('platform.payment_failed', $payment, ['reason' => $reason], null, $payment->tenant_id);
     }
 
-    /** @return array<string, mixed> */
+    protected function findPayment(?string $reference): ?PlatformPayment
+    {
+        if ($reference === null || $reference === '') {
+            return null;
+        }
+
+        return PlatformPayment::query()->where('provider_ref', $reference)->first()
+            ?? PlatformPayment::query()->where('idempotency_key', $reference)->first();
+    }
+
+    protected function resolveConfig(string $provider, ?PlatformPayment $payment): ?PaymentGateway
+    {
+        $configId = $payment?->meta['gateway_config_id'] ?? null;
+
+        return ($configId ? PaymentGateway::query()->find($configId) : null)
+            ?? $this->gateways->config($provider);
+    }
+
+    /**
+     * Common checkout payload. Each driver reads the keys it understands.
+     *
+     * @return array<string, mixed>
+     */
     protected function checkoutPayload(SubscriptionInvoice $invoice, PlatformPayment $payment, string $reference, string $provider): array
     {
         $tenant = $invoice->tenant;
 
-        return array_filter([
+        $payload = array_filter([
             'total_amount' => number_format((float) $payment->amount, 2, '.', ''),
             'currency' => $payment->currency,
             'tran_id' => $reference,
-            'success_url' => route('payments.callback', ['provider' => $provider, 'result' => 'success']),
-            'fail_url' => route('payments.callback', ['provider' => $provider, 'result' => 'fail']),
-            'cancel_url' => route('payments.callback', ['provider' => $provider, 'result' => 'cancel']),
-            'ipn_url' => route('payments.ipn', ['provider' => $provider]),
             'cus_name' => $tenant?->name,
-            'cus_email' => $tenant?->getSetting('billing.email', $tenant?->business_email),
+            'cus_email' => $tenant?->getSetting('billing.email', $tenant?->getSetting('company.email', $tenant?->business_email)),
             'cus_phone' => $tenant?->getSetting('company.phone'),
             'cus_add1' => $tenant?->getSetting('company.address'),
-            'cus_city' => $tenant?->getSetting('company.city'),
-            'cus_country' => $tenant?->getSetting('region.country', 'Bangladesh'),
+            'cus_city' => $tenant?->getSetting('billing.city'),
+            'cus_country' => $tenant?->getSetting('billing.country', $tenant?->getSetting('region.country', 'Bangladesh')),
             'product_name' => 'Subscription '.$invoice->number,
             'product_category' => 'Software',
             'product_profile' => 'non-physical-goods',
             'shipping_method' => 'NO',
             'num_of_item' => 1,
         ], fn ($value) => $value !== null && $value !== '');
+
+        // Gateway callback/IPN endpoints (hosted-checkout providers).
+        $payload += [
+            'success_url' => route('payments.callback', ['provider' => $provider, 'result' => 'success']),
+            'fail_url' => route('payments.callback', ['provider' => $provider, 'result' => 'fail']),
+            'cancel_url' => route('payments.callback', ['provider' => $provider, 'result' => 'cancel']),
+            'ipn_url' => route('payments.ipn', ['provider' => $provider]),
+            'callback_url' => route('payments.callback', ['provider' => $provider, 'result' => 'success']),
+        ];
+
+        // Provider-specific fields consumed by the newer drivers.
+        $payload['reference'] = $reference;
+        $payload['amount'] = (float) $payment->amount;
+        $payload['currency'] = $payment->currency;
+        $payload['invoice_number'] = $invoice->number;
+        $payload['tenant_id'] = $invoice->tenant_id;
+        $payload['price_id'] = $this->providerPriceId($invoice, $provider);
+
+        // Drop empty optional fields (e.g. a null Paddle price id) so providers
+        // only receive keys they can use.
+        return array_filter($payload, fn ($value) => $value !== null && $value !== '');
+    }
+
+    /** The provider's configured price id for this invoice's plan/currency/interval. */
+    protected function providerPriceId(SubscriptionInvoice $invoice, string $provider): ?string
+    {
+        $subscription = $invoice->subscription;
+
+        if (! $subscription) {
+            return null;
+        }
+
+        $subscription->loadMissing('plan.prices');
+
+        $prices = $subscription->plan?->prices;
+
+        if (! $prices) {
+            return null;
+        }
+
+        $interval = $subscription->billing_cycle->value;
+
+        $price = $prices->first(fn ($p) => strtoupper($p->currency) === strtoupper($invoice->currency) && $p->interval === $interval)
+            ?? $prices->firstWhere('interval', $interval);
+
+        return $price?->providerPriceId($provider);
     }
 }

@@ -18,8 +18,28 @@ class MarketingRoutesTest extends TestCase
 
     public function test_product_page_is_accessible(): void
     {
-        $response = $this->get('/product');
-        $response->assertStatus(200);
+        $this->get('/product')->assertRedirect('/products')->assertStatus(301);
+
+        $this->get('/products')->assertOk();
+
+        foreach ([
+            'qr-ordering', 'digital-menu', 'table-management', 'order-management', 'kitchen-display',
+            'billing-payments', 'reports', 'branch-management', 'staff-roles', 'inventory',
+        ] as $slug) {
+            $this->get("/products/{$slug}")->assertOk();
+        }
+
+        $this->get('/products/does-not-exist')->assertNotFound();
+    }
+
+    public function test_workflow_solution_pages_are_accessible(): void
+    {
+        foreach ([
+            'dine-in-qr-ordering', 'table-order-management', 'kitchen-workflow',
+            'faster-restaurant-service', 'restaurant-billing-checkout', 'restaurant-reporting',
+        ] as $slug) {
+            $this->get("/solutions/{$slug}")->assertOk();
+        }
     }
 
     public function test_features_hub_and_all_subpages_are_accessible(): void
@@ -43,9 +63,26 @@ class MarketingRoutesTest extends TestCase
             'customer-management',
         ];
 
+        // Modules that moved to dedicated product pages redirect permanently.
+        $moved = [
+            'kitchen-display' => 'kitchen-display',
+            'table-management' => 'table-management',
+            'menu-management' => 'digital-menu',
+            'order-management' => 'order-management',
+            'reports-analytics' => 'reports',
+            'staff-management' => 'staff-roles',
+            'multi-branch-management' => 'branch-management',
+            'inventory-management' => 'inventory',
+        ];
+
         foreach ($features as $slug) {
             $subResponse = $this->get("/features/{$slug}");
-            $subResponse->assertStatus(200);
+
+            if (isset($moved[$slug])) {
+                $subResponse->assertRedirect("/products/{$moved[$slug]}")->assertStatus(301);
+            } else {
+                $subResponse->assertStatus(200);
+            }
         }
     }
 

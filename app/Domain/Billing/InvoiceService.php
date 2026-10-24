@@ -27,8 +27,10 @@ class InvoiceService
     /** @return array<string, mixed> */
     public function documentData(SubscriptionInvoice $invoice): array
     {
-        $invoice->loadMissing(['items', 'adjustments', 'creditNotes', 'subscription.plan']);
+        $invoice->loadMissing(['items', 'adjustments', 'creditNotes', 'subscription.plan', 'platformPayments']);
         $tenant = $invoice->tenant;
+        $snapshot = $invoice->billing_snapshot ?? [];
+        $payment = $invoice->latestSuccessfulPayment();
 
         return [
             'platform' => [
@@ -37,10 +39,19 @@ class InvoiceService
             ],
             'invoice' => $invoice,
             'tenant' => [
-                'name' => $tenant?->name,
-                'email' => $tenant?->getSetting('billing.email', $tenant?->business_email),
-                'address' => $tenant?->getSetting('company.address'),
+                'name' => $snapshot['name'] ?? $tenant?->name,
+                'email' => $snapshot['email'] ?? $tenant?->getSetting('billing.email', $tenant?->business_email),
+                'address' => $snapshot['address'] ?? $tenant?->getSetting('company.address'),
+                'city' => $snapshot['city'] ?? null,
+                'postal_code' => $snapshot['postal_code'] ?? null,
+                'country' => $snapshot['country'] ?? null,
+                'tax_id' => $snapshot['tax_id'] ?? null,
             ],
+            'payment' => $payment ? [
+                'gateway' => $payment->meta['gateway'] ?? ucfirst($payment->gateway),
+                'reference' => $payment->provider_ref,
+                'paid_at' => $payment->paid_at,
+            ] : null,
             'items' => $invoice->items,
             'credit_notes' => $invoice->creditNotes,
             'adjustments' => $invoice->adjustments,

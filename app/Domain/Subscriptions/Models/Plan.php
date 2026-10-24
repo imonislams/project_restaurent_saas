@@ -2,8 +2,10 @@
 
 namespace App\Domain\Subscriptions\Models;
 
+use App\Domain\Billing\Models\PaymentGateway;
 use App\Domain\Subscriptions\Enums\PlanVisibility;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -61,6 +63,12 @@ class Plan extends Model
     public function prices(): HasMany
     {
         return $this->hasMany(PlanPrice::class);
+    }
+
+    public function gateways(): BelongsToMany
+    {
+        return $this->belongsToMany(PaymentGateway::class, 'payment_gateway_plan', 'plan_id', 'payment_gateway_id')
+            ->withTimestamps();
     }
 
     public function limit(string $metric): ?int

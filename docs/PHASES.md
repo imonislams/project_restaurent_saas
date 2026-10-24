@@ -35,7 +35,7 @@ requirement in [ROADMAP.md](./ROADMAP.md) is satisfied and the report below is f
 | 17E — Offline foundation (bundle, IndexedDB, outbox, sync) | Complete pending review |
 | 17F — Offline POS capture & pricing parity | Complete pending review |
 | 17G — Conflicts & sync observability | Complete pending review |
-| 17H — Offline auth & approvals hardening | Not started |
+| 17H — Offline auth & approvals hardening | Complete pending review |
 
 ---
 
@@ -2883,6 +2883,52 @@ the new page. Rebuilding fixed it — worth remembering that page-rendering test
 ### Final phase status
 
 **Complete pending review.**
+
+---
+
+## Phase 17H — Offline auth & approvals hardening
+
+### Decision
+
+The approved plan's wording ("cache a hashed credential … unlock a read-mostly POS session")
+was **not** implemented. Caching credential material to let someone start a POS session with
+no server contact is a real attack surface on a shared terminal, for a capability the business
+does not need. Confirmed with the owner: harden **within the existing session** instead.
+
+### Implemented
+
+- **`config/pos.php`** — `offline.max_hours` (`POS_OFFLINE_MAX_HOURS`, default **12**; `0`
+  disables). Shipped to the client in the offline bundle, so the window is centrally
+  controllable.
+- **`resources/js/offline/session.ts`** — records the last time the device *actually* reached
+  the server (a successful bundle fetch or sync flush) in a new IndexedDB `meta` store
+  (schema v2, additive `upgrade` path). `isWindowExpired()` is a **pure** function so it is
+  unit-testable without IndexedDB.
+- **POS refuses offline sales when the window has lapsed**, with a message naming the window.
+  Never having reached the server counts as expired — **fail closed**.
+- **Approval-gated discounts are refused offline.** The bundle now carries
+  `discountApprovalPercent`; if the order's discount would exceed it, the sale is refused with
+  an explanation rather than collecting a manager PIN that cannot be verified. The percent is
+  computed from the same subtotal/discount figures the server's `authorizeDiscount` uses.
+- `OfflineBundle` now also exposes `discountApprovalPercent` and `offlineMaxHours`.
+
+### Verification
+
+- `php -l` clean; `npx tsc --noEmit` clean; `npm run build` clean.
+- `npm run test:js` → **15 passed** (10 pricing + 5 new window tests: within window, past
+  window, never contacted, unparseable timestamp, disabled).
+- `php artisan test` → **622 passed (3530 assertions)**, including 2 new bundle tests.
+
+### Known limits
+
+- The guards live in the POS submit path and are exercised by unit tests on the pure window
+  function, not by a DOM-level test of the modal (the project has no browser test runner).
+- `void`, `refund` and other approval-gated actions were already online-only; they are now
+  consistent with the discount rule rather than incidentally so.
+
+### Final phase status
+
+**Complete pending review.** Closes the Phase 17 program.
 
 ---
 

@@ -222,3 +222,17 @@
 .auth-form input:not([type='checkbox']):not([type='radio']):hover { border-color: #8a8583; }
 .auth-form input:not([type='checkbox']):not([type='radio']):focus, .auth-form input:not([type='checkbox']):not([type='radio']):focus-visible { outline: none; border-color: #ec3013; box-shadow: 0 0 0 4px rgba(236, 48, 19, 0.14); }
 .auth-form button[type='submit'] { height: 3rem; font-size: 1rem; }
+
+/* Touch Dine hero and journey motion */
+@keyframes td-scan { from { transform: translateY(0); } to { transform: translateY(136px); } }
+.td-scan { animation: td-scan 1s ease-in-out infinite alternate; }
+@keyframes td-ring { from { transform: scale(0.97); opacity: 0.9; } to { transform: scale(1.1); opacity: 0; } }
+.td-ring { animation: td-ring 1.3s ease-out infinite; }
+@keyframes td-draw { to { stroke-dashoffset: 0; } }
+.td-check path { stroke-dasharray: 30; stroke-dashoffset: 30; animation: td-draw 0.5s 0.15s ease-out forwards; }
+@keyframes td-pop { 0% { transform: scale(0.6); opacity: 0; } 70% { transform: scale(1.06); } 100% { transform: scale(1); opacity: 1; } }
+.td-pop { animation: td-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+    .td-scan, .td-ring, .td-pop { animation: none; }
+    .td-check path { animation: none; stroke-dashoffset: 0; }
+}

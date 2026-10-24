@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Com
 import { Input } from '@/Components/ui/Input';
 import { Label } from '@/Components/ui/Label';
 import { Textarea } from '@/Components/ui/Textarea';
+import { trackConversion } from '@/Components/Marketing';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { ArrowRight, CheckCircle2, Clock, HelpCircle, Mail, Send } from 'lucide-react';
 import { FormEventHandler } from 'react';
@@ -21,14 +22,20 @@ export default function Contact() {
         restaurant_name: '',
         venue_type: 'restaurant',
         branches_count: '1',
-        inquiry_category: 'sales',
+        inquiry_category:
+            typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('topic') === 'demo'
+                ? 'demo'
+                : 'sales',
         message: '',
     });
 
     const handleSubmit: FormEventHandler = (e) => {
         e.preventDefault();
         post(route('contact.submit'), {
-            onSuccess: () => reset(),
+            onSuccess: () => {
+                if (data.inquiry_category === 'demo') trackConversion('demo_requested', { location: 'contact_form' });
+                reset();
+            },
         });
     };
 

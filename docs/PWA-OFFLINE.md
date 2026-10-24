@@ -121,15 +121,24 @@ is not proof of payment.
 
 ## 8. Offline authentication & approvals
 
-- Going offline requires a cached, **hashed** credential plus a permission snapshot scoped
-  to tenant, branch and user, with an expiry (forced online re-authentication after N hours).
+**There is no offline login, by design.** No credential material is cached in the browser and
+a POS session cannot be started without reaching the server. Offline selling is available only
+to a session that was already authenticated while online, and only for a bounded window.
+
+- The device records the last time it **actually reached the server** (a successful catalogue
+  fetch or sync flush). That timestamp is what the window is measured from.
+- Once the window (`POS_OFFLINE_MAX_HOURS`, default **12 hours**) has passed, the POS refuses
+  new offline sales and asks for a reconnect. A device that never reached the server counts as
+  expired — the rule fails closed. Setting the window to `0` disables the limit.
+- Rationale: an unattended or stolen terminal must not be able to keep trading indefinitely on
+  a stale catalogue, stale prices and stale permissions.
 - The offline session **may** take orders and cash payments only.
-- Approval-gated actions — discount overrides above threshold, **voids, refunds** — remain
-  **online-only** and are blocked offline with an explicit message. Rationale:
-  `ManagerPinService::verify()` and its audit trail are server-side; approving money movements
-  without them would be unauditable.
-- *(Pending confirmation — see open decision in the plan: block approvals offline (recommended)
-  vs cache PIN hashes offline.)*
+
+**Approval-gated actions are online-only.** A discount above the tenant's
+`pos.discount_approval_percent` needs a manager PIN, verified by
+`ManagerPinService::verify()` server-side. Because that verification cannot happen offline —
+and must not be faked — the POS **refuses** such a sale offline and explains why, rather than
+collecting a PIN it cannot check. Voids, refunds and other approvals follow the same rule.
 
 ## 9. Conflict rules
 
@@ -180,10 +189,10 @@ reports are recorded in [PHASES.md](./PHASES.md).
 | Outbox + sync engine (replay-safe, `place_sale` / `open_order` / `settle_order`) | Delivered — 17E |
 | Offline POS capture (cash only, provisional reference) | Delivered — 17F |
 | Pricing parity harness (PHP ↔ TypeScript, shared fixtures) | Delivered — 17F |
-| Conflict recording + reconciliation UI | **Pending — 17G** |
-| Offline auth / approval hardening | **Pending — 17H** |
+| Conflict recording + reconciliation UI | Delivered — 17G |
+| Offline auth / approval hardening | Delivered — 17H |
 | Offline card payments, offline KDS, multi-device merge | Out of scope (see §11) |
 
-Until 17G lands, an offline sale whose server-computed total differs from the device's is
-accepted at the **server** total and the difference is not yet surfaced for review — only the
-per-operation result is returned to the client.
+There is **no offline login**: offline selling requires a session authenticated while online
+and a server contact within the window (§8). Differences the server resolves on sync are
+recorded in `offline_sync_conflicts` and reviewed from Platform Admin → Offline Sync Conflicts.

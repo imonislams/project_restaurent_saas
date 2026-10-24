@@ -465,6 +465,30 @@ class OnboardingService
         return Product::withoutGlobalScopes()->where('tenant_id', $tenant->getKey())->exists();
     }
 
+    /**
+     * Persist the tenant's billing profile (used for gateway eligibility and for
+     * invoice details). Distinct from the restaurant's own company details.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function saveBilling(Tenant $tenant, array $data): void
+    {
+        $tenant->mergeSettings([
+            'billing' => array_filter([
+                'name' => $data['billing_name'] ?? null,
+                'email' => $data['billing_email'] ?? null,
+                'country' => $data['billing_country'] ?? null,
+                'currency' => $data['billing_currency'] ?? null,
+                'address' => $data['billing_address'] ?? null,
+                'city' => $data['billing_city'] ?? null,
+                'postal_code' => $data['billing_postal_code'] ?? null,
+                'tax_id' => $data['billing_tax_id'] ?? null,
+            ], fn ($value) => $value !== null && $value !== ''),
+        ]);
+
+        $tenant->save();
+    }
+
     public function savePos(Tenant $tenant, array $data): void
     {
         $tenant->mergeSettings([
@@ -538,6 +562,16 @@ class OnboardingService
     public function settingsFormData(Tenant $tenant, string $group): array
     {
         return match ($group) {
+            'billing' => [
+                'billing_name' => $tenant->getSetting('billing.name', $tenant->getSetting('company.legal_name', $tenant->name)),
+                'billing_email' => $tenant->getSetting('billing.email', $tenant->getSetting('company.email', $tenant->business_email)),
+                'billing_country' => $tenant->getSetting('billing.country', $tenant->getSetting('region.country', 'BD')),
+                'billing_currency' => $tenant->getSetting('billing.currency', $tenant->getSetting('region.currency', 'BDT')),
+                'billing_address' => $tenant->getSetting('billing.address', $tenant->getSetting('company.address')),
+                'billing_city' => $tenant->getSetting('billing.city'),
+                'billing_postal_code' => $tenant->getSetting('billing.postal_code'),
+                'billing_tax_id' => $tenant->getSetting('billing.tax_id', $tenant->getSetting('company.tax_id')),
+            ],
             'pos' => [
                 'service_charge_rate' => (float) $tenant->getSetting('service_charge.rate', 0),
                 'pos_allow_partial' => (bool) $tenant->getSetting('pos.allow_partial', false),

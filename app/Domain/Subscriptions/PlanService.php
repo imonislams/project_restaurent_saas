@@ -23,12 +23,14 @@ class PlanService
     {
         return DB::transaction(function () use ($data, $actor) {
             $prices = $data['prices'] ?? [];
-            unset($data['prices']);
+            $gateways = $data['gateways'] ?? [];
+            unset($data['prices'], $data['gateways']);
 
             $data['version'] = 1;
             $plan = Plan::create($data);
 
             $this->syncPrices($plan, $prices);
+            $plan->gateways()->sync($gateways);
 
             $this->audit->log('platform.plan_created', $plan, ['name' => $plan->name], $actor);
 
@@ -41,7 +43,8 @@ class PlanService
     {
         return DB::transaction(function () use ($plan, $data, $actor) {
             $prices = $data['prices'] ?? null;
-            unset($data['prices']);
+            $gateways = $data['gateways'] ?? null;
+            unset($data['prices'], $data['gateways']);
 
             // Any substantive change bumps the version so new terms are explicit.
             $data['version'] = $plan->version + 1;
@@ -50,6 +53,10 @@ class PlanService
 
             if (is_array($prices)) {
                 $this->syncPrices($plan, $prices);
+            }
+
+            if (is_array($gateways)) {
+                $plan->gateways()->sync($gateways);
             }
 
             $this->forgetTenantEntitlements($plan);
@@ -100,10 +107,16 @@ class PlanService
                 continue;
             }
 
+            $providerPrices = collect($price['provider_prices'] ?? [])
+                ->map(fn ($value) => array_filter((array) $value, fn ($v) => $v !== null && $v !== ''))
+                ->filter()
+                ->all();
+
             $normalised[strtoupper($price['currency']).'|'.$price['interval']] = [
                 'currency' => strtoupper($price['currency']),
                 'interval' => $price['interval'],
                 'price' => $price['price'] ?? 0,
+                'provider_prices' => $providerPrices === [] ? null : $providerPrices,
             ];
         }
 
@@ -113,7 +126,7 @@ class PlanService
         foreach ($normalised as $entry) {
             $plan->prices()->updateOrCreate(
                 ['currency' => $entry['currency'], 'interval' => $entry['interval']],
-                ['price' => $entry['price']],
+                ['price' => $entry['price'], 'provider_prices' => $entry['provider_prices']],
             );
         }
     }

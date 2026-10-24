@@ -12,13 +12,26 @@ class PlanPrice extends Model
         'currency',
         'interval',
         'price',
+        'provider_prices',
     ];
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
+            'provider_prices' => 'array',
         ];
+    }
+
+    /**
+     * A provider-specific price identifier for this plan/currency/interval,
+     * e.g. priceId('paddle') => "pri_...".
+     */
+    public function providerPriceId(string $provider): ?string
+    {
+        $value = data_get($this->provider_prices, "{$provider}.price_id");
+
+        return $value !== null ? (string) $value : null;
     }
 
     public function plan(): BelongsTo

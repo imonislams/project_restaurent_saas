@@ -16,6 +16,7 @@ import {
     SheetTrigger,
 } from '@/Components/ui/sheet';
 import { Link, usePage } from '@inertiajs/react';
+import { MobileGroups, ProductsMenu, SolutionsMenu } from './MegaMenus';
 import {
     ArrowRight,
     BarChart3,
@@ -73,95 +74,7 @@ export default function MarketingNavbar() {
                     <div className="hidden lg:flex items-center">
                         <NavigationMenu>
                             <NavigationMenuList className="gap-1">
-                                {/* Product Mega Dropdown */}
-                                <NavigationMenuItem>
-                                    <NavigationMenuTrigger className="text-sm font-medium text-stone-700 hover:text-stone-900 bg-transparent hover:bg-stone-50 data-[state=open]:bg-stone-50">
-                                        Product
-                                    </NavigationMenuTrigger>
-                                    <NavigationMenuContent>
-                                        <div className="grid w-[600px] grid-cols-2 gap-3 p-4 bg-white rounded-xl shadow-lg border border-stone-200">
-                                            <div className="col-span-2 pb-2 border-b border-stone-100 flex items-center justify-between">
-                                                <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
-                                                    Touch Dine Platform Modules
-                                                </span>
-                                                <Link
-                                                    href="/product"
-                                                    className="text-xs font-semibold text-[#EC3013] hover:underline flex items-center gap-1"
-                                                >
-                                                    Platform Blueprint <ArrowRight className="w-3 h-3" />
-                                                </Link>
-                                            </div>
-
-                                            <Link
-                                                href="/features/restaurant-pos"
-                                                className="group flex items-start gap-3 p-2.5 rounded-lg hover:bg-stone-50 transition-colors"
-                                            >
-                                                <div className="w-9 h-9 rounded-lg bg-stone-100 group-hover:bg-[#EC3013]/10 text-stone-700 group-hover:text-[#EC3013] flex items-center justify-center shrink-0 transition-colors">
-                                                    <Monitor className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-semibold text-stone-900 group-hover:text-[#EC3013]">
-                                                        Point of Sale (POS)
-                                                    </div>
-                                                    <div className="text-xs text-stone-500 line-clamp-1 mt-0.5">
-                                                        Sub-second offline-capable register
-                                                    </div>
-                                                </div>
-                                            </Link>
-
-                                            <Link
-                                                href="/features/kitchen-display"
-                                                className="group flex items-start gap-3 p-2.5 rounded-lg hover:bg-stone-50 transition-colors"
-                                            >
-                                                <div className="w-9 h-9 rounded-lg bg-stone-100 group-hover:bg-[#EC3013]/10 text-stone-700 group-hover:text-[#EC3013] flex items-center justify-center shrink-0 transition-colors">
-                                                    <ChefHat className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-semibold text-stone-900 group-hover:text-[#EC3013]">
-                                                        Kitchen Display (KDS)
-                                                    </div>
-                                                    <div className="text-xs text-stone-500 line-clamp-1 mt-0.5">
-                                                        Live station routing & coursing
-                                                    </div>
-                                                </div>
-                                            </Link>
-
-                                            <Link
-                                                href="/features/table-management"
-                                                className="group flex items-start gap-3 p-2.5 rounded-lg hover:bg-stone-50 transition-colors"
-                                            >
-                                                <div className="w-9 h-9 rounded-lg bg-stone-100 group-hover:bg-[#EC3013]/10 text-stone-700 group-hover:text-[#EC3013] flex items-center justify-center shrink-0 transition-colors">
-                                                    <LayoutGrid className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-semibold text-stone-900 group-hover:text-[#EC3013]">
-                                                        Table & Floor Architect
-                                                    </div>
-                                                    <div className="text-xs text-stone-500 line-clamp-1 mt-0.5">
-                                                        Interactive floor plans & seat status
-                                                    </div>
-                                                </div>
-                                            </Link>
-
-                                            <Link
-                                                href="/features/inventory-management"
-                                                className="group flex items-start gap-3 p-2.5 rounded-lg hover:bg-stone-50 transition-colors"
-                                            >
-                                                <div className="w-9 h-9 rounded-lg bg-stone-100 group-hover:bg-[#EC3013]/10 text-stone-700 group-hover:text-[#EC3013] flex items-center justify-center shrink-0 transition-colors">
-                                                    <Boxes className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-semibold text-stone-900 group-hover:text-[#EC3013]">
-                                                        Inventory Ledger
-                                                    </div>
-                                                    <div className="text-xs text-stone-500 line-clamp-1 mt-0.5">
-                                                        Recipe-level gram deductions & alerts
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                        </div>
-                                    </NavigationMenuContent>
-                                </NavigationMenuItem>
+                                <ProductsMenu isActive={isActive('/products')} />
 
                                 {/* Features Direct Link */}
                                 <NavigationMenuItem>
@@ -175,95 +88,7 @@ export default function MarketingNavbar() {
                                     </Link>
                                 </NavigationMenuItem>
 
-                                {/* Solutions Dropdown */}
-                                <NavigationMenuItem>
-                                    <NavigationMenuTrigger className="text-sm font-medium text-stone-700 hover:text-stone-900 bg-transparent hover:bg-stone-50 data-[state=open]:bg-stone-50">
-                                        Solutions
-                                    </NavigationMenuTrigger>
-                                    <NavigationMenuContent>
-                                        <div className="grid w-[540px] grid-cols-2 gap-3 p-4 bg-white rounded-xl shadow-lg border border-stone-200">
-                                            <div className="col-span-2 pb-2 border-b border-stone-100 flex items-center justify-between">
-                                                <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
-                                                    By Venue Type
-                                                </span>
-                                                <Link
-                                                    href="/solutions"
-                                                    className="text-xs font-semibold text-[#EC3013] hover:underline flex items-center gap-1"
-                                                >
-                                                    All Solutions <ArrowRight className="w-3 h-3" />
-                                                </Link>
-                                            </div>
-
-                                            <Link
-                                                href="/solutions/restaurants"
-                                                className="group flex items-start gap-3 p-2.5 rounded-lg hover:bg-stone-50 transition-colors"
-                                            >
-                                                <div className="w-9 h-9 rounded-lg bg-stone-100 group-hover:bg-[#EC3013]/10 text-stone-700 group-hover:text-[#EC3013] flex items-center justify-center shrink-0 transition-colors">
-                                                    <Utensils className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-semibold text-stone-900 group-hover:text-[#EC3013]">
-                                                        Full-Service Dining
-                                                    </div>
-                                                    <div className="text-xs text-stone-500 line-clamp-1 mt-0.5">
-                                                        Fine dining & bistros
-                                                    </div>
-                                                </div>
-                                            </Link>
-
-                                            <Link
-                                                href="/solutions/quick-service-restaurants"
-                                                className="group flex items-start gap-3 p-2.5 rounded-lg hover:bg-stone-50 transition-colors"
-                                            >
-                                                <div className="w-9 h-9 rounded-lg bg-stone-100 group-hover:bg-[#EC3013]/10 text-stone-700 group-hover:text-[#EC3013] flex items-center justify-center shrink-0 transition-colors">
-                                                    <Sparkles className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-semibold text-stone-900 group-hover:text-[#EC3013]">
-                                                        Quick Service (QSR)
-                                                    </div>
-                                                    <div className="text-xs text-stone-500 line-clamp-1 mt-0.5">
-                                                        Rapid cashier and counter service
-                                                    </div>
-                                                </div>
-                                            </Link>
-
-                                            <Link
-                                                href="/solutions/cafes"
-                                                className="group flex items-start gap-3 p-2.5 rounded-lg hover:bg-stone-50 transition-colors"
-                                            >
-                                                <div className="w-9 h-9 rounded-lg bg-stone-100 group-hover:bg-[#EC3013]/10 text-stone-700 group-hover:text-[#EC3013] flex items-center justify-center shrink-0 transition-colors">
-                                                    <Coffee className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-semibold text-stone-900 group-hover:text-[#EC3013]">
-                                                        Cafés & Bakeries
-                                                    </div>
-                                                    <div className="text-xs text-stone-500 line-clamp-1 mt-0.5">
-                                                        Fast line busting & modifiers
-                                                    </div>
-                                                </div>
-                                            </Link>
-
-                                            <Link
-                                                href="/solutions/multi-location-restaurants"
-                                                className="group flex items-start gap-3 p-2.5 rounded-lg hover:bg-stone-50 transition-colors"
-                                            >
-                                                <div className="w-9 h-9 rounded-lg bg-stone-100 group-hover:bg-[#EC3013]/10 text-stone-700 group-hover:text-[#EC3013] flex items-center justify-center shrink-0 transition-colors">
-                                                    <Building2 className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-semibold text-stone-900 group-hover:text-[#EC3013]">
-                                                        Multi-Location Chains
-                                                    </div>
-                                                    <div className="text-xs text-stone-500 line-clamp-1 mt-0.5">
-                                                        Centralized menus & analytics
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                        </div>
-                                    </NavigationMenuContent>
-                                </NavigationMenuItem>
+                                <SolutionsMenu isActive={isActive('/solutions')} />
 
                                 {/* Pricing Direct Link */}
                                 <NavigationMenuItem>
@@ -388,7 +213,7 @@ export default function MarketingNavbar() {
                                 <Menu className="w-5 h-5" />
                             </button>
                         </SheetTrigger>
-                        <SheetContent side="right" className="w-[300px] sm:w-[350px] p-6 flex flex-col justify-between">
+                        <SheetContent side="right" className="w-[300px] sm:w-[350px] p-6 flex flex-col justify-between overflow-y-auto">
                             <div className="space-y-6">
                                 <SheetHeader className="text-left">
                                     <SheetTitle>
@@ -400,18 +225,7 @@ export default function MarketingNavbar() {
                                     <div className="text-[11px] font-semibold uppercase tracking-wider text-stone-400 px-2 py-1">
                                         Navigation
                                     </div>
-                                    <Link
-                                        href="/product"
-                                        onClick={() => setMobileOpen(false)}
-                                        className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                            isActive('/product')
-                                                ? 'bg-stone-100 text-[#EC3013] font-semibold'
-                                                : 'text-stone-700 hover:bg-stone-50'
-                                        }`}
-                                    >
-                                        <span>Product Overview</span>
-                                        <ArrowRight className="w-4 h-4 text-stone-400" />
-                                    </Link>
+                                    <MobileGroups onNavigate={() => setMobileOpen(false)} />
                                     <Link
                                         href="/features"
                                         onClick={() => setMobileOpen(false)}
@@ -422,18 +236,6 @@ export default function MarketingNavbar() {
                                         }`}
                                     >
                                         <span>Features & Modules</span>
-                                        <ArrowRight className="w-4 h-4 text-stone-400" />
-                                    </Link>
-                                    <Link
-                                        href="/solutions"
-                                        onClick={() => setMobileOpen(false)}
-                                        className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                            isActive('/solutions')
-                                                ? 'bg-stone-100 text-[#EC3013] font-semibold'
-                                                : 'text-stone-700 hover:bg-stone-50'
-                                        }`}
-                                    >
-                                        <span>Solutions</span>
                                         <ArrowRight className="w-4 h-4 text-stone-400" />
                                     </Link>
                                     <Link

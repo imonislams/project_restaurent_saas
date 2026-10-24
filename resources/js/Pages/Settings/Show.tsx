@@ -1,3 +1,4 @@
+import BillingFields from '@/Components/Settings/BillingFields';
 import BranchFields from '@/Components/Settings/BranchFields';
 import CompanyFields from '@/Components/Settings/CompanyFields';
 import HoursFields from '@/Components/Settings/HoursFields';
@@ -14,7 +15,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useEffect } from 'react';
 
-const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'pos', 'orders', 'notifications', 'qr', 'payments'] as const;
+const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'billing', 'pos', 'orders', 'notifications', 'qr', 'payments'] as const;
 
 export default function SettingsShow({
     group,
@@ -52,6 +53,8 @@ export default function SettingsShow({
                 return <TaxFields data={data} setData={setData} errors={errors} options={options} />;
             case 'receipt':
                 return <ReceiptFields data={data} setData={setData} errors={errors} options={options} />;
+            case 'billing':
+                return <BillingFields data={data} setData={setData} errors={errors} options={options} />;
             case 'pos':
                 return <PosFields data={data} setData={setData} errors={errors} options={options} />;
             case 'orders':

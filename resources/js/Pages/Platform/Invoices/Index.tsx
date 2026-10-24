@@ -46,7 +46,7 @@ export default function InvoicesIndex({
     options,
 }: {
     invoices: Paginated<InvoiceRow>;
-    summary: { outstanding: number; paid_this_month: number };
+    summary: { currency: string; outstanding: number; paid_this_month: number }[];
     filters: { search: string; status: string };
     options: { statuses: Option[] };
 }) {
@@ -78,9 +78,26 @@ export default function InvoicesIndex({
 
     return (
         <PlatformLayout title="Invoices" description="Subscription invoices issued to tenants, with outstanding and collected totals.">
-            <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <KpiCard label="Outstanding" value={formatMoney(summary.outstanding)} tone={summary.outstanding > 0 ? 'warning' : 'neutral'} hint="Issued, open, overdue and partial" />
-                <KpiCard label="Collected this month" value={formatMoney(summary.paid_this_month)} tone="success" hint="Paid invoice total" />
+            <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {summary.length === 0 && <KpiCard label="Outstanding" value={formatMoney(0)} hint="No invoices yet" />}
+                {summary.map((row) => (
+                    <KpiCard
+                        key={row.currency}
+                        label={`Outstanding · ${row.currency}`}
+                        value={formatMoney(row.outstanding, row.currency)}
+                        tone={row.outstanding > 0 ? 'warning' : 'neutral'}
+                        hint="Issued, open, overdue, partial"
+                    />
+                ))}
+                {summary.map((row) => (
+                    <KpiCard
+                        key={`paid-${row.currency}`}
+                        label={`Collected this month · ${row.currency}`}
+                        value={formatMoney(row.paid_this_month, row.currency)}
+                        tone="success"
+                        hint="Paid invoice total"
+                    />
+                ))}
             </div>
 
             <FilterBar>

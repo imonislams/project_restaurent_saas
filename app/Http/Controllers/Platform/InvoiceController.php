@@ -12,6 +12,8 @@ use App\Domain\Billing\Models\PlatformRefund;
 use App\Domain\Billing\PlatformPaymentService;
 use App\Domain\PaymentGateways\PlatformGatewayManager;
 use App\Domain\Subscriptions\Enums\InvoiceStatus;
+use App\Domain\Subscriptions\Enums\SubscriptionStatus;
+use App\Domain\Subscriptions\Models\Subscription;
 use App\Domain\Subscriptions\Models\SubscriptionInvoice;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -35,9 +37,6 @@ class InvoiceController extends Controller
             'status' => $request->string('status')->toString(),
         ];
 
-        $outstanding = (float) SubscriptionInvoice::withoutGlobalScopes()
-            ->whereIn('status', InvoiceStatus::outstandingValues())->sum('amount');
-
         return Inertia::render('Platform/Invoices/Index', [
             'invoices' => SubscriptionInvoice::withoutGlobalScopes()
                 ->with(['tenant:id,name'])
@@ -59,17 +58,35 @@ class InvoiceController extends Controller
                     'due_date' => $invoice->due_date?->toIso8601String(),
                     'paid_at' => $invoice->paid_at?->toIso8601String(),
                 ]),
-            'summary' => [
-                'outstanding' => round($outstanding, 2),
-                'paid_this_month' => round((float) SubscriptionInvoice::withoutGlobalScopes()
-                    ->where('status', InvoiceStatus::Paid->value)
-                    ->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('amount'), 2),
-            ],
+            'summary' => $this->currencySummary(),
             'filters' => $filters,
             'options' => [
                 'statuses' => collect(InvoiceStatus::cases())->map(fn (InvoiceStatus $s) => ['value' => $s->value, 'label' => $s->label()])->all(),
             ],
         ]);
+    }
+
+    /**
+     * Outstanding and collected totals per currency. Currencies are never summed
+     * together — each is reported separately.
+     *
+     * @return list<array{currency: string, outstanding: float, paid_this_month: float}>
+     */
+    protected function currencySummary(): array
+    {
+        $currencies = SubscriptionInvoice::withoutGlobalScopes()
+            ->select('currency')->distinct()->orderBy('currency')->pluck('currency');
+
+        return $currencies->map(function (string $currency) {
+            $base = fn () => SubscriptionInvoice::withoutGlobalScopes()->where('currency', $currency);
+
+            return [
+                'currency' => $currency,
+                'outstanding' => round((float) $base()->whereIn('status', InvoiceStatus::outstandingValues())->sum('amount'), 2),
+                'paid_this_month' => round((float) $base()->where('status', InvoiceStatus::Paid->value)
+                    ->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('amount'), 2),
+            ];
+        })->values()->all();
     }
 
     public function show(SubscriptionInvoice $invoice): Response
@@ -131,21 +148,75 @@ class InvoiceController extends Controller
 
     public function overview(): Response
     {
-        $invoices = SubscriptionInvoice::withoutGlobalScopes();
+        $currencies = SubscriptionInvoice::withoutGlobalScopes()
+            ->select('currency')->distinct()->orderBy('currency')->pluck('currency');
+
+        if ($currencies->isEmpty()) {
+            $currencies = collect([(string) config('platform.reporting_currency', 'USD')]);
+        }
+
+        $byCurrency = $currencies->map(function (string $currency) {
+            $inv = fn () => SubscriptionInvoice::withoutGlobalScopes()->where('currency', $currency);
+            $pay = fn () => PlatformPayment::query()->where('currency', $currency);
+
+            return [
+                'currency' => $currency,
+                'outstanding' => round((float) $inv()->whereIn('status', InvoiceStatus::outstandingValues())->sum('amount'), 2),
+                'collected_month' => round((float) $inv()->where('status', InvoiceStatus::Paid->value)
+                    ->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('amount'), 2),
+                'collected_total' => round((float) $inv()->where('status', InvoiceStatus::Paid->value)->sum('amount'), 2),
+                'refunds_total' => round((float) PlatformRefund::query()->where('currency', $currency)->sum('amount'), 2),
+                'credit_notes_total' => round((float) CreditNote::query()->where('currency', $currency)->sum('amount'), 2),
+                'adjustments_total' => round((float) BillingAdjustment::query()->where('currency', $currency)->sum('amount'), 2),
+                'payments_succeeded' => $pay()->where('status', PlatformPaymentStatus::Succeeded->value)->count(),
+                'payments_failed' => $pay()->where('status', PlatformPaymentStatus::Failed->value)->count(),
+                'payments_pending' => $pay()->whereIn('status', [PlatformPaymentStatus::Pending->value, PlatformPaymentStatus::Processing->value])->count(),
+            ];
+        })->values()->all();
+
+        $byGateway = PlatformPayment::query()
+            ->where('status', PlatformPaymentStatus::Succeeded->value)
+            ->get(['gateway', 'currency', 'amount'])
+            ->groupBy(fn (PlatformPayment $payment) => $payment->gateway.'|'.$payment->currency)
+            ->map(function ($group) {
+                $first = $group->first();
+
+                return [
+                    'gateway' => ucfirst((string) $first->gateway),
+                    'currency' => $first->currency,
+                    'collected' => round((float) $group->sum('amount'), 2),
+                    'payments' => $group->count(),
+                ];
+            })
+            ->sortByDesc('collected')
+            ->values()
+            ->all();
 
         return Inertia::render('Platform/Billing/Overview', [
-            'summary' => [
-                'outstanding' => round((float) (clone $invoices)->whereIn('status', InvoiceStatus::outstandingValues())->sum('amount'), 2),
-                'collected_month' => round((float) SubscriptionInvoice::withoutGlobalScopes()->where('status', InvoiceStatus::Paid->value)->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('amount'), 2),
-                'collected_total' => round((float) SubscriptionInvoice::withoutGlobalScopes()->where('status', InvoiceStatus::Paid->value)->sum('amount'), 2),
+            'by_currency' => $byCurrency,
+            'by_gateway' => $byGateway,
+            'counts' => [
+                'active' => Subscription::withoutGlobalScopes()->where('status', SubscriptionStatus::Active->value)->count(),
+                'trialing' => Subscription::withoutGlobalScopes()->where('status', SubscriptionStatus::Trialing->value)->count(),
+                'past_due' => Subscription::withoutGlobalScopes()->whereIn('status', [SubscriptionStatus::PastDue->value, SubscriptionStatus::GracePeriod->value])->count(),
+                'cancelled' => Subscription::withoutGlobalScopes()->whereIn('status', [SubscriptionStatus::Cancelled->value, SubscriptionStatus::Expired->value])->count(),
                 'invoices_total' => SubscriptionInvoice::withoutGlobalScopes()->count(),
-                'credit_notes_total' => round((float) CreditNote::query()->sum('amount'), 2),
-                'adjustments_total' => round((float) BillingAdjustment::query()->sum('amount'), 2),
-                'refunds_total' => round((float) PlatformRefund::query()->sum('amount'), 2),
                 'payments_total' => PlatformPayment::query()->count(),
-                'payments_failed' => PlatformPayment::query()->where('status', PlatformPaymentStatus::Failed->value)->count(),
-                'payments_pending' => PlatformPayment::query()->whereIn('status', [PlatformPaymentStatus::Pending->value, PlatformPaymentStatus::Processing->value])->count(),
             ],
+            'upcoming_renewals' => Subscription::withoutGlobalScopes()
+                ->with(['tenant:id,name', 'plan:id,name,currency'])
+                ->whereIn('status', [SubscriptionStatus::Active->value, SubscriptionStatus::Trialing->value, SubscriptionStatus::PastDue->value])
+                ->whereBetween('current_period_end', [now(), now()->addDays(30)])
+                ->orderBy('current_period_end')
+                ->limit(10)
+                ->get()
+                ->map(fn (Subscription $subscription) => [
+                    'tenant' => $subscription->tenant?->name,
+                    'plan' => $subscription->plan?->name,
+                    'currency' => $subscription->plan?->currency,
+                    'amount' => $subscription->plan ? $subscription->billing_cycle->priceFor($subscription->plan) : null,
+                    'renews_at' => $subscription->current_period_end?->toIso8601String(),
+                ])->all(),
             'recent_invoices' => SubscriptionInvoice::withoutGlobalScopes()->with('tenant:id,name')->latest('id')->limit(8)->get()
                 ->map(fn (SubscriptionInvoice $invoice) => [
                     'id' => $invoice->getKey(),

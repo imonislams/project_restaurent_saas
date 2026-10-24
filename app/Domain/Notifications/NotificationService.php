@@ -13,11 +13,18 @@ use App\Domain\Notifications\Notifications\OrderHandedOverNotification;
 use App\Domain\Notifications\Notifications\OrderReadyNotification;
 use App\Domain\Notifications\Notifications\OrderServedForBillingNotification;
 use App\Domain\Notifications\Notifications\QrOrderPlacedNotification;
+use App\Domain\Notifications\Notifications\RefundProcessedNotification;
 use App\Domain\Notifications\Notifications\SalesSummaryNotification;
 use App\Domain\Notifications\Notifications\ShiftVarianceNotification;
+use App\Domain\Notifications\Notifications\SubscriptionActivatedNotification;
+use App\Domain\Notifications\Notifications\SubscriptionCancelledNotification;
 use App\Domain\Notifications\Notifications\SubscriptionExpiringNotification;
+use App\Domain\Notifications\Notifications\SubscriptionPaymentFailedNotification;
+use App\Domain\Notifications\Notifications\SubscriptionPaymentSucceededNotification;
+use App\Domain\Notifications\Notifications\SubscriptionRenewalReminderNotification;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Subscriptions\Models\Subscription;
+use App\Domain\Subscriptions\Models\SubscriptionInvoice;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -237,6 +244,102 @@ class NotificationService
             $subscription->plan?->name,
             $subscription->daysRemaining(),
             $subscription->onTrial(),
+        ));
+
+        return $recipients->count();
+    }
+
+    /** Notify tenant billing users that a verified subscription payment landed. */
+    public function paymentSucceeded(?Tenant $tenant, ?SubscriptionInvoice $invoice, float $amount, string $currency, string $gateway): int
+    {
+        if (! $tenant) {
+            return 0;
+        }
+
+        $recipients = $this->recipients($tenant);
+        Notification::send($recipients, new SubscriptionPaymentSucceededNotification($amount, $currency, $gateway, $invoice?->number));
+
+        return $recipients->count();
+    }
+
+    /** Notify tenant billing users that a subscription payment failed. */
+    public function paymentFailed(?Tenant $tenant, ?SubscriptionInvoice $invoice, float $amount, string $currency): int
+    {
+        if (! $tenant) {
+            return 0;
+        }
+
+        $recipients = $this->recipients($tenant);
+        Notification::send($recipients, new SubscriptionPaymentFailedNotification($amount, $currency, $invoice?->number));
+
+        return $recipients->count();
+    }
+
+    public function subscriptionActivated(Subscription $subscription): int
+    {
+        $tenant = $subscription->tenant;
+
+        if (! $tenant) {
+            return 0;
+        }
+
+        $recipients = $this->recipients($tenant);
+        Notification::send($recipients, new SubscriptionActivatedNotification(
+            $subscription->plan?->name,
+            $subscription->current_period_end?->toFormattedDateString(),
+        ));
+
+        return $recipients->count();
+    }
+
+    public function subscriptionCancelled(Subscription $subscription): int
+    {
+        $tenant = $subscription->tenant;
+
+        if (! $tenant) {
+            return 0;
+        }
+
+        $recipients = $this->recipients($tenant);
+        Notification::send($recipients, new SubscriptionCancelledNotification(
+            $subscription->plan?->name,
+            $subscription->current_period_end?->toFormattedDateString(),
+        ));
+
+        return $recipients->count();
+    }
+
+    public function refundProcessed(?Tenant $tenant, float $amount, string $currency): int
+    {
+        if (! $tenant) {
+            return 0;
+        }
+
+        $recipients = $this->recipients($tenant);
+        Notification::send($recipients, new RefundProcessedNotification($amount, $currency));
+
+        return $recipients->count();
+    }
+
+    /** Remind a tenant that a manual-renewal subscription needs paying. */
+    public function renewalReminder(Subscription $subscription): int
+    {
+        $tenant = $subscription->tenant;
+
+        if (! $tenant) {
+            return 0;
+        }
+
+        $amount = $subscription->plan
+            ? $subscription->billing_cycle->priceFor($subscription->plan)
+            : null;
+
+        $recipients = $this->recipients($tenant);
+        Notification::send($recipients, new SubscriptionRenewalReminderNotification(
+            $subscription->plan?->name,
+            $subscription->current_period_end?->toFormattedDateString(),
+            $amount,
+            $subscription->plan?->currency,
         ));
 
         return $recipients->count();

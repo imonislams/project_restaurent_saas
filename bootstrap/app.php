@@ -60,6 +60,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Subscription lifecycle and billing.
         $schedule->command('subscriptions:process')->dailyAt('01:00');
         $schedule->command('billing:warn-expiring')->dailyAt('09:00');
+        $schedule->command('billing:renew-subscriptions')->dailyAt('06:00');
         $schedule->command('usage:record')->dailyAt('02:00');
 
         // Operational alerts.

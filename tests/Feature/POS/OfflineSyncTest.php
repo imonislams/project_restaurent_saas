@@ -146,11 +146,10 @@ class OfflineSyncTest extends TestCase
 
         config(['pos.offline.max_hours' => 8]);
 
-        $this->actingAs($this->user)
-            ->getJson('/pos/offline-bundle')
-            ->assertOk()
-            ->assertJsonPath('data.offlineMaxHours', 8)
-            ->assertJsonPath('data.discountApprovalPercent', 15.0);
+        $bundle = $this->actingAs($this->user)->getJson('/pos/offline-bundle')->assertOk()->json('data');
+
+        $this->assertSame(8, $bundle['offlineMaxHours']);
+        $this->assertEqualsWithDelta(15.0, $bundle['discountApprovalPercent'], 0.001);
     }
 
     public function test_the_bundle_reports_no_approval_threshold_when_unset(): void

@@ -38,7 +38,7 @@ class ManualGateway implements PlatformGateway
         ];
     }
 
-    public function verifyWebhook(PaymentGateway $config, array $payload): bool
+    public function verifyWebhook(PaymentGateway $config, array $payload, ?string $rawBody = null, array $headers = []): bool
     {
         return true;
     }
@@ -46,5 +46,35 @@ class ManualGateway implements PlatformGateway
     public function refund(PaymentGateway $config, string $providerRef, float $amount, string $reason): array
     {
         return ['status' => 'pending', 'reference' => null, 'raw' => ['note' => 'Manual refund recorded for processing.']];
+    }
+
+    public function notificationReference(array $payload): ?string
+    {
+        return isset($payload['reference']) ? (string) $payload['reference'] : null;
+    }
+
+    public function notificationEventId(array $payload): ?string
+    {
+        return $this->notificationReference($payload);
+    }
+
+    public function notificationEventType(array $payload): ?string
+    {
+        return isset($payload['status']) ? (string) $payload['status'] : null;
+    }
+
+    public function verificationId(array $payload): ?string
+    {
+        return null;
+    }
+
+    public function isSubscriptionEvent(array $payload): bool
+    {
+        return false;
+    }
+
+    public function testConnection(PaymentGateway $config): array
+    {
+        return ['ok' => true, 'error' => null];
     }
 }

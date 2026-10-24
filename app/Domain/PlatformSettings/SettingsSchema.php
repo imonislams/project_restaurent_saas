@@ -80,6 +80,8 @@ class SettingsSchema
                     self::f('default_gateway', 'payments.default_gateway', 'Default gateway', 'select', 'manual', null, [
                         ['value' => 'manual', 'label' => 'Manual'],
                         ['value' => 'sslcommerz', 'label' => 'SSLCommerz'],
+                        ['value' => 'bkash', 'label' => 'bKash'],
+                        ['value' => 'paddle', 'label' => 'Paddle'],
                     ]),
                     self::f('environment_default', 'payments.environment_default', 'Default environment', 'select', 'sandbox', null, [
                         ['value' => 'sandbox', 'label' => 'Sandbox'],

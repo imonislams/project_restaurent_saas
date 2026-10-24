@@ -2,31 +2,56 @@
 
 namespace App\Domain\PaymentGateways;
 
+use App\Domain\Billing\GatewayEligibilityService;
 use App\Domain\Billing\Models\PaymentGateway;
 use App\Domain\PaymentGateways\Contracts\PlatformGateway;
+use App\Domain\PaymentGateways\Gateways\BkashGateway;
 use App\Domain\PaymentGateways\Gateways\ManualGateway;
+use App\Domain\PaymentGateways\Gateways\PaddleGateway;
 use App\Domain\PaymentGateways\Gateways\SslCommerzGateway;
+use App\Domain\Subscriptions\Models\Plan;
+use App\Domain\Tenancy\Models\Tenant;
 use Illuminate\Support\Collection;
 
 /**
- * Resolves gateway drivers and their stored configuration. Multiple named
- * configurations are supported and several may be enabled at once. Providers are
- * looked up from the database — never hard-coded into billing logic.
+ * Resolves platform gateway drivers and their stored configuration. Multiple
+ * named configurations are supported and several may be enabled at once.
+ * Providers are looked up from the registry/database — never hard-coded into
+ * billing logic.
  */
 class PlatformGatewayManager
 {
-    public const PROVIDERS = ['manual', 'sslcommerz'];
+    public function __construct(protected GatewayProviderRegistry $registry) {}
 
     /** @return list<string> */
     public function providers(): array
     {
-        return self::PROVIDERS;
+        return $this->registry->providers();
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function schema(): array
+    {
+        return $this->registry->schema();
+    }
+
+    /** @return list<string> */
+    public function requiredCredentialKeys(string $provider): array
+    {
+        return $this->registry->requiredCredentialKeys($provider);
+    }
+
+    public function supportsRecurring(string $provider): bool
+    {
+        return $this->registry->supportsRecurring($provider);
     }
 
     public function driver(string $provider): PlatformGateway
     {
         return match ($provider) {
             'sslcommerz' => new SslCommerzGateway(),
+            'bkash' => new BkashGateway(),
+            'paddle' => new PaddleGateway(),
             default => new ManualGateway(),
         };
     }
@@ -52,6 +77,17 @@ class PlatformGatewayManager
     public function forCurrency(string $currency): Collection
     {
         return $this->enabledConfigs()->filter(fn (PaymentGateway $config) => $config->supports($currency))->values();
+    }
+
+    /**
+     * Enabled configurations a tenant may use for a plan/currency, applying
+     * country, capability and plan rules.
+     *
+     * @return Collection<int, PaymentGateway>
+     */
+    public function eligibleFor(Tenant $tenant, ?Plan $plan, string $currency): Collection
+    {
+        return app(GatewayEligibilityService::class)->eligibleFor($tenant, $plan, $currency);
     }
 
     /** The preferred enabled configuration for a currency (default first). */

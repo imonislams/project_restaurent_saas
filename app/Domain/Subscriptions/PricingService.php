@@ -40,7 +40,17 @@ class PricingService
     public function subscriptionPrice(Subscription $subscription): array
     {
         $plan = $subscription->plan;
-        $currency = strtoupper((string) ($subscription->tenant?->getSetting('region.currency') ?? $plan?->currency ?? 'USD'));
+
+        // The tenant's billing currency (set in the billing profile), falling
+        // back to the region currency captured at onboarding, then the plan's
+        // own currency. This is the single source of truth for what a tenant is
+        // billed in — the checkout uses exactly this currency.
+        $currency = strtoupper((string) (
+            $subscription->tenant?->getSetting('billing.currency')
+            ?? $subscription->tenant?->getSetting('region.currency')
+            ?? $plan?->currency
+            ?? 'USD'
+        ));
 
         if (! $plan) {
             return ['currency' => $currency, 'amount' => 0.0];

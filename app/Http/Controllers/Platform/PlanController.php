@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Platform;
 
+use App\Domain\Billing\Models\PaymentGateway;
+use App\Domain\PaymentGateways\GatewayProviderRegistry;
 use App\Domain\Subscriptions\Enums\PlanFeature;
 use App\Domain\Subscriptions\Enums\PlanVisibility;
 use App\Domain\Subscriptions\Models\Plan;
@@ -28,7 +30,7 @@ class PlanController extends Controller
 
         return Inertia::render('Platform/Plans', [
             'plans' => Plan::query()
-                ->with('prices')
+                ->with(['prices', 'gateways'])
                 ->withCount('subscriptions')
                 ->orderBy('sort_order')
                 ->get()
@@ -50,7 +52,7 @@ class PlanController extends Controller
 
     public function edit(Plan $plan): Response
     {
-        $plan->load('prices')->loadCount('subscriptions');
+        $plan->load(['prices', 'gateways'])->loadCount('subscriptions');
 
         return Inertia::render('Platform/Plans/Form', $this->formProps($this->row($plan)));
     }
@@ -109,6 +111,17 @@ class PlanController extends Controller
                 ['key' => 'users', 'label' => 'Users', 'hint' => 'Staff accounts allowed'],
                 ['key' => 'orders_this_month', 'label' => 'Orders / month', 'hint' => 'Sales allowed per month'],
             ],
+            'gateways' => PaymentGateway::query()
+                ->orderBy('provider')
+                ->orderBy('sort_order')
+                ->get()
+                ->map(fn (PaymentGateway $gateway) => ['value' => (string) $gateway->getKey(), 'label' => $gateway->displayName()])
+                ->values()
+                ->all(),
+            'price_providers' => collect(app(GatewayProviderRegistry::class)->priceProviders())
+                ->map(fn (string $provider) => ['value' => $provider, 'label' => app(GatewayProviderRegistry::class)->label($provider)])
+                ->values()
+                ->all(),
         ];
     }
 
@@ -135,7 +148,9 @@ class PlanController extends Controller
                 'currency' => $price->currency,
                 'interval' => $price->interval,
                 'price' => (float) $price->price,
+                'provider_prices' => $price->provider_prices ?? [],
             ])->values()->all(),
+            'gateway_ids' => $plan->gateways->pluck('id')->map(fn ($id) => (string) $id)->values()->all(),
         ];
     }
 
@@ -165,6 +180,9 @@ class PlanController extends Controller
             'prices.*.currency' => ['required', 'string', 'size:3'],
             'prices.*.interval' => ['required', Rule::in(['monthly', 'yearly'])],
             'prices.*.price' => ['required', 'numeric', 'min:0'],
+            'prices.*.provider_prices' => ['nullable', 'array'],
+            'gateways' => ['nullable', 'array'],
+            'gateways.*' => ['integer', 'exists:payment_gateways,id'],
         ]);
 
         // Only apply create-time defaults on store; partial updates must not wipe

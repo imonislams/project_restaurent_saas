@@ -8,6 +8,11 @@ interface Option {
     label: string;
 }
 
+interface ProviderPrice {
+    product_id?: string;
+    price_id?: string;
+}
+
 interface ExtraPrice {
     currency: string;
     interval: string;
@@ -30,7 +35,8 @@ interface PlanRow {
     version: number;
     archived: boolean;
     subscriptions_count: number;
-    prices: { currency: string; interval: string; price: number }[];
+    prices: { currency: string; interval: string; price: number; provider_prices?: Record<string, ProviderPrice> }[];
+    gateway_ids: string[];
 }
 
 interface LimitKey {
@@ -39,12 +45,16 @@ interface LimitKey {
     hint: string;
 }
 
+const priceKey = (currency: string, interval: string) => `${currency}|${interval}`;
+
 export default function PlanForm({
     plan,
     currencies,
     default_currency,
     feature_options,
     limit_keys,
+    gateways,
+    price_providers,
 }: {
     plan: PlanRow | null;
     currencies: Option[];
@@ -52,6 +62,8 @@ export default function PlanForm({
     default_currency: string;
     feature_options: Option[];
     limit_keys: LimitKey[];
+    gateways: Option[];
+    price_providers: Option[];
 }) {
     const editing = plan !== null;
     const initialCurrency = plan?.currency ?? default_currency ?? currencies[0]?.value ?? 'USD';
@@ -60,6 +72,10 @@ export default function PlanForm({
         plan
             ? plan.prices.filter((p) => p.currency !== plan.currency).map((p) => ({ currency: p.currency, interval: p.interval, price: String(p.price) }))
             : [],
+    );
+
+    const [providerPrices, setProviderPrices] = useState<Record<string, Record<string, ProviderPrice>>>(
+        Object.fromEntries((plan?.prices ?? []).map((p) => [priceKey(p.currency, p.interval), p.provider_prices ?? {}])),
     );
 
     const form = useForm({
@@ -73,6 +89,7 @@ export default function PlanForm({
         trial_days: plan?.trial_days ?? 14,
         is_active: plan?.is_active ?? true,
         features: (plan?.features ?? []) as string[],
+        gateways: (plan?.gateway_ids ?? []) as string[],
         limits_branches: (plan?.limits?.branches ?? '') as number | '',
         limits_users: (plan?.limits?.users ?? '') as number | '',
         limits_orders: (plan?.limits?.orders_this_month ?? '') as number | '',
@@ -86,8 +103,43 @@ export default function PlanForm({
         form.setData('features', current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
     };
 
+    const toggleGateway = (value: string) => {
+        const current: string[] = form.data.gateways ?? [];
+        form.setData('gateways', current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
+    };
+
+    const setProviderPrice = (currency: string, interval: string, provider: string, field: 'product_id' | 'price_id', value: string) => {
+        const key = priceKey(currency, interval);
+        setProviderPrices((state) => ({
+            ...state,
+            [key]: { ...(state[key] ?? {}), [provider]: { ...(state[key]?.[provider] ?? {}), [field]: value } },
+        }));
+    };
+
+    const pricesFor = (currency: string, interval: string) => {
+        const row = providerPrices[priceKey(currency, interval)] ?? {};
+        const cleaned: Record<string, ProviderPrice> = {};
+        Object.entries(row).forEach(([provider, value]) => {
+            const productId = value.product_id?.trim();
+            const priceId = value.price_id?.trim();
+            if (productId || priceId) {
+                cleaned[provider] = { product_id: productId ?? '', price_id: priceId ?? '' };
+            }
+        });
+        return cleaned;
+    };
+
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+
+        const rows = [
+            { currency: form.data.currency, interval: 'monthly', price: Number(form.data.price_monthly) },
+            { currency: form.data.currency, interval: 'yearly', price: Number(form.data.price_yearly) },
+            ...extraPrices
+                .filter((p) => p.currency && p.price !== '')
+                .map((p) => ({ currency: p.currency, interval: p.interval, price: Number(p.price) })),
+        ];
+
         form.transform((data) => ({
             name: data.name,
             slug: data.slug,
@@ -99,16 +151,13 @@ export default function PlanForm({
             trial_days: data.trial_days,
             is_active: data.is_active,
             features: data.features,
+            gateways: data.gateways.map((id) => Number(id)),
             limits: {
                 branches: data.unlimited_branches ? null : data.limits_branches === '' ? null : Number(data.limits_branches),
                 users: data.unlimited_users ? null : data.limits_users === '' ? null : Number(data.limits_users),
                 orders_this_month: data.unlimited_orders ? null : data.limits_orders === '' ? null : Number(data.limits_orders),
             },
-            prices: [
-                { currency: data.currency, interval: 'monthly', price: data.price_monthly },
-                { currency: data.currency, interval: 'yearly', price: data.price_yearly },
-                ...extraPrices.filter((p) => p.currency && p.price !== '').map((p) => ({ currency: p.currency, interval: p.interval, price: Number(p.price) })),
-            ],
+            prices: rows.map((row) => ({ ...row, provider_prices: pricesFor(row.currency, row.interval) })),
         }));
 
         if (editing) {
@@ -123,6 +172,12 @@ export default function PlanForm({
         if (key === 'users') return { value: form.data.limits_users, unlimited: form.data.unlimited_users, setValue: 'limits_users', setUnlimited: 'unlimited_users' } as const;
         return { value: form.data.limits_orders, unlimited: form.data.unlimited_orders, setValue: 'limits_orders', setUnlimited: 'unlimited_orders' } as const;
     };
+
+    const priceRows = [
+        { currency: form.data.currency, interval: 'monthly', label: 'Monthly' },
+        { currency: form.data.currency, interval: 'yearly', label: 'Yearly' },
+        ...extraPrices.map((p) => ({ currency: p.currency, interval: p.interval, label: p.currency })),
+    ];
 
     return (
         <PlatformLayout title={editing ? `Edit ${plan.name}` : 'New plan'}>
@@ -184,6 +239,38 @@ export default function PlanForm({
                             </div>
                         </FormSection>
 
+                        {price_providers.length > 0 && (
+                            <FormSection title="Provider price mapping" description="Map each plan price to the provider's product/price IDs so hosted checkout can be created.">
+                                <div className="space-y-3">
+                                    {priceRows.map((row) => (
+                                        <div key={priceKey(row.currency, row.interval)} className="rounded-lg border border-border bg-card p-3.5 shadow-2xs">
+                                            <div className="mb-2 flex items-center gap-2">
+                                                <span className="text-xs font-semibold text-foreground">{row.currency}</span>
+                                                <Badge tone="neutral">{row.label}</Badge>
+                                            </div>
+                                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                                {price_providers.map((provider) => (
+                                                    <div key={provider.value} className="space-y-2 rounded-md border border-border/60 p-2.5">
+                                                        <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{provider.label}</span>
+                                                        <TextField
+                                                            label="Product ID"
+                                                            value={providerPrices[priceKey(row.currency, row.interval)]?.[provider.value]?.product_id ?? ''}
+                                                            onChange={(v) => setProviderPrice(row.currency, row.interval, provider.value, 'product_id', v)}
+                                                        />
+                                                        <TextField
+                                                            label="Price ID"
+                                                            value={providerPrices[priceKey(row.currency, row.interval)]?.[provider.value]?.price_id ?? ''}
+                                                            onChange={(v) => setProviderPrice(row.currency, row.interval, provider.value, 'price_id', v)}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </FormSection>
+                        )}
+
                         <FormSection title="Limits" description="Tick “Unlimited” to leave a limit uncapped.">
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                 {limit_keys.map((limit) => {
@@ -211,15 +298,15 @@ export default function PlanForm({
                             <FormSection title="Included modules" description="What this plan entitles.">
                                 <div className="grid grid-cols-1 gap-2">
                                     {feature_options.map((feature) => (
-                                        <label 
-                                            key={feature.value} 
+                                        <label
+                                            key={feature.value}
                                             className={'flex items-center gap-2.5 rounded-lg border p-3 text-sm cursor-pointer select-none transition ' + (form.data.features.includes(feature.value) ? 'border-primary/50 bg-primary/5 text-foreground font-medium' : 'border-border text-muted-foreground hover:border-border/80')}
                                         >
-                                            <input 
-                                                type="checkbox" 
-                                                className="h-4 w-4 rounded border-input text-primary shadow-2xs focus-visible:ring-1 focus-visible:ring-ring" 
-                                                checked={form.data.features.includes(feature.value)} 
-                                                onChange={() => toggleFeature(feature.value)} 
+                                            <input
+                                                type="checkbox"
+                                                className="h-4 w-4 rounded border-input text-primary shadow-2xs focus-visible:ring-1 focus-visible:ring-ring"
+                                                checked={form.data.features.includes(feature.value)}
+                                                onChange={() => toggleFeature(feature.value)}
                                             />
                                             <span>{feature.label}</span>
                                         </label>
@@ -227,6 +314,29 @@ export default function PlanForm({
                                 </div>
                             </FormSection>
                         </Card>
+
+                        {gateways.length > 0 && (
+                            <Card>
+                                <FormSection title="Payment gateways" description="Which gateways may collect for this plan. None selected = all gateways.">
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {gateways.map((gateway) => (
+                                            <label
+                                                key={gateway.value}
+                                                className={'flex items-center gap-2.5 rounded-lg border p-2.5 text-xs cursor-pointer select-none transition ' + (form.data.gateways.includes(gateway.value) ? 'border-primary/50 bg-primary/5 text-foreground font-medium' : 'border-border text-muted-foreground hover:border-border/80')}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    className="h-4 w-4 rounded border-input text-primary shadow-2xs focus-visible:ring-1 focus-visible:ring-ring"
+                                                    checked={form.data.gateways.includes(gateway.value)}
+                                                    onChange={() => toggleGateway(gateway.value)}
+                                                />
+                                                <span>{gateway.label}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </FormSection>
+                            </Card>
+                        )}
 
                         {editing && (
                             <Card className="p-4 text-sm text-muted-foreground">

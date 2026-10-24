@@ -33,9 +33,15 @@ class ReconciliationService
             ->having('total', '>', 1)
             ->count();
 
-        $outstanding = (float) SubscriptionInvoice::withoutGlobalScopes()
+        // Outstanding is reported per currency — currencies are never summed.
+        $outstandingByCurrency = SubscriptionInvoice::withoutGlobalScopes()
+            ->select('currency', DB::raw('sum(amount) as total'))
             ->whereIn('status', InvoiceStatus::outstandingValues())
-            ->sum('amount');
+            ->groupBy('currency')
+            ->get()
+            ->map(fn ($row) => ['currency' => $row->currency, 'amount' => round((float) $row->total, 2)])
+            ->values()
+            ->all();
 
         $paidNoPayment = SubscriptionInvoice::withoutGlobalScopes()
             ->where('status', InvoiceStatus::Paid->value)
@@ -46,7 +52,7 @@ class ReconciliationService
             'unresolved_payments' => $unresolved,
             'succeeded_without_paid_at' => $succeededWithoutPaidAt,
             'duplicate_references' => $duplicateRefs,
-            'outstanding_total' => round($outstanding, 2),
+            'outstanding_by_currency' => $outstandingByCurrency,
             'paid_invoices_without_payment' => $paidNoPayment,
         ];
     }

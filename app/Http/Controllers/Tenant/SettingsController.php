@@ -26,7 +26,7 @@ use Inertia\Response;
  */
 class SettingsController extends Controller
 {
-    public const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'pos', 'orders', 'notifications', 'qr'];
+    public const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'billing', 'pos', 'orders', 'notifications', 'qr'];
 
     public function __construct(
         protected OnboardingService $onboarding,
@@ -63,6 +63,7 @@ class SettingsController extends Controller
             'hours' => $this->onboarding->saveHours($tenant, $data['days']),
             'tax' => $this->onboarding->saveTax($tenant, $data),
             'receipt' => $this->onboarding->saveReceipt($tenant, $data),
+            'billing' => $this->onboarding->saveBilling($tenant, $data),
             'pos' => $this->onboarding->savePos($tenant, $data),
             'orders' => $this->onboarding->saveOrders($tenant, $data),
             'notifications' => $this->onboarding->saveNotifications($tenant, $data),
@@ -83,6 +84,7 @@ class SettingsController extends Controller
             'hours' => app(HoursRequest::class)->rules(),
             'tax' => app(TaxRequest::class)->rules(),
             'receipt' => app(ReceiptRequest::class)->rules(),
+            'billing' => app(\App\Http\Requests\Tenant\BillingSettingsRequest::class)->rules(),
             'pos' => app(PosSettingsRequest::class)->rules(),
             'orders' => app(OrderSettingsRequest::class)->rules(),
             'notifications' => app(NotificationSettingsRequest::class)->rules(),

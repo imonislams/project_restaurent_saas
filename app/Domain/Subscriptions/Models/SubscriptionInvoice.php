@@ -2,6 +2,7 @@
 
 namespace App\Domain\Subscriptions\Models;
 
+use App\Domain\Billing\Enums\PlatformPaymentStatus;
 use App\Domain\Billing\Models\BillingAdjustment;
 use App\Domain\Billing\Models\CreditNote;
 use App\Domain\Billing\Models\PlatformPayment;
@@ -31,6 +32,7 @@ class SubscriptionInvoice extends Model
         'issued_at',
         'paid_at',
         'provider_ref',
+        'billing_snapshot',
     ];
 
     protected function casts(): array
@@ -44,7 +46,17 @@ class SubscriptionInvoice extends Model
             'period_end' => 'datetime',
             'issued_at' => 'datetime',
             'paid_at' => 'datetime',
+            'billing_snapshot' => 'array',
         ];
+    }
+
+    /** The capturing payment (gateway + transaction reference), if any. */
+    public function latestSuccessfulPayment(): ?PlatformPayment
+    {
+        return $this->platformPayments()
+            ->where('status', PlatformPaymentStatus::Succeeded->value)
+            ->latest('id')
+            ->first();
     }
 
     public function subscription(): BelongsTo

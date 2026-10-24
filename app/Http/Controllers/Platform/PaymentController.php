@@ -8,6 +8,7 @@ use App\Domain\Billing\Models\PlatformRefund;
 use App\Domain\Billing\PlatformPaymentService;
 use App\Domain\Billing\ReconciliationService;
 use App\Domain\Billing\RefundService;
+use App\Domain\PaymentGateways\GatewayProviderRegistry;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ class PaymentController extends Controller
     public function __construct(
         protected RefundService $refunds,
         protected ReconciliationService $reconciliation,
+        protected GatewayProviderRegistry $registry,
     ) {}
 
     public function index(Request $request): Response
@@ -56,7 +58,7 @@ class PaymentController extends Controller
             'filters' => $filters,
             'options' => [
                 'statuses' => collect(PlatformPaymentStatus::cases())->map(fn (PlatformPaymentStatus $s) => ['value' => $s->value, 'label' => $s->label()])->all(),
-                'gateways' => collect(['manual', 'sslcommerz'])->map(fn ($g) => ['value' => $g, 'label' => ucfirst($g)])->all(),
+                'gateways' => collect($this->registry->providers())->map(fn (string $g) => ['value' => $g, 'label' => $this->registry->label($g)])->all(),
             ],
         ]);
     }

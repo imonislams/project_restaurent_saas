@@ -51,7 +51,7 @@ export default function PaymentsIndex({
         unresolved_payments: number;
         succeeded_without_paid_at: number;
         duplicate_references: number;
-        outstanding_total: number;
+        outstanding_by_currency: { currency: string; amount: number }[];
         paid_invoices_without_payment: number;
     };
     filters: { search: string; status: string; gateway: string };
@@ -98,9 +98,20 @@ export default function PaymentsIndex({
 
     return (
         <PlatformLayout title="Payments" description="Gateway and manual payments against platform invoices, with reconciliation signals.">
-            <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 <KpiCard label="Unresolved" value={summary.unresolved_payments} tone={summary.unresolved_payments > 0 ? 'warning' : 'neutral'} hint="Pending / processing" />
-                <KpiCard label="Outstanding invoices" value={formatMoney(summary.outstanding_total)} tone="warning" hint="Not yet collected" />
+                {summary.outstanding_by_currency.map((row) => (
+                    <KpiCard
+                        key={row.currency}
+                        label={`Outstanding · ${row.currency}`}
+                        value={formatMoney(row.amount, row.currency)}
+                        tone={row.amount > 0 ? 'warning' : 'neutral'}
+                        hint="Not yet collected"
+                    />
+                ))}
+                {summary.outstanding_by_currency.length === 0 && (
+                    <KpiCard label="Outstanding" value={formatMoney(0)} hint="No open invoices" />
+                )}
                 <KpiCard label="Duplicate references" value={summary.duplicate_references} tone={summary.duplicate_references > 0 ? 'danger' : 'neutral'} hint="Reconciliation check" />
                 <KpiCard label="Paid w/o payment" value={summary.paid_invoices_without_payment} tone={summary.paid_invoices_without_payment > 0 ? 'warning' : 'neutral'} hint="Invoices marked paid with no gateway payment" />
             </div>

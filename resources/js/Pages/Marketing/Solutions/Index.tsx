@@ -1,10 +1,10 @@
 import {
-    Button,
     MarketingHead,
     MarketingLayout,
-    SectionHeading,
     trackConversion,
 } from '@/Components/Marketing';
+import { SOLUTION_WORKFLOWS } from '@/Components/Marketing/Catalog/catalog';
+import { CtaBand, DemoButton, SectionTitle, breadcrumbSchema } from '@/Components/Marketing/Catalog/pageParts';
 import { Link } from '@inertiajs/react';
 
 interface SolutionCard {
@@ -73,82 +73,71 @@ const SOLUTIONS: SolutionCard[] = [
     },
 ];
 
-export default function SolutionsIndex() {
+export default function SolutionsIndex({ canonical }: { canonical: string }) {
+    const base = canonical.replace(/\/solutions$/, '');
     return (
         <MarketingLayout>
             <MarketingHead
-                title="Restaurant Solutions by Business Type"
-                description="Tailored restaurant management software for full-service dining, cafes, ghost kitchens, QSR, takeaway, and multi-unit chains."
+                title="Restaurant Solutions by Workflow and Business Type"
+                description="See how Touch Dine solves real restaurant problems: dine-in QR ordering, floor control, kitchen workflow, faster service, checkout and owner reporting."
+                canonical={canonical}
+                schema={{ '@context': 'https://schema.org', ...breadcrumbSchema([{ name: 'Home', url: `${base}/` }, { name: 'Solutions', url: canonical }]) }}
             />
 
-            <section className="pt-12 pb-20 sm:pt-20 sm:pb-28">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <SectionHeading
-                        badge="TAILORED INDUSTRY SOLUTIONS"
-                        title="Built for How Your Venue Actually Operates"
-                        description="A quick-service counter shouldn't have to navigate dining room tables, and a ghost kitchen doesn't need hostess seating. Explore workflows tailored specifically to your service model."
-                    />
+            <section className="relative w-full overflow-hidden bg-[#F3F2F2] px-4 pb-14 pt-12 sm:px-6 lg:px-8 lg:pb-20 lg:pt-16">
+                <div aria-hidden className="mk-grid pointer-events-none absolute inset-0" />
+                <div className="relative mx-auto max-w-6xl animate-fade-up">
+                    <span className="mk-eyebrow">Touch Dine solutions</span>
+                    <h1 className="mt-3 max-w-3xl text-4xl font-extrabold leading-[1.08] tracking-tight text-stone-900 sm:text-5xl">Start with the problem on your floor.</h1>
+                    <p className="mt-5 max-w-2xl text-lg leading-relaxed text-stone-600">Each solution follows one real restaurant workflow from start to finish and shows which Touch Dine modules handle each step.</p>
+                    <div className="mt-8"><DemoButton where="solutions_hero" /></div>
+                </div>
+            </section>
 
-                    {/* Solutions Grid */}
-                    <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <section className="w-full bg-white px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+                <div className="mx-auto max-w-6xl">
+                    <SectionTitle eyebrow="By workflow" title="Solutions for how service actually runs" />
+                    <div className="mt-8 grid items-stretch gap-5 md:grid-cols-2 lg:grid-cols-3">
+                        {SOLUTION_WORKFLOWS.map((sol) => (
+                            <Link
+                                key={sol.slug}
+                                href={`/solutions/${sol.slug}`}
+                                onClick={() => trackConversion('solution_viewed', { solution: sol.slug, location: 'solutions_index' })}
+                                className="group flex h-full flex-col rounded-2xl border border-stone-200 bg-white p-6 transition-colors hover:border-[#EC3013] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#EC3013]"
+                            >
+                                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-stone-100 group-hover:bg-[#EC3013]/10 group-hover:text-[#EC3013]"><sol.icon className="h-5 w-5" /></span>
+                                <h3 className="mt-4 text-[18px] font-extrabold text-stone-900">{sol.name}</h3>
+                                <p className="mt-1 flex-1 text-[15px] leading-relaxed text-stone-600">{sol.short}</p>
+                                <span className="mt-4 text-[14px] font-bold text-[#EC3013] group-hover:underline">See the workflow →</span>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <section className="w-full bg-[#F3F2F2] px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+                <div className="mx-auto max-w-7xl">
+                    <SectionTitle eyebrow="By business type" title="Built for How Your Venue Operates" />
+                    <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                         {SOLUTIONS.map((sol) => (
                             <Link
                                 key={sol.slug}
                                 href={`/solutions/${sol.slug}`}
-                                className="group flex flex-col justify-between rounded-2xl border border-stone-200 bg-white p-8 hover:border-[#EC3013] hover:shadow-md transition-all"
+                                className="group flex flex-col justify-between rounded-2xl border border-stone-200 bg-white p-8 transition-all hover:border-[#EC3013] hover:shadow-md"
                                 onClick={() => trackConversion('solution_viewed', { solution: sol.slug })}
                             >
                                 <div>
-                                    <div className="text-[11px] font-mono font-bold tracking-wider text-[#EC3013] mb-3">
-                                        {sol.badge}
-                                    </div>
-
-                                    <h3 className="font-display text-xl font-bold text-stone-900 group-hover:text-[#EC3013]">
-                                        {sol.title}
-                                    </h3>
-
-                                    <div className="mt-2 text-xs font-semibold text-stone-700">
-                                        {sol.headline}
-                                    </div>
-
-                                    <p className="mt-3 text-xs sm:text-sm text-stone-600 leading-relaxed">
-                                        {sol.description}
-                                    </p>
-
-                                    <div className="mt-6 pt-4 border-t border-stone-100 space-y-2 text-xs text-stone-600">
-                                        {sol.tailoredFeatures.map((f, i) => (
-                                            <div key={i} className="flex items-center gap-2">
-                                                <span className="h-1.5 w-1.5 rounded-full bg-[#EC3013]" />
-                                                <span>{f}</span>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    <div className="mb-3 text-[13px] font-bold uppercase tracking-wider text-[#EC3013]">{sol.badge}</div>
+                                    <h3 className="font-display text-xl font-bold text-stone-900 group-hover:text-[#EC3013]">{sol.title}</h3>
+                                    <p className="mt-3 text-sm leading-relaxed text-stone-600">{sol.description}</p>
                                 </div>
-
-                                <div className="mt-8 pt-4 border-t border-stone-100 flex items-center justify-between text-xs font-semibold text-[#EC3013] group-hover:underline">
-                                    <span>Explore {sol.title}</span>
-                                    <span>→</span>
-                                </div>
+                                <div className="mt-6 border-t border-stone-100 pt-4 text-sm font-semibold text-[#EC3013] group-hover:underline">Explore {sol.title} →</div>
                             </Link>
                         ))}
                     </div>
-
-                    {/* Bottom Trial Banner */}
-                    <div className="mt-20 rounded-3xl bg-stone-900 p-8 sm:p-12 text-white text-center">
-                        <h2 className="font-display text-2xl sm:text-3xl font-extrabold">
-                            Start Your 14-Day Free Trial
-                        </h2>
-                        <p className="mt-3 text-stone-300 text-xs sm:text-sm max-w-lg mx-auto">
-                            Configure your restaurant profile in under 5 minutes. No credit card required.
-                        </p>
-                        <div className="mt-6">
-                            <Button href="/register" variant="accent" size="lg">
-                                Create Free Workspace
-                            </Button>
-                        </div>
-                    </div>
                 </div>
             </section>
+            <CtaBand />
         </MarketingLayout>
     );
 }

@@ -14,6 +14,7 @@ use App\Domain\Subscriptions\Models\SubscriptionInvoice;
 use App\Domain\Tenancy\Enums\TenantStatus;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -174,6 +175,16 @@ class SubscriptionService
         return $subscription;
     }
 
+    /** Undo a scheduled cancellation (resume auto-renewal at period end). */
+    public function resume(Subscription $subscription, ?User $actor = null): Subscription
+    {
+        $subscription->forceFill(['cancel_at_period_end' => false])->save();
+
+        $this->audit->log('subscription.cancel_reverted', $subscription, [], $actor, $subscription->tenant_id);
+
+        return $subscription;
+    }
+
     /** Terminal state after the period ends for a scheduled cancellation. */
     public function expire(Subscription $subscription, ?User $actor = null): Subscription
     {
@@ -221,6 +232,55 @@ class SubscriptionService
         return $this->renew($subscription, $actor);
     }
 
+    /**
+     * Apply a provider-confirmed renewal: advance the period (using the
+     * provider's own period when supplied) and issue the renewal invoice. The
+     * capturing payment is recorded separately by the caller.
+     */
+    public function applyProviderRenewal(Subscription $subscription, ?Carbon $periodStart = null, ?Carbon $periodEnd = null, ?User $actor = null): SubscriptionInvoice
+    {
+        return DB::transaction(function () use ($subscription, $periodStart, $periodEnd, $actor) {
+            $subscription->forceFill([
+                'status' => SubscriptionStatus::Active,
+                'grace_ends_at' => null,
+                'suspended_at' => null,
+                'cancel_at_period_end' => false,
+                'current_period_start' => $periodStart ?? now(),
+                'current_period_end' => $periodEnd ?? now()->addMonths($subscription->billing_cycle->months()),
+            ])->save();
+
+            $this->setTenantStatus($subscription, TenantStatus::Active);
+
+            $invoice = $this->issueInvoice($subscription);
+
+            $this->audit->log('subscription.renewed', $subscription, [
+                'source' => 'provider',
+                'invoice' => $invoice->number,
+            ], $actor, $subscription->tenant_id);
+
+            return $invoice;
+        });
+    }
+
+    /**
+     * Issue a renewal invoice for a manual-renewal gateway (bKash / SSLCOMMERZ):
+     * the tenant pays it with a fresh checkout. Idempotent per open period.
+     */
+    public function issueRenewalInvoice(Subscription $subscription): ?SubscriptionInvoice
+    {
+        $existing = $subscription->invoices()
+            ->whereIn('status', [InvoiceStatus::Issued->value, InvoiceStatus::Open->value, InvoiceStatus::PartiallyPaid->value, InvoiceStatus::Overdue->value])
+            ->where('period_end', '>=', $subscription->current_period_end ?? now())
+            ->latest('id')
+            ->first();
+
+        if ($existing) {
+            return null;
+        }
+
+        return $this->issueInvoice($subscription);
+    }
+
     public function issueInvoice(Subscription $subscription): SubscriptionInvoice
     {
         $price = $this->pricing->subscriptionPrice($subscription);
@@ -261,6 +321,7 @@ class SubscriptionService
                 'period_end' => $subscription->current_period_end ?? now()->addMonth(),
                 'issued_at' => now(),
                 'due_date' => ($subscription->current_period_start ?? now())->copy()->addDays(14),
+                'billing_snapshot' => $this->billingSnapshot($subscription->tenant),
             ]);
 
             $invoice->items()->create([
@@ -317,6 +378,30 @@ class SubscriptionService
         $this->audit->log('subscription.coupon_removed', $subscription, [], $actor, $subscription->tenant_id);
 
         return $subscription;
+    }
+
+    /**
+     * Immutable snapshot of the tenant's billing details at issue time, so a
+     * historical invoice keeps the details it was billed to.
+     *
+     * @return array<string, mixed>
+     */
+    protected function billingSnapshot(?Tenant $tenant): array
+    {
+        if (! $tenant) {
+            return [];
+        }
+
+        return array_filter([
+            'name' => $tenant->getSetting('billing.name', $tenant->getSetting('company.legal_name', $tenant->name)),
+            'email' => $tenant->getSetting('billing.email', $tenant->getSetting('company.email', $tenant->business_email)),
+            'country' => $tenant->getSetting('billing.country', $tenant->getSetting('region.country')),
+            'address' => $tenant->getSetting('billing.address', $tenant->getSetting('company.address')),
+            'city' => $tenant->getSetting('billing.city'),
+            'postal_code' => $tenant->getSetting('billing.postal_code'),
+            'tax_id' => $tenant->getSetting('billing.tax_id', $tenant->getSetting('company.tax_id')),
+            'captured_at' => now()->toIso8601String(),
+        ], fn ($value) => $value !== null && $value !== '');
     }
 
     protected function setTenantStatus(Subscription $subscription, TenantStatus $status): void

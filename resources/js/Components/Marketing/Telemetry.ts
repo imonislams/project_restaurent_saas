@@ -17,6 +17,9 @@ export type ConversionEventName =
     | 'nav_cta_clicked'
     | 'faq_toggled'
     | 'solution_viewed'
+    | 'product_viewed'
+    | 'demo_requested'
+    | 'nav_menu_opened'
     | 'feature_viewed';
 
 export interface ConversionEventPayload {
@@ -24,6 +27,7 @@ export interface ConversionEventPayload {
     billing_cycle?: 'monthly' | 'yearly';
     feature?: string;
     solution?: string;
+    product?: string;
     location?: string;
     faq_question?: string;
     [key: string]: unknown;

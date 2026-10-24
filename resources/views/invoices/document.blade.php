@@ -37,8 +37,13 @@
             <td>
                 <strong>Billed to</strong><br>
                 {{ $tenant['name'] }}<br>
-                <span class="muted">{{ $tenant['email'] }}</span><br>
-                <span class="muted">{{ $tenant['address'] }}</span>
+                @if (! empty($tenant['email']))<span class="muted">{{ $tenant['email'] }}</span><br>@endif
+                @if (! empty($tenant['address']))<span class="muted">{{ $tenant['address'] }}</span><br>@endif
+                @if (! empty($tenant['city']) || ! empty($tenant['postal_code']))
+                    <span class="muted">{{ trim(($tenant['city'] ?? '').' '.($tenant['postal_code'] ?? '')) }}</span><br>
+                @endif
+                @if (! empty($tenant['country']))<span class="muted">{{ $tenant['country'] }}</span><br>@endif
+                @if (! empty($tenant['tax_id']))<span class="muted">Tax ID: {{ $tenant['tax_id'] }}</span>@endif
             </td>
             <td class="right">
                 <strong>Issued</strong> {{ optional($invoice->issued_at)->format('Y-m-d') }}<br>
@@ -81,6 +86,18 @@
             <tr><td class="muted">Paid</td><td class="right">{{ optional($invoice->paid_at)->format('Y-m-d') }}</td></tr>
         @endif
     </table>
+
+    @if (! empty($payment))
+        <table class="totals">
+            <tr><td class="muted">Payment method</td><td class="right">{{ $payment['gateway'] }}</td></tr>
+            @if (! empty($payment['reference']))
+                <tr><td class="muted">Transaction</td><td class="right">{{ $payment['reference'] }}</td></tr>
+            @endif
+            @if (! empty($payment['paid_at']))
+                <tr><td class="muted">Paid on</td><td class="right">{{ optional($payment['paid_at'])->format('Y-m-d') }}</td></tr>
+            @endif
+        </table>
+    @endif
 
     @if ($credit_notes->isNotEmpty())
         <h3 style="margin-top:24px; font-size:13px;">Credit notes</h3>

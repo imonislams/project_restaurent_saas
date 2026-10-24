@@ -238,6 +238,49 @@ HTML;
                     ]),
                 'variables' => ['tenant_name', 'plan_name', 'end_date', 'amount', 'platform_name'],
             ],
+            'payment_succeeded' => [
+                'name' => 'Payment received',
+                'subject' => 'Payment received for invoice {{ invoice_number }}',
+                'body' => $this->heading('Payment received')
+                    .$this->paragraph('Hello {{ tenant_name }},')
+                    .$this->paragraph('We have received and verified your payment. Your subscription is active.')
+                    .$this->panel([
+                        'Invoice' => '{{ invoice_number }}',
+                        'Amount' => '{{ amount }}',
+                        'Gateway' => '{{ gateway }}',
+                    ])
+                    .$this->button('View billing', '{{ billing_url }}'),
+                'variables' => ['tenant_name', 'invoice_number', 'amount', 'gateway', 'billing_url', 'platform_name'],
+            ],
+            'subscription_activated' => [
+                'name' => 'Subscription activated',
+                'subject' => 'Your {{ plan_name }} subscription is active',
+                'body' => $this->heading('Subscription active')
+                    .$this->paragraph('Hello {{ tenant_name }},')
+                    .$this->paragraph('Your <strong>{{ plan_name }}</strong> subscription is now active.')
+                    .$this->panel([
+                        'Plan' => '{{ plan_name }}',
+                        'Renews on' => '{{ end_date }}',
+                    ]),
+                'variables' => ['tenant_name', 'plan_name', 'end_date', 'platform_name'],
+            ],
+            'subscription_cancelled' => [
+                'name' => 'Subscription cancelled',
+                'subject' => 'Your subscription has been cancelled',
+                'body' => $this->heading('Subscription cancelled')
+                    .$this->paragraph('Hello {{ tenant_name }},')
+                    .$this->paragraph('Your <strong>{{ plan_name }}</strong> subscription has been cancelled. Access continues until {{ end_date }}.')
+                    .$this->paragraph('You can reactivate at any time from your billing settings.'),
+                'variables' => ['tenant_name', 'plan_name', 'end_date', 'platform_name'],
+            ],
+            'refund_processed' => [
+                'name' => 'Refund processed',
+                'subject' => 'A refund of {{ amount }} has been processed',
+                'body' => $this->heading('Refund processed')
+                    .$this->paragraph('Hello {{ tenant_name }},')
+                    .$this->paragraph('A refund of <strong>{{ amount }}</strong> has been recorded on your account.'),
+                'variables' => ['tenant_name', 'amount', 'platform_name'],
+            ],
             'staff_invitation' => [
                 'name' => 'Staff invitation',
                 'subject' => 'You have been invited to {{ tenant_name }}',

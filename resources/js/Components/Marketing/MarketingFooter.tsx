@@ -75,23 +75,33 @@ export default function MarketingFooter() {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/features/kitchen-display" className="hover:text-stone-900 transition-colors">
+                                    <Link href="/products/kitchen-display" className="hover:text-stone-900 transition-colors">
                                         Kitchen Display (KDS)
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/features/inventory-management" className="hover:text-stone-900 transition-colors">
-                                        Inventory Ledger
+                                    <Link href="/products/inventory" className="hover:text-stone-900 transition-colors">
+                                        Inventory
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/features/table-management" className="hover:text-stone-900 transition-colors">
-                                        Floor &amp; Tables
+                                    <Link href="/products/table-management" className="hover:text-stone-900 transition-colors">
+                                        Table Management
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/features/multi-branch-management" className="hover:text-stone-900 transition-colors">
-                                        Multi-Branch Hub
+                                    <Link href="/products/branch-management" className="hover:text-stone-900 transition-colors">
+                                        Branch Management
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/products/qr-ordering" className="hover:text-stone-900 transition-colors">
+                                        QR Code Ordering
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/products" className="hover:text-stone-900 transition-colors">
+                                        All Products
                                     </Link>
                                 </li>
                                 <li>
@@ -107,6 +117,16 @@ export default function MarketingFooter() {
                                 Solutions
                             </span>
                             <ul className="flex flex-col gap-2.5 text-sm text-stone-600">
+                                <li>
+                                    <Link href="/solutions/dine-in-qr-ordering" className="hover:text-stone-900 transition-colors">
+                                        Dine-In QR Ordering
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/solutions/kitchen-workflow" className="hover:text-stone-900 transition-colors">
+                                        Kitchen Workflow
+                                    </Link>
+                                </li>
                                 <li>
                                     <Link href="/solutions/restaurants" className="hover:text-stone-900 transition-colors">
                                         Full-Service Dining
@@ -161,7 +181,7 @@ export default function MarketingFooter() {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/product" className="hover:text-stone-900 transition-colors">
+                                    <Link href="/products" className="hover:text-stone-900 transition-colors">
                                         Product Architecture
                                     </Link>
                                 </li>

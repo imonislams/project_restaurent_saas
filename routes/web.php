@@ -21,6 +21,7 @@ use App\Http\Controllers\Orders\OrderController;
 use App\Http\Controllers\Orders\ReceiptController;
 use App\Http\Controllers\Payments\PaymentWebhookController;
 use App\Http\Controllers\Payments\PlatformCallbackController;
+use App\Http\Controllers\Payments\PlatformWebhookController;
 use App\Http\Controllers\Platform\AdminController as PlatformAdminController;
 use App\Http\Controllers\Platform\AnalyticsController as PlatformAnalyticsController;
 use App\Http\Controllers\Platform\AnnouncementController as PlatformAnnouncementController;
@@ -88,6 +89,8 @@ use Inertia\Inertia;
 // Public marketing & product routes
 Route::get('/', [MarketingController::class, 'index'])->name('home');
 Route::get('/product', [MarketingController::class, 'product'])->name('product');
+Route::get('/products', [MarketingController::class, 'products'])->name('products.index');
+Route::get('/products/{product}', [MarketingController::class, 'productPage'])->name('products.show');
 Route::get('/features', [MarketingController::class, 'features'])->name('features.index');
 Route::get('/features/{feature}', [MarketingController::class, 'feature'])->name('features.show');
 Route::get('/solutions', [MarketingController::class, 'solutions'])->name('solutions.index');
@@ -126,6 +129,9 @@ Route::post('/webhooks/payments/{provider}', PaymentWebhookController::class)->n
 Route::get('/payments/result', [PlatformCallbackController::class, 'result'])->name('payments.result');
 Route::match(['get', 'post'], '/payments/callback/{provider}/{result}', [PlatformCallbackController::class, 'callback'])->name('payments.callback');
 Route::post('/payments/ipn/{provider}', [PlatformCallbackController::class, 'ipn'])->name('payments.ipn');
+
+// Provider-agnostic platform billing webhooks (e.g. Paddle, bKash).
+Route::post('/webhooks/platform-payments/{provider}', PlatformWebhookController::class)->name('webhooks.platform-payments');
 
 // Language switch (available to guests so auth screens can be localized too).
 Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
@@ -496,6 +502,12 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->group(function 
             ->middleware('permission:subscription.manage')->name('plan');
         Route::post('/invoices/{invoice}/pay', [TenantSubscriptionController::class, 'payInvoice'])
             ->middleware('permission:subscription.manage')->name('pay');
+        Route::get('/invoices/{invoice}/document', [TenantSubscriptionController::class, 'downloadInvoice'])
+            ->middleware('permission:subscription.view')->name('invoices.document');
+        Route::post('/cancel', [TenantSubscriptionController::class, 'cancel'])
+            ->middleware('permission:subscription.manage')->name('cancel');
+        Route::post('/resume', [TenantSubscriptionController::class, 'resume'])
+            ->middleware('permission:subscription.manage')->name('resume');
     });
 });
 
