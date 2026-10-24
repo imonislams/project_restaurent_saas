@@ -23,6 +23,7 @@
 - Keyboard navigation, accessible contrast, visible focus states.
 - Proper loading, empty, error and success states on every major screen.
 
+
 ### 1.2 Sidebar navigation (conceptual)
 
 ```
