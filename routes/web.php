@@ -40,6 +40,7 @@ use App\Http\Controllers\Platform\ImpersonationController as PlatformImpersonati
 use App\Http\Controllers\Platform\InvoiceController as PlatformInvoiceController;
 use App\Http\Controllers\Platform\NotificationController as PlatformNotificationController;
 use App\Http\Controllers\Platform\OpsController as PlatformOpsController;
+use App\Http\Controllers\Platform\OfflineConflictController as PlatformOfflineConflictController;
 use App\Http\Controllers\Platform\PaymentController as PlatformPaymentController;
 use App\Http\Controllers\Platform\PlanController as PlatformPlanController;
 use App\Http\Controllers\Platform\RestoreController as PlatformRestoreController;
@@ -52,6 +53,7 @@ use App\Http\Controllers\Platform\SubscriptionController as PlatformSubscription
 use App\Http\Controllers\Platform\SupportTicketController as PlatformSupportTicketController;
 use App\Http\Controllers\Platform\TenantController as PlatformTenantController;
 use App\Http\Controllers\Platform\UsageController as PlatformUsageController;
+use App\Http\Controllers\POS\OfflineSyncController;
 use App\Http\Controllers\POS\PosController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
@@ -285,6 +287,12 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->group(function 
         ->middleware(['permission:pos.use', 'permission:orders.update'])->name('pos.orders.store');
     Route::post('/pos/orders/open', [PosController::class, 'open'])
         ->middleware(['permission:pos.use', 'permission:orders.create'])->name('pos.orders.open');
+
+    // Offline POS: mirror the catalogue, then replay captured operations.
+    Route::get('/pos/offline-bundle', [OfflineSyncController::class, 'bundle'])
+        ->middleware('permission:pos.use')->name('pos.offline.bundle');
+    Route::post('/pos/sync', [OfflineSyncController::class, 'sync'])
+        ->middleware('permission:pos.use')->name('pos.offline.sync');
 
     Route::middleware('permission:pos.use')->group(function () {
         Route::post('/shifts/open', [ShiftController::class, 'open'])->name('shifts.open');
@@ -637,6 +645,10 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
         Route::post('/ops/failed-jobs/retry-all', [PlatformOpsController::class, 'retryAllFailed'])->name('ops.failed-jobs.retry-all');
         Route::post('/ops/failed-jobs/{id}/retry', [PlatformOpsController::class, 'retryFailedJob'])->name('ops.failed-jobs.retry');
         Route::delete('/ops/failed-jobs/{id}', [PlatformOpsController::class, 'deleteFailedJob'])->name('ops.failed-jobs.destroy');
+
+        // Offline sync: operations the server resolved differently from the device.
+        Route::get('/offline-conflicts', [PlatformOfflineConflictController::class, 'index'])->name('offline-conflicts.index');
+        Route::post('/offline-conflicts/{conflict}/resolve', [PlatformOfflineConflictController::class, 'resolve'])->name('offline-conflicts.resolve');
     });
     Route::get('/ops/logs', [PlatformOpsController::class, 'logs'])
         ->middleware('platform.permission:platform.logs.view')->name('ops.logs');

@@ -4,12 +4,9 @@ namespace App\Http\Controllers\POS;
 
 use App\Domain\Branches\Models\Branch;
 use App\Domain\CashManagement\Models\Shift;
-use App\Domain\Customers\Models\Customer;
-use App\Domain\Delivery\Models\DeliveryZone;
-use App\Domain\Menu\Models\Category;
-use App\Domain\Menu\Models\Product;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Models\Order;
+use App\Domain\POS\OfflineBundle;
 use App\Domain\POS\SaleService;
 use App\Http\Controllers\Concerns\ResolvesActiveBranch;
 use App\Http\Controllers\Controller;
@@ -51,73 +48,9 @@ class PosController extends Controller
                 'opened_at' => $shift->opened_at?->toIso8601String(),
                 'opened_by' => $shift->openedBy?->name,
             ] : null,
-            'products' => Product::query()
-                ->where('is_active', true)
-                ->with(['category:id,name', 'variants', 'modifierGroups.options'])
-                ->orderBy('sort_order')->orderBy('name')->get()
-                ->map(fn (Product $product) => [
-                    'id' => $product->getKey(),
-                    'name' => $product->name,
-                    'sku' => $product->sku,
-                    'barcode' => $product->barcode,
-                    'category_id' => $product->category_id,
-                    'price_dine_in' => (float) $product->price_dine_in,
-                    'price_takeaway' => (float) $product->price_takeaway,
-                    'price_delivery' => (float) $product->price_delivery,
-                    'is_available' => $product->is_available,
-                    'variants' => $product->variants->map(fn ($v) => [
-                        'id' => $v->getKey(),
-                        'name' => $v->name,
-                        'price' => $v->price !== null ? (float) $v->price : null,
-                    ]),
-                    'modifier_groups' => $product->modifierGroups
-                        ->where('is_active', true)
-                        ->map(fn ($group) => [
-                            'id' => $group->getKey(),
-                            'name' => $group->name,
-                            'selection_type' => $group->selection_type->value,
-                            'min_select' => $group->effectiveMin(),
-                            'max_select' => $group->effectiveMax(),
-                            'is_required' => $group->is_required,
-                            'options' => $group->options
-                                ->where('is_active', true)
-                                ->map(fn ($option) => [
-                                    'id' => $option->getKey(),
-                                    'name' => $option->name,
-                                    'price_delta' => (float) $option->price_delta,
-                                ])->values(),
-                        ])->values(),
-                ]),
-            'categories' => Category::query()->where('is_active', true)
-                ->withCount('products')
-                ->orderBy('sort_order')->orderBy('name')->get()
-                ->map(fn (Category $c) => ['id' => $c->getKey(), 'name' => $c->name, 'products_count' => $c->products_count]),
-            'paymentMethods' => $tenant->paymentMethods()->where('is_active', true)->orderBy('sort_order')->get()
-                ->map(fn ($m) => ['id' => $m->getKey(), 'name' => $m->name, 'type' => $m->type->value]),
-            'taxInclusive' => (bool) $tenant->getSetting('tax.inclusive', false),
-            'taxRate' => (float) $tenant->getSetting('tax.rate', 0),
-            'serviceChargeRate' => (float) $tenant->getSetting('service_charge.rate', 0),
-            'tables' => $branch
-                ? $branch->tables()->where('is_active', true)->with('staff:id,name')->orderBy('sort_order')->orderBy('name')->get()
-                    ->map(fn ($table) => [
-                        'id' => $table->getKey(),
-                        'name' => $table->name,
-                        'seats' => $table->seats,
-                        'status' => $table->status->value,
-                        'staff' => $table->staff->map(fn ($user) => [
-                            'id' => $user->getKey(),
-                            'name' => $user->name,
-                        ])->values(),
-                    ])
-                : [],
-            'customers' => Customer::query()->where('is_active', true)->orderBy('name')->limit(200)->get()
-                ->map(fn ($customer) => ['id' => $customer->getKey(), 'name' => $customer->name, 'phone' => $customer->phone]),
-            'deliveryZones' => $branch
-                ? DeliveryZone::query()->where('is_active', true)
-                    ->where(fn ($q) => $q->whereNull('branch_id')->orWhere('branch_id', $branch->getKey()))
-                    ->orderBy('name')->get()
-                    ->map(fn ($zone) => ['id' => $zone->getKey(), 'name' => $zone->name, 'fee' => (float) $zone->fee])
-                : [],
+            // Catalogue snapshot. Shared with GET /pos/offline-bundle so the online
+            // and offline shapes cannot drift.
+            ...app(OfflineBundle::class)->build($branch, $tenant),
             'openOrders' => $branch
                 ? Order::query()->where('branch_id', $branch->getKey())
                     ->whereIn('status', [OrderStatus::Held->value, OrderStatus::Draft->value])

@@ -1,5 +1,6 @@
 # Taste
 - Wants work executed **phase by phase**, one approved phase at a time; do not automatically proceed to the next phase — stop after verification and wait for explicit approval. Confidence: 0.95
+- When the user says they want everything done "step by step", they mean carry the remaining steps through in order without pausing for re-approval between each one — the phase-by-phase gating applies until they greenlight the whole run, after which they want continuous sequential progress rather than a stop-and-ask at every sub-step. Confidence: 0.5
 - Documentation-first: wants project docs (PRD, architecture, roadmap, etc.) produced before writing implementation code. Confidence: 0.85
 - Discovery-first: inspect the existing repository (code, DB, routes, auth, frontend, tests, deployment) before making any changes; no broad refactoring during discovery. Confidence: 0.85
 - Approves work with terse, blanket affirmatives (e.g. "YES DO", "do it", "yes") rather than detailed instructions; once a phase is greenlit, expects the agent to carry it out end-to-end (implementation, full test suite, formatter/lint, frontend build, live end-to-end verification, written report) without intermediate check-ins. Confidence: 0.8
@@ -60,6 +61,10 @@
 - Wants the agent to clearly distinguish verified project facts from assumptions, and to identify missing/unavailable data honestly instead of filling gaps with invented values. Confidence: 0.7
 - Prefers the simplest maintainable solution and explicitly wants unnecessary complexity avoided. Confidence: 0.65
 - For date-dependent analytics, wants a single global period filter (e.g. Today / Week / Month / Custom) that drives all period-scoped metrics consistently, while genuinely time-independent metrics (point-in-time/lifetime) are explicitly kept out of it rather than being forced into the range. Confidence: 0.6
+- Wants the web app delivered as an installable **Progressive Web App** — web manifest, proper (incl. maskable) app icons, install/update prompts and an offline shell — explicitly asked to "Implement PWA". Confidence: 0.6
+- Expects genuine **offline operation**, not just installability: the system (at least the POS) must keep working and taking orders when the network is unavailable and sync safely on reconnect — explicit "I need all and offline run the system". Confidence: 0.55
+- Wants proper **versioning and a release process**: an app version surfaced in the UI, a changelog, and tagged releases — explicitly "Version control ... Prepare release". Confidence: 0.55
+- Not averse to adding dev-only tooling when it buys real correctness: approved introducing a JavaScript test runner (Vitest + a `npm run test:js` script) so the offline client's pricing logic is proven against the same specification as the server, rather than reviewed by hand. Confidence: 0.55
 
 
 ## Design system

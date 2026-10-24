@@ -45,6 +45,21 @@ php artisan queue:restart            # tell workers to pick up new code
 
 Health check after deploy: `GET /health` must return `200 {"status":"ok"}`.
 
+### Progressive Web App
+
+- `npm run build` emits the web manifest (`public/build/manifest.webmanifest`) and the
+  service worker (`public/build/sw.js`). Both are build artifacts — deploy them with the
+  assets, or the app is not installable and has no offline shell.
+- A service worker only registers in a **secure context**: serve over HTTPS (or `localhost`
+  during development). Over plain HTTP on a LAN address the app works, but is not
+  installable and does not work offline — this is browser policy, not configuration.
+- Installed clients update through an in-app prompt. The precache is revisioned by content
+  hash, so a deploy is picked up automatically; the revision for `/offline.html` is the
+  build commit.
+- The version reported by `GET /health` and the sidebar comes from the committed `VERSION`
+  file. A deploy may set `APP_VERSION` (and `APP_COMMIT`) to override it — recommended when
+  releasing from a tag.
+
 ## 3. Required long-running processes
 
 | Process | Command | Notes |
@@ -124,6 +139,9 @@ Health check after deploy: `GET /health` must return `200 {"status":"ok"}`.
 
 - [ ] `php artisan test` green.
 - [ ] `GET /health` returns ok; scheduler + worker running.
+- [ ] `GET /health` reports the expected `version` for this release.
+- [ ] Manifest and service worker reachable over HTTPS; the app installs and the offline
+      page shows when the network is cut.
 - [ ] Backups configured and a restore has been tested.
 - [ ] Error tracking + log aggregation wired.
 - [ ] Seeds/plans reviewed (`PlanSeeder`), platform admin created.

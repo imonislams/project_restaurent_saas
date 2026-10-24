@@ -17,6 +17,8 @@ application built on Laravel + Inertia + React + TypeScript.
 | [ROADMAP.md](./ROADMAP.md) | 14-phase build plan with per-phase exit requirements and approval gates |
 | [PHASES.md](./PHASES.md) | Per-phase status and audit reports (scope, changes, tests, risks) |
 | [PRODUCTION.md](./PRODUCTION.md) | Production readiness runbook — deploy, processes, monitoring, backups, rollback, go-live checklist |
+| [PWA-OFFLINE.md](./PWA-OFFLINE.md) | Progressive Web App and offline POS — caching policy, offline data model, outbox/sync, conflict rules, offline auth |
+| [RELEASE.md](./RELEASE.md) | Versioning (SemVer), branch model, commit convention, changelog, tagging and release/rollback process |
 
 ## Reading order
 
@@ -26,6 +28,8 @@ application built on Laravel + Inertia + React + TypeScript.
 4. **UI-UX.md** — how it looks and behaves.
 5. **SECURITY.md** — the boundaries that must never be crossed.
 6. **ROADMAP.md** — the order in which we build it.
+7. **PWA-OFFLINE.md** — how the app installs and keeps running without a network.
+8. **RELEASE.md** — how a version is numbered, tagged and shipped.
 
 ## Three workspaces over one core platform
 

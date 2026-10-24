@@ -115,6 +115,7 @@ const NAV: NavSection[] = [
             { label: 'Queue Monitoring', icon: 'server', permission: 'platform.monitoring.view', routeName: 'platform.ops.queue', pattern: 'platform.ops.queue' },
             { label: 'Failed Jobs', icon: 'alert', permission: 'platform.monitoring.view', routeName: 'platform.ops.failed-jobs', pattern: 'platform.ops.failed-jobs' },
             { label: 'Scheduled Tasks', icon: 'clock', permission: 'platform.monitoring.view', routeName: 'platform.ops.schedule', pattern: 'platform.ops.schedule' },
+            { label: 'Offline Sync Conflicts', icon: 'alert', permission: 'platform.monitoring.view', routeName: 'platform.offline-conflicts.index', pattern: 'platform.offline-conflicts.*' },
             { label: 'Command Runner', icon: 'terminal', permission: 'platform.commands.run', routeName: 'platform.commands.index', pattern: 'platform.commands.*' },
         ],
     },

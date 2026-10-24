@@ -1,6 +1,10 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Icon, { IconName } from '@/Components/Icon';
 import NotificationWatcher from '@/Components/NotificationWatcher';
+import OfflineStatus from '@/Components/OfflineStatus';
+import OfflineSyncBoot from '@/Components/OfflineSyncBoot';
+import PwaInstallPrompt from '@/Components/PwaInstallPrompt';
+import PwaUpdatePrompt from '@/Components/PwaUpdatePrompt';
 import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/Avatar';
 import BranchSelector from '@/Components/ui/BranchSelector';
 import CommandPalette, { CommandItem } from '@/Components/ui/CommandPalette';
@@ -34,7 +38,7 @@ import {
 import { ToastProvider } from '@/Components/ui/Toast';
 import { useT } from '@/i18n';
 import { BranchSummary } from '@/types';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     ChevronsUpDown,
     HelpCircle,
@@ -99,6 +103,7 @@ export default function AppShell({
     children,
 }: PropsWithChildren<AppShellProps>) {
     const t = useT();
+    const { version } = usePage().props as { version?: { app?: string; commit?: string } };
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
     const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
     const navRef = useRef<HTMLDivElement | null>(null);
@@ -180,6 +185,7 @@ export default function AppShell({
     return (
         <ToastProvider>
             <NotificationWatcher pending={pendingApprovals} />
+            <OfflineSyncBoot />
             <SidebarProvider defaultOpen className="tenant-shell">
                 {/* Desktop and Mobile Genuine shadcn Sidebar */}
                 <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar select-none">
@@ -279,6 +285,15 @@ export default function AppShell({
 
                     {/* Footer: Authenticated User and Menu */}
                     <SidebarFooter className="border-t border-sidebar-border/80 p-2">
+                        {version?.app && (
+                            <div
+                                className="px-2.5 pb-1.5 text-[10.5px] font-medium text-muted-foreground/70 group-data-[collapsible=icon]:hidden"
+                                title="Application version"
+                            >
+                                v{version.app}
+                                {version.commit ? ` · ${version.commit}` : ''}
+                            </div>
+                        )}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <SidebarMenuButton
@@ -410,6 +425,9 @@ export default function AppShell({
 
                             {/* Dynamic Topbar Right Slot (Language Selector, Notifications) */}
                             {topbarRight}
+
+                            {/* Offline queue / connectivity (POS) */}
+                            <OfflineStatus />
                         </div>
                     </header>
 
@@ -444,6 +462,12 @@ export default function AppShell({
                 show={shortcutsModalOpen}
                 onClose={() => setShortcutsModalOpen(false)}
             />
+
+            {/* PWA: install suggestion + service-worker update prompt */}
+            <div className="pointer-events-none fixed bottom-4 left-4 z-[70] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2.5">
+                <PwaUpdatePrompt />
+                <PwaInstallPrompt />
+            </div>
         </ToastProvider>
     );
 }

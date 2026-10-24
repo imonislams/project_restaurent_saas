@@ -28,6 +28,14 @@ requirement in [ROADMAP.md](./ROADMAP.md) is satisfied and the report below is f
 | 16E(B) — Branch-wise permissions & task assignment | Complete pending review |
 | 16F — Table staff assignment (create & edit) | Complete pending review |
 | 16G — Table staff role & order confirmation | Complete pending review |
+| 17A — PWA/offline & release documentation | Complete pending review |
+| 17B — PWA shell (manifest, service worker, offline page) | Complete pending review |
+| 17C — Version + build metadata | Complete pending review |
+| 17D — Release process & first tag | Complete pending review (tag not created) |
+| 17E — Offline foundation (bundle, IndexedDB, outbox, sync) | Complete pending review |
+| 17F — Offline POS capture & pricing parity | Complete pending review |
+| 17G — Conflicts & sync observability | Complete pending review |
+| 17H — Offline auth & approvals hardening | Not started |
 
 ---
 
@@ -2496,6 +2504,385 @@ image, and a storage-link test that really executes the command (exit 0).
 
 **Complete pending review.** This closes the 16A–16D refinement program.
 >>>>>>> 042a3615db870847b5a61a3b5e5d7a99bb627eaf
+
+---
+
+## Phase 17A — PWA/offline & release documentation
+
+### Scope inspected
+
+PWA groundwork (`public/icon-192.png`, `icon-512.png`, `apple-touch-icon.png`,
+`public/brand/*`, `theme-color` in `app.blade.php`), build config (`vite.config.js`,
+`resources/js/app.tsx`), versioning surfaces (`package.json`, `composer.json`,
+`config/app.php`), git state (branches, tags, remotes), and the offline-critical paths:
+`PosController`, `SaleService`, `SaleCalculator`, `OrderNumberGenerator`,
+`ManagerPinService`, `orders`/`payments` schema, `Pos/Index.tsx`.
+
+### Findings
+
+- **PWA:** icons and `theme-color` exist, but there is no web manifest, no service worker
+  and no `vite-plugin-pwa`. The app is neither installable nor cached.
+- **Versioning:** no version field anywhere, no `config('app.version')`, and **no git tags**.
+- **Release:** `PRODUCTION.md` covers deploy only; there is no versioning/changelog/tagging process.
+- **Offline enablers already present:** `orders.idempotency_key` (unique per tenant) with the
+  `SaleService::findByKey()` short-circuit, `payments.idempotency_key`, a full catalog
+  snapshot already returned by `PosController@index`, and idempotent kitchen ticket creation.
+- **Offline blockers:** server-authoritative pricing (`SaleCalculator`), gap-free server-side
+  order numbering (`order_sequences`), a mandatory open shift, stock deduction inside the sale
+  transaction, payments written straight to `Succeeded`, and server-side sessions.
+- **Repository defect found:** `docs/PHASES.md` contains **committed git merge-conflict
+  markers** (`<<<<<<< HEAD` / `=======` / `>>>>>>>`) around this section. Not resolved here —
+  choosing a side is a content decision. Flagged for the owner.
+
+### Deliverable
+
+Documentation only. No application code, no schema change, no command executed.
+
+- **Added `docs/PWA-OFFLINE.md`** — hard constraints, caching policy (static assets only,
+  never Inertia/JSON), offline data model, outbox + sync engine (idempotency reuse, no
+  Background Sync on iOS), pricing parity via a single fixture specification, provisional
+  offline order numbers, offline payment rules (cash only), offline auth/approvals policy,
+  conflict rules, device/storage caveats and an explicit out-of-scope list.
+- **Added `docs/RELEASE.md`** — SemVer, `VERSION` as single source of truth, branch model,
+  Conventional Commits, changelog convention, release procedure, rollback (including the
+  service-worker cache caveat) and the first-release proposal.
+- **Updated `docs/README.md`** — indexed both new documents.
+- **Updated `docs/ROADMAP.md`** — added Phase 17 with sub-phases 17A–17H and per-sub-phase
+  exit requirements.
+- **Updated `docs/PHASES.md`** — this report and the sub-phase status rows.
+
+### Open decisions (carried from the approved plan)
+
+1. Starting release number: `v0.1.0` (proposed) vs `v1.0.0`.
+2. Sequencing: Phases 17A–17D first, then the offline programme 17E–17H (recommended).
+3. Offline approvals: blocked-by-default (recommended) vs cached PIN hashes offline.
+
+### Verification
+
+- Documentation review only. **No tests, build or commands were run.**
+
+### Final phase status
+
+**Complete pending review.** Awaiting approval before starting 17B (PWA shell).
+
+---
+
+## Phase 17B — PWA shell
+
+### Scope inspected
+
+`vite.config.js`, `resources/views/app.blade.php`, `resources/js/app.tsx`,
+`resources/js/Layouts/AppShell.tsx`, `AuthenticatedLayout.tsx`, `PlatformLayout.tsx`,
+`tsconfig.json`, existing icons in `public/` and `public/brand/`, and the workbox
+internals that decide navigation behaviour.
+
+### Implemented
+
+- **Build**: `vite-plugin-pwa` (2.0.0) in **`injectManifest`** mode with a hand-written
+  service worker at `resources/js/pwa/sw.ts`. Dev deps added: `vite-plugin-pwa`,
+  `workbox-window`, `workbox-core`, `workbox-precaching`, `workbox-routing`,
+  `workbox-strategies`, `workbox-expiration`.
+- **Manifest** (emitted to `public/build/manifest.webmanifest`): name/short_name,
+  description, `start_url`, `scope`, `display: standalone`, `theme_color #EC3013`,
+  `background_color #ffffff`, four icons (2 `any` + 2 `maskable`) and POS/Kitchen shortcuts.
+- **Maskable icons**: generated from the existing artwork, scaled to 85% and padded with the
+  artwork's own background (sampled as `#EC3013`) so the mark stays inside the maskable safe
+  circle. `public/icon-maskable-192.png`, `public/icon-maskable-512.png`.
+- **Service worker rules**:
+  - precache build assets (187 entries) plus `/offline.html`;
+  - navigations are **network-first** — the offline shell is returned only when the network
+    fails, and page HTML is never written to a cache;
+  - static chrome images limited to the web root and `/brand/` (a single path segment), so
+    uploaded tenant files under `/storage/…` can never match and never enter a cache;
+  - web fonts only — no application endpoints;
+  - `SKIP_WAITING` message handling and `cleanupOutdatedCaches()`.
+- **Offline page** `public/offline.html`: self-contained (inline CSS, no build assets, no
+  remote fonts), branded, with an accessible retry control.
+- **Document head** (`app.blade.php`): manifest link, `mobile-web-app-capable`,
+  `apple-mobile-web-app-capable` / `-status-bar-style` / `-title`, `viewport-fit=cover`.
+- **UI**: `PwaInstallPrompt` and `PwaUpdatePrompt` mounted once in `AppShell` (so both the
+  tenant and platform workspaces get them), accessible (`role="status"`, `aria-live`),
+  dismissible. iOS shows a Share → Add to Home Screen hint instead of a non-functional
+  install button. Updates never auto-reload mid-transaction.
+
+### Defect found and fixed during verification
+
+The first implementation used the plugin's **generated** service worker with
+`navigateFallback: '/offline.html'`. Workbox compiles that to
+`NavigationRoute(createHandlerBoundToURL('/offline.html'))`, and
+`PrecacheController::createHandlerBoundToURL` serves the **precached** response *without
+consulting the network* (confirmed by reading `workbox-precaching`'s source). Every page
+navigation — online or not — would therefore have returned the offline page, breaking the
+whole application as soon as the service worker installed. Replaced with `injectManifest`
+and an explicit network-first navigation route. This is exactly why the approved plan
+specified `injectManifest`.
+
+### Verification
+
+- `npx tsc --noEmit` → clean (exit 0).
+- `npm run build` → clean; emits `public/build/sw.js` and `public/build/manifest.webmanifest`
+  (187 precache entries).
+- Inspected the built `sw.js`: the only registered routes are the navigation route
+  (network-first with offline fallback), the static-chrome image rule and the web-font rule.
+  No `NavigationRoute` registration remains. The precache contains `assets/*` plus
+  `/offline.html` and `manifest.webmanifest` only — no HTML pages and no application JSON.
+- Served the built app locally: `HTTP 200` and correct content types for
+  `/build/manifest.webmanifest` (`application/manifest+json`), `/build/sw.js`,
+  `/offline.html` and the maskable icon; head tags render as expected.
+- **No PHP test suite was run** (per standing rule).
+
+### Known limits and risks
+
+- A service worker requires a **secure context**: HTTPS, or `localhost` / `127.0.0.1`.
+  Opening the app over a LAN IP (e.g. the MAMP host) will not register one, so installability
+  and offline are unavailable there by browser policy — not by our configuration.
+- Manifest and service worker are build artifacts, and `devOptions.enabled` is `false`, so
+  `npm run dev` does not exercise them. Verify with `npm run build` then serve.
+- iOS storage eviction and the absence of Background Sync are documented in
+  `docs/PWA-OFFLINE.md` and will be handled in 17E–17F.
+- `npm install` reports 9 vulnerabilities (4 moderate, 5 high) in the dependency tree, largely
+  pre-existing. Not auto-fixed (`npm audit fix --force` was deliberately not run).
+
+### Final phase status
+
+**Complete pending review.** Awaiting approval before starting 17C (version + build metadata).
+
+---
+
+## Phase 17C — Version + build metadata
+
+### Implemented
+
+- **`VERSION`** at the repository root (`0.1.0`) — the single source of truth.
+- **`config/version.php`** reads it, with `APP_VERSION` / `APP_COMMIT` overrides for a deploy.
+- **`App\Support\AppVersion`** — `version()`, `commit()`, `label()`. The commit prefers
+  `APP_COMMIT`, otherwise detects git (guarded, `shell_exec`-safe, returns empty on failure).
+  Bound as a **singleton** so the git probe runs at most once per request.
+- **Commands** — `app:version` (prints version + commit) and `version:bump {patch|minor|major}`
+  (rewrites `VERSION`, prints the remaining release steps).
+- **`GET /health`** now returns `version` and `commit` alongside the existing checks.
+- **Inertia** shares `version.app` / `version.commit`; the app-shell sidebar footer renders
+  `v0.1.0 · <commit>` for both the tenant and platform workspaces (hidden when collapsed).
+- Tests added in `tests/Feature/Readiness/AppVersionTest.php` (file/env precedence, health
+  payload, shared prop, both commands).
+
+### Deviation from the plan
+
+The plan listed a Vite `define` for `__APP_VERSION__` / `__APP_COMMIT__`. It was **not**
+added: the version reaches the frontend through Inertia shared props (one source, no drift),
+and the only build-time consumer of the commit is the service-worker revision in
+`vite.config.js`. Adding globals would have created a second source of truth and unused
+constants.
+
+### Verification
+
+- `php -l` clean on all changed PHP files.
+- `npx tsc --noEmit` clean; `npm run build` clean.
+- `php artisan app:version` → `Version: 0.1.0`, `Commit: d6a0efb`.
+- Served the built app: `GET /health` → `{"status":"ok","version":"0.1.0","commit":"d6a0efb",…}`
+  and the page payload carries `version:{app:"0.1.0",commit:"d6a0efb"}`.
+- **No PHP test suite was run** (per standing rule); the new tests are written only.
+
+### Final phase status
+
+**Complete pending review.**
+
+---
+
+## Phase 17D — Release process & first tag
+
+### Implemented
+
+- **`CHANGELOG.md`** (Keep a Changelog + SemVer) with the `0.1.0` entry covering the PWA
+  shell, versioning, docs, the email-log preview, and the two email defects fixed.
+- **`composer release:check`** — the pre-release gate: `pint --test`, `npm run build`,
+  `php artisan test`. Defined only; not executed.
+- **`docs/PRODUCTION.md`** — a "Progressive Web App" deploy subsection (build artifacts,
+  secure-context requirement, update flow, `APP_VERSION`/`APP_COMMIT`) and two new go-live
+  checklist items (health reports the expected version; manifest/SW reachable over HTTPS).
+- **`docs/RELEASE.md`** — corrected to describe how the version actually reaches the frontend
+  and where it is surfaced.
+
+### Not done (deliberately)
+
+- **No git tag and no commit were created.** Creating tags/commits is a repository state
+  change and was not explicitly requested; the working tree holds this work uncommitted.
+  To release: `composer release:check`, commit, merge to `main`, then
+  `git tag -a v0.1.0 -m "Release v0.1.0"` and push the tag.
+
+### Verification
+
+- `composer.json` parses and `release:check` is present with the expected steps.
+- Documentation review only; the suite was **not** executed.
+
+### Final phase status
+
+**Complete pending review** — the tag/commit remain a human step.
+
+---
+
+## Phase 17E — Offline foundation
+
+### Implemented
+
+**Server**
+
+- **`GET /pos/offline-bundle`** (`pos.offline.bundle`) — the catalogue snapshot the POS
+  mirrors locally, plus a `version` fingerprint and the active branch/shift.
+- **`App\Domain\POS\OfflineBundle`** — the single builder for that snapshot. `PosController@index`
+  now spreads it instead of repeating the product/category/payment-method/table/customer/zone
+  mapping, so the online and offline shapes cannot drift. Adds offline-relevant settings
+  (`allowPartialPayment`, `blockSaleWhenInsufficient`).
+- **`POST /pos/sync`** (`pos.offline.sync`) — replays a batch of captured operations.
+- **`App\Domain\POS\OfflineSyncService`** — applies `place_sale`, `open_order` and
+  `settle_order` through the existing `SaleService`, so shift, stock, pricing, cash and audit
+  rules are unchanged. Returns a per-operation `accepted`/`rejected` result with a reason, so
+  one bad operation never discards the batch.
+- **Permission parity**: the endpoint needs `pos.use`, and each operation additionally
+  requires the permission its live route requires (`orders.update` / `orders.create`), since a
+  single endpoint serves several actions.
+- **Rule reuse**: `PlaceOrderRequest` now exposes `orderRules()` / `paymentRules()` and
+  `SyncOfflineOperationsRequest` + the service validate replayed payloads with the *same*
+  rules as a live request — no duplicated validation.
+- **Migration** `2026_10_24_000025_add_offline_fields_to_orders_table` (additive, reversible):
+  `offline_reference`, `captured_offline_at`, `synced_at`. Applied to the local database.
+
+**Client**
+
+- `resources/js/offline/` — `types.ts`, `db.ts` (IndexedDB via `idb`, namespaced
+  `tenant:{id}:branch:{id}:user:{id}`), `bundle.ts` (fetch/cache the snapshot, skip rewriting
+  when the version is unchanged), `outbox.ts` (durable queue; the operation id is reused as the
+  order idempotency key), `sync.ts` (flush engine).
+- **Sync triggers**: `online`, window `focus`, `visibilitychange` and a 30s interval.
+  **Background Sync is deliberately not used** — iOS Safari does not implement it.
+- `Components/OfflineStatus.tsx` in the app-shell topbar: offline/queued/syncing state with a
+  label (never colour alone) and a "Sync now" action; also boots the engine and refreshes the
+  mirror while online.
+
+### Verification
+
+- `php -l` clean on all changed PHP files; `npx tsc --noEmit` clean; `npm run build` clean.
+- `php artisan migrate --force` applied the additive migration; `route:list` confirms
+  `pos.offline.bundle` and `pos.offline.sync`.
+- **Test suite run (authorised): `php artisan test` → 603 passed (3386 assertions).** This
+  includes the existing POS suite (`PosSaleTest`, `SaleCalculatorTest`, `ShiftTest`,
+  `VoidOrderTest`), which confirms the `OfflineBundle` extraction left the POS page
+  behaviour-identical — the risk called out while implementing this phase is now closed.
+- New coverage: `tests/Feature/POS/OfflineSyncTest.php` (8 tests — bundle shape + version
+  change, captured sale recorded as offline, replay safety: two identical syncs yield one
+  order, partial-batch rejection, open→settle replay, permission enforcement, unknown
+  operation type) and `tests/Feature/Readiness/AppVersionTest.php` (8 tests, 17C).
+
+### Final phase status
+
+**Complete pending review.**
+
+---
+
+## Phase 17F — Offline POS capture & pricing parity
+
+### Implemented
+
+**Pricing parity (the money path)**
+
+- `tests/Fixtures/pricing/fixtures.json` — **one specification** for order totals: 9 cases
+  covering no-tax, tax exclusive, tax inclusive, percent and amount discounts (including the
+  amount capped at the subtotal), the half-cent weighted line (0.67 × 1.5), order-type price
+  column selection, modifiers, and a mixed multi-line order with per-line tax allocation.
+- `tests/Unit/POS/SaleCalculatorParityTest.php` — asserts the server's `SaleCalculator`
+  against those fixtures.
+- `resources/js/offline/pricing.ts` — the TypeScript port the offline POS uses. Its `round()`
+  reproduces PHP's half-away-from-zero behaviour *including the pre-rounding correction*:
+  without it, 1.005 (held as 1.00499999…) rounds down in JavaScript and up on the server.
+- `resources/js/offline/pricing.test.ts` (Vitest) — asserts the port against the **same**
+  file, with an explicit snake_case→camelCase key map that fails loudly on an unmapped key.
+  **Tooling added:** `vitest` (dev) and `npm run test:js`, plus `vitest.config.ts` kept
+  separate from `vite.config.js` so app plugins stay out of unit runs.
+- Verified both directions: `php artisan test --filter=SaleCalculatorParityTest` → 9 passed;
+  `npm run test:js` → 10 passed.
+
+**POS offline capture** (`resources/js/Pages/Pos/Index.tsx`)
+
+- Submitting while offline writes the sale to the outbox instead of posting it, and reports the
+  provisional reference. The operation id doubles as the order idempotency key, so the later
+  sync cannot double-post.
+- **Cash only offline:** a card/gateway leg is refused with an explicit message rather than
+  being accepted and recorded as unsettled.
+- The POS is a standalone full-screen kiosk (it does **not** use `AppShell`), so it now renders
+  its own offline banner and states plainly that offline sales sync on reconnect.
+- **`OfflineSyncBoot`** was extracted so the queue engine runs on the POS screen too — without
+  it, sales captured there would never have flushed while the cashier stayed on that screen.
+  `startSyncEngine()` is now guarded against double-start, since it is mounted in two places.
+- `useOfflineStatus()` hook added; `OfflineStatus` reduced to display-only.
+
+### Verification
+
+- `npx tsc --noEmit` clean; `npm run build` clean.
+- `npm run test:js` → **10 passed** (9 fixtures + rounding).
+- `php artisan test` → **612 passed (3466 assertions)**, including the new parity suite; the
+  existing POS suite still passes.
+
+### Known limits
+
+- Offline totals are **provisional**: the server re-prices on sync and its total wins. Surfacing
+  and resolving that difference is 17G.
+- Voids, refunds and manager-PIN approvals remain online-only (17H).
+- The mirror is refreshed on load and on reconnect; a long-lived tab keeps the last snapshot.
+
+### Final phase status
+
+**Complete pending review.**
+
+---
+
+## Phase 17G — Conflicts & sync observability
+
+### Implemented
+
+- **`offline_sync_conflicts`** (additive, reversible) + `App\Domain\POS\Models\OfflineSyncConflict`
+  — records the operation, the order it became, what the device expected, what the server
+  decided, and the review state.
+- **`OfflineConflictRecorder`** — writes conflicts; `OfflineSyncService` now records one for
+  every operation that needs a look rather than only reporting it in the HTTP response.
+- **Conflict rules enforced server-side:**
+  - `total_mismatch` — the device sends `expected_total`; when the server's authoritative total
+    differs by more than one cent the order is **accepted at the server total** and the
+    difference is flagged. The server total still wins, but the difference is now visible and
+    auditable instead of disappearing.
+  - `table_occupied` — a table free when the device went offline may be taken by sync time. The
+    sale is **not** lost: the table binding is dropped, the order is recorded without it, and
+    the difference is flagged.
+  - `shift_closed`, `product_unavailable`, `stock_insufficient`, `rejected` — classified
+    best-effort from the validation failure; the raw message is always stored, so an
+    unclassified operation is still fully reviewable.
+- **Per-operation result** gained `conflicted` (applied, but resolved differently), plus the
+  human-readable differences.
+- **Client:** the outbox carries `expected_total`; `conflicted` operations leave the queue but
+  are counted, and the status chip links to the review screen ("N to review").
+- **Platform Admin screen** `Platform/OfflineConflicts` (`platform.offline-conflicts.index`,
+  gated by `platform.monitoring.view` — the same gate the existing ops write actions use):
+  filter by status/type, summary counts, and a review drawer showing device-vs-server values
+  with an optional note. Resolving is audited as `platform.offline_conflict_resolved`.
+
+### Verification
+
+- `php -l` clean; `npx tsc --noEmit` clean; `npm run build` clean; migration applied.
+- `php artisan test` → **620 passed (3525 assertions)**; `npm run test:js` → 10 passed.
+- New coverage: `OfflineSyncTest` (+4 — total mismatch flagged with expected/actual, matching
+  total not flagged, rejection recorded for review, table taken → sale still recorded without
+  the table) and `Platform/OfflineConflictTest` (list renders and defaults to open, resolve
+  records the reviewer and audits, permission gate).
+
+### Defect found during verification
+
+Two test failures were genuine, not flaky: the conflict list rendered `500` because the test
+environment serves pages through the **Vite manifest**, which had not been rebuilt to include
+the new page. Rebuilding fixed it — worth remembering that page-rendering tests need a current
+`npm run build`.
+
+### Final phase status
+
+**Complete pending review.**
 
 ---
 

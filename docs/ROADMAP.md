@@ -26,6 +26,7 @@
 | 12 | Queues, scheduler and notifications | Retry-safe jobs, recurring tasks, failure monitoring, operational alerts |
 | 13 | Performance and production readiness | Query profiling, indexes, backups, restore tests, monitoring, security, load tests |
 | 14 | Internationalization and advanced features | Localized experience, extra payment providers, loyalty, delivery integrations, advanced analytics |
+| 17 | PWA, offline operation, versioning & release | Installable app, offline POS capture with replay-safe sync, SemVer + changelog + tagged releases |
 
 ---
 
@@ -101,6 +102,29 @@ tests.
 
 Localized experience (Bangla/English), additional payment providers, loyalty, delivery
 integrations and advanced analytics.
+
+### Phase 17 — PWA, offline operation, versioning & release
+
+Runs **after** the core build, as a program of its own with an approval gate per sub-phase.
+Design authority is [PWA-OFFLINE.md](./PWA-OFFLINE.md) and [RELEASE.md](./RELEASE.md).
+
+| Sub-phase | Focus |
+|---|---|
+| 17A | Documentation — PWA/offline design and release process (no code). |
+| 17B | PWA shell — manifest, icons, service worker (static assets only), offline page, install/update UI. |
+| 17C | Version + build metadata — `VERSION` as single source, surfaced in UI and `/health`. |
+| 17D | Release process — changelog, pre-release check, first annotated tag. |
+| 17E | Offline foundation — offline bundle endpoint, IndexedDB mirror, outbox, sync engine. |
+| 17F | Offline POS capture — pricing parity fixtures, offline sale flow, provisional numbers. |
+| 17G | Conflicts & sync observability — `offline_sync_conflicts`, resolution UI, server rules. |
+| 17H | Offline auth & approvals hardening — cached session expiry, online-only approvals. |
+
+**Exit requirements (per sub-phase):** the phase exit checklist below **plus** an explicit
+statement of what remains unavailable offline, and evidence that no Inertia/JSON response is
+cached by the service worker.
+
+> **Hard boundary:** a payment that cannot be authorised offline is never recorded as
+> settled, and an offline-created order is never given a final order number by the client.
 
 ---
 

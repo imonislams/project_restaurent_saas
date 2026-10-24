@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Domain\Communications\AnnouncementService;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Tenancy\TenantContext;
+use App\Support\AppVersion;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -86,6 +87,10 @@ class HandleInertiaRequests extends Middleware
                 ? app(AnnouncementService::class)->forTenant($tenant)
                 : [],
             'locale' => app()->getLocale(),
+            'version' => [
+                'app' => fn () => app(AppVersion::class)->version(),
+                'commit' => fn () => app(AppVersion::class)->commit(),
+            ],
             'locales' => collect(config('app.locales', ['en' => 'English']))
                 ->map(fn ($label, $code) => ['value' => $code, 'label' => $label])->values(),
             // Enabled plan features (null = unrestricted, e.g. no subscription).

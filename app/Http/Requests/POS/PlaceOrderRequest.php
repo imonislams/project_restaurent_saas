@@ -3,6 +3,7 @@
 namespace App\Http\Requests\POS;
 
 use App\Domain\Orders\Enums\OrderType;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,14 +16,31 @@ class PlaceOrderRequest extends FormRequest
 
     public function rules(): array
     {
-        $tenantId = $this->user()->tenant_id;
+        $user = $this->user();
+
+        return [
+            ...self::orderRules($user),
+            'payments' => ['nullable', 'array'],
+            ...self::paymentRules($user->tenant_id),
+        ];
+    }
+
+    /**
+     * Order and line rules. Shared with the offline sync endpoint so a replayed
+     * operation is validated exactly like a live one.
+     *
+     * @return array<string, mixed>
+     */
+    public static function orderRules(User $user): array
+    {
+        $tenantId = $user->tenant_id;
 
         return [
             'branch_id' => [
                 'required',
                 'integer',
                 Rule::exists('branches', 'id')->where('tenant_id', $tenantId),
-                Rule::in($this->user()->accessibleBranchIds()),
+                Rule::in($user->accessibleBranchIds()),
             ],
             'shift_id' => ['nullable', 'integer', Rule::exists('shifts', 'id')->where('tenant_id', $tenantId)],
             'order_type' => ['required', Rule::in(OrderType::values())],
@@ -50,8 +68,15 @@ class PlaceOrderRequest extends FormRequest
             'items.*.modifiers' => ['nullable', 'array'],
             'items.*.modifiers.*.option_id' => ['required_with:items.*.modifiers', 'integer', Rule::exists('modifier_options', 'id')->where('tenant_id', $tenantId)],
             'items.*.modifiers.*.quantity' => ['nullable', 'numeric', 'min:1'],
+        ];
+    }
 
-            'payments' => ['nullable', 'array'],
+    /**
+     * @return array<string, mixed>
+     */
+    public static function paymentRules(int $tenantId): array
+    {
+        return [
             'payments.*.payment_method_id' => ['required_with:payments', 'integer', Rule::exists('payment_methods', 'id')->where('tenant_id', $tenantId)],
             'payments.*.amount' => ['required', 'numeric', 'min:0'],
             'payments.*.tendered' => ['nullable', 'numeric', 'min:0'],

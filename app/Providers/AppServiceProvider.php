@@ -17,6 +17,7 @@ use App\Listeners\LogOutboundEmail;
 use App\Listeners\RecordAuthSecurityEvents;
 use App\Listeners\RecordScheduledTask;
 use App\Models\User;
+use App\Support\AppVersion;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
@@ -41,6 +42,9 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(TenantContext::class);
+
+        // Memoised so the git commit probe runs at most once per request.
+        $this->app->singleton(AppVersion::class);
     }
 
     /**

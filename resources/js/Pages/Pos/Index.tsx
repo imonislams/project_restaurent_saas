@@ -1,7 +1,12 @@
 import Icon from '@/Components/Icon';
+import OfflineSyncBoot from '@/Components/OfflineSyncBoot';
 import Badge from '@/Components/ui/Badge';
 import Button from '@/Components/ui/Button';
 import { useT } from '@/i18n';
+import { cachedBundle } from '@/offline/bundle';
+import { enqueue } from '@/offline/outbox';
+import { offlineWindowExpired } from '@/offline/session';
+import { useOfflineStatus } from '@/offline/useOfflineStatus';
 import { BranchSummary } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -233,6 +238,8 @@ export default function PosIndex({
     const [serviceCharge, setServiceCharge] = useState(false);
     const [managerPin, setManagerPin] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [offlineNotice, setOfflineNotice] = useState<string | null>(null);
+    const isOffline = useOfflineStatus();
     const [soundEnabled, setSoundEnabled] = useState(true);
 
     const searchRef = useRef<HTMLInputElement>(null);
@@ -696,6 +703,36 @@ export default function PosIndex({
                     </button>
                 </div>
             </header>
+
+            {/* Boots the offline queue engine (this screen is not inside AppShell). */}
+            <OfflineSyncBoot />
+
+            {/* Offline state. The POS is a standalone screen, so it carries its own indicator. */}
+            {isOffline && (
+                <div className="flex items-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs font-medium text-amber-800 shadow-subtle">
+                    <Icon name="alert" className="h-4 w-4 shrink-0" />
+                    <span>
+                        Offline — sales are saved on this device and sync automatically when the
+                        connection returns. Card and online payments are unavailable.
+                    </span>
+                </div>
+            )}
+
+            {offlineNotice && (
+                <div className="flex items-center justify-between border-b border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-medium text-emerald-800 shadow-subtle">
+                    <div className="flex items-center gap-2">
+                        <Icon name="receipt" className="h-4 w-4 shrink-0" />
+                        <span>{offlineNotice}</span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setOfflineNotice(null)}
+                        className="text-xs hover:opacity-75"
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
 
             {/* Banner Notifications */}
             {(flash?.success || flash?.error || error) && (
@@ -1338,11 +1375,14 @@ export default function PosIndex({
                 <PaymentModal
                     currency={currency}
                     total={totals.total}
+                    subtotal={totals.subtotal}
+                    discountTotal={totals.discount}
                     paymentMethods={paymentMethods}
                     managerPin={managerPin}
                     setManagerPin={setManagerPin}
                     onClose={() => setShowPayment(false)}
                     onError={setError}
+                    onQueuedOffline={setOfflineNotice}
                     playSound={playSound}
                     buildPayload={() => ({
                         branch_id: branch.id,
@@ -1558,27 +1598,34 @@ export default function PosIndex({
 function PaymentModal({
     currency,
     total,
+    subtotal,
+    discountTotal,
     paymentMethods,
     managerPin,
     setManagerPin,
     onClose,
     onError,
+    onQueuedOffline,
     playSound,
     buildPayload,
 }: {
     currency: string;
     total: number;
+    subtotal: number;
+    discountTotal: number;
     paymentMethods: PaymentMethod[];
     managerPin: string;
     setManagerPin: (v: string) => void;
     onClose: () => void;
     onError: (v: string | null) => void;
+    onQueuedOffline: (message: string) => void;
     playSound: (kind: 'tap' | 'add' | 'success' | 'alert') => void;
     buildPayload: () => Record<string, unknown>;
 }) {
     const [isSplit, setIsSplit] = useState(false);
     const [singleMethodId, setSingleMethodId] = useState<number>(paymentMethods[0]?.id ?? 1);
     const [singleTendered, setSingleTendered] = useState<number>(total);
+    const offline = useOfflineStatus();
 
     // Split payments state
     const [splitPayments, setSplitPayments] = useState<{ method_id: number; amount: number; tendered?: number }[]>([
@@ -1631,6 +1678,65 @@ function PaymentModal({
         );
     };
 
+    /**
+     * Offline checkout. Only reached when the browser reports no network.
+     *
+     * Two things are refused rather than worked around:
+     *  - a card/online payment, which cannot be authorised offline;
+     *  - a sale whose offline window has lapsed, or whose discount needs a manager
+     *    PIN — approval is verified server-side and must not be faked here.
+     */
+    const submitOffline = async (
+        paymentsPayload: { payment_method_id: number; amount: number; tendered?: number | null }[],
+    ) => {
+        const bundle = await cachedBundle();
+        const settings = (bundle?.data ?? {}) as {
+            offlineMaxHours?: number;
+            discountApprovalPercent?: number | null;
+        };
+
+        const maxHours = Number(settings.offlineMaxHours ?? 12);
+
+        if (await offlineWindowExpired(maxHours)) {
+            playSound('alert');
+            onError(
+                `Offline selling is limited to ${maxHours} hours after this device last reached the server. Reconnect, then try again.`,
+            );
+
+            return;
+        }
+
+        const threshold = settings.discountApprovalPercent;
+
+        if (threshold !== null && threshold !== undefined && subtotal > 0) {
+            const percent = (discountTotal / subtotal) * 100;
+
+            if (percent > threshold) {
+                playSound('alert');
+                onError(
+                    `A ${percent.toFixed(1)}% discount needs manager approval, which is only available online. Reconnect, or reduce the discount to ${threshold}% or less.`,
+                );
+
+                return;
+            }
+        }
+
+        try {
+            const operation = await enqueue({
+                type: 'place_sale',
+                payload: { ...buildPayload(), payments: paymentsPayload },
+                expectedTotal: total,
+            });
+
+            playSound('success');
+            onQueuedOffline(`Sale saved offline as ${operation.offline_reference}. It will sync automatically.`);
+            onClose();
+        } catch {
+            playSound('alert');
+            onError('Could not save the sale on this device. Reconnect before closing the page.');
+        }
+    };
+
     const submit = () => {
         onError(null);
 
@@ -1658,6 +1764,25 @@ function PaymentModal({
                     tendered: isSingleCash ? singleTendered : null,
                 },
             ];
+        }
+
+        // Offline: cash only, and the sale is queued on this device rather than posted.
+        // A card or online payment cannot be authorised without the server, so it must
+        // never be recorded as settled here.
+        if (offline) {
+            const unauthorisable = paymentsPayload.find(
+                (payment) => paymentMethods.find((m) => m.id === payment.payment_method_id)?.type !== 'cash',
+            );
+
+            if (unauthorisable) {
+                onError('Card and online payments cannot be taken while offline. Use cash, or reconnect and try again.');
+                playSound('alert');
+                return;
+            }
+
+            void submitOffline(paymentsPayload);
+
+            return;
         }
 
         const payload = {
