@@ -46,6 +46,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Uploaded media (product images, logos, avatars) must be served from
+        // the origin the request actually arrived on. Basing the public disk's
+        // URL on APP_URL pins every <img> to a single host/port, so images 404
+        // whenever the app is opened through MAMP, a LAN address, a virtual
+        // host or a sub-directory instead of the configured APP_URL.
+        config(['filesystems.disks.public.url' => url('/storage')]);
+
         Vite::prefetch(concurrency: 3);
 
         $this->registerQrRateLimiters();

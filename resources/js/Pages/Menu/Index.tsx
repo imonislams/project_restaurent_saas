@@ -6,12 +6,15 @@ import KpiCard from '@/Components/ui/KpiCard';
 import Modal from '@/Components/Modal';
 import PageHeader from '@/Components/ui/PageHeader';
 import {
+    CheckboxField,
+    SelectField,
     Table,
     TableBody,
     TableCell,
     TableHead,
     TableHeader,
     TableRow,
+    TextField,
 } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
@@ -148,37 +151,26 @@ export default function MenuIndex({
                     description="Configure restaurant catalog, multi-channel pricing, variants, and stock tracking."
                     actions={
                         <div className="flex flex-wrap items-center gap-2">
-                            <a
-                                href={route('menu.products.template')}
-                                className="inline-flex h-8 items-center rounded-md border border-input bg-background px-2.5 text-xs font-semibold text-foreground shadow-2xs transition-colors hover:bg-accent"
-                            >
+                            <Button variant="outline" size="sm" href={route('menu.products.template')}>
                                 Template
-                            </a>
-                            <a
-                                href={route('menu.products.export', { format: 'csv' })}
-                                className="inline-flex h-8 items-center rounded-md border border-input bg-background px-2.5 text-xs font-semibold text-foreground shadow-2xs transition-colors hover:bg-accent"
-                            >
+                            </Button>
+                            <Button variant="outline" size="sm" href={route('menu.products.export', { format: 'csv' })}>
                                 Export CSV
-                            </a>
-                            <a
-                                href={route('menu.products.export', { format: 'pdf' })}
-                                className="inline-flex h-8 items-center rounded-md border border-input bg-background px-2.5 text-xs font-semibold text-foreground shadow-2xs transition-colors hover:bg-accent"
-                            >
+                            </Button>
+                            <Button variant="outline" size="sm" href={route('menu.products.export', { format: 'pdf' })}>
                                 Export PDF
-                            </a>
+                            </Button>
                             {canManage && (
                                 <>
                                     <input ref={importRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => handleImport(e.target.files?.[0] ?? null)} />
                                     <Button variant="outline" size="sm" disabled={importing} onClick={() => importRef.current?.click()}>
                                         {importing ? 'Importing…' : 'Import CSV'}
                                     </Button>
-                                    <Button variant="outline" size="sm" onClick={() => setShowCategoriesModal(true)}>
-                                        <Layers className="mr-1.5 h-3.5 w-3.5" />
+                                    <Button variant="outline" size="sm" onClick={() => setShowCategoriesModal(true)} icon={<Layers className="h-3.5 w-3.5" />}>
                                         Categories ({categories.length})
                                     </Button>
-                                    <Button size="sm" onClick={() => setEditing('new')}>
-                                        <Plus className="mr-1.5 h-3.5 w-3.5" />
-                                        New Product
+                                    <Button size="sm" onClick={() => setEditing('new')} icon={<Plus className="h-3.5 w-3.5" />}>
+                                        New product
                                     </Button>
                                 </>
                             )}
@@ -197,6 +189,36 @@ export default function MenuIndex({
                             <Check className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                             <span>{flash.success}</span>
                         </div>
+                    )}
+
+                    {flash?.import_result && (
+                        <Card>
+                            <CardContent className="p-4">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <span className="text-sm font-semibold text-foreground">Import result</span>
+                                    <div className="flex flex-wrap gap-2">
+                                        <Badge tone="success">{flash.import_result.created} created</Badge>
+                                        <Badge tone="info">{flash.import_result.updated} updated</Badge>
+                                        {flash.import_result.skipped > 0 && <Badge tone="danger">{flash.import_result.skipped} skipped</Badge>}
+                                        {flash.import_result.warnings?.length > 0 && <Badge tone="warning">{flash.import_result.warnings.length} image issue(s)</Badge>}
+                                    </div>
+                                </div>
+                                {flash.import_result.errors?.length > 0 && (
+                                    <ul className="mt-3 space-y-1 text-xs text-destructive">
+                                        {flash.import_result.errors.slice(0, 10).map((error: string, index: number) => (
+                                            <li key={index}>{error}</li>
+                                        ))}
+                                    </ul>
+                                )}
+                                {flash.import_result.warnings?.length > 0 && (
+                                    <ul className="mt-3 space-y-1 text-xs text-amber-700">
+                                        {flash.import_result.warnings.slice(0, 10).map((warning: string, index: number) => (
+                                            <li key={index}>{warning}</li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </CardContent>
+                        </Card>
                     )}
 
                     {/* Metric Cards */}
@@ -575,6 +597,7 @@ function ProductEditorModal({
         is_available: product?.is_available ?? true,
         sort_order: product?.sort_order ?? 0,
         labels: (product?.labels ?? []).join(', '),
+        image: null as File | null,
         variants: (product?.variants ?? []).map((v) => ({
             name: v.name,
             sku: v.sku ?? '',
@@ -603,16 +626,17 @@ function ProductEditorModal({
 
         form.transform(() => payload);
 
+        const options = {
+            preserveScroll: true,
+            onSuccess: onClose,
+            // Send multipart when a new product carries an image.
+            forceFormData: Boolean(form.data.image),
+        };
+
         if (product) {
-            form.patch(route('menu.products.update', product.id), {
-                preserveScroll: true,
-                onSuccess: onClose,
-            });
+            form.patch(route('menu.products.update', product.id), options);
         } else {
-            form.post(route('menu.products.store'), {
-                preserveScroll: true,
-                onSuccess: onClose,
-            });
+            form.post(route('menu.products.store'), options);
         }
     };
 
@@ -646,91 +670,56 @@ function ProductEditorModal({
                 </div>
 
                 <form onSubmit={submit} className="mt-4 space-y-4">
-                    {product && <ProductImageUploader product={product} />}
+                    {product ? (
+                        <ProductImageUploader product={product} />
+                    ) : (
+                        <ProductImageField
+                            value={form.data.image}
+                            error={form.errors.image}
+                            onChange={(file) => form.setData('image', file)}
+                        />
+                    )}
                     {/* Basic Info */}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div className="sm:col-span-2">
-                            <label className="text-xs font-semibold text-foreground block mb-1">
-                                Product Name *
-                            </label>
-                            <input
-                                type="text"
-                                className="h-9 w-full rounded-md border border-input bg-background py-1.5 px-3 text-xs font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                            <TextField
+                                label="Product name"
                                 value={form.data.name}
-                                onChange={(e) => form.setData('name', e.target.value)}
+                                onChange={(v) => form.setData('name', v)}
                                 placeholder="e.g. Classic Wagyu Burger"
                                 required
-                            />
-                            {form.errors.name && (
-                                <p className="mt-1 text-xs text-destructive">{form.errors.name}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className="text-xs font-semibold text-foreground block mb-1">
-                                Category
-                            </label>
-                            <select
-                                className="h-9 w-full rounded-md border border-input bg-background py-1.5 px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                                value={form.data.category_id ?? ''}
-                                onChange={(e) =>
-                                    form.setData('category_id', e.target.value ? Number(e.target.value) : '')
-                                }
-                            >
-                                <option value="">Uncategorised</option>
-                                {categories.map((c) => (
-                                    <option key={c.id} value={c.id}>
-                                        {c.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="text-xs font-semibold text-foreground block mb-1">
-                                Stock Tracking Mode
-                            </label>
-                            <select
-                                className="h-9 w-full rounded-md border border-input bg-background py-1.5 px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                                value={form.data.inventory_mode}
-                                onChange={(e) => form.setData('inventory_mode', e.target.value)}
-                            >
-                                {inventoryModes.map((m) => (
-                                    <option key={m.value} value={m.value}>
-                                        {m.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="text-xs font-semibold text-foreground block mb-1">
-                                SKU / Item Code
-                            </label>
-                            <input
-                                type="text"
-                                className="h-9 w-full rounded-md border border-input bg-background py-1.5 px-3 text-xs font-mono font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                                value={form.data.sku}
-                                onChange={(e) => form.setData('sku', e.target.value)}
-                                placeholder="e.g. BRG-001"
-                            />
-                            {form.errors.sku && (
-                                <p className="mt-1 text-xs text-destructive">{form.errors.sku}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className="text-xs font-semibold text-foreground block mb-1">
-                                Barcode (EAN / UPC)
-                            </label>
-                            <input
-                                type="text"
-                                className="h-9 w-full rounded-md border border-input bg-background py-1.5 px-3 text-xs font-mono font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                                value={form.data.barcode}
-                                onChange={(e) => form.setData('barcode', e.target.value)}
-                                placeholder="e.g. 501234567890"
+                                error={form.errors.name}
                             />
                         </div>
+
+                        <SelectField
+                            label="Category"
+                            value={String(form.data.category_id ?? '')}
+                            options={[{ value: '', label: 'Uncategorised' }, ...categories.map((c) => ({ value: String(c.id), label: c.name }))]}
+                            onChange={(v) => form.setData('category_id', v ? Number(v) : '')}
+                        />
+
+                        <SelectField
+                            label="Stock tracking mode"
+                            value={form.data.inventory_mode}
+                            options={inventoryModes}
+                            onChange={(v) => form.setData('inventory_mode', v)}
+                        />
+
+                        <TextField
+                            label="SKU / item code"
+                            value={form.data.sku}
+                            onChange={(v) => form.setData('sku', v)}
+                            placeholder="e.g. BRG-001"
+                            error={form.errors.sku}
+                        />
+
+                        <TextField
+                            label="Barcode (EAN / UPC)"
+                            value={form.data.barcode}
+                            onChange={(v) => form.setData('barcode', v)}
+                            placeholder="e.g. 501234567890"
+                        />
                     </div>
 
                     {/* Multi-Channel Pricing Box */}
@@ -747,102 +736,23 @@ function ProductEditorModal({
                         </div>
 
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                            <div>
-                                <label className="text-[11px] font-semibold text-foreground block mb-1">
-                                    Dine-In Price ($) *
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    className="h-8 w-full rounded-md border border-input bg-background py-1 px-2.5 font-mono text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                                    value={form.data.price_dine_in}
-                                    onChange={(e) => form.setData('price_dine_in', Number(e.target.value))}
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-[11px] font-semibold text-foreground block mb-1">
-                                    Takeaway Price ($) *
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    className="h-8 w-full rounded-md border border-input bg-background py-1 px-2.5 font-mono text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                                    value={form.data.price_takeaway}
-                                    onChange={(e) => form.setData('price_takeaway', Number(e.target.value))}
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-[11px] font-semibold text-foreground block mb-1">
-                                    Delivery Price ($) *
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    className="h-8 w-full rounded-md border border-input bg-background py-1 px-2.5 font-mono text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                                    value={form.data.price_delivery}
-                                    onChange={(e) => form.setData('price_delivery', Number(e.target.value))}
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-[11px] font-semibold text-foreground block mb-1">
-                                    Cost Price ($)
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    className="h-8 w-full rounded-md border border-input bg-background py-1 px-2.5 font-mono text-xs font-medium text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                                    value={form.data.cost_price}
-                                    onChange={(e) => form.setData('cost_price', Number(e.target.value))}
-                                />
-                            </div>
+                            <TextField label="Dine-in price" type="number" value={String(form.data.price_dine_in)} onChange={(v) => form.setData('price_dine_in', Number(v))} required error={form.errors.price_dine_in} />
+                            <TextField label="Takeaway price" type="number" value={String(form.data.price_takeaway)} onChange={(v) => form.setData('price_takeaway', Number(v))} required error={form.errors.price_takeaway} />
+                            <TextField label="Delivery price" type="number" value={String(form.data.price_delivery)} onChange={(v) => form.setData('price_delivery', Number(v))} required error={form.errors.price_delivery} />
+                            <TextField label="Cost price" type="number" value={String(form.data.cost_price)} onChange={(v) => form.setData('cost_price', Number(v))} error={form.errors.cost_price} />
                         </div>
                     </div>
 
-                    {/* Labels & Tags */}
-                    <div>
-                        <label className="text-xs font-semibold text-foreground block mb-1">
-                            Labels &amp; Badges (comma separated)
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="e.g. Popular, Spicy, Chef Special, Vegan"
-                            className="h-9 w-full rounded-md border border-input bg-background py-1.5 px-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                            value={form.data.labels}
-                            onChange={(e) => form.setData('labels', e.target.value)}
-                        />
-                    </div>
+                    <TextField
+                        label="Labels & badges (comma separated)"
+                        value={form.data.labels}
+                        placeholder="e.g. Popular, Spicy, Chef Special, Vegan"
+                        onChange={(v) => form.setData('labels', v)}
+                    />
 
-                    {/* Active & Available Toggles */}
-                    <div className="flex items-center gap-6 rounded-lg border border-border bg-muted/30 p-3">
-                        <label className="flex items-center gap-2 text-xs font-semibold text-foreground cursor-pointer">
-                            <input
-                                type="checkbox"
-                                className="rounded border-input text-primary focus:ring-ring"
-                                checked={form.data.is_active}
-                                onChange={(e) => form.setData('is_active', e.target.checked)}
-                            />
-                            <span>Active in Catalog</span>
-                        </label>
-
-                        <label className="flex items-center gap-2 text-xs font-semibold text-foreground cursor-pointer">
-                            <input
-                                type="checkbox"
-                                className="rounded border-input text-primary focus:ring-ring"
-                                checked={form.data.is_available}
-                                onChange={(e) => form.setData('is_available', e.target.checked)}
-                            />
-                            <span>Available on POS (In Stock)</span>
-                        </label>
+                    <div className="flex flex-wrap items-center gap-6 rounded-lg border border-border bg-muted/30 p-3">
+                        <CheckboxField label="Active in catalog" checked={form.data.is_active} onChange={(v) => form.setData('is_active', v)} />
+                        <CheckboxField label="Available on POS (in stock)" checked={form.data.is_available} onChange={(v) => form.setData('is_available', v)} />
                     </div>
 
                     {/* Product Variants Section */}
@@ -1121,6 +1031,60 @@ function ProductImageUploader({ product }: { product: Product }) {
                 )}
             </div>
             {form.errors.image && <p className="w-full text-xs text-destructive">{form.errors.image}</p>}
+        </div>
+    );
+}
+
+/**
+ * Image picker for a product that does not exist yet — the file rides along with
+ * the create request (multipart) instead of a separate upload endpoint.
+ */
+function ProductImageField({
+    value,
+    onChange,
+    error,
+}: {
+    value: File | null;
+    onChange: (file: File | null) => void;
+    error?: string;
+}) {
+    const ref = useRef<HTMLInputElement>(null);
+    const [preview, setPreview] = useState<string | null>(value ? URL.createObjectURL(value) : null);
+
+    const pick = (file: File | null) => {
+        onChange(file);
+        setPreview(file ? URL.createObjectURL(file) : null);
+    };
+
+    return (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+            {preview ? (
+                <img src={preview} alt="Product" className="h-14 w-14 rounded-lg object-cover ring-1 ring-border" />
+            ) : (
+                <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-background text-[10px] font-semibold text-muted-foreground ring-1 ring-border">
+                    No image
+                </div>
+            )}
+            <div className="flex items-center gap-2">
+                <input ref={ref} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => pick(e.target.files?.[0] ?? null)} />
+                <Button type="button" size="xs" variant="secondary" onClick={() => ref.current?.click()}>
+                    Choose image
+                </Button>
+                {preview && (
+                    <Button
+                        type="button"
+                        size="xs"
+                        variant="ghost"
+                        onClick={() => {
+                            pick(null);
+                            if (ref.current) ref.current.value = '';
+                        }}
+                    >
+                        Clear
+                    </Button>
+                )}
+            </div>
+            {error && <p className="w-full text-xs text-destructive">{error}</p>}
         </div>
     );
 }

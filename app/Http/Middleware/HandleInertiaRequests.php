@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\Communications\AnnouncementService;
+use App\Domain\Orders\Models\Order;
 use App\Domain\Tenancy\TenantContext;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -54,6 +56,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
+                'import_result' => fn () => $request->session()->get('import_result'),
             ],
             'impersonation' => $request->session()->has('impersonator_id') ? [
                 'admin_id' => $request->session()->get('impersonator_id'),
@@ -80,7 +83,7 @@ class HandleInertiaRequests extends Middleware
                 : [],
             'active_branch_id' => fn () => app(TenantContext::class)->branchId(),
             'announcements' => fn () => $tenant
-                ? app(\App\Domain\Communications\AnnouncementService::class)->forTenant($tenant)
+                ? app(AnnouncementService::class)->forTenant($tenant)
                 : [],
             'locale' => app()->getLocale(),
             'locales' => collect(config('app.locales', ['en' => 'English']))

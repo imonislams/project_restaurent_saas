@@ -7,7 +7,6 @@ use App\Domain\Billing\Models\PaymentGateway;
 use App\Domain\PlatformSettings\PlatformSettings;
 use App\Support\HealthChecker;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class PlatformReadinessCheck extends Command
 {

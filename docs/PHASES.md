@@ -2029,6 +2029,7 @@ command fixes).
 
 ---
 
+<<<<<<< HEAD
 ## Phase 16E(A) — Active restaurant & branch context
 
 ### Business journey completed
@@ -2066,10 +2067,42 @@ QR flow). The sidebar switcher changed only the displayed label.
 - **Frontend** — POS, Kitchen and Tables switchers now switch the global context
   (`branch.switch`) rather than a page-local `?branch_id`; Orders gained a branch filter.
   Branch types consolidated onto `BranchSummary`.
+=======
+## Phase 16D — Product images, bulk ops & command fixes
+
+### Business journey completed
+
+An owner uploads an image while creating a product (not only when editing), downloads a CSV
+template, bulk-imports a catalogue whose rows may carry an `image_url` (downloaded and stored,
+with failures reported but never dropping the product), and exports the catalogue as CSV or
+PDF including images. The platform "Link storage" command now runs with a resolved PHP binary
+and reports real public-storage health.
+
+### Features implemented
+
+- **Image on create** — `ProductRequest` accepts an `image`; `storeProduct`/`updateProduct`
+  store it (public disk, replacing the previous file). The product editor shows an image
+  picker for new products and submits multipart; the standalone replace/remove endpoints
+  remain.
+- **Import with images** — `ProductImportService` gains an `image_url` column: each URL is
+  downloaded (type/size checked) and stored under the tenant's folder. A failed download is a
+  warning — the product is still imported. The controller flashes a structured import result
+  (created/updated/skipped/errors/warnings) rendered in the UI.
+- **Template/export** — the CSV template and export include `image_url`, so a round-trip is
+  lossless.
+- **Command runner** — new `config/operations.php`; `CommandRunner` resolves `{php}`/`{npm}`
+  placeholders to real executables (CLI `PHP_BINARY`, a sibling CLI binary under fpm/cgi, or
+  an env override). Verified by actually executing `storage:link --force` in a test.
+- **Health** — `HealthChecker` adds a public-storage check (writable public disk + symlink
+  present); `platform:check` reports a "Public files" row.
+- **Design** — the menu header actions and product editor fields use the shared UI kit
+  (`TextField`, `SelectField`, `CheckboxField`, `Button`, `Card`, `Badge`).
+>>>>>>> 042a3615db870847b5a61a3b5e5d7a99bb627eaf
 
 ### Files and modules changed
 
 ```
+<<<<<<< HEAD
 app/Http/Middleware/ResolveActiveBranch.php          (new)
 app/Http/Controllers/Concerns/ResolvesActiveBranch.php (new)
 app/Http/Controllers/Tenant/BranchSwitchController.php (new)
@@ -2264,10 +2297,23 @@ database/migrations/2026_10_13_000001_create_table_staff_tables.php  (new)
 resources/js/Components/ui/StaffMultiSelect.tsx          (new) + ui/index.ts export
 resources/js/Pages/Tables/Index.tsx, Pos/Index.tsx, Orders/Show.tsx
 tests/Feature/Tables/TableStaffAssignmentTest.php        (new)
+=======
+app/Http/Requests/Menu/ProductRequest.php              (image rule)
+app/Http/Controllers/Menu/MenuController.php           (image on create/update, import result)
+app/Domain/Menu/ProductImportService.php               (image_url fetch, warnings)
+app/Domain/Operations/CommandRunner.php                (binary resolution, placeholders)
+app/Http/Controllers/Platform/CommandController.php   (resolved command display)
+app/Support/HealthChecker.php, app/Console/Commands/PlatformReadinessCheck.php
+app/Http/Middleware/HandleInertiaRequests.php          (flash import_result)
+config/operations.php                                  (new)
+resources/js/Pages/Menu/Index.tsx                      (editor + import UI)
+tests/Feature/Menu/ProductBulkOpsTest.php
+>>>>>>> 042a3615db870847b5a61a3b5e5d7a99bb627eaf
 ```
 
 ### Database and migration changes
 
+<<<<<<< HEAD
 - New: `table_staff`, `order_staff`. Additive and reversible.
 
 ### Security and tenant-isolation results
@@ -2276,10 +2322,21 @@ tests/Feature/Tables/TableStaffAssignmentTest.php        (new)
   users are rejected (422); the service also intersects with the eligible set (fail closed).
 - `tables.manage` required to create/update; branch `Rule::in(accessibleBranchIds())` retained.
 - Verified: no cross-tenant or cross-branch staff can be assigned.
+=======
+None.
+
+### Security and tenant-isolation results
+
+- Uploaded/imported images are validated (image mime, 2–3 MB) and stored under the tenant's
+  folder; the previous file is deleted on replace.
+- Remote image fetches are time-bounded and type-checked; a malicious/unreachable URL cannot
+  break or block an import — verified.
+>>>>>>> 042a3615db870847b5a61a3b5e5d7a99bb627eaf
 
 ### Tests executed
 
 ```
+<<<<<<< HEAD
 php artisan test tests/Feature/Tables/TableStaffAssignmentTest.php
   →  16 passed (66 assertions)
 php -l on all changed PHP files → clean
@@ -2420,11 +2477,31 @@ resources/js/Pages/Pos/Index.tsx
 ### Final phase status
 
 **Complete pending review.** Awaiting explicit authorization before any test/QA run.
+=======
+php artisan test   →  512 passed (2743 assertions)
+```
+
+New coverage (+3 net): image on create, import with `image_url`, import warning on a failed
+image, and a storage-link test that really executes the command (exit 0).
+
+### Known defects and unresolved risks
+
+- Import remains synchronous; very large catalogues with many images should move to a queued
+  job.
+- Import reads only the documented columns; no Excel (`.xlsx`) support (CSV only, per scope).
+- `OPERATIONS_PHP_BINARY`/`OPERATIONS_NPM_BINARY` may still be needed on hosts whose layout
+  does not match the auto-detection.
+
+### Final phase status
+
+**Complete pending review.** This closes the 16A–16D refinement program.
+>>>>>>> 042a3615db870847b5a61a3b5e5d7a99bb627eaf
 
 ---
 
 ## Program status
 
+<<<<<<< HEAD
 Phases 15A–15D, 16A, 16B and 16C are implemented and verified (509 tests passing; frontend
 build clean). Remaining known gaps are noted per phase. Phase 16D (product bulk ops, images &
 command fixes) is planned but not yet implemented. Phases 16E(A) (active restaurant & branch
@@ -2433,3 +2510,9 @@ context) and 16E(B) (branch-wise permissions & task assignment) are implemented 
 verified (new `TableStaffAssignmentTest`: 16 tests passing; frontend build clean). Phase 16G
 (table staff role & order confirmation) is implemented and verified — **538 tests passing**,
 frontend build clean. Re-seed `RolePermissionSeeder` for the new role and permission.
+=======
+Phases 15A–15D and 16A–16D are implemented and verified (512 tests passing; frontend build
+clean). Remaining known gaps are noted per phase. The owner journey, tenant payment gateways,
+customer segmentation/analytics and product bulk operations are now complete, with the tenant
+panel restyled on the shared shadcn-based UI kit and Roboto typography.
+>>>>>>> 042a3615db870847b5a61a3b5e5d7a99bb627eaf

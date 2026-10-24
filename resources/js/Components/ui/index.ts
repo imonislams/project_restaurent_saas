@@ -41,6 +41,7 @@ export type { DateRange } from './DateRangePicker';
 export { default as KpiCard } from './KpiCard';
 export { default as Money, formatMoney, formatNumber, formatDate, formatDateTime } from './Money';
 export { default as Skeleton, CardSkeleton, TableSkeleton } from './Skeleton';
+export { default as Progress } from './Progress';
 export { default as BranchSelector } from './BranchSelector';
 export { default as CommandPalette } from './CommandPalette';
 export type { CommandItem } from './CommandPalette';

@@ -5,7 +5,7 @@ export default function StepFooter({ processing, onSkip }: { processing: boolean
     const t = useT();
 
     return (
-        <div className="flex items-center justify-between border-t border-gray-100 pt-5">
+        <div className="flex items-center justify-between gap-3 border-t border-border pt-5">
             {onSkip ? (
                 <Button type="button" variant="ghost" onClick={onSkip}>
                     {t('onboarding.skip')}
