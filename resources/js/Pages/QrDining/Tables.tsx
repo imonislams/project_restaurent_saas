@@ -7,6 +7,7 @@ import EmptyState from '@/Components/ui/EmptyState';
 import { SelectField, TextField } from '@/Components/ui/Field';
 import KpiCard from '@/Components/ui/KpiCard';
 import PageHeader from '@/Components/ui/PageHeader';
+import { formatMoney } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -45,8 +46,6 @@ const statusTone: Record<string, 'success' | 'warning' | 'info' | 'danger' | 'ne
     cleaning: 'neutral',
 };
 
-const money = (n: number) => `$${Number(n || 0).toFixed(2)}`;
-
 export default function QrTablesIndex({
     tables,
     branches,
@@ -60,7 +59,7 @@ export default function QrTablesIndex({
     filters: { branch_id: number | null; area_id: number | null; search: string };
     stats: { total: number; active: number; occupied: number };
 }) {
-    const { auth, flash } = usePage().props as Record<string, any>;
+    const { auth, flash, currency } = usePage().props as Record<string, any>;
     const canManage = auth?.permissions?.includes('qr.manage') ?? false;
 
     const [search, setSearch] = useState(filters.search ?? '');
@@ -195,7 +194,7 @@ export default function QrTablesIndex({
                                             </div>
                                             {table.session ? (
                                                 <Badge tone="warning">
-                                                    {table.session.orders_count} order(s) · {money(table.session.total)}
+                                                    {table.session.orders_count} order(s) · {formatMoney(table.session.total, currency)}
                                                 </Badge>
                                             ) : (
                                                 <Badge tone="neutral">Vacant</Badge>

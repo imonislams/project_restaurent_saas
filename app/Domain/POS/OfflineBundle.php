@@ -34,6 +34,7 @@ class OfflineBundle
                     'sku' => $product->sku,
                     'barcode' => $product->barcode,
                     'category_id' => $product->category_id,
+                    'image_url' => $product->image_url,
                     'price_dine_in' => (float) $product->price_dine_in,
                     'price_takeaway' => (float) $product->price_takeaway,
                     'price_delivery' => (float) $product->price_delivery,
@@ -94,6 +95,7 @@ class OfflineBundle
             'taxRate' => (float) $tenant->getSetting('tax.rate', 0),
             'serviceChargeRate' => (float) $tenant->getSetting('service_charge.rate', 0),
             'allowPartialPayment' => (bool) $tenant->getSetting('pos.allow_partial', false),
+            'requireTableForDineIn' => (bool) $tenant->getSetting('pos.require_table_for_dine_in', true),
             'blockSaleWhenInsufficient' => (bool) $tenant->getSetting('inventory.block_sale_when_insufficient', false),
             // Null means no discount needs approval; anything above this percentage
             // needs a manager PIN, which is verified server-side — so the offline

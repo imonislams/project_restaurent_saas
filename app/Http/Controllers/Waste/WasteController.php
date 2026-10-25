@@ -48,6 +48,7 @@ class WasteController extends Controller
                     'recorded_at' => $record->created_at?->toIso8601String(),
                 ]),
             'approvalThreshold' => $tenant->getSetting('waste.approval_threshold'),
+            'currency' => $tenant->getSetting('region.currency', 'USD'),
         ]);
     }
 

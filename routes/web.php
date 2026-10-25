@@ -62,6 +62,7 @@ use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\SupplierController;
 use App\Http\Controllers\QrDining\QrAnalyticsController;
 use App\Http\Controllers\QrDining\QrBillController;
+use App\Http\Controllers\QrDining\QrDesignController;
 use App\Http\Controllers\QrDining\QrEntryController;
 use App\Http\Controllers\QrDining\QrFeedbackController;
 use App\Http\Controllers\QrDining\QrMenuController;
@@ -267,10 +268,28 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->group(function 
         Route::get('/analytics', [QrAnalyticsController::class, 'index'])
             ->middleware('permission:qr.analytics')->name('analytics');
 
+        // QR design panel: card designs + customer QR menu branding.
+        Route::get('/designs', [QrDesignController::class, 'index'])
+            ->middleware('permission:qr.view')->name('designs.index');
+        Route::get('/designs/{design}/preview', [QrDesignController::class, 'preview'])
+            ->middleware('permission:qr.view')->name('designs.preview');
+        Route::get('/designs/{design}/export', [QrDesignController::class, 'export'])
+            ->middleware('permission:qr.view')->name('designs.export');
+
         Route::middleware('permission:qr.manage')->group(function () {
             Route::post('/tables/{table}/regenerate', [QrTableController::class, 'regenerate'])->name('tables.regenerate');
             Route::post('/tables/{table}/revoke', [QrTableController::class, 'revoke'])->name('tables.revoke');
+
+            Route::post('/designs', [QrDesignController::class, 'store'])->name('designs.store');
+            Route::post('/designs/assets', [QrDesignController::class, 'uploadAsset'])->name('designs.assets');
+            Route::patch('/designs/{design}', [QrDesignController::class, 'update'])->name('designs.update');
+            Route::post('/designs/{design}/activate', [QrDesignController::class, 'activate'])->name('designs.activate');
+            Route::post('/designs/{design}/duplicate', [QrDesignController::class, 'duplicate'])->name('designs.duplicate');
+            Route::delete('/designs/{design}', [QrDesignController::class, 'destroy'])->name('designs.destroy');
         });
+
+        Route::post('/branding', [QrDesignController::class, 'saveBranding'])
+            ->middleware('permission:qr.settings')->name('branding.save');
     });
 
     Route::prefix('inventory')->name('inventory.')->group(function () {

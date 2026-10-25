@@ -14,6 +14,7 @@ export default function PosFields({ data, setData, errors }: FieldProps) {
                     <TextField label={t('settings.discount_approval')} type="number" value={data.pos_discount_approval_percent ?? ''} error={errors.pos_discount_approval_percent} onChange={(v) => setData('pos_discount_approval_percent', v)} />
                 </div>
                 <CheckboxField label={t('settings.allow_partial')} checked={Boolean(data.pos_allow_partial)} onChange={(v) => setData('pos_allow_partial', v)} />
+                <CheckboxField label={t('settings.require_table_dine_in')} hint={t('settings.require_table_dine_in_hint')} checked={data.pos_require_table_for_dine_in === undefined ? true : Boolean(data.pos_require_table_for_dine_in)} onChange={(v) => setData('pos_require_table_for_dine_in', v)} />
             </FormSection>
 
             <FormSection title="Payments" description="How you accept payment. Card and cash methods are managed per branch.">

@@ -8,6 +8,7 @@ import {
     KpiCard,
     PageHeader,
     ConfirmDialog,
+    formatMoney,
 } from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -62,7 +63,7 @@ const STATUS_TONE: Record<string, BadgeTone> = {
 };
 
 export default function PurchasingShow({ order }: { order: OrderView }) {
-    const { auth, flash } = usePage().props as Record<string, any>;
+    const { auth, flash, currency } = usePage().props as Record<string, any>;
     const canManage = auth.permissions.includes('purchasing.manage');
     const canApprove = auth.permissions.includes('purchasing.approve');
 
@@ -259,18 +260,18 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <KpiCard
                             label="Total Order Amount"
-                            value={`$${order.total.toFixed(2)}`}
-                            hint={`Subtotal: $${order.subtotal.toFixed(2)}`}
+                            value={formatMoney(order.total, currency)}
+                            hint={`Subtotal: ${formatMoney(order.subtotal, currency)}`}
                         />
                         <KpiCard
                             label="Paid to Vendor"
-                            value={`$${order.paid_total.toFixed(2)}`}
+                            value={formatMoney(order.paid_total, currency)}
                             tone="success"
                             hint={`${order.payments.length} recorded payments`}
                         />
                         <KpiCard
                             label="Outstanding Due"
-                            value={`$${order.outstanding.toFixed(2)}`}
+                            value={formatMoney(order.outstanding, currency)}
                             tone={order.outstanding > 0 ? 'warning' : 'neutral'}
                             hint={order.outstanding > 0 ? 'Pending payment' : 'Fully settled'}
                         />
@@ -324,10 +325,10 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-right font-mono tabular-nums text-gray-600">
-                                                    ${item.unit_cost.toFixed(2)}
+                                                    {formatMoney(item.unit_cost, currency)}
                                                 </td>
                                                 <td className="px-6 py-4 text-right font-mono font-bold tabular-nums text-gray-900">
-                                                    ${item.line_total.toFixed(2)}
+                                                    {formatMoney(item.line_total, currency)}
                                                 </td>
                                             </tr>
                                         ))}
@@ -486,7 +487,7 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
                                                             {p.reference ?? '—'}
                                                         </td>
                                                         <td className="px-4 py-2.5 text-right font-mono font-bold text-emerald-700">
-                                                            ${p.amount.toFixed(2)}
+                                                            {formatMoney(p.amount, currency)}
                                                         </td>
                                                         <td className="px-4 py-2.5 text-gray-500">
                                                             {p.by ?? 'System'}
@@ -510,7 +511,7 @@ export default function PurchasingShow({ order }: { order: OrderView }) {
                                         <div className="flex flex-wrap items-end gap-3 text-xs">
                                             <div>
                                                 <label className="block text-gray-700 font-medium mb-1">
-                                                    Payment Amount ($)
+                                                    Payment Amount ({currency})
                                                 </label>
                                                 <input
                                                     type="number"

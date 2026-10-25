@@ -19,6 +19,7 @@ import {
     TableHeader,
     TableRow,
     TextField,
+    formatMoney,
 } from '@/Components/ui';
 import type { StaffOption } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -109,7 +110,7 @@ export default function TablesIndex({
     staffByBranch: Record<number, StaffOption[]>;
     statuses: { value: string; label: string }[];
 }) {
-    const { auth, flash } = usePage().props as Record<string, any>;
+    const { auth, flash, currency } = usePage().props as Record<string, any>;
     const canManage = auth.permissions.includes('tables.manage');
 
     // UI View states
@@ -1042,7 +1043,7 @@ export default function TablesIndex({
                                             <option value="">Select order to move…</option>
                                             {transferableOrders.map((o) => (
                                                 <option key={o.id} value={o.id}>
-                                                    {o.order_number} (From {o.fromTableName} · ${o.total.toFixed(2)})
+                                                    {o.order_number} (From {o.fromTableName} · {formatMoney(o.total, currency)})
                                                 </option>
                                             ))}
                                         </select>

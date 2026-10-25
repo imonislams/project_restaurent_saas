@@ -46,12 +46,66 @@ Online payments use the existing `payments.provider` gateway setting
 (`manual` = paid at the table immediately; `stub` = pending until a signed
 webhook confirms). No new provider is introduced.
 
+## QR design panel
+
+**Restaurant Operations → QR Designer** (`/qr-dining/designs`) covers both branded
+surfaces in one place:
+
+**Table card (printed).** A Canva-style editor for the card that sits on each table.
+
+- Element vocabulary is deliberately small — `text`, `rectangle`, `ellipse`, `line`,
+  `image`, `qr` — positioned in **millimetres** on a fixed card size.
+- Text may use `{{restaurant}}`, `{{branch}}`, `{{table}}` and `{{area}}` placeholders;
+  they are filled per table when printing or previewing.
+- Designs are **per branch**. Resolution when printing: the branch's active design →
+  the company-wide active design (`branch_id` null) → the built-in default (created on
+  first use). The design list shows a branch's own designs *plus* the company-wide ones.
+- The **server render is authoritative**: `GET /qr-dining/designs/{design}/preview`
+  returns the card HTML the PDF uses, shown in the inspector's preview panel. After
+  saving, the panel refreshes so the preview and the PDF always agree.
+- **Download PDF** renders one card per page for every table in the branch, each with
+  its own QR. "Print all" on the Table QR Codes page now uses the active design too.
+
+**QR menu page (diners).** Branding for the page a guest sees after scanning
+(`/qr/{token}`, `/qr/{token}/tracking`):
+
+| Key | Meaning |
+|---|---|
+| `qr.branding.primary_color` / `accent_color` / `background_color` | Theme colours |
+| `qr.branding.header_style` | `light`, `brand` or `dark` header |
+| `qr.branding.show_logo` / `show_table_name` | What the header shows |
+| `qr.branding.welcome_title` / `welcome_text` | Optional banner above the menu |
+| `qr.branding.footer_text` | Footer line |
+
+Stored in `qr.branding` on `branches.settings` (per branch) falling back to
+`tenants.settings` and then the built-in defaults, resolved by
+`App\Domain\Dining\QrBrandingSettings`. Colours become CSS variables
+(`--qr-primary`, `--qr-primary-text`, …) on `QrLayout`; the text colour paired with a
+brand colour is computed server-side for contrast, so a pale primary colour can never
+produce unreadable labels. A tenant that never customises anything keeps the current look.
+
+### PDF-safe limits
+
+The export can only reproduce what DomPDF supports, and the editor says so:
+
+- No rotation, gradients, shadows or blur — positions, solid colours, borders, corner
+  radius, text alignment/weight/italic/underline, letter-spacing and line-height only.
+- Fonts are limited to what DomPDF ships (DejaVu Sans / Serif / Mono). **Bengali card
+  typography needs a bundled Bengali TTF**, which is not in the repository yet; until
+  then card text renders in the Latin PDF-safe set.
+- Images (the restaurant logo, or an uploaded card image ≤ 1.5 MB) are embedded as data
+  URIs. They fill their box — the export does not preserve an image's aspect ratio.
+
 ## Permissions
 
 Added to the RBAC catalog and `RolePermissionSeeder`:
 
 - `qr.view`, `qr.manage`, `qr.settings`, `qr.analytics`
 - `modifiers.view`, `modifiers.manage` (menu add-ons)
+
+The design panel reuses these — viewing and exporting need `qr.view`, editing designs
+needs `qr.manage`, and saving the QR menu branding needs `qr.settings`. No new
+permission was introduced.
 
 Plan feature `qr_dining` gates the admin routes and sidebar entry.
 
@@ -64,6 +118,11 @@ npm run build
 
 No new queues, storage links or services. `endroid/qr-code` generates the QR
 images/SVGs and the printable PDF cards.
+
+The design panel adds one **additive** table, `qr_card_designs` (tenant + nullable
+branch, name, `canvas` JSON, active flag), so `php artisan migrate --force` is safe to
+run live. Uploaded card images are stored on the existing `public` disk under
+`qr-designs/{tenant_id}`.
 
 ## Operations
 

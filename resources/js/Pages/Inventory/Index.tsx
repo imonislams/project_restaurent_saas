@@ -12,6 +12,7 @@ import {
     TextField,
     SelectField,
     ConfirmDialog,
+    formatMoney,
 } from '@/Components/ui';
 import type { BadgeTone, TabItem } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -112,7 +113,7 @@ export default function InventoryIndex({
     movements: Movement[];
     allowNegative: boolean;
 }) {
-    const { auth, flash } = usePage().props as Record<string, any>;
+    const { auth, flash, currency } = usePage().props as Record<string, any>;
     const canManage = auth.permissions.includes('inventory.manage');
     const canAdjust = auth.permissions.includes('inventory.adjust');
 
@@ -480,7 +481,7 @@ export default function InventoryIndex({
                         />
                         <KpiCard
                             label="Est. Stock Valuation"
-                            value={`$${totalValuation.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            value={formatMoney(totalValuation, currency)}
                             tone="neutral"
                             hint="Calculated from active ingredient unit costs"
                         />
@@ -855,7 +856,7 @@ export default function InventoryIndex({
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4 text-right font-mono tabular-nums text-gray-900">
-                                                            ${i.cost_per_unit.toFixed(2)}
+                                                            {formatMoney(i.cost_per_unit, currency)}
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
                                                             {i.track_inventory ? (
@@ -1238,7 +1239,7 @@ export default function InventoryIndex({
                             {stockModalMode === 'opening' ? (
                                 <div>
                                     <label className="block text-xs font-medium text-gray-700">
-                                        Unit Cost ($)
+                                        Unit Cost ({currency})
                                     </label>
                                     <input
                                         type="number"
@@ -1375,7 +1376,7 @@ export default function InventoryIndex({
 
                             <div>
                                 <label className="block text-xs font-medium text-gray-700">
-                                    Cost Per Unit ($)
+                                    Cost Per Unit ({currency})
                                 </label>
                                 <input
                                     type="number"

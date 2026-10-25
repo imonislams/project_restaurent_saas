@@ -56,6 +56,7 @@ interface Product {
     sku?: string | null;
     barcode?: string | null;
     category_id: number | null;
+    image_url?: string | null;
     price_dine_in: number;
     price_takeaway: number;
     price_delivery: number;
@@ -183,6 +184,7 @@ export default function PosIndex({
     taxInclusive,
     taxRate,
     serviceChargeRate,
+    requireTableForDineIn = true,
     openOrders = [],
 }: {
     branches: BranchSummary[];
@@ -197,6 +199,7 @@ export default function PosIndex({
     taxInclusive: boolean;
     taxRate: number;
     serviceChargeRate: number;
+    requireTableForDineIn?: boolean;
     openOrders?: OpenOrderSummary[];
 }) {
     const { auth, flash } = usePage().props as {
@@ -246,6 +249,17 @@ export default function PosIndex({
 
     const playSound = (kind: 'tap' | 'add' | 'success' | 'alert') => {
         if (soundEnabled) playTone(kind);
+    };
+
+    // A dine-in order may require an explicit table (tenant setting, on by default).
+    const tableMissing = requireTableForDineIn && orderType === 'dine_in' && !tableId;
+
+    /** Blocks checkout / parking until a table is chosen. Returns false when it blocks. */
+    const guardTable = (): boolean => {
+        if (!tableMissing) return true;
+        playSound('alert');
+        setError(t('pos.table_required'));
+        return false;
     };
 
     // Calculate effective unit price by order type
@@ -481,7 +495,7 @@ export default function PosIndex({
             } else if (e.key === 'F4') {
                 e.preventDefault();
                 if (cart.length > 0 && shift) {
-                    setShowPayment(true);
+                    if (guardTable()) setShowPayment(true);
                 } else if (!shift) {
                     setShowShift(true);
                 }
@@ -503,12 +517,13 @@ export default function PosIndex({
         };
         window.addEventListener('keydown', handler);
         return () => window.removeEventListener('keydown', handler);
-    }, [cart.length, shift, orderType]);
+    }, [cart.length, shift, orderType, tableId, requireTableForDineIn]);
 
     // Hold / Park Dine-in or Open Order
     const handleHoldOrder = () => {
         if (cart.length === 0 || !shift || !branch) return;
         setError(null);
+        if (!guardTable()) return;
         router.post(
             route('pos.orders.open'),
             {
@@ -920,12 +935,29 @@ export default function PosIndex({
                                             )}
                                         </div>
 
-                                        <div className="mt-2 line-clamp-2 min-h-[2.5rem] text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-primary transition">
-                                            {product.name}
-                                        </div>
-
-                                        <div className="mt-2 font-mono text-sm font-bold text-gray-900 tracking-tight">
-                                            {money(unitPrice, currency)}
+                                        <div className="mt-2 flex items-start gap-2.5">
+                                            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-100 ring-1 ring-gray-200">
+                                                {product.image_url ? (
+                                                    <img
+                                                        src={product.image_url}
+                                                        alt={product.name}
+                                                        loading="lazy"
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="flex h-full w-full items-center justify-center text-gray-300">
+                                                        <Icon name="book" className="h-4 w-4" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="line-clamp-2 min-h-[2.5rem] text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-primary transition">
+                                                    {product.name}
+                                                </div>
+                                                <div className="mt-1 font-mono text-sm font-bold text-gray-900 tracking-tight">
+                                                    {money(unitPrice, currency)}
+                                                </div>
+                                            </div>
                                         </div>
                                     </button>
 
@@ -1002,43 +1034,53 @@ export default function PosIndex({
 
                         {/* Dine-In Controls */}
                         {orderType === 'dine_in' && (
-                            <div className="mt-2.5 grid grid-cols-3 gap-2">
-                                <div className="col-span-2">
-                                    <select
-                                        aria-label="Table selection"
-                                        className="w-full rounded-xl border border-input bg-background py-1.5 px-2.5 text-xs font-medium text-foreground shadow-xs focus:border-ring focus:ring-1 focus:ring-ring"
-                                        value={tableId}
-                                        onChange={(e) =>
-                                            setTableId(e.target.value ? Number(e.target.value) : '')
-                                        }
-                                    >
-                                        <option value="">{t('pos.no_table')}</option>
-                                        {tables.map((tbl) => (
-                                            <option key={tbl.id} value={tbl.id}>
-                                                {tbl.name} ({tbl.seats} seats · {tbl.status}
-                                                {tbl.staff.length > 0
-                                                    ? ` · ${tbl.staff.map((s) => s.name).join(', ')}`
-                                                    : ''}
-                                                )
-                                            </option>
-                                        ))}
-                                    </select>
+                            <div className="mt-2.5">
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="col-span-2">
+                                        <select
+                                            aria-label="Table selection"
+                                            aria-invalid={tableMissing}
+                                            className={`w-full rounded-xl border bg-background py-1.5 px-2.5 text-xs font-medium text-foreground shadow-xs focus:ring-1 focus:ring-ring ${
+                                                tableMissing ? 'border-red-400 focus:border-red-500' : 'border-input focus:border-ring'
+                                            }`}
+                                            value={tableId}
+                                            onChange={(e) =>
+                                                setTableId(e.target.value ? Number(e.target.value) : '')
+                                            }
+                                        >
+                                            <option value="">{t('pos.no_table')}</option>
+                                            {tables.map((tbl) => (
+                                                <option key={tbl.id} value={tbl.id}>
+                                                    {tbl.name} ({tbl.seats} seats · {tbl.status}
+                                                    {tbl.staff.length > 0
+                                                        ? ` · ${tbl.staff.map((s) => s.name).join(', ')}`
+                                                        : ''}
+                                                    )
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            max={50}
+                                            placeholder="Covers"
+                                            title="Guest Covers count"
+                                            value={covers}
+                                            onChange={(e) => setCovers(Math.max(1, Number(e.target.value)))}
+                                            className="w-full rounded-xl border border-gray-300 bg-white py-1.5 px-2.5 text-xs font-semibold text-gray-800 shadow-subtle text-center"
+                                        />
+                                        <span className="pointer-events-none absolute right-2 top-1.5 text-[10px] text-gray-400">
+                                            pax
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="relative">
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        max={50}
-                                        placeholder="Covers"
-                                        title="Guest Covers count"
-                                        value={covers}
-                                        onChange={(e) => setCovers(Math.max(1, Number(e.target.value)))}
-                                        className="w-full rounded-xl border border-gray-300 bg-white py-1.5 px-2.5 text-xs font-semibold text-gray-800 shadow-subtle text-center"
-                                    />
-                                    <span className="pointer-events-none absolute right-2 top-1.5 text-[10px] text-gray-400">
-                                        pax
-                                    </span>
-                                </div>
+                                {tableMissing && (
+                                    <p className="mt-1.5 text-xs font-medium text-red-600" role="alert">
+                                        {t('pos.table_required')}
+                                    </p>
+                                )}
                             </div>
                         )}
 
@@ -1325,7 +1367,7 @@ export default function PosIndex({
                                 disabled={cart.length === 0 || !shift}
                                 onClick={() => {
                                     playSound('tap');
-                                    setShowPayment(true);
+                                    if (guardTable()) setShowPayment(true);
                                 }}
                                 className="mt-3 flex w-full items-center justify-between rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 active:scale-[0.99] transition disabled:opacity-50 disabled:pointer-events-none"
                             >

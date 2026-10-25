@@ -44,9 +44,11 @@ class OverviewDashboardTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
 
         $this->tenant = Tenant::factory()->create(['onboarding_completed_at' => now()]);
+        // The dine-in table requirement has its own test; these tests cover other behaviour.
         $this->tenant->mergeSettings([
             'tax' => ['rate' => 10, 'inclusive' => false],
             'region' => ['timezone' => 'Asia/Dhaka', 'currency' => 'BDT'],
+            'pos.require_table_for_dine_in' => false,
         ]);
         $this->tenant->save();
 

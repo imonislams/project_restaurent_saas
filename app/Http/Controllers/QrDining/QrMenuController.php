@@ -4,6 +4,7 @@ namespace App\Http\Controllers\QrDining;
 
 use App\Domain\Dining\CustomerStatusMapper;
 use App\Domain\Dining\DiningAuthorization;
+use App\Domain\Dining\QrBrandingSettings;
 use App\Domain\Dining\QrDiningSettings;
 use App\Domain\Menu\QrMenuService;
 use App\Domain\Orders\Enums\OrderStatus;
@@ -41,6 +42,7 @@ class QrMenuController extends Controller
         return Inertia::render('Qr/Menu', [
             'token' => $qr->token,
             'table' => ['id' => $table->getKey(), 'name' => $table->name],
+            'branding' => app(QrBrandingSettings::class)->resolve($tenant, $branch),
             'session' => [
                 'id' => $session->getKey(),
                 'status' => $session->status->value,

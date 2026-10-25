@@ -19,10 +19,15 @@ class PlatformCallbackController extends Controller
     public function callback(Request $request, string $provider, string $result): RedirectResponse
     {
         if ($result === 'success') {
-            $outcome = $this->payments->handleNotification($provider, $request->all());
+            $this->payments->handleNotification($provider, $request->all());
+
+            // The provider also posts a server IPN for the same transaction, so
+            // this return is often a duplicate. Report the payment's real state
+            // rather than treating "already processed" as a failure.
+            $settled = $this->payments->notificationSettled($provider, $request->all());
 
             return redirect()->route('payments.result', [
-                'status' => $outcome['processed'] ? 'success' : 'failed',
+                'status' => $settled ? 'success' : 'failed',
             ]);
         }
 

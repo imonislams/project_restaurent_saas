@@ -1,4 +1,5 @@
 import QrLayout from '@/Layouts/QrLayout';
+import type { QrBranding } from '@/Components/Qr/qrBranding';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -6,11 +7,12 @@ interface EntryProps {
     token: string;
     restaurant: { name: string; branch: string; logo_url?: string | null };
     table: { id: number; name: string };
+    branding?: Partial<QrBranding> | null;
     enabled: boolean;
     policy: { guest_checkout: boolean; require_phone: boolean; require_email: boolean };
 }
 
-export default function QrEntry({ token, restaurant, table, enabled, policy }: EntryProps) {
+export default function QrEntry({ token, restaurant, table, branding, enabled, policy }: EntryProps) {
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
@@ -40,7 +42,7 @@ export default function QrEntry({ token, restaurant, table, enabled, policy }: E
     };
 
     return (
-        <QrLayout restaurant={restaurant} tableName={table.name}>
+        <QrLayout restaurant={restaurant} tableName={table.name} branding={branding}>
             <Head title={`${restaurant.name} · Table ${table.name}`} />
 
             <div className="mt-6 rounded-2xl bg-white p-6 shadow-card">

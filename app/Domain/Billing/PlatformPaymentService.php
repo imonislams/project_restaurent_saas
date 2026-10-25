@@ -182,6 +182,24 @@ class PlatformPaymentService
     }
 
     /**
+     * Whether the payment a notification refers to is settled.
+     *
+     * A provider sends both a server IPN and a browser return for the same
+     * transaction. Whichever arrives second is a duplicate, so the browser
+     * return must report the payment's real state — not treat "already
+     * processed" as a failure.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public function notificationSettled(string $provider, array $payload): bool
+    {
+        $reference = $this->gateways->driver($provider)->notificationReference($payload);
+        $payment = $this->findPayment($reference);
+
+        return $payment !== null && $payment->status === PlatformPaymentStatus::Succeeded;
+    }
+
+    /**
      * Verify a pending payment directly with the provider (used on a return URL).
      * A browser redirect is never proof of payment — the transaction is confirmed
      * against the provider API, and amount/currency are re-checked.

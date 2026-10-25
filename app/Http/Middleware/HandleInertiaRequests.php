@@ -84,6 +84,8 @@ class HandleInertiaRequests extends Middleware
                 ])->values()
                 : [],
             'active_branch_id' => fn () => app(TenantContext::class)->branchId(),
+            // Tenant-wide currency for money formatting on authenticated pages.
+            'currency' => fn () => $tenant?->getSetting('region.currency') ?? 'USD',
             'announcements' => fn () => $tenant
                 ? app(AnnouncementService::class)->forTenant($tenant)
                 : [],

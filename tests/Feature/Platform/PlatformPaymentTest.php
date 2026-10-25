@@ -215,6 +215,32 @@ class PlatformPaymentTest extends TestCase
         $this->assertDatabaseCount('platform_payment_events', 1);
     }
 
+    public function test_browser_return_reports_success_when_the_ipn_already_settled_the_payment(): void
+    {
+        $config = $this->sslcommerzConfig();
+        $invoice = $this->invoice();
+
+        Http::fake(['sandbox.sslcommerz.com/gwprocess/*' => Http::response(['GatewayPageURL' => 'https://x/pay'], 200)]);
+        $this->actingAs($this->admin())->post("/platform/invoices/{$invoice->id}/checkout", ['gateway_id' => $config->id]);
+        $payment = PlatformPayment::firstOrFail();
+
+        Http::fake([
+            'sandbox.sslcommerz.com/validatorapi/*' => Http::response([
+                'status' => 'VALID', 'amount' => '29.00', 'currency' => 'USD', 'tran_id' => $payment->provider_ref,
+            ], 200),
+        ]);
+
+        $payload = ['tran_id' => $payment->provider_ref, 'val_id' => 'VAL-RETURN', 'status' => 'VALID'];
+
+        // SSLCommerz's server IPN settles the payment first...
+        $this->post('/payments/ipn/sslcommerz', $payload)->assertJson(['processed' => true]);
+        $this->assertSame(PlatformPaymentStatus::Succeeded, $payment->fresh()->status);
+
+        // ...then the browser return for the same transaction must still report success.
+        $this->get('/payments/callback/sslcommerz/success?'.http_build_query($payload))
+            ->assertRedirect(route('payments.result', ['status' => 'success']));
+    }
+
     public function test_refund_cannot_exceed_the_refundable_balance(): void
     {
         $admin = $this->admin();

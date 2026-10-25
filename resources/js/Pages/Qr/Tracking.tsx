@@ -1,4 +1,5 @@
 import QrLayout from '@/Layouts/QrLayout';
+import type { QrBranding } from '@/Components/Qr/qrBranding';
 import { Head, Link } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -50,13 +51,14 @@ interface TrackingProps {
     token: string;
     restaurant: { name: string; branch: string; logo_url?: string | null };
     table: { id: number; name: string };
+    branding?: Partial<QrBranding> | null;
     participant_token: string | null;
     initial: TrackingPayload;
 }
 
 const POLL_MS = 8000;
 
-export default function QrTracking({ token, restaurant, table, participant_token, initial }: TrackingProps) {
+export default function QrTracking({ token, restaurant, table, branding, participant_token, initial }: TrackingProps) {
     const [data, setData] = useState<TrackingPayload>(initial);
     const [secondsAgo, setSecondsAgo] = useState(0);
     const [live, setLive] = useState(true);
@@ -141,6 +143,7 @@ export default function QrTracking({ token, restaurant, table, participant_token
         <QrLayout
             restaurant={restaurant}
             tableName={table.name}
+            branding={branding}
             headerRight={
                 <Link href={route('qr.menu', { token })} className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700">
                     Menu

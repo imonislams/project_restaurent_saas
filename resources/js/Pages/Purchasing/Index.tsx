@@ -9,6 +9,7 @@ import {
     KpiCard,
     PageHeader,
     Tabs,
+    formatMoney,
 } from '@/Components/ui';
 import type { BadgeTone, TabItem } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -63,7 +64,7 @@ export default function PurchasingIndex({
     branches: { id: number; name: string }[];
     items: ItemOption[];
 }) {
-    const { auth, flash } = usePage().props as Record<string, any>;
+    const { auth, flash, currency } = usePage().props as Record<string, any>;
     const canManage = auth.permissions.includes('purchasing.manage');
 
     const [activeTab, setActiveTab] = useState<'orders' | 'suppliers'>('orders');
@@ -276,7 +277,7 @@ export default function PurchasingIndex({
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <KpiCard
                             label="Total PO Volume"
-                            value={`$${totalOrderVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            value={formatMoney(totalOrderVolume, currency)}
                             hint={`${orders.length} total purchase orders`}
                         />
                         <KpiCard
@@ -287,7 +288,7 @@ export default function PurchasingIndex({
                         />
                         <KpiCard
                             label="Supplier Accounts Payable"
-                            value={`$${totalSupplierDebt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            value={formatMoney(totalSupplierDebt, currency)}
                             tone={totalSupplierDebt > 0 ? 'warning' : 'neutral'}
                             hint="Outstanding balance due across all vendors"
                         />
@@ -390,7 +391,7 @@ export default function PurchasingIndex({
                                                             {o.items_count} {o.items_count === 1 ? 'item' : 'items'}
                                                         </td>
                                                         <td className="px-6 py-4 text-right font-mono font-bold tabular-nums text-gray-900">
-                                                            ${o.total.toFixed(2)}
+                                                            {formatMoney(o.total, currency)}
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
                                                             <Badge tone={STATUS_TONE[o.status] ?? 'neutral'}>
@@ -489,7 +490,7 @@ export default function PurchasingIndex({
                                                                         : 'text-gray-600'
                                                                 }`}
                                                             >
-                                                                ${s.outstanding.toFixed(2)}
+                                                                {formatMoney(s.outstanding, currency)}
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
@@ -637,7 +638,7 @@ export default function PurchasingIndex({
                                             <input
                                                 type="number"
                                                 step="0.01"
-                                                placeholder="Unit Cost ($)"
+                                                placeholder={`Unit Cost (${currency})`}
                                                 value={row.unit_cost}
                                                 onChange={(e) =>
                                                     updateLineCost(idx, Number(e.target.value))
@@ -665,7 +666,7 @@ export default function PurchasingIndex({
                         <div className="flex items-center justify-between rounded-lg bg-gray-100 p-3 text-xs">
                             <span className="font-semibold text-gray-700">Estimated PO Total:</span>
                             <span className="font-mono text-base font-bold text-gray-900">
-                                ${calculatedOrderTotal.toFixed(2)}
+                                {formatMoney(calculatedOrderTotal, currency)}
                             </span>
                         </div>
 

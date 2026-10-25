@@ -1,4 +1,5 @@
 import QrLayout from '@/Layouts/QrLayout';
+import type { QrBranding } from '@/Components/Qr/qrBranding';
 import { Head } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -72,6 +73,7 @@ interface MenuProps {
     token: string;
     restaurant: { name: string; branch: string; currency: string; logo_url?: string | null };
     table: { id: number; name: string };
+    branding?: Partial<QrBranding> | null;
     session: { id: number; status: string; billing_mode: string };
     policy: { allow_additional_orders: boolean; allow_notes: boolean };
     tracking: { available: boolean; orders: TrackedOrder[] };
@@ -79,7 +81,7 @@ interface MenuProps {
     products: MenuProduct[];
 }
 
-export default function QrMenu({ token, restaurant, table, policy, tracking: initialTracking, categories, products }: MenuProps) {
+export default function QrMenu({ token, restaurant, table, branding, policy, tracking: initialTracking, categories, products }: MenuProps) {
     const currency = restaurant.currency;
     const cartKey = `qr_cart_${token}`;
     const money = (n: number) => `${currency} ${Number(n || 0).toFixed(2)}`;
@@ -261,11 +263,13 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
         <QrLayout
             restaurant={restaurant}
             tableName={table.name}
+            branding={branding}
             headerRight={
                 <button
                     type="button"
                     onClick={() => setShowCart(true)}
-                    className="relative rounded-xl bg-touchdine-600 px-3 py-2 text-xs font-bold text-white shadow-subtle"
+                    className="relative rounded-xl px-3 py-2 text-xs font-bold shadow-subtle"
+                    style={{ background: 'var(--qr-primary)', color: 'var(--qr-primary-text)' }}
                 >
                     Cart
                     {cartCount > 0 && (
@@ -314,8 +318,9 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                     type="button"
                     onClick={() => setActiveCategory('all')}
                     className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                        activeCategory === 'all' ? 'bg-touchdine-600 text-white' : 'bg-white text-gray-600 ring-1 ring-gray-200'
+                        activeCategory === 'all' ? '' : 'bg-white text-gray-600 ring-1 ring-gray-200'
                     }`}
+                    style={activeCategory === 'all' ? { background: 'var(--qr-primary)', color: 'var(--qr-primary-text)' } : undefined}
                 >
                     All
                 </button>
@@ -325,8 +330,9 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                         type="button"
                         onClick={() => setActiveCategory(category.id)}
                         className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                            activeCategory === category.id ? 'bg-touchdine-600 text-white' : 'bg-white text-gray-600 ring-1 ring-gray-200'
+                            activeCategory === category.id ? '' : 'bg-white text-gray-600 ring-1 ring-gray-200'
                         }`}
+                        style={activeCategory === category.id ? { background: 'var(--qr-primary)', color: 'var(--qr-primary-text)' } : undefined}
                     >
                         {category.name}
                     </button>
@@ -460,7 +466,8 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                                 type="button"
                                 disabled={!detailValid}
                                 onClick={addToCart}
-                                className="h-11 flex-1 rounded-xl bg-touchdine-600 text-sm font-bold text-white shadow-card hover:bg-touchdine-700 disabled:opacity-50"
+                                className="h-11 flex-1 rounded-xl text-sm font-bold shadow-card disabled:opacity-50"
+                                style={{ background: 'var(--qr-primary)', color: 'var(--qr-primary-text)' }}
                             >
                                 Add · {money((detailBasePrice + detailDelta) * detailQty)}
                             </button>
@@ -533,7 +540,8 @@ export default function QrMenu({ token, restaurant, table, policy, tracking: ini
                                 type="button"
                                 disabled={cart.length === 0 || submitting}
                                 onClick={submitOrder}
-                                className="h-12 w-full rounded-xl bg-touchdine-600 text-sm font-bold text-white shadow-card hover:bg-touchdine-700 disabled:opacity-50"
+                                className="h-12 w-full rounded-xl text-sm font-bold shadow-card disabled:opacity-50"
+                                style={{ background: 'var(--qr-primary)', color: 'var(--qr-primary-text)' }}
                             >
                                 {submitting ? 'Placing order…' : 'Place order'}
                             </button>

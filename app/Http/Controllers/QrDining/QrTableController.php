@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\QrDining;
 
+use App\Domain\Branches\Models\Branch;
 use App\Domain\Tables\Models\DiningArea;
 use App\Domain\Tables\Models\Table;
+use App\Domain\Tables\QrCardDesignService;
+use App\Domain\Tables\QrCardRenderer;
 use App\Domain\Tables\QrCodeRenderer;
 use App\Domain\Tables\TableQrService;
 use App\Http\Controllers\Controller;
@@ -24,6 +27,8 @@ class QrTableController extends Controller
     public function __construct(
         protected TableQrService $qr,
         protected QrCodeRenderer $renderer,
+        protected QrCardDesignService $designs,
+        protected QrCardRenderer $cards,
     ) {}
 
     public function index(Request $request): Response
@@ -102,7 +107,7 @@ class QrTableController extends Controller
         ]);
     }
 
-    /** Printable PDF of table tent cards for the selected tables / branch. */
+    /** Printable PDF of table tent cards, rendered with each branch's active design. */
     public function print(Request $request): HttpResponse
     {
         $user = $request->user();
@@ -120,24 +125,16 @@ class QrTableController extends Controller
             ->orderBy('sort_order')->orderBy('name')
             ->get();
 
-        $cards = $tables->map(function (Table $table) use ($user) {
-            $url = $this->qr->url($this->qr->ensureToken($table, $user));
+        $branch = $branchId ? Branch::query()->find($branchId) : null;
 
-            return [
-                'name' => $table->name,
-                'area' => $table->diningArea?->name,
-                'url' => $url,
-                'png' => $this->renderer->dataUri($url, 360, 6),
-            ];
-        });
-
-        $branch = $branchId ? \App\Domain\Branches\Models\Branch::query()->find($branchId) : null;
+        // One design per run — a PDF has a single page size. Each table still
+        // gets its own QR and its own branch/area text.
+        $design = $this->designs->activeFor($tenant, $branch);
 
         return Pdf::loadView('qr.print', [
-            'tenantName' => $tenant->name,
-            'branchName' => $branch?->name,
-            'cards' => $cards,
-        ])->setPaper('a4')->download('table-qr-codes.pdf');
+            'canvas' => $design->canvas,
+            'cards' => $this->cards->cardsFor($tables, $tenant, $design),
+        ])->setPaper($this->cards->paperPoints($design->canvas))->download('table-qr-codes.pdf');
     }
 
     /**

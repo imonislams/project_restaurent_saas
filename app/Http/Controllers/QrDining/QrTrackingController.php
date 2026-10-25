@@ -5,6 +5,7 @@ namespace App\Http\Controllers\QrDining;
 use App\Domain\Dining\DiningTrackingService;
 use App\Domain\Dining\Models\DiningParticipant;
 use App\Domain\Dining\Models\DiningSession;
+use App\Domain\Dining\QrBrandingSettings;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -36,6 +37,7 @@ class QrTrackingController extends Controller
             'token' => $qr->token,
             'restaurant' => ['name' => $tenant->name, 'branch' => $branch->name, 'logo_url' => $tenant->logo_url],
             'table' => ['id' => $table->getKey(), 'name' => $table->name],
+            'branding' => app(QrBrandingSettings::class)->resolve($tenant, $branch),
             'participant_token' => $participant?->participant_token,
             'initial' => app(DiningTrackingService::class)->payload($session, $participant),
         ]);

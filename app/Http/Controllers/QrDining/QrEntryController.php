@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\QrDining;
 
 use App\Domain\Dining\DiningReceiptService;
+use App\Domain\Dining\QrBrandingSettings;
 use App\Domain\Dining\QrDiningSettings;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\QrDining\Concerns\ResolvesDiningSession;
@@ -30,6 +31,7 @@ class QrEntryController extends Controller
 
         $restaurant = ['name' => $tenant->name, 'branch' => $branch->name, 'logo_url' => $tenant->logo_url];
         $tableInfo = ['id' => $table->getKey(), 'name' => $table->name];
+        $branding = app(QrBrandingSettings::class)->resolve($tenant, $branch);
 
         $session = $this->diningSessionFromRequest($request);
 
@@ -42,6 +44,7 @@ class QrEntryController extends Controller
                 'token' => $qr->token,
                 'restaurant' => $restaurant,
                 'table' => $tableInfo,
+                'branding' => $branding,
                 'receipt' => app(DiningReceiptService::class)->forSession($session),
                 'feedback_enabled' => $settings->feedbackEnabled(),
                 'feedback' => $session->feedback ? [
@@ -55,6 +58,7 @@ class QrEntryController extends Controller
             'token' => $qr->token,
             'restaurant' => $restaurant,
             'table' => $tableInfo,
+            'branding' => $branding,
             'enabled' => $settings->enabled() && $settings->branchEnabled($branch->getKey()),
             'policy' => [
                 'guest_checkout' => $settings->guestCheckout(),

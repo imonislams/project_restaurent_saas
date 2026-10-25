@@ -494,6 +494,7 @@ class OnboardingService
         $tenant->mergeSettings([
             'service_charge.rate' => (float) ($data['service_charge_rate'] ?? 0),
             'pos.allow_partial' => (bool) ($data['pos_allow_partial'] ?? false),
+            'pos.require_table_for_dine_in' => (bool) ($data['pos_require_table_for_dine_in'] ?? true),
             'pos.cash_variance_threshold' => isset($data['pos_cash_variance_threshold']) && $data['pos_cash_variance_threshold'] !== ''
                 ? (float) $data['pos_cash_variance_threshold'] : null,
             'pos.discount_approval_percent' => isset($data['pos_discount_approval_percent']) && $data['pos_discount_approval_percent'] !== ''
@@ -575,6 +576,7 @@ class OnboardingService
             'pos' => [
                 'service_charge_rate' => (float) $tenant->getSetting('service_charge.rate', 0),
                 'pos_allow_partial' => (bool) $tenant->getSetting('pos.allow_partial', false),
+                'pos_require_table_for_dine_in' => (bool) $tenant->getSetting('pos.require_table_for_dine_in', true),
                 'pos_cash_variance_threshold' => $tenant->getSetting('pos.cash_variance_threshold'),
                 'pos_discount_approval_percent' => $tenant->getSetting('pos.discount_approval_percent'),
                 'payments_provider' => $tenant->getSetting('payments.provider', 'manual'),

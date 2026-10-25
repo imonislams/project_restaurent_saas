@@ -1,3 +1,5 @@
+import { usePage } from '@inertiajs/react';
+
 export function formatMoney(amount: number | string | null | undefined, currency = 'USD', locale = 'en'): string {
     const value = typeof amount === 'string' ? Number(amount) : (amount ?? 0);
     if (!Number.isFinite(value)) return '—';
@@ -28,6 +30,7 @@ export function formatDateTime(value: string | null | undefined, locale = 'en'):
     return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
-export default function Money({ amount, currency = 'USD', locale = 'en', className }: { amount: number | string | null | undefined; currency?: string; locale?: string; className?: string }) {
-    return <span className={className}>{formatMoney(amount, currency, locale)}</span>;
+export default function Money({ amount, currency, locale = 'en', className }: { amount: number | string | null | undefined; currency?: string; locale?: string; className?: string }) {
+    const sharedCurrency = (usePage().props as Record<string, any>)?.currency as string | undefined;
+    return <span className={className}>{formatMoney(amount, currency ?? sharedCurrency ?? 'USD', locale)}</span>;
 }

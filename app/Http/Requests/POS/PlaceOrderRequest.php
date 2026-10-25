@@ -19,7 +19,7 @@ class PlaceOrderRequest extends FormRequest
         $user = $this->user();
 
         return [
-            ...self::orderRules($user),
+            ...self::orderRules($user, $this->input('order_type')),
             'payments' => ['nullable', 'array'],
             ...self::paymentRules($user->tenant_id),
         ];
@@ -31,9 +31,14 @@ class PlaceOrderRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
-    public static function orderRules(User $user): array
+    public static function orderRules(User $user, ?string $orderType = null): array
     {
         $tenantId = $user->tenant_id;
+
+        // Dine-in orders must name a table when the tenant requires it (the
+        // default). Other order types never do.
+        $tableRequired = $orderType === OrderType::DineIn->value
+            && (bool) ($user->tenant?->getSetting('pos.require_table_for_dine_in', true) ?? true);
 
         return [
             'branch_id' => [
@@ -44,7 +49,11 @@ class PlaceOrderRequest extends FormRequest
             ],
             'shift_id' => ['nullable', 'integer', Rule::exists('shifts', 'id')->where('tenant_id', $tenantId)],
             'order_type' => ['required', Rule::in(OrderType::values())],
-            'table_id' => ['nullable', 'integer', Rule::exists('tables', 'id')->where('tenant_id', $tenantId)],
+            'table_id' => [
+                $tableRequired ? 'required' : 'nullable',
+                'integer',
+                Rule::exists('tables', 'id')->where('tenant_id', $tenantId),
+            ],
             'customer_id' => ['nullable', 'integer', Rule::exists('customers', 'id')->where('tenant_id', $tenantId)],
             'delivery_zone_id' => ['nullable', 'integer', Rule::exists('delivery_zones', 'id')->where('tenant_id', $tenantId)],
             'delivery_address' => ['nullable', 'string', 'max:255'],

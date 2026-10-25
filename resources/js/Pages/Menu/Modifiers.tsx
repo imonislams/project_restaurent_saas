@@ -7,6 +7,7 @@ import Drawer from '@/Components/ui/Drawer';
 import EmptyState from '@/Components/ui/EmptyState';
 import { CheckboxField, SelectField, TextField } from '@/Components/ui/Field';
 import PageHeader from '@/Components/ui/PageHeader';
+import { formatMoney } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
@@ -65,8 +66,6 @@ const emptyGroup = (): GroupForm => ({
     options: [{ name: '', sku: null, price_delta: 0, is_default: false, is_active: true }],
 });
 
-const money = (n: number) => `+$${Number(n || 0).toFixed(2)}`;
-
 export default function ModifiersIndex({
     groups,
     products,
@@ -76,7 +75,7 @@ export default function ModifiersIndex({
     products: ProductOption[];
     selectionTypes: { value: string; label: string }[];
 }) {
-    const { auth } = usePage().props as Record<string, any>;
+    const { auth, currency } = usePage().props as Record<string, any>;
     const canManage = auth?.permissions?.includes('modifiers.manage') ?? false;
 
     const [editing, setEditing] = useState(false);
@@ -203,7 +202,7 @@ export default function ModifiersIndex({
                                                     <li key={option.id} className="flex items-center justify-between gap-2">
                                                         <span className="truncate">{option.name}</span>
                                                         <span className="tabular-nums text-xs text-muted-foreground">
-                                                            {Number(option.price_delta) === 0 ? 'Free' : money(option.price_delta)}
+                                                            {Number(option.price_delta) === 0 ? 'Free' : `+${formatMoney(option.price_delta, currency)}`}
                                                         </span>
                                                     </li>
                                                 ))}

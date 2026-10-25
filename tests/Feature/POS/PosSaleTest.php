@@ -16,6 +16,7 @@ use App\Domain\Orders\Models\Order;
 use App\Domain\Payments\Actions\ProvisionPaymentDefaults;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentMethod;
+use App\Domain\Tables\Models\Table;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
 use App\Models\User;
@@ -42,7 +43,8 @@ class PosSaleTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
 
         $this->tenant = Tenant::factory()->create();
-        $this->tenant->mergeSettings(['tax' => ['rate' => 0, 'inclusive' => false]]);
+        // The dine-in table requirement has its own test; these tests cover other behaviour.
+        $this->tenant->mergeSettings(['tax' => ['rate' => 0, 'inclusive' => false], 'pos.require_table_for_dine_in' => false]);
         $this->tenant->save();
 
         app(ProvisionInventoryDefaults::class)->forTenant($this->tenant);
@@ -130,6 +132,37 @@ class PosSaleTest extends TestCase
         $order = Order::firstOrFail();
         $this->assertSame(50.0, (float) $order->change_due);
         $this->assertSame(50.0, (float) $order->payments->first()->change_due);
+    }
+
+    public function test_dine_in_requires_a_table_when_the_tenant_requires_one(): void
+    {
+        $this->tenant->mergeSettings(['pos.require_table_for_dine_in' => true]);
+        $this->tenant->save();
+        $this->user->unsetRelation('tenant');
+
+        $product = $this->product();
+        $items = [['product_id' => $product->id, 'quantity' => 1]];
+        $payments = [['payment_method_id' => $this->cashMethod()->id, 'amount' => 100, 'tendered' => 100]];
+
+        // A dine-in sale without a table is rejected...
+        $this->placeOrder(['items' => $items, 'payments' => $payments])
+            ->assertSessionHasErrors('table_id');
+
+        // ...other order types are unaffected...
+        $this->placeOrder(['order_type' => 'takeaway', 'items' => $items, 'payments' => $payments])
+            ->assertRedirect();
+
+        // ...and naming a table is accepted.
+        $table = Table::factory()->create([
+            'tenant_id' => $this->tenant->id,
+            'branch_id' => $this->branch->id,
+            'name' => 'T1',
+        ]);
+
+        $this->placeOrder(['table_id' => $table->id, 'items' => $items, 'payments' => $payments])
+            ->assertRedirect();
+
+        $this->assertSame($table->id, Order::where('order_type', 'dine_in')->firstOrFail()->table_id);
     }
 
     public function test_a_cash_sale_records_a_cash_movement_and_updates_expected_cash(): void

@@ -9,6 +9,7 @@ import {
     KpiCard,
     PageHeader,
     ConfirmDialog,
+    formatMoney,
 } from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -49,12 +50,14 @@ export default function WasteIndex({
     reasons,
     records,
     approvalThreshold,
+    currency,
 }: {
     branches: { id: number; name: string }[];
     items: { value: string; label: string; type: string; id: number; cost?: number }[];
     reasons: { value: string; label: string }[];
     records: WasteRow[];
     approvalThreshold: number | null;
+    currency: string;
 }) {
     const { auth, flash } = usePage().props as Record<string, any>;
     const canCreate = auth.permissions.includes('waste.create');
@@ -145,7 +148,7 @@ export default function WasteIndex({
         setConfirmAction({
             open: true,
             title: `Approve Waste Incident #${record.id}?`,
-            message: `Approving this incident will formally deduct ${record.quantity} units of ${record.item_name} from inventory balance (Valuation: $${record.cost.toFixed(2)}).`,
+            message: `Approving this incident will formally deduct ${record.quantity} units of ${record.item_name} from inventory balance (Valuation: ${formatMoney(record.cost, currency)}).`,
             tone: 'primary',
             onConfirm: () => {
                 router.post(
@@ -189,7 +192,7 @@ export default function WasteIndex({
                         <div className="flex flex-wrap items-center gap-2.5">
                             {approvalThreshold !== null && (
                                 <Badge tone="info">
-                                    Approval Threshold: ${Number(approvalThreshold).toFixed(2)}
+                                    Approval Threshold: {formatMoney(Number(approvalThreshold), currency)}
                                 </Badge>
                             )}
                             {canCreate && (
@@ -226,7 +229,7 @@ export default function WasteIndex({
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <KpiCard
                             label="Total Waste Cost"
-                            value={`$${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            value={formatMoney(totalCost, currency)}
                             tone={totalCost > 0 ? 'warning' : 'neutral'}
                             hint="Reported loss across approved write-offs only"
                         />
@@ -243,7 +246,7 @@ export default function WasteIndex({
                         />
                         <KpiCard
                             label="Approval Threshold"
-                            value={approvalThreshold ? `$${Number(approvalThreshold).toFixed(2)}` : 'Auto-Approve'}
+                            value={approvalThreshold ? formatMoney(Number(approvalThreshold), currency) : 'Auto-Approve'}
                             hint={
                                 approvalThreshold
                                     ? 'Waste cost above threshold flags as pending'
@@ -392,7 +395,7 @@ export default function WasteIndex({
                                                         {r.quantity.toFixed(3)}
                                                     </td>
                                                     <td className="px-6 py-4 text-right font-mono font-bold tabular-nums text-rose-700">
-                                                        ${r.cost.toFixed(2)}
+                                                        {formatMoney(r.cost, currency)}
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <span
@@ -563,12 +566,12 @@ export default function WasteIndex({
                             >
                                 <div className="flex items-center justify-between font-semibold">
                                     <span>Estimated Loss Valuation:</span>
-                                    <span className="font-mono text-sm">${estimatedCost.toFixed(2)}</span>
+                                    <span className="font-mono text-sm">{formatMoney(estimatedCost, currency)}</span>
                                 </div>
                                 {willRequireApproval && (
                                     <p className="mt-1.5 text-xs text-amber-800">
-                                        ⚠️ This loss exceeds the manager threshold ($
-                                        {Number(approvalThreshold).toFixed(2)}). It will be submitted as{' '}
+                                        ⚠️ This loss exceeds the manager threshold (
+                                        {formatMoney(Number(approvalThreshold), currency)}). It will be submitted as{' '}
                                         <span className="font-bold underline">Pending Approval</span> and will not deduct
                                         stock until reviewed.
                                     </p>

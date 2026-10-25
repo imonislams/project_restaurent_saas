@@ -16,6 +16,7 @@ class PosSettingsRequest extends FormRequest
         return [
             'service_charge_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'pos_allow_partial' => ['boolean'],
+            'pos_require_table_for_dine_in' => ['boolean'],
             'pos_cash_variance_threshold' => ['nullable', 'numeric', 'min:0'],
             'pos_discount_approval_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'payments_provider' => ['nullable', 'string', 'max:50'],

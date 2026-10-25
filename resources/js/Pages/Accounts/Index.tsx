@@ -10,6 +10,7 @@ import {
     PageHeader,
     Tabs,
     ConfirmDialog,
+    formatMoney,
 } from '@/Components/ui';
 import type { TabItem } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -56,7 +57,7 @@ export default function AccountsIndex({
     transfers: TransferRow[];
     accountTypes: { value: string; label: string }[];
 }) {
-    const { auth, flash } = usePage().props as Record<string, any>;
+    const { auth, flash, currency } = usePage().props as Record<string, any>;
     const canManage = auth.permissions.includes('accounts.manage');
 
     const [activeTab, setActiveTab] = useState<'accounts' | 'transfers'>('accounts');
@@ -271,18 +272,18 @@ export default function AccountsIndex({
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <KpiCard
                             label="Total Treasury Balance"
-                            value={`$${totalTreasuryBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            value={formatMoney(totalTreasuryBalance, currency)}
                             tone={totalTreasuryBalance < 0 ? 'danger' : 'success'}
                             hint="Net liquid balance across all accounts"
                         />
                         <KpiCard
                             label="Cash On Hand & Registers"
-                            value={`$${cashAccountsBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            value={formatMoney(cashAccountsBalance, currency)}
                             hint="Registers, cash drawers & petty cash"
                         />
                         <KpiCard
                             label="Bank & Digital Accounts"
-                            value={`$${bankAccountsBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            value={formatMoney(bankAccountsBalance, currency)}
                             hint="Operating checking & payment gateways"
                         />
                         <KpiCard
@@ -372,7 +373,7 @@ export default function AccountsIndex({
                                                             {a.branch ?? 'Company-wide (All Branches)'}
                                                         </td>
                                                         <td className="px-6 py-4 text-right font-mono text-xs tabular-nums text-gray-500">
-                                                            ${a.opening_balance.toFixed(2)}
+                                                            {formatMoney(a.opening_balance, currency)}
                                                         </td>
                                                         <td className="px-6 py-4 text-right">
                                                             <span
@@ -382,7 +383,7 @@ export default function AccountsIndex({
                                                                         : 'text-gray-900'
                                                                 }`}
                                                             >
-                                                                ${a.balance.toFixed(2)}
+                                                                {formatMoney(a.balance, currency)}
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
@@ -503,7 +504,7 @@ export default function AccountsIndex({
                                                             {t.to ?? 'Unknown Account'}
                                                         </td>
                                                         <td className="px-6 py-4 text-right font-mono font-bold tabular-nums text-emerald-700">
-                                                            ${t.amount.toFixed(2)}
+                                                            {formatMoney(t.amount, currency)}
                                                         </td>
                                                         <td className="px-6 py-4 font-mono text-xs text-gray-500">
                                                             {t.reference ?? '—'}
@@ -603,7 +604,7 @@ export default function AccountsIndex({
 
                         <div>
                             <label className="block text-xs font-medium text-gray-700">
-                                Opening Balance ($)
+                                Opening Balance ({currency})
                             </label>
                             <input
                                 type="number"
@@ -682,7 +683,7 @@ export default function AccountsIndex({
                                 >
                                     {accounts.map((a) => (
                                         <option key={a.id} value={a.id}>
-                                            {a.name} (${a.balance.toFixed(2)})
+                                            {a.name} ({formatMoney(a.balance, currency)})
                                         </option>
                                     ))}
                                 </select>
@@ -702,7 +703,7 @@ export default function AccountsIndex({
                                 >
                                     {accounts.map((a) => (
                                         <option key={a.id} value={a.id}>
-                                            {a.name} (${a.balance.toFixed(2)})
+                                            {a.name} ({formatMoney(a.balance, currency)})
                                         </option>
                                     ))}
                                 </select>
@@ -717,7 +718,7 @@ export default function AccountsIndex({
 
                         <div>
                             <label className="block text-xs font-medium text-gray-700">
-                                Transfer Amount ($) <span className="text-red-500">*</span>
+                                Transfer Amount ({currency}) <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="number"
@@ -744,13 +745,13 @@ export default function AccountsIndex({
                                 <div className="flex justify-between">
                                     <span>{fromAccount.name}:</span>
                                     <span className="font-mono font-medium text-rose-700">
-                                        ${(fromAccount.balance - transferForm.data.amount).toFixed(2)}
+                                        {formatMoney(fromAccount.balance - transferForm.data.amount, currency)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>{toAccount.name}:</span>
                                     <span className="font-mono font-medium text-emerald-700">
-                                        ${(toAccount.balance + transferForm.data.amount).toFixed(2)}
+                                        {formatMoney(toAccount.balance + transferForm.data.amount, currency)}
                                     </span>
                                 </div>
                             </div>

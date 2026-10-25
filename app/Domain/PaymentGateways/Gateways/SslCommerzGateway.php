@@ -47,9 +47,13 @@ class SslCommerzGateway implements PlatformGateway
     {
         $body = array_merge($payload, $this->credentials($config));
 
-        $response = Http::asForm()->post($this->endpoints($config)['process'], $body);
-        $data = $response->json();
-        $data = is_array($data) ? $data : [];
+        try {
+            $response = Http::asForm()->timeout(20)->post($this->endpoints($config)['process'], $body);
+            $data = $response->json();
+            $data = is_array($data) ? $data : [];
+        } catch (\Throwable $e) {
+            return ['status' => 'failed', 'reference' => null, 'redirect_url' => null, 'raw' => ['error' => $e->getMessage()]];
+        }
 
         $url = $data['GatewayPageURL'] ?? null;
 
@@ -65,15 +69,19 @@ class SslCommerzGateway implements PlatformGateway
     {
         $credentials = $this->credentials($config);
 
-        $response = Http::get($this->endpoints($config)['validate'], [
-            'val_id' => $valId,
-            'store_id' => $credentials['store_id'],
-            'store_passwd' => $credentials['store_passwd'],
-            'format' => 'json',
-        ]);
+        try {
+            $response = Http::timeout(20)->get($this->endpoints($config)['validate'], [
+                'val_id' => $valId,
+                'store_id' => $credentials['store_id'],
+                'store_passwd' => $credentials['store_passwd'],
+                'format' => 'json',
+            ]);
 
-        $data = $response->json();
-        $data = is_array($data) ? $data : [];
+            $data = $response->json();
+            $data = is_array($data) ? $data : [];
+        } catch (\Throwable $e) {
+            return ['valid' => false, 'status' => null, 'amount' => null, 'currency' => null, 'reference' => null, 'raw' => ['error' => $e->getMessage()]];
+        }
 
         $status = strtoupper((string) ($data['status'] ?? ''));
 

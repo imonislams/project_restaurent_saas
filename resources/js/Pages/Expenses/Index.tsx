@@ -15,6 +15,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
+    formatMoney,
 } from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -56,7 +57,7 @@ export default function ExpensesIndex({
     expenses: ExpenseRow[];
     autoApproveLimit: number | null;
 }) {
-    const { auth, flash } = usePage().props as Record<string, any>;
+    const { auth, flash, currency } = usePage().props as Record<string, any>;
     const canManage = auth.permissions.includes('expenses.manage');
     const canApprove = auth.permissions.includes('expenses.approve');
 
@@ -158,7 +159,7 @@ export default function ExpensesIndex({
         setConfirmAction({
             open: true,
             title: `Approve Expense #${expense.id}?`,
-            message: `Approving will debit $${expense.amount.toFixed(2)} from account "${expense.account ?? 'Default'}" and post the journal entry.`,
+            message: `Approving will debit ${formatMoney(expense.amount, currency)} from account "${expense.account ?? 'Default'}" and post the journal entry.`,
             tone: 'primary',
             confirmLabel: 'Approve Expense',
             onConfirm: () => {
@@ -249,14 +250,14 @@ export default function ExpensesIndex({
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <KpiCard
                             label="Total Recorded Expenses"
-                            value={`$${totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            value={formatMoney(totalExpenses, currency)}
                             hint={`${expenses.length} total entries`}
                         />
                         <KpiCard
                             label="Awaiting Approval"
                             value={pendingCount}
                             tone={pendingCount > 0 ? 'warning' : 'neutral'}
-                            hint={pendingCount > 0 ? `$${pendingSum.toFixed(2)} pending sign-off` : 'No pending reviews'}
+                            hint={pendingCount > 0 ? `${formatMoney(pendingSum, currency)} pending sign-off` : 'No pending reviews'}
                         />
                         <KpiCard
                             label="Approved Expenses"
@@ -266,7 +267,7 @@ export default function ExpensesIndex({
                         />
                         <KpiCard
                             label="Auto-Approve Limit"
-                            value={autoApproveLimit ? `$${Number(autoApproveLimit).toFixed(2)}` : 'Unrestricted'}
+                            value={autoApproveLimit ? formatMoney(Number(autoApproveLimit), currency) : 'Unrestricted'}
                             hint={autoApproveLimit ? 'Entries above require approval' : 'All recorded expenses auto-approve'}
                         />
                     </div>
@@ -436,7 +437,7 @@ export default function ExpensesIndex({
                                                     {e.account ?? 'General Account'}
                                                 </TableCell>
                                                 <TableCell className="text-right font-semibold tabular-nums text-foreground">
-                                                    ${e.amount.toFixed(2)}
+                                                    {formatMoney(e.amount, currency)}
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     <Badge tone={STATUS_TONE[e.status] ?? 'neutral'}>
@@ -530,7 +531,7 @@ export default function ExpensesIndex({
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label className="block text-xs font-medium text-gray-700">
-                                    Amount ($) <span className="text-red-500">*</span>
+                                    Amount ({currency}) <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="number"
@@ -651,7 +652,7 @@ export default function ExpensesIndex({
                         {/* Approval Threshold Notice */}
                         {isAboveAutoApprove && (
                             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-                                ⚠️ This amount exceeds the auto-approval threshold (${Number(autoApproveLimit).toFixed(2)}).
+                                ⚠️ This amount exceeds the auto-approval threshold ({formatMoney(Number(autoApproveLimit), currency)}).
                                 This expense will be submitted as <span className="font-bold underline">Pending Approval</span> and will require a manager review before posting to accounts.
                             </div>
                         )}

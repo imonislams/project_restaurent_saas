@@ -1,4 +1,5 @@
 import QrLayout from '@/Layouts/QrLayout';
+import type { QrBranding } from '@/Components/Qr/qrBranding';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -29,12 +30,13 @@ interface ClosedProps {
     token: string;
     restaurant: { name: string; branch: string; logo_url?: string | null };
     table: { id: number; name: string };
+    branding?: Partial<QrBranding> | null;
     receipt: Receipt;
     feedback_enabled: boolean;
     feedback: { rating: number; comment: string | null } | null;
 }
 
-export default function QrClosed({ token, restaurant, table, receipt, feedback_enabled, feedback }: ClosedProps) {
+export default function QrClosed({ token, restaurant, table, branding, receipt, feedback_enabled, feedback }: ClosedProps) {
     const [rating, setRating] = useState(feedback?.rating ?? 0);
     const [comment, setComment] = useState(feedback?.comment ?? '');
     const [submitted, setSubmitted] = useState(feedback !== null);
@@ -70,7 +72,7 @@ export default function QrClosed({ token, restaurant, table, receipt, feedback_e
     };
 
     return (
-        <QrLayout restaurant={restaurant} tableName={table.name}>
+        <QrLayout restaurant={restaurant} tableName={table.name} branding={branding}>
             <Head title={`${restaurant.name} · Thank you`} />
 
             <div className="mt-4 rounded-2xl bg-white p-6 text-center shadow-card">

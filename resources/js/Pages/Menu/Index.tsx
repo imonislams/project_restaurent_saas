@@ -15,6 +15,7 @@ import {
     TableHeader,
     TableRow,
     TextField,
+    formatMoney,
 } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
@@ -34,7 +35,6 @@ import { FormEventHandler, useMemo, useRef, useState } from 'react';
 import { cn } from '@/Components/ui/cn';
 
 // --- Interfaces ---
-
 interface Category {
     id: number;
     name: string;
@@ -80,9 +80,6 @@ interface Paginated<T> {
     to?: number;
 }
 
-const money = (n: number) =>
-    `$${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
 export default function MenuIndex({
     categories,
     products,
@@ -94,7 +91,7 @@ export default function MenuIndex({
     filters: { search: string; category_id: number | null };
     inventoryModes: { value: string; label: string }[];
 }) {
-    const { auth, flash } = usePage().props as Record<string, any>;
+    const { auth, flash, currency } = usePage().props as Record<string, any>;
     const canManage = auth?.permissions?.includes('menu.manage') ?? false;
 
     const [search, setSearch] = useState(filters.search ?? '');
@@ -391,23 +388,42 @@ export default function MenuIndex({
                                             <TableRow key={product.id}>
                                                 {/* Product details */}
                                                 <TableCell>
-                                                    <div className="font-medium text-foreground">
-                                                        {product.name}
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
-                                                        {product.sku && (
-                                                            <span className="font-mono bg-muted/80 border border-border/50 px-1.5 py-0.5 rounded text-[11px] text-muted-foreground">
-                                                                {product.sku}
-                                                            </span>
+                                                    <div className="flex items-center gap-3">
+                                                        {product.image_url ? (
+                                                            <img
+                                                                src={product.image_url}
+                                                                alt={product.name}
+                                                                loading="lazy"
+                                                                className="h-10 w-10 shrink-0 rounded-md object-cover ring-1 ring-border"
+                                                            />
+                                                        ) : (
+                                                            <div
+                                                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground ring-1 ring-border"
+                                                                aria-hidden="true"
+                                                            >
+                                                                <BookOpen className="h-4 w-4" />
+                                                            </div>
                                                         )}
-                                                        {product.variants.length > 0 && (
-                                                            <span className="text-primary font-medium">
-                                                                · {product.variants.length} variants
-                                                            </span>
-                                                        )}
-                                                        {product.labels.length > 0 && (
-                                                            <span>· {product.labels.join(', ')}</span>
-                                                        )}
+                                                        <div className="min-w-0">
+                                                            <div className="font-medium text-foreground">
+                                                                {product.name}
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
+                                                                {product.sku && (
+                                                                    <span className="font-mono bg-muted/80 border border-border/50 px-1.5 py-0.5 rounded text-[11px] text-muted-foreground">
+                                                                        {product.sku}
+                                                                    </span>
+                                                                )}
+                                                                {product.variants.length > 0 && (
+                                                                    <span className="text-primary font-medium">
+                                                                        · {product.variants.length} variants
+                                                                    </span>
+                                                                )}
+                                                                {product.labels.length > 0 && (
+                                                                    <span>· {product.labels.join(', ')}</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </TableCell>
 
@@ -424,22 +440,22 @@ export default function MenuIndex({
 
                                                 {/* Dine-In Price */}
                                                 <TableCell className="text-right tabular-nums text-xs font-semibold text-foreground">
-                                                    {money(product.price_dine_in)}
+                                                    {formatMoney(product.price_dine_in, currency)}
                                                 </TableCell>
 
                                                 {/* Takeaway Price */}
                                                 <TableCell className="text-right tabular-nums text-xs text-muted-foreground">
-                                                    {money(product.price_takeaway)}
+                                                    {formatMoney(product.price_takeaway, currency)}
                                                 </TableCell>
 
                                                 {/* Delivery Price */}
                                                 <TableCell className="text-right tabular-nums text-xs text-muted-foreground">
-                                                    {money(product.price_delivery)}
+                                                    {formatMoney(product.price_delivery, currency)}
                                                 </TableCell>
 
                                                 {/* Cost Price */}
                                                 <TableCell className="text-right tabular-nums text-xs text-muted-foreground">
-                                                    {product.cost_price > 0 ? money(product.cost_price) : '—'}
+                                                    {product.cost_price > 0 ? formatMoney(product.cost_price, currency) : '—'}
                                                 </TableCell>
 
                                                 {/* Stock Tracking Mode */}
@@ -582,6 +598,7 @@ function ProductEditorModal({
     inventoryModes: { value: string; label: string }[];
     onClose: () => void;
 }) {
+    const { currency } = usePage().props as Record<string, any>;
     const form = useForm({
         name: product?.name ?? '',
         category_id: product?.category_id ?? ('' as number | ''),
@@ -730,7 +747,7 @@ function ProductEditorModal({
                             </span>
                             {grossMargin && (
                                 <span className="rounded-md bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                                    Gross Margin: {grossMargin.pct}% ({money(grossMargin.profit)} profit)
+                                    Gross Margin: {grossMargin.pct}% ({formatMoney(grossMargin.profit, currency)} profit)
                                 </span>
                             )}
                         </div>

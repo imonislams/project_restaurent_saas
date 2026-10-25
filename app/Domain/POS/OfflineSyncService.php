@@ -125,7 +125,7 @@ class OfflineSyncService
     protected function placeSale(array $payload, array $operation, User $user): array
     {
         $data = $this->validated($payload, [
-            ...PlaceOrderRequest::orderRules($user),
+            ...PlaceOrderRequest::orderRules($user, $payload['order_type'] ?? null),
             'payments' => ['nullable', 'array'],
             ...PlaceOrderRequest::paymentRules($user->tenant_id),
         ]);
@@ -151,7 +151,7 @@ class OfflineSyncService
      */
     protected function openOrder(array $payload, array $operation, User $user): array
     {
-        $data = $this->validated($payload, PlaceOrderRequest::orderRules($user));
+        $data = $this->validated($payload, PlaceOrderRequest::orderRules($user, $payload['order_type'] ?? null));
 
         $differences = [];
         $data = $this->detachOccupiedTable($data, $differences);

@@ -37,7 +37,8 @@ class NotificationTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
 
         $this->tenant = Tenant::factory()->create();
-        $this->tenant->mergeSettings(['tax' => ['rate' => 0, 'inclusive' => false]]);
+        // The dine-in table requirement has its own test; these tests cover other behaviour.
+        $this->tenant->mergeSettings(['tax' => ['rate' => 0, 'inclusive' => false], 'pos.require_table_for_dine_in' => false]);
         $this->tenant->save();
 
         app(ProvisionInventoryDefaults::class)->forTenant($this->tenant);
