@@ -419,21 +419,23 @@ class PlatformPaymentService
     /** The provider's configured price id for this invoice's plan/currency/interval. */
     protected function providerPriceId(SubscriptionInvoice $invoice, string $provider): ?string
     {
-        $subscription = $invoice->subscription;
+        // Price the plan the invoice bills for — for a pending plan change that is
+        // the *target* plan, not the subscription's still-current plan.
+        $plan = $invoice->effectivePlan();
 
-        if (! $subscription) {
+        if (! $plan) {
             return null;
         }
 
-        $subscription->loadMissing('plan.prices');
+        $plan->loadMissing('prices');
 
-        $prices = $subscription->plan?->prices;
+        $prices = $plan->prices;
 
         if (! $prices) {
             return null;
         }
 
-        $interval = $subscription->billing_cycle->value;
+        $interval = $invoice->effectiveCycle()->value;
 
         $price = $prices->first(fn ($p) => strtoupper($p->currency) === strtoupper($invoice->currency) && $p->interval === $interval)
             ?? $prices->firstWhere('interval', $interval);

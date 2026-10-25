@@ -46,6 +46,15 @@ interface SubscriptionView {
     provider: string | null;
 }
 
+interface PendingPlanView {
+    plan: string | null;
+    plan_id: number;
+    billing_cycle: string | null;
+    invoice_id: number | null;
+    invoice_number: string | null;
+    since: string | null;
+}
+
 interface GatewayOption {
     value: string;
     label: string;
@@ -119,6 +128,7 @@ const limitLabel = (key: string) => key.replace(/_/g, ' ').replace(/\b\w/g, (c) 
 
 export default function SubscriptionIndex({
     subscription,
+    pending_plan,
     usage,
     limits,
     plans,
@@ -129,6 +139,7 @@ export default function SubscriptionIndex({
     billing,
 }: {
     subscription: SubscriptionView | null;
+    pending_plan: PendingPlanView | null;
     usage: Record<string, number>;
     limits: Record<string, number | null>;
     plans: PlanView[];
@@ -280,6 +291,14 @@ export default function SubscriptionIndex({
                     </div>
                 )}
 
+                {pending_plan && (
+                    <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+                        Your change to <span className="font-semibold">{pending_plan.plan}</span> is pending. Your current plan stays active until you
+                        settle {pending_plan.invoice_number ? `invoice ${pending_plan.invoice_number}` : 'its invoice'} below — the new plan activates
+                        automatically once that payment is confirmed.
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                     <Card className="lg:col-span-2">
                         <CardHeader
@@ -383,7 +402,7 @@ export default function SubscriptionIndex({
                 <Card>
                     <CardHeader
                         title="Change plan"
-                        description="A change applies immediately and a new invoice is issued for the current period. No proration."
+                        description="Choose a plan. A new invoice is issued at the new price and your plan activates once it is paid. No proration."
                         action={
                             <Tabs
                                 tabs={[
@@ -403,6 +422,7 @@ export default function SubscriptionIndex({
                             <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
                                 {plans.map((plan) => {
                                     const isCurrent = subscription?.plan_id === plan.id;
+                                    const isPending = pending_plan?.plan_id === plan.id;
                                     return (
                                         <div
                                             key={plan.id}
@@ -413,7 +433,10 @@ export default function SubscriptionIndex({
                                         >
                                             <div className="flex items-start justify-between gap-2">
                                                 <h3 className="text-base font-semibold tracking-tight text-foreground">{plan.name}</h3>
-                                                {isCurrent && <Badge tone="info">Current</Badge>}
+                                                <div className="flex items-center gap-1.5">
+                                                    {isCurrent && <Badge tone="info">Current</Badge>}
+                                                    {isPending && <Badge tone="warning">Pending</Badge>}
+                                                </div>
                                             </div>
                                             {plan.description && <p className="mt-1 text-xs text-muted-foreground">{plan.description}</p>}
                                             <div className="mt-3 flex items-end gap-1">
@@ -446,12 +469,12 @@ export default function SubscriptionIndex({
                                             <div className="mt-4 flex-1" />
                                             <Button
                                                 size="sm"
-                                                variant={isCurrent ? 'secondary' : 'primary'}
-                                                disabled={isCurrent}
+                                                variant={isCurrent || isPending ? 'secondary' : 'primary'}
+                                                disabled={isCurrent || isPending}
                                                 className="w-full"
                                                 onClick={() => setPending(plan)}
                                             >
-                                                {isCurrent ? 'Current plan' : 'Switch to this plan'}
+                                                {isCurrent ? 'Current plan' : isPending ? 'Pending activation' : 'Switch to this plan'}
                                             </Button>
                                         </div>
                                     );
@@ -479,7 +502,7 @@ export default function SubscriptionIndex({
             <ConfirmDialog
                 show={pending !== null}
                 title={`Switch to ${pending?.name ?? ''}?`}
-                description="Your plan changes immediately and a new invoice is issued for the current period at the new price. There is no proration."
+                description="A new invoice is issued for this plan at the selected cycle's price. Your plan activates once that invoice is paid — there is no proration."
                 confirmLabel="Switch plan"
                 tone="primary"
                 onConfirm={switchPlan}

@@ -28,8 +28,9 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 /**
  * Tenant self-service subscription: view the current plan and entitlements,
  * upgrade/downgrade, pay invoices online with an eligible gateway, cancel or
- * resume renewal, and download invoices. No proration — a change applies
- * immediately and the new period is billed.
+ * resume renewal, and download invoices. No proration — the new period is
+ * billed, and a requested change is only activated once its invoice is paid
+ * (the tenant keeps the current plan until then).
  *
  * Eligible gateways are always resolved for the currency an invoice is actually
  * billed in (the same currency PricingService uses to issue invoices), so the
@@ -50,7 +51,7 @@ class SubscriptionController extends Controller
     public function index(Request $request): Response
     {
         $tenant = $request->user()->tenant;
-        $subscription = $tenant?->subscription?->load('plan');
+        $subscription = $tenant?->subscription?->load('plan', 'pendingPlan', 'pendingInvoice');
 
         // Offer only the tenant's regional ladder (Bangladesh or International),
         // exactly like the public pricing page.
@@ -104,6 +105,14 @@ class SubscriptionController extends Controller
                 'days_remaining' => $subscription->daysRemaining(),
                 'cancel_at_period_end' => $subscription->cancel_at_period_end,
                 'provider' => $subscription->provider,
+            ] : null,
+            'pending_plan' => $subscription?->hasPendingPlanChange() ? [
+                'plan' => $subscription->pendingPlan?->name,
+                'plan_id' => $subscription->pending_plan_id,
+                'billing_cycle' => $subscription->pending_billing_cycle?->value,
+                'invoice_id' => $subscription->pending_invoice_id,
+                'invoice_number' => $subscription->pendingInvoice?->number,
+                'since' => $subscription->pending_since?->toIso8601String(),
             ] : null,
             'usage' => $tenant ? $this->usage->metrics($tenant) : [],
             'limits' => [
@@ -199,17 +208,28 @@ class SubscriptionController extends Controller
 
         $subscription = $tenant->subscription;
 
-        $this->subscriptions->changePlan($subscription, $plan, BillingCycle::from($data['billing_cycle']), $request->user());
+        // Hold the requested change as pending and bill the target plan (no
+        // proration). The live plan is only activated once this invoice is paid.
+        $invoice = $this->subscriptions->requestPlanChange(
+            $subscription,
+            $plan,
+            BillingCycle::from($data['billing_cycle']),
+            $request->user(),
+        );
 
-        // Bill the new period at the new plan's price (no proration).
-        $invoice = $this->subscriptions->issueInvoice($subscription->fresh());
+        // Nothing to pay (free plan / fully discounted) — activate immediately.
+        if ((float) $invoice->amount <= 0) {
+            $this->subscriptions->payInvoice($invoice, $request->user());
+
+            return back()->with('success', "Your plan is now {$plan->name}.");
+        }
 
         $gateways = $this->eligibility->eligibleFor($tenant, $plan, $invoice->currency);
 
         // No gateway can take the billed currency — say so precisely instead of
         // leaving the tenant with an unusable checkout button.
         if ($gateways->isEmpty()) {
-            return back()->with('error', "Your plan is now {$plan->name}, but no payment method supports {$invoice->currency}. "
+            return back()->with('error', "Your change to {$plan->name} is pending, but no payment method supports {$invoice->currency}. "
                 .'Ask your platform administrator to enable a gateway for this currency, or contact support.');
         }
 
@@ -224,16 +244,16 @@ class SubscriptionController extends Controller
             if ($result['payment']->status === PlatformPaymentStatus::Failed) {
                 $reason = $result['payment']->failure_reason;
 
-                return back()->with('error', 'Your plan was updated, but the checkout could not start'
+                return back()->with('error', "Your change to {$plan->name} is pending. The checkout could not start"
                     .($reason ? ': '.$reason : '.')
                     ." Please retry invoice {$invoice->number} from the list below.");
             }
 
-            return back()->with('success', "Your plan is now {$plan->name}. Complete the payment for invoice {$invoice->number}.");
+            return back()->with('success', "Your change to {$plan->name} is pending. Complete the payment for invoice {$invoice->number} to activate it.");
         }
 
         // Several options — the tenant chooses on the invoice row.
-        return back()->with('success', "Your plan is now {$plan->name}. Choose a payment method for invoice {$invoice->number} below.");
+        return back()->with('success', "Your change to {$plan->name} is pending. Choose a payment method for invoice {$invoice->number} below to activate it.");
     }
 
     public function payInvoice(Request $request, SubscriptionInvoice $invoice): SymfonyResponse

@@ -66,6 +66,11 @@ class SubscriptionService
         return $subscription;
     }
 
+    /**
+     * Immediate, direct plan switch — used for platform-admin / comped changes.
+     * The tenant self-service flow goes through requestPlanChange() so the new
+     * plan is not activated until its invoice is paid.
+     */
     public function changePlan(Subscription $subscription, Plan $plan, BillingCycle $cycle, User $actor): Subscription
     {
         if ($plan->isArchived()) {
@@ -75,6 +80,11 @@ class SubscriptionService
         $subscription->forceFill([
             'plan_id' => $plan->getKey(),
             'billing_cycle' => $cycle,
+            // An immediate change supersedes any pending self-service request.
+            'pending_plan_id' => null,
+            'pending_billing_cycle' => null,
+            'pending_invoice_id' => null,
+            'pending_since' => null,
         ]);
         $subscription->snapshotPlan($plan);
         $subscription->save();
@@ -86,6 +96,103 @@ class SubscriptionService
         ], $actor, $subscription->tenant_id);
 
         return $subscription->fresh('plan');
+    }
+
+    /**
+     * Request a plan change without activating it: the target plan/cycle is held
+     * as pending and an invoice is issued for it. The live plan is only switched
+     * once that invoice is settled (see payInvoice → applyPendingPlanChange).
+     */
+    public function requestPlanChange(Subscription $subscription, Plan $plan, BillingCycle $cycle, User $actor): SubscriptionInvoice
+    {
+        if ($plan->isArchived()) {
+            throw ValidationException::withMessages(['plan_id' => 'This plan is archived and cannot be assigned.']);
+        }
+
+        // Idempotent: reuse the outstanding invoice when the same change is pending.
+        $existing = $subscription->pendingInvoice;
+
+        if ((int) $subscription->pending_plan_id === (int) $plan->getKey()
+            && $subscription->pending_billing_cycle === $cycle
+            && $existing
+            && ! $existing->status->isSettled()) {
+            return $existing;
+        }
+
+        return DB::transaction(function () use ($subscription, $plan, $cycle, $actor) {
+            $subscription->forceFill([
+                'pending_plan_id' => $plan->getKey(),
+                'pending_billing_cycle' => $cycle,
+                'pending_since' => now(),
+            ])->save();
+
+            $invoice = $this->issueInvoice($subscription, $plan, $cycle);
+
+            $subscription->forceFill(['pending_invoice_id' => $invoice->getKey()])->save();
+
+            $this->audit->log('subscription.plan_change_requested', $subscription, [
+                'plan' => $plan->name,
+                'cycle' => $cycle->value,
+                'plan_version' => $plan->version,
+                'invoice' => $invoice->number,
+            ], $actor, $subscription->tenant_id);
+
+            return $invoice;
+        });
+    }
+
+    /**
+     * Activate a requested plan change once its invoice is settled: switch the
+     * live plan/cycle, re-capture the agreed terms, and start the paid period.
+     */
+    public function applyPendingPlanChange(Subscription $subscription, ?User $actor = null): Subscription
+    {
+        if (! $subscription->hasPendingPlanChange()) {
+            return $subscription;
+        }
+
+        $plan = Plan::query()->find($subscription->pending_plan_id);
+
+        if (! $plan) {
+            // The target plan is gone — drop the request rather than half-apply it.
+            $subscription->clearPendingPlanChange();
+
+            return $subscription;
+        }
+
+        $cycle = $subscription->pending_billing_cycle ?? $subscription->billing_cycle;
+        $invoice = $subscription->pendingInvoice;
+
+        return DB::transaction(function () use ($subscription, $plan, $cycle, $invoice, $actor) {
+            $subscription->forceFill([
+                'plan_id' => $plan->getKey(),
+                'billing_cycle' => $cycle,
+                'status' => SubscriptionStatus::Active,
+                'suspended_at' => null,
+                'grace_ends_at' => null,
+                'cancel_at_period_end' => false,
+                'current_period_start' => $invoice?->period_start ?? now(),
+                'current_period_end' => $invoice?->period_end ?? now()->addMonths($cycle->months()),
+                'pending_plan_id' => null,
+                'pending_billing_cycle' => null,
+                'pending_invoice_id' => null,
+                'pending_since' => null,
+            ]);
+
+            $subscription->snapshotPlan($plan);
+            $subscription->save();
+
+            $this->setTenantStatus($subscription, TenantStatus::Active);
+
+            $this->audit->log('subscription.plan_changed', $subscription, [
+                'plan' => $plan->name,
+                'cycle' => $cycle->value,
+                'plan_version' => $plan->version,
+                'source' => 'payment',
+            ], $actor, $subscription->tenant_id);
+
+            return $subscription->fresh('plan');
+        });
     }
 
     public function activate(Subscription $subscription, ?User $actor = null): Subscription
@@ -281,9 +388,17 @@ class SubscriptionService
         return $this->issueInvoice($subscription);
     }
 
-    public function issueInvoice(Subscription $subscription): SubscriptionInvoice
+    /**
+     * Issue an invoice for a subscription's agreed period. Pass an explicit
+     * plan/cycle to bill a requested plan change while the subscription itself
+     * still points at its current plan.
+     */
+    public function issueInvoice(Subscription $subscription, ?Plan $plan = null, ?BillingCycle $cycle = null): SubscriptionInvoice
     {
-        $price = $this->pricing->subscriptionPrice($subscription);
+        $plan ??= $subscription->plan;
+        $cycle ??= $subscription->billing_cycle;
+
+        $price = $this->pricing->subscriptionPrice($subscription, $plan, $cycle);
         $subtotal = $price['amount'];
 
         $discount = 0.0;
@@ -291,8 +406,8 @@ class SubscriptionService
 
         $coupon = $subscription->coupon;
 
-        if (! $coupon) {
-            $coupon = $this->coupons->bestAutoApply($subscription->plan, $subscription->tenant, $subtotal);
+        if (! $coupon && $plan) {
+            $coupon = $this->coupons->bestAutoApply($plan, $subscription->tenant, $subtotal);
 
             if ($coupon) {
                 $this->coupons->redeem($coupon, $subscription->tenant, $subscription, $coupon->discountFor($subtotal));
@@ -304,12 +419,14 @@ class SubscriptionService
             $couponCode = $coupon->code;
         }
 
-        return DB::transaction(function () use ($subscription, $subtotal, $discount, $couponCode, $price) {
+        return DB::transaction(function () use ($subscription, $plan, $cycle, $subtotal, $discount, $couponCode, $price) {
             $prefix = (string) (app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('billing.invoice_prefix') ?? 'INV');
 
             $invoice = SubscriptionInvoice::create([
                 'tenant_id' => $subscription->tenant_id,
                 'subscription_id' => $subscription->getKey(),
+                'plan_id' => $plan?->getKey(),
+                'billing_cycle' => $cycle,
                 'number' => $this->numbers->next($subscription->tenant_id, 'subscription_invoice', $prefix),
                 'subtotal' => $subtotal,
                 'discount_amount' => $discount,
@@ -325,7 +442,7 @@ class SubscriptionService
             ]);
 
             $invoice->items()->create([
-                'description' => ($subscription->plan?->name ?? 'Subscription').' — '.ucfirst($subscription->billing_cycle->value).' subscription',
+                'description' => ($plan?->name ?? 'Subscription').' — '.ucfirst($cycle->value).' subscription',
                 'quantity' => 1,
                 'unit_price' => $subtotal,
                 'amount' => $subtotal,
@@ -344,6 +461,15 @@ class SubscriptionService
         ])->save();
 
         $this->audit->log('subscription.invoice_paid', $invoice, ['number' => $invoice->number], $actor, $invoice->tenant_id);
+
+        // Settling the invoice for a pending plan change is what activates it.
+        $subscription = $invoice->subscription;
+
+        if ($subscription
+            && $subscription->pending_invoice_id !== null
+            && (int) $subscription->pending_invoice_id === (int) $invoice->getKey()) {
+            $this->applyPendingPlanChange($subscription, $actor);
+        }
 
         return $invoice;
     }

@@ -5,8 +5,10 @@ namespace Tests\Feature\Subscription;
 use App\Domain\Billing\Models\PaymentGateway;
 use App\Domain\Billing\Models\PlatformPayment;
 use App\Domain\Identity\Enums\RoleName;
+use App\Domain\Subscriptions\Enums\PlanRegion;
 use App\Domain\Subscriptions\Models\Plan;
 use App\Domain\Subscriptions\Models\Subscription;
+use App\Domain\Subscriptions\Models\SubscriptionInvoice;
 use App\Domain\Subscriptions\SubscriptionService;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
@@ -51,9 +53,10 @@ class TenantSubscriptionTest extends TestCase
             ->assertInertia(fn ($page) => $page->component('Subscription/Index')->has('plans'));
     }
 
-    public function test_tenant_can_change_plan_and_an_invoice_is_issued(): void
+    public function test_changing_plan_is_pending_and_does_not_activate_before_payment(): void
     {
         [$tenant, $owner] = $this->tenantWithOwner();
+        $current = Subscription::withoutGlobalScopes()->where('tenant_id', $tenant->id)->firstOrFail()->plan;
         $growth = Plan::where('slug', 'growth')->firstOrFail();
 
         $this->actingAs($owner)->post('/subscription/plan', [
@@ -61,12 +64,77 @@ class TenantSubscriptionTest extends TestCase
             'billing_cycle' => 'yearly',
         ])->assertRedirect();
 
+        // The live plan is untouched; the change is held as pending.
         $subscription = Subscription::withoutGlobalScopes()->where('tenant_id', $tenant->id)->firstOrFail();
-        $this->assertSame($growth->getKey(), $subscription->plan_id);
-        $this->assertSame('yearly', $subscription->billing_cycle->value);
+        $this->assertSame($current->getKey(), $subscription->plan_id);
+        $this->assertSame($growth->getKey(), $subscription->pending_plan_id);
+        $this->assertSame('yearly', $subscription->pending_billing_cycle->value);
+        $this->assertNotNull($subscription->pending_invoice_id);
 
-        $this->assertDatabaseHas('subscription_invoices', ['tenant_id' => $tenant->id, 'amount' => 790]);
+        // The tenant keeps the current plan's entitlements while pending.
+        $this->assertSame(5, $tenant->fresh()->planLimit('users'));
+
+        // The invoice bills the target plan at its price.
+        $this->assertDatabaseHas('subscription_invoices', [
+            'tenant_id' => $tenant->id,
+            'plan_id' => $growth->getKey(),
+            'amount' => 790,
+        ]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'subscription.plan_change_requested']);
+    }
+
+    public function test_settling_the_pending_invoice_activates_the_new_plan(): void
+    {
+        [$tenant, $owner] = $this->tenantWithOwner();
+        $growth = Plan::where('slug', 'growth')->firstOrFail();
+
+        $this->actingAs($owner)->post('/subscription/plan', [
+            'plan_id' => $growth->getKey(),
+            'billing_cycle' => 'monthly',
+        ])->assertRedirect();
+
+        $subscription = Subscription::withoutGlobalScopes()->where('tenant_id', $tenant->id)->firstOrFail();
+        $invoice = SubscriptionInvoice::withoutGlobalScopes()->findOrFail($subscription->pending_invoice_id);
+
+        app(TenantContext::class)->set($tenant);
+        app(SubscriptionService::class)->payInvoice($invoice, $owner);
+        app(TenantContext::class)->forget();
+
+        $subscription->refresh();
+        $this->assertSame($growth->getKey(), $subscription->plan_id);
+        $this->assertSame('monthly', $subscription->billing_cycle->value);
+        $this->assertNull($subscription->pending_plan_id);
+        $this->assertNull($subscription->pending_invoice_id);
+        $this->assertSame('active', $subscription->status->value);
+        $this->assertSame(25, $tenant->fresh()->planLimit('users'));
         $this->assertDatabaseHas('audit_logs', ['action' => 'subscription.plan_changed']);
+    }
+
+    public function test_a_free_plan_change_activates_immediately_without_a_checkout(): void
+    {
+        [$tenant, $owner] = $this->tenantWithOwner();
+
+        $free = Plan::create([
+            'name' => 'Free',
+            'slug' => 'free',
+            'currency' => 'USD',
+            'price_monthly' => 0,
+            'price_yearly' => 0,
+            'trial_days' => 0,
+            'is_active' => true,
+            'visibility' => 'public',
+            'region' => PlanRegion::Global,
+            'sort_order' => 9,
+        ]);
+
+        $this->actingAs($owner)->post('/subscription/plan', [
+            'plan_id' => $free->getKey(),
+            'billing_cycle' => 'monthly',
+        ])->assertRedirect();
+
+        $subscription = Subscription::withoutGlobalScopes()->where('tenant_id', $tenant->id)->firstOrFail();
+        $this->assertSame($free->getKey(), $subscription->plan_id);
+        $this->assertNull($subscription->pending_plan_id);
     }
 
     public function test_cashier_cannot_change_the_plan(): void

@@ -35,11 +35,15 @@ class PricingService
     /**
      * The price to bill a subscription, in a currency we have a price for.
      *
+     * Pass an explicit plan/cycle to price a requested (not-yet-active) plan
+     * change, e.g. the target plan of a pending change.
+     *
      * @return array{currency: string, amount: float}
      */
-    public function subscriptionPrice(Subscription $subscription): array
+    public function subscriptionPrice(Subscription $subscription, ?Plan $plan = null, ?BillingCycle $cycle = null): array
     {
-        $plan = $subscription->plan;
+        $plan ??= $subscription->plan;
+        $cycle ??= $subscription->billing_cycle;
 
         // The tenant's billing currency (set in the billing profile), falling
         // back to the region currency captured at onboarding, then the plan's
@@ -56,12 +60,12 @@ class PricingService
             return ['currency' => $currency, 'amount' => 0.0];
         }
 
-        $amount = $this->priceFor($plan, $currency, $subscription->billing_cycle);
+        $amount = $this->priceFor($plan, $currency, $cycle);
 
         if ($amount === null) {
             // No price for the tenant's currency — fall back to the plan's own currency.
             $currency = strtoupper($plan->currency);
-            $amount = $this->priceFor($plan, $currency, $subscription->billing_cycle) ?? 0.0;
+            $amount = $this->priceFor($plan, $currency, $cycle) ?? 0.0;
         }
 
         return ['currency' => $currency, 'amount' => round($amount, 2)];

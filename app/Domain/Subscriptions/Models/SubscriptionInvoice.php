@@ -7,6 +7,7 @@ use App\Domain\Billing\Models\BillingAdjustment;
 use App\Domain\Billing\Models\CreditNote;
 use App\Domain\Billing\Models\PlatformPayment;
 use App\Domain\Billing\Models\SubscriptionInvoiceItem;
+use App\Domain\Subscriptions\Enums\BillingCycle;
 use App\Domain\Subscriptions\Enums\InvoiceStatus;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,8 @@ class SubscriptionInvoice extends Model
     protected $fillable = [
         'tenant_id',
         'subscription_id',
+        'plan_id',
+        'billing_cycle',
         'number',
         'amount',
         'subtotal',
@@ -42,6 +45,7 @@ class SubscriptionInvoice extends Model
             'subtotal' => 'decimal:2',
             'discount_amount' => 'decimal:2',
             'status' => InvoiceStatus::class,
+            'billing_cycle' => BillingCycle::class,
             'period_start' => 'datetime',
             'period_end' => 'datetime',
             'issued_at' => 'datetime',
@@ -62,6 +66,29 @@ class SubscriptionInvoice extends Model
     public function subscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class);
+    }
+
+    /** The plan this invoice bills for. */
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
+    }
+
+    /**
+     * The plan being billed: the invoice's own captured plan, falling back to
+     * the subscription's current plan for invoices issued before the column.
+     */
+    public function effectivePlan(): ?Plan
+    {
+        return $this->plan ?? $this->subscription?->plan;
+    }
+
+    /** The interval being billed, falling back to the subscription's cycle. */
+    public function effectiveCycle(): BillingCycle
+    {
+        return $this->billing_cycle
+            ?? $this->subscription?->billing_cycle
+            ?? BillingCycle::Monthly;
     }
 
     public function items(): HasMany

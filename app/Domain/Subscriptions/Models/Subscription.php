@@ -24,6 +24,10 @@ class Subscription extends Model
     protected $fillable = [
         'tenant_id',
         'plan_id',
+        'pending_plan_id',
+        'pending_billing_cycle',
+        'pending_invoice_id',
+        'pending_since',
         'coupon_id',
         'status',
         'billing_cycle',
@@ -45,10 +49,12 @@ class Subscription extends Model
         return [
             'status' => SubscriptionStatus::class,
             'billing_cycle' => BillingCycle::class,
+            'pending_billing_cycle' => BillingCycle::class,
             'trial_ends_at' => 'datetime',
             'current_period_start' => 'datetime',
             'current_period_end' => 'datetime',
             'grace_ends_at' => 'datetime',
+            'pending_since' => 'datetime',
             'cancel_at_period_end' => 'boolean',
             'cancelled_at' => 'datetime',
             'suspended_at' => 'datetime',
@@ -67,6 +73,18 @@ class Subscription extends Model
         return $this->belongsTo(Plan::class);
     }
 
+    /** The plan the tenant has requested but not yet paid for. */
+    public function pendingPlan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class, 'pending_plan_id');
+    }
+
+    /** The invoice that must settle before the pending plan change applies. */
+    public function pendingInvoice(): BelongsTo
+    {
+        return $this->belongsTo(SubscriptionInvoice::class, 'pending_invoice_id');
+    }
+
     public function coupon(): BelongsTo
     {
         return $this->belongsTo(Coupon::class);
@@ -75,6 +93,23 @@ class Subscription extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(SubscriptionInvoice::class);
+    }
+
+    /** A plan change has been requested but its invoice is not yet settled. */
+    public function hasPendingPlanChange(): bool
+    {
+        return $this->pending_plan_id !== null;
+    }
+
+    /** Drop any requested plan change (e.g. superseded by an admin override). */
+    public function clearPendingPlanChange(): void
+    {
+        $this->forceFill([
+            'pending_plan_id' => null,
+            'pending_billing_cycle' => null,
+            'pending_invoice_id' => null,
+            'pending_since' => null,
+        ])->save();
     }
 
     /** Immutable snapshot of the plan terms agreed at subscription time. */
