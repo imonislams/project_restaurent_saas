@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -121,7 +122,7 @@ class MenuController extends Controller
     public function storeProduct(ProductRequest $request): RedirectResponse
     {
         $data = $this->productAttributes($request->validated());
-        unset($data['image']);
+        unset($data['image'], $data['remove_image']);
 
         $product = Product::create($data);
 
@@ -134,12 +135,19 @@ class MenuController extends Controller
     public function updateProduct(ProductRequest $request, Product $product): RedirectResponse
     {
         $data = $this->productAttributes($request->validated(), $product);
-        unset($data['image']);
+        unset($data['image'], $data['remove_image']);
 
         $product->update($data);
 
         $this->syncVariants($product, $request->validated('variants') ?? []);
-        $this->storeProductImage($product, $request->file('image'));
+
+        // An explicit removal wins over an upload; otherwise a file replaces the image and
+        // sending neither leaves the existing image untouched.
+        if ($request->boolean('remove_image')) {
+            $this->deleteProductImage($product);
+        } else {
+            $this->storeProductImage($product, $request->file('image'));
+        }
 
         return back()->with('success', 'Product updated.');
     }
@@ -162,7 +170,14 @@ class MenuController extends Controller
         return back()->with('success', 'Product image updated.');
     }
 
-    /** Store an uploaded image and replace the previous file, if any. */
+    /**
+     * Store an uploaded image and replace the previous file, if any.
+     *
+     * The new file is written first, the row is updated inside a transaction, and the
+     * previous file is only deleted once the new path is committed. If the row update
+     * fails the freshly written file is removed, so the database and the storage disk
+     * never drift apart.
+     */
     protected function storeProductImage(Product $product, ?UploadedFile $file): void
     {
         if ($file === null) {
@@ -172,19 +187,40 @@ class MenuController extends Controller
         $previous = $product->image_path;
         $path = $file->store('products/'.$product->tenant_id, 'public');
 
-        $product->forceFill(['image_path' => $path])->save();
+        try {
+            DB::transaction(fn () => $product->forceFill(['image_path' => $path])->save());
+        } catch (\Throwable $e) {
+            Storage::disk('public')->delete($path);
+
+            throw $e;
+        }
 
         if ($previous && $previous !== $path) {
-            Storage::disk('public')->delete($previous);
+            $this->deleteStoredImage($previous);
         }
+    }
+
+    /**
+     * Clear the product's image reference, then delete the stored file. The row is
+     * updated first so a failed file delete leaves a harmless orphan rather than a
+     * product pointing at a file that no longer exists.
+     */
+    protected function deleteProductImage(Product $product): void
+    {
+        $path = $product->image_path;
+
+        if ($path === null) {
+            return;
+        }
+
+        DB::transaction(fn () => $product->forceFill(['image_path' => null])->save());
+
+        $this->deleteStoredImage($path);
     }
 
     public function destroyProductImage(Product $product): RedirectResponse
     {
-        if ($product->image_path) {
-            Storage::disk('public')->delete($product->image_path);
-            $product->forceFill(['image_path' => null])->save();
-        }
+        $this->deleteProductImage($product);
 
         return back()->with('success', 'Product image removed.');
     }
@@ -280,21 +316,62 @@ class MenuController extends Controller
     }
 
     /**
+     * Reconcile a product's variants against the submitted set.
+     *
+     * Existing variants are updated in place rather than deleted and recreated, so their
+     * ids survive an edit. Order items reference `product_variants.id` with a
+     * `nullOnDelete` key, so recreating them would silently blank the variant that past
+     * sales recorded. Only variants the user actually removed are deleted.
+     *
      * @param  list<array<string, mixed>>  $variants
      */
     protected function syncVariants(Product $product, array $variants): void
     {
-        $product->variants()->delete();
+        $keptIds = [];
 
         foreach (array_values($variants) as $index => $variant) {
-            $product->variants()->create([
-                'tenant_id' => $product->tenant_id,
+            $attributes = [
                 'name' => $variant['name'],
                 'sku' => $variant['sku'] ?? null,
                 'price' => $variant['price'] ?? null,
                 'sort_order' => $index,
                 'is_default' => $index === 0,
-            ]);
+            ];
+
+            $existing = isset($variant['id'])
+                ? $product->variants()->whereKey($variant['id'])->first()
+                : null;
+
+            if ($existing) {
+                $existing->update($attributes);
+                $keptIds[] = $existing->getKey();
+            } else {
+                $keptIds[] = $product->variants()->create($attributes + [
+                    'tenant_id' => $product->tenant_id,
+                ])->getKey();
+            }
+        }
+
+        $product->variants()->whereNotIn('id', $keptIds)->delete();
+    }
+
+    /**
+     * Delete a stored product image unless another product record still points at the
+     * same file. Paths are tenant-scoped, but an import or a duplicate can legitimately
+     * share one file, and a soft-deleted product may still reference it.
+     */
+    protected function deleteStoredImage(?string $path): void
+    {
+        if ($path === null) {
+            return;
+        }
+
+        $stillReferenced = Product::withoutGlobalScopes()
+            ->where('image_path', $path)
+            ->exists();
+
+        if (! $stillReferenced) {
+            Storage::disk('public')->delete($path);
         }
     }
 

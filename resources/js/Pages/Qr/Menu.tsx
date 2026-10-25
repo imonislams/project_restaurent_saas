@@ -150,7 +150,8 @@ export default function QrMenu({ token, restaurant, table, branding, policy, tra
 
     const openDetail = (product: MenuProduct) => {
         setDetail(product);
-        setVariantId(product.variants[0]?.id ?? null);
+        // Default to the item as-is ("Regular" — the base price). Choosing a size is opt-in.
+        setVariantId(null);
         setSelected({});
         setDetailQty(1);
         setDetailNote('');
@@ -345,23 +346,56 @@ export default function QrMenu({ token, restaurant, table, branding, policy, tra
                         key={product.id}
                         type="button"
                         onClick={() => openDetail(product)}
-                        className="overflow-hidden rounded-2xl bg-white text-left shadow-subtle transition hover:shadow-card"
+                        className="group flex flex-col overflow-hidden rounded-2xl border border-black/5 bg-white text-left shadow-subtle transition duration-150 hover:-translate-y-0.5 hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-touchdine-500 active:scale-[.99]"
                     >
-                        {product.image_url ? (
-                            <img src={product.image_url} alt={product.name} className="h-28 w-full object-cover" loading="lazy" />
-                        ) : (
-                            <div className="flex h-28 w-full items-center justify-center bg-touchdine-50 text-2xl">🍽️</div>
-                        )}
-                        <div className="p-3">
-                            <p className="line-clamp-2 min-h-[2.25rem] text-sm font-semibold text-gray-900">{product.name}</p>
-                            <div className="mt-1 flex items-center justify-between">
-                                <span className="font-mono text-sm font-bold text-gray-900">{money(product.price)}</span>
-                                {product.labels.slice(0, 2).map((label) => (
-                                    <span key={label} className="rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-semibold text-gray-500">
-                                        {label}
-                                    </span>
-                                ))}
+                        <div className="h-28 w-full overflow-hidden bg-gray-50">
+                            {product.image_url ? (
+                                <img
+                                    src={product.image_url}
+                                    alt={product.name}
+                                    loading="lazy"
+                                    decoding="async"
+                                    className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                                />
+                            ) : (
+                                <div className="flex h-full w-full items-center justify-center text-2xl">🍽️</div>
+                            )}
+                        </div>
+
+                        <div className="flex flex-1 flex-col p-3">
+                            <p className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-gray-900">
+                                {product.name}
+                            </p>
+
+                            <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                                <span className="text-base font-bold tabular-nums text-gray-900">
+                                    {money(product.price)}
+                                </span>
+                                <span className="flex flex-wrap gap-1">
+                                    {product.labels.slice(0, 2).map((label) => (
+                                        <span
+                                            key={label}
+                                            className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500"
+                                        >
+                                            {label}
+                                        </span>
+                                    ))}
+                                </span>
                             </div>
+
+                            {product.variants.length > 0 && (
+                                <div className="mt-2 space-y-1 border-t border-gray-100 pt-2">
+                                    <p className="text-xs font-semibold text-gray-400">Sizes</p>
+                                    {product.variants.map((variant) => (
+                                        <div key={variant.id} className="flex items-baseline justify-between gap-2">
+                                            <span className="truncate text-xs text-gray-500">{variant.name}</span>
+                                            <span className="shrink-0 text-xs font-semibold tabular-nums text-gray-700">
+                                                {money(variant.price)}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </button>
                 ))}
@@ -388,16 +422,27 @@ export default function QrMenu({ token, restaurant, table, branding, policy, tra
                         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
                             {detail.variants.length > 0 && (
                                 <div>
-                                    <p className="mb-1.5 text-xs font-semibold text-gray-700">Choose a size</p>
-                                    <div className="flex flex-wrap gap-1.5">
+                                    <p className="mb-2 text-xs font-semibold text-gray-700">Choose a size</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setVariantId(null)}
+                                            className={`rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                                                variantId === null ? 'border-transparent' : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                                            }`}
+                                            style={variantId === null ? { background: 'var(--qr-primary)', color: 'var(--qr-primary-text)' } : undefined}
+                                        >
+                                            Regular · {money(detail.price)}
+                                        </button>
                                         {detail.variants.map((variant) => (
                                             <button
                                                 key={variant.id}
                                                 type="button"
                                                 onClick={() => setVariantId(variant.id)}
-                                                className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold ${
-                                                    variantId === variant.id ? 'border-touchdine-500 bg-touchdine-50 text-touchdine-800' : 'border-gray-200 text-gray-700'
+                                                className={`rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                                                    variantId === variant.id ? 'border-transparent' : 'border-gray-200 text-gray-600 hover:border-gray-300'
                                                 }`}
+                                                style={variantId === variant.id ? { background: 'var(--qr-primary)', color: 'var(--qr-primary-text)' } : undefined}
                                             >
                                                 {variant.name} · {money(variant.price)}
                                             </button>

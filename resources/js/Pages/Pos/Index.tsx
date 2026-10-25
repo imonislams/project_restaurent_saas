@@ -9,7 +9,7 @@ import { offlineWindowExpired } from '@/offline/session';
 import { useOfflineStatus } from '@/offline/useOfflineStatus';
 import { BranchSummary } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 // --- Interfaces ---
 
@@ -894,7 +894,7 @@ export default function PosIndex({
                     </div>
 
                     {/* Product Grid */}
-                    <div className="grid flex-1 auto-rows-min grid-cols-2 gap-2.5 overflow-y-auto p-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                    <div className="grid flex-1 auto-rows-min grid-cols-1 gap-3 overflow-y-auto p-3 sm:grid-cols-2 lg:grid-cols-3">
                         {filtered.map((product) => {
                             const unitPrice = priceFor(product);
                             const inCartCount = cart
@@ -902,90 +902,17 @@ export default function PosIndex({
                                 .reduce((acc, l) => acc + l.quantity, 0);
 
                             return (
-                                <div
+                                <ProductCard
                                     key={product.id}
-                                    className={`group relative flex flex-col justify-between rounded-2xl border p-3 bg-white shadow-subtle transition-all duration-150 ${
-                                        product.is_available
-                                            ? 'border-gray-200 hover:border-primary/50 hover:shadow-card cursor-pointer'
-                                            : 'border-gray-100 bg-gray-50/70 opacity-60'
-                                    }`}
-                                >
-                                    {/* In-cart count badge */}
-                                    {inCartCount > 0 && (
-                                        <div className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground shadow-subtle">
-                                            ×{inCartCount}
-                                        </div>
-                                    )}
-
-                                    {/* Product main tap area */}
-                                    <button
-                                        type="button"
-                                        disabled={!product.is_available}
-                                        onClick={() => addOrConfigure(product, null)}
-                                        className="flex flex-1 flex-col text-left focus:outline-none"
-                                    >
-                                        <div className="flex items-center justify-between gap-1">
-                                            <span className="inline-block rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">
-                                                {product.sku || 'Item'}
-                                            </span>
-                                            {!product.is_available && (
-                                                <span className="rounded bg-red-100 px-1.5 py-0.5 text-[9px] font-bold text-red-700">
-                                                    Sold Out
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <div className="mt-2 flex items-start gap-2.5">
-                                            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-100 ring-1 ring-gray-200">
-                                                {product.image_url ? (
-                                                    <img
-                                                        src={product.image_url}
-                                                        alt={product.name}
-                                                        loading="lazy"
-                                                        className="h-full w-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="flex h-full w-full items-center justify-center text-gray-300">
-                                                        <Icon name="book" className="h-4 w-4" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <div className="line-clamp-2 min-h-[2.5rem] text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-primary transition">
-                                                    {product.name}
-                                                </div>
-                                                <div className="mt-1 font-mono text-sm font-bold text-gray-900 tracking-tight">
-                                                    {money(unitPrice, currency)}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </button>
-
-                                    {/* Variant buttons */}
-                                    {product.variants.length > 0 && (
-                                        <div className="mt-2.5 pt-2 border-t border-gray-100 flex flex-wrap gap-1">
-                                            {product.variants.map((v) => (
-                                                <button
-                                                    key={v.id}
-                                                    type="button"
-                                                    disabled={!product.is_available}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        addOrConfigure(product, v);
-                                                    }}
-                                                    className="rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-700 hover:bg-primary/10 hover:text-primary transition disabled:opacity-50"
-                                                >
-                                                    {v.name}
-                                                    {v.price !== null && (
-                                                        <span className="ml-1 font-mono text-gray-500">
-                                                            {money(v.price, currency)}
-                                                        </span>
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                                    product={product}
+                                    categoryName={
+                                        categories.find((c) => c.id === product.category_id)?.name ?? null
+                                    }
+                                    unitPrice={unitPrice}
+                                    currency={currency}
+                                    inCartCount={inCartCount}
+                                    onAdd={addOrConfigure}
+                                />
                             );
                         })}
 
@@ -1633,6 +1560,135 @@ export default function PosIndex({
 }
 
 // --- SUB-COMPONENTS ---
+
+/**
+ * A single POS product tile: the product image fills the whole landscape card, with the
+ * category pill top-left and the name / sizes / price overlaid at the bottom over a dark
+ * gradient. The card is one tap target that adds the base product. Sizes are shown as
+ * inline text separated by "/" (as in the reference), but each one stays its own button so
+ * a size can still be added in a single tap. Decorative layers sit below the tap target and
+ * never swallow a click.
+ */
+function ProductCard({
+    product,
+    categoryName,
+    unitPrice,
+    currency,
+    inCartCount,
+    onAdd,
+}: {
+    product: Product;
+    categoryName: string | null;
+    unitPrice: number;
+    currency: string;
+    inCartCount: number;
+    onAdd: (product: Product, variant: Variant | null) => void;
+}) {
+    const t = useT();
+    const [broken, setBroken] = useState(false);
+    const showImage = Boolean(product.image_url) && !broken;
+    const initial = product.name.trim().charAt(0).toUpperCase() || '?';
+    const hasVariants = product.variants.length > 0;
+
+    return (
+        <div
+            className={`group relative aspect-[3/2] overflow-hidden rounded-3xl border bg-card shadow-subtle transition-[transform,box-shadow,border-color] duration-150 ${
+                product.is_available
+                    ? 'cursor-pointer border-border hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-card'
+                    : 'border-border/50'
+            }`}
+        >
+            {/* Image fills the whole card; never stretched. Falls back to a branded tile. */}
+            {showImage ? (
+                <img
+                    src={product.image_url as string}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    onError={() => setBroken(true)}
+                    className={`absolute inset-0 h-full w-full object-cover ${
+                        product.is_available ? '' : 'opacity-55 grayscale'
+                    }`}
+                />
+            ) : (
+                <span
+                    className={`absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#201E1D] ${
+                        product.is_available ? '' : 'opacity-55 grayscale'
+                    }`}
+                >
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-white/10 text-xl font-extrabold text-[#F3F2F2]">
+                        {initial}
+                    </span>
+                    <span className="text-xs font-semibold text-[#F3F2F2]/60">No image</span>
+                </span>
+            )}
+
+            {/* Decorative gradient over the lower part — never blocks taps. */}
+            <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-t from-black/90 via-black/55 to-transparent" />
+
+            {categoryName && (
+                <span className="pointer-events-none absolute left-2.5 top-2.5 z-[3] rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground shadow-subtle">
+                    {categoryName}
+                </span>
+            )}
+            {inCartCount > 0 && (
+                <span className="pointer-events-none absolute right-2.5 top-2.5 z-[3] flex h-6 min-w-6 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-primary-foreground shadow-subtle">
+                    ×{inCartCount}
+                </span>
+            )}
+
+            {/* Whole-card tap target. */}
+            <button
+                type="button"
+                disabled={!product.is_available}
+                onClick={() => onAdd(product, null)}
+                aria-label={product.name}
+                className="absolute inset-0 z-[1] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80 disabled:cursor-not-allowed"
+            />
+
+            {/* Name, sizes and price overlaid on the image. */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex flex-col gap-1 p-3">
+                <div className="line-clamp-2 min-w-0 break-words text-lg font-extrabold leading-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
+                    {product.name}
+                </div>
+
+                {!product.is_available ? (
+                    <div className="text-base font-extrabold tracking-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
+                        {t('pos.sold_out')}
+                    </div>
+                ) : hasVariants ? (
+                    // The base price is the item sold as-is, shown as "Regular"; each size keeps
+                    // its own price. Every option stays tappable so a size is still one tap away.
+                    <div className="pointer-events-auto flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm font-bold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
+                        <button
+                            type="button"
+                            onClick={() => onAdd(product, null)}
+                            className="rounded-md underline-offset-4 transition hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                        >
+                            {t('pos.regular')} {money(unitPrice, currency)}
+                        </button>
+                        {product.variants.map((v) => (
+                            <Fragment key={v.id}>
+                                <span className="text-white/40">·</span>
+                                <button
+                                    type="button"
+                                    onClick={() => onAdd(product, v)}
+                                    className="rounded-md underline-offset-4 transition hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                                >
+                                    {v.name} {money(v.price ?? unitPrice, currency)}
+                                </button>
+                            </Fragment>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-base font-extrabold tracking-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
+                        {money(unitPrice, currency)}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
 
 /**
  * Payment Modal: Supports single & split payments, quick cash denomination chips, and change calculation.

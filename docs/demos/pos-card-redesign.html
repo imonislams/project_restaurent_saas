@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>POS Menu Cards — Reference Design (Demo)</title>
+<style>
+  :root{
+    --red:#EC3013; --red-hover:#D02710; --ink:#201E1D; --paper:#F3F2F2;
+    --s200:#e7e5e4; --s300:#d6d3d1; --s400:#a8a29e; --s500:#78716c; --s600:#57534e;
+    --radius:28px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:#fff;color:var(--ink);
+    font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 18px 60px;}
+
+  header.top{display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px;justify-content:space-between;}
+  h1{font-size:21px;margin:0;letter-spacing:-.02em;}
+  .sub{color:var(--s600);font-size:13px;margin:6px 0 0;max-width:660px;line-height:1.55;}
+  .head-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+  .badge-note{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--s200);
+    color:var(--s600);font-size:12px;font-weight:700;padding:6px 11px;border-radius:999px;}
+  .dot{width:8px;height:8px;border-radius:999px;background:var(--red);}
+  .frames{display:inline-flex;background:#fff;border:1px solid var(--s200);border-radius:12px;padding:4px;gap:4px;}
+  .frames button{border:0;background:transparent;padding:7px 13px;border-radius:9px;font:inherit;font-size:12.5px;
+    font-weight:700;color:var(--s600);cursor:pointer;}
+  .frames button.on{background:var(--red);color:#fff;}
+
+  /* ---------- device frame ---------- */
+  .stage{margin:20px auto 0;transition:max-width .25s ease;}
+  .stage.wide{max-width:1120px;}
+  .stage.mid{max-width:760px;}
+  .stage.small{max-width:430px;}
+  .pos{background:#fafaf9;border:1px solid var(--s200);border-radius:18px;overflow:hidden;
+    box-shadow:0 20px 50px rgba(0,0,0,.10);}
+
+  .pos-top{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;
+    border-bottom:1px solid var(--s200);padding:10px 14px;}
+  .pos-top .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:14px;}
+  .mark{width:20px;height:20px;display:grid;grid-template-columns:1fr 1fr;gap:2px;}
+  .mark i{background:var(--ink);border-radius:2px;}
+  .mark i:nth-child(2){background:var(--red);}
+  .chiplist{display:flex;gap:7px;flex-wrap:wrap;}
+  .chip2{font-size:12px;font-weight:700;color:var(--s600);background:#f5f5f4;border-radius:8px;padding:5px 9px;}
+  .chip2.live{background:rgba(236,48,19,.10);color:var(--red);}
+
+  .pos-main{display:flex;align-items:stretch;min-height:560px;}
+  .rail{width:168px;flex:none;background:#fff;border-right:1px solid var(--s200);padding:10px;}
+  .rail .h{font-size:11.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--s400);
+    padding:4px 8px 8px;}
+  .rail button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;
+    font:inherit;font-size:12.5px;font-weight:700;color:#44403c;background:transparent;padding:9px 10px;
+    border-radius:11px;cursor:pointer;text-align:left;}
+  .rail button:hover{background:#f5f5f4;}
+  .rail button.on{background:var(--red);color:#fff;}
+  .rail .n{font-size:11px;font-weight:800;background:#f5f5f4;color:var(--s500);border-radius:999px;padding:1px 7px;}
+  .rail button.on .n{background:rgba(255,255,255,.22);color:#fff;}
+
+  .catalog{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .searchwrap{background:#fff;border-bottom:1px solid var(--s200);padding:10px 12px;}
+  .search{display:flex;align-items:center;gap:8px;background:#f5f5f4;border:1px solid var(--s200);
+    border-radius:11px;padding:8px 11px;color:var(--s400);font-size:13px;}
+
+  .grid{display:grid;gap:14px;padding:14px;grid-template-columns:1fr;align-content:start;}
+  @media(min-width:680px){.grid{grid-template-columns:repeat(2,1fr);}}
+  @media(min-width:1040px){.grid{grid-template-columns:repeat(3,1fr);}}
+
+  .cart{width:270px;flex:none;background:#fff;border-left:1px solid var(--s200);padding:12px;
+    display:flex;flex-direction:column;gap:10px;}
+  .cart h3{margin:0;font-size:13px;font-weight:800;}
+  .cart .line{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--s600);}
+  .cart .empty{font-size:12.5px;color:var(--s400);}
+  .cart .total{margin-top:auto;border-top:1px solid var(--s200);padding-top:10px;display:flex;
+    justify-content:space-between;font-size:14px;font-weight:800;}
+
+  .stage.small .rail{display:none;}
+  .stage.small .cart{display:none;}
+  .stage.mid .cart{width:220px;}
+  .stage.small .grid{grid-template-columns:1fr;gap:12px;padding:12px;}
+  .stage.small .pos-main{min-height:430px;}
+
+  /* ---------- THE CARD ---------- */
+  .card{position:relative;aspect-ratio:3/2;border-radius:var(--radius);overflow:hidden;background:var(--ink);
+    box-shadow:0 1px 3px rgba(0,0,0,.12);cursor:pointer;
+    transition:transform .15s ease,box-shadow .15s ease;}
+  .card:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(0,0,0,.22);}
+  .card:active{transform:scale(.99);}
+  .card:focus-visible{outline:3px solid rgba(236,48,19,.5);outline-offset:2px;}
+  .card.off{cursor:not-allowed;}
+  .card.off:hover{transform:none;box-shadow:0 1px 3px rgba(0,0,0,.12);}
+
+  /* image layer — fills the whole landscape card, never stretched */
+  .card .img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56px;}
+  .ph-1{background:linear-gradient(135deg,#7c2d12,#c2410c 55%,#f59e0b);}
+  .ph-2{background:linear-gradient(135deg,#14532d,#15803d 55%,#84cc16);}
+  .ph-3{background:linear-gradient(135deg,#7f1d1d,#b91c1c 60%,#fca5a5);}
+  .ph-4{background:linear-gradient(135deg,#78350f,#a16207 60%,#fde68a);}
+  .ph-5{background:linear-gradient(135deg,#1e3a8a,#1d4ed8 60%,#93c5fd);}
+  .ph-6{background:linear-gradient(135deg,#3f3f46,#52525b 60%,#a1a1aa);}
+  .card.off .img{filter:grayscale(.6);opacity:.5;}
+
+  /* branded fallback when there is no image / it fails to load */
+  .fb{position:absolute;inset:0;background:var(--ink);display:flex;flex-direction:column;gap:8px;
+    align-items:center;justify-content:center;color:var(--paper);}
+  .fb .initial{width:54px;height:54px;border-radius:999px;background:rgba(243,242,242,.10);
+    border:1px solid rgba(243,242,242,.26);display:flex;align-items:center;justify-content:center;
+    font-size:22px;font-weight:800;}
+  .fb .lbl{font-size:12px;font-weight:700;color:rgba(243,242,242,.6);}
+  .card.off .fb{opacity:.5;filter:grayscale(.6);}
+
+  /* dark scrim over the lower part — never blocks taps */
+  .grad{position:absolute;left:0;right:0;bottom:0;height:62%;pointer-events:none;
+    background:linear-gradient(to top,rgba(0,0,0,.92) 0%,rgba(0,0,0,.58) 45%,rgba(0,0,0,0) 100%);}
+
+  /* the whole card is the tap target */
+  .hit{position:absolute;inset:0;z-index:1;border:0;background:transparent;cursor:pointer;padding:0;}
+
+  /* category pill, top-left */
+  .badge-cat{position:absolute;top:10px;left:10px;z-index:3;background:var(--red);color:#fff;
+    font-size:12px;font-weight:800;padding:5px 11px;border-radius:999px;pointer-events:none;
+    box-shadow:0 3px 8px rgba(0,0,0,.30);}
+  /* in-cart pill, top-right */
+  .badge-cart{position:absolute;top:10px;right:10px;z-index:3;min-width:24px;height:24px;padding:0 7px;
+    border-radius:999px;background:rgba(255,255,255,.95);color:var(--ink);font-size:12px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;pointer-events:none;
+    box-shadow:0 3px 8px rgba(0,0,0,.30);}
+
+  /* name / sizes / price overlaid on the image */
+  .content{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:14px 16px 15px;
+    display:flex;flex-direction:column;gap:4px;pointer-events:none;}
+  .content .name{font-size:20px;font-weight:800;line-height:1.2;letter-spacing:-.02em;color:#fff;
+    min-width:0;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    overflow:hidden;text-shadow:0 1px 4px rgba(0,0,0,.6);}
+  .content .options{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;font-size:14px;font-weight:700;
+    color:#fff;pointer-events:auto;text-shadow:0 1px 4px rgba(0,0,0,.6);}
+  .content .options .opt{border:0;background:transparent;font:inherit;font-size:14px;font-weight:700;color:#fff;
+    cursor:pointer;padding:0;border-radius:4px;text-underline-offset:4px;}
+  .content .options .opt:hover{text-decoration:underline;}
+  .content .options .sep{color:rgba(255,255,255,.42);}
+  .content .price{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.01em;
+    text-shadow:0 1px 4px rgba(0,0,0,.6);}
+
+  /* ---------- QR customer menu cards (existing layout, polished) ---------- */
+  .qrwrap{margin-top:26px;}
+  .qvhead{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--s500);margin:0 0 10px;text-align:center;}
+  .qr{background:#fff;border:1px solid var(--s200);border-radius:18px;padding:14px;max-width:520px;margin:0 auto;}
+  .qr .qrhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .qr .qrhead b{font-size:13px;}
+  .qrgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .qrcard{overflow:hidden;border-radius:16px;background:#fff;border:1px solid rgba(0,0,0,.05);
+    box-shadow:0 1px 3px rgba(0,0,0,.08);text-align:left;transition:transform .15s ease,box-shadow .15s ease;}
+  .qrcard:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.14);}
+  .qrcard .top{height:82px;display:flex;align-items:center;justify-content:center;font-size:28px;}
+  .qrcard .pad{padding:10px;}
+  .qrcard .nm{font-size:13px;font-weight:700;color:#1c1917;line-height:1.3;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.5em;}
+  .qrcard .row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 6px;margin-top:6px;}
+  .qrcard .pr{font-size:15px;font-weight:800;color:#1c1917;font-variant-numeric:tabular-nums;}
+  .qrcard .lab{font-size:12px;font-weight:500;color:var(--s500);background:#f5f5f4;border-radius:999px;padding:2px 8px;}
+  .qrcard .vlist{margin-top:8px;border-top:1px solid #f5f5f4;padding-top:8px;display:flex;flex-direction:column;gap:4px;}
+  .qrcard .vh{font-size:12px;font-weight:700;color:var(--s400);}
+  .qrcard .vit{display:flex;align-items:baseline;justify-content:space-between;gap:6px;font-size:12px;}
+  .qrcard .vit span:first-child{color:var(--s500);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .qrcard .vit span:last-child{flex:none;font-weight:700;color:var(--s600);font-variant-numeric:tabular-nums;}
+
+  .qrdetail{background:#fff;border:1px solid var(--s200);border-radius:16px;padding:14px;max-width:520px;
+    margin:14px auto 0;}
+  .qrdetail .dt{font-size:13px;font-weight:800;margin:0 0 2px;}
+  .qrdetail .ds{font-size:12px;color:var(--s500);margin:0 0 10px;}
+  .qrdetail .dl{font-size:12px;font-weight:600;color:var(--s600);margin:0 0 7px;}
+  .sizebtns{display:flex;flex-wrap:wrap;gap:8px;}
+  .sizebtn{border:1px solid var(--s200);background:#fff;border-radius:12px;padding:8px 12px;font:inherit;
+    font-size:12px;font-weight:700;color:var(--s600);cursor:pointer;transition:border-color .15s,background .15s;}
+  .sizebtn:hover{border-color:var(--s300);}
+  .sizebtn.on{background:var(--red);border-color:transparent;color:#fff;}
+
+  .notes{margin-top:22px;display:grid;gap:12px;grid-template-columns:1fr;}
+  @media(min-width:780px){.notes{grid-template-columns:1fr 1fr;}}
+  .note{background:#fff;border:1px solid var(--s200);border-radius:14px;padding:14px 16px;}
+  .note h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--s500);margin:0 0 9px;}
+  .note ul{margin:0;padding-left:18px;font-size:13px;color:var(--s600);line-height:1.65;}
+  .note code{background:#f5f5f4;border-radius:5px;padding:1px 5px;font-size:12px;}
+  .note .no{color:#b91c1c;font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>POS Menu Cards — match to your reference</h1>
+      <p class="sub">Landscape card, product image full-bleed. Category pill top-left; item name, sizes and
+        price overlaid bottom-left on a dark gradient. <b>No <code>+</code> button and no separate bottom
+        panel</b> — tapping the card adds the item.</p>
+    </div>
+    <div class="head-right">
+      <span class="badge-note"><span class="dot"></span> Demo / mockup — not yet implemented</span>
+      <div class="frames" role="group" aria-label="Preview width">
+        <button type="button" id="f-wide" class="on" onclick="frame('wide')">Desktop</button>
+        <button type="button" id="f-mid" onclick="frame('mid')">Tablet</button>
+        <button type="button" id="f-small" onclick="frame('small')">Small screen</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="stage wide" id="stage">
+    <div class="pos">
+      <div class="pos-top">
+        <div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span> Touch Dine POS</div>
+        <div class="chiplist">
+          <span class="chip2 live">● Shift open</span>
+          <span class="chip2">Dine-in</span>
+          <span class="chip2" id="cartCountChip">Cart: 0</span>
+        </div>
+      </div>
+
+      <div class="pos-main">
+        <aside class="rail">
+          <div class="h">Categories</div>
+          <button type="button" class="on"><span>All items</span><span class="n" id="railAll">8</span></button>
+          <button type="button"><span>Burgers</span><span class="n">3</span></button>
+          <button type="button"><span>Mains</span><span class="n">2</span></button>
+          <button type="button"><span>Drinks</span><span class="n">2</span></button>
+          <button type="button"><span>Desserts</span><span class="n">1</span></button>
+        </aside>
+
+        <section class="catalog">
+          <div class="searchwrap">
+            <div class="search">⌕ &nbsp;Search products or scan barcode…  (F2)</div>
+          </div>
+          <div class="grid" id="grid"></div>
+        </section>
+
+        <aside class="cart">
+          <h3>Current order</h3>
+          <div id="cartLines"><div class="empty">Cart is empty. Select products to begin.</div></div>
+          <div class="total"><span>Total</span><span id="cartTotal">৳ 0.00</span></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <div class="qrwrap">
+    <h2 class="qvhead">QR customer menu — polished card + sizes &amp; prices</h2>
+    <div class="qr">
+      <div class="qrhead"><b>Touch Dine · Table 4</b><span class="chip2">Cart</span></div>
+      <div class="qrgrid" id="qrgrid"></div>
+    </div>
+
+    <div class="qrdetail">
+      <p class="dt">Classic Beef Burger</p>
+      <p class="ds">Choose your size and add it to the order.</p>
+      <p class="dl">Choose a size</p>
+      <div class="sizebtns">
+        <button type="button" class="sizebtn on">Regular · ৳ 250.00</button>
+        <button type="button" class="sizebtn">Large · ৳ 350.00</button>
+        <button type="button" class="sizebtn">Small · ৳ 200.00</button>
+      </div>
+    </div>
+
+    <p style="text-align:center;font-size:12px;color:var(--s500);margin:10px 0 0">
+      Same white-card layout as today, tightened: bigger prices, readable label chips (no 9px text),
+      a “Sizes” list, and <b>Regular pre-selected</b> as the default size.
+    </p>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <h2>Card anatomy (matches your reference)</h2>
+      <ul>
+        <li>Landscape card, roughly <b>3 : 2</b>, radius 28px.</li>
+        <li>Image fills the whole card — <code>object-fit: cover</code>, never stretched.</li>
+        <li>Category pill top-left (from the item's existing category).</li>
+        <li>Name (largest, up to 2 lines) → sizes → price, stacked bottom-left.</li>
+        <li>Dark scrim over the lower part keeps the text readable on any photo.</li>
+        <li>In-cart count pill top-right; no image → branded fallback tile.</li>
+        <li class="no">No <code>+</code> button anywhere — the card is the tap target.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h2>Behaviour &amp; information</h2>
+      <ul>
+        <li><b>The base (“Regular”) price is always shown</b>, followed by each size and its own price —
+          so a priced item never loses its price when it has sizes.</li>
+        <li><b>Every option stays tappable</b> (underlines on hover): “Regular …” adds the item as-is,
+          each size adds that size — size selection is never lost.</li>
+        <li>No sizes → just the single price.</li>
+        <li>A sold-out item shows <b>Sold out</b> instead of the price and is disabled.</li>
+        <li><b>Shown:</b> name, category, price(s), sizes, sold-out, in-cart count.</li>
+        <li><b>Not shown:</b> SKU, barcode, cost price, tax category, stock mode, labels, description —
+          SKU/barcode still work through search, category through the rail.</li>
+        <li>Click the card to add — exactly once.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Mock imagery is CSS-only (no external URLs). The real card uses the product's image_url.
+  const products = [
+    { id:'brg',     name:'Classic Beef Burger',   category:'Burgers', price:250, ph:'ph-1', emoji:'🍔',
+      available:true,  labels:['Popular'], variants:[{ n:'Regular', p:250 }, { n:'Large', p:350 }] },
+    { id:'chicken', name:'Grilled Chicken Burger', category:'Burgers', price:220, ph:'ph-2', emoji:'🍗',
+      available:true,  labels:['Spicy'], variants:[{ n:'Regular', p:220 }, { n:'Large', p:320 }] },
+    { id:'pizza',   name:'Signature Beef Pepperoni Pizza With Extra Cheese', category:'Mains', price:780,
+      ph:'ph-3', emoji:'🍕', available:true, variants:[] },
+    { id:'veg',     name:'Veggie Burger',         category:'Burgers', price:200, ph:'ph-5', emoji:'🥬',
+      available:false, variants:[{ n:'Regular', p:200 }, { n:'Large', p:300 }] },
+    { id:'lassi',   name:'Mango Lassi',           category:'Drinks',  price:120, ph:null, emoji:null,
+      available:true,  variants:[] },
+    { id:'tea',     name:'Iced Lemon Tea',        category:'Drinks',  price:90,  ph:'ph-2', emoji:'🥤',
+      available:true,  variants:[] },
+    { id:'biryani', name:'Chicken Biryani',       category:'Mains',   price:340, ph:'ph-4', emoji:'🍛',
+      available:true,  variants:[] },
+    { id:'jamun',   name:'Gulab Jamun',           category:'Desserts', price:110, ph:null, emoji:null,
+      available:true,  variants:[] },
+  ];
+
+  const state = { counts:{}, lines:{}, total:0, count:0 };
+  const money = n => '৳ ' + n.toFixed(2);
+
+  function render(){
+    document.getElementById('grid').innerHTML = products.map(p => {
+      const n = state.counts[p.id] || 0;
+
+      const media = p.ph
+        ? '<span class="img ' + p.ph + '">' + p.emoji + '</span>'
+        : '<span class="fb"><span class="initial">' + p.name.trim()[0] +
+          '</span><span class="lbl">No image</span></span>';
+
+      const options = !p.available
+        ? '<div class="price">Sold out</div>'
+        : p.variants.length
+          ? '<div class="options">' +
+              '<button type="button" class="opt" data-add="' + p.id + '" data-price="' + p.price + '">Regular ' +
+                money(p.price) + '</button>' +
+              p.variants.map(v =>
+                '<span class="sep">·</span>' +
+                '<button type="button" class="opt" data-add="' + p.id + '" data-price="' + v.p + '">' +
+                  v.n + ' ' + money(v.p) + '</button>'
+              ).join('') +
+            '</div>'
+          : '<div class="price">' + money(p.price) + '</div>';
+
+      const cartBadge = n > 0 ? '<span class="badge-cart">×' + n + '</span>' : '';
+
+      return '<article class="card' + (p.available ? '' : ' off') + '" data-card="' + p.id + '"' +
+          (p.available ? ' tabindex="0"' : ' aria-disabled="true"') + ' title="' + p.name + '">' +
+          media +
+          '<span class="grad"></span>' +
+          '<span class="badge-cat">' + p.category + '</span>' +
+          cartBadge +
+          '<button class="hit" type="button" aria-label="' + p.name + '"' +
+            (p.available ? '' : ' disabled') + '></button>' +
+          '<div class="content">' +
+            '<div class="name">' + p.name + '</div>' +
+            options +
+          '</div>' +
+        '</article>';
+    }).join('');
+    renderCart();
+  }
+
+  function renderCart(){
+    const ids = Object.keys(state.lines);
+    document.getElementById('cartLines').innerHTML = ids.length
+      ? ids.map(id => {
+          const p = products.find(x => x.id === id);
+          return '<div class="line"><span>' + p.name + ' × ' + state.lines[id] +
+            '</span><span>' + money(p.price * state.lines[id]) + '</span></div>';
+        }).join('')
+      : '<div class="empty">Cart is empty. Select products to begin.</div>';
+    document.getElementById('cartTotal').textContent = money(state.total);
+    document.getElementById('cartCountChip').textContent = 'Cart: ' + state.count;
+  }
+
+  function addOne(id, price){
+    state.count += 1; state.total += price;
+    state.counts[id] = (state.counts[id] || 0) + 1;
+    state.lines[id]  = (state.lines[id]  || 0) + 1;
+    render();
+  }
+
+  document.addEventListener('click', e => {
+    const opt = e.target.closest('[data-add]');
+    if (opt && !opt.disabled) { addOne(opt.dataset.add, Number(opt.dataset.price)); return; }
+    const card = e.target.closest('[data-card]');
+    if (card && !card.classList.contains('off')) {
+      const p = products.find(x => x.id === card.dataset.card);
+      addOne(p.id, p.price); // the base item ("Regular") when the card body is tapped
+    }
+  });
+
+  function frame(which){
+    document.getElementById('stage').className = 'stage ' + which;
+    ['wide','mid','small'].forEach(k =>
+      document.getElementById('f-' + k).classList.toggle('on', k === which));
+  }
+
+  function renderQr(){
+    document.getElementById('qrgrid').innerHTML = products.slice(0, 4).map(p => {
+      const top = p.ph
+        ? '<div class="top ' + p.ph + '">' + p.emoji + '</div>'
+        : '<div class="top" style="background:#fafaf9">🍽️</div>';
+
+      const labels = (p.labels || []).slice(0, 2)
+        .map(l => '<span class="lab">' + l + '</span>').join('');
+
+      const vlist = p.variants.length
+        ? '<div class="vlist"><div class="vh">Sizes</div>' + p.variants.map(v =>
+            '<div class="vit"><span>' + v.n + '</span><span>' + money(v.p) + '</span></div>'
+          ).join('') + '</div>'
+        : '';
+
+      return '<div class="qrcard">' + top +
+        '<div class="pad">' +
+          '<div class="nm">' + p.name + '</div>' +
+          '<div class="row"><span class="pr">' + money(p.price) + '</span>' + labels + '</div>' +
+          vlist +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  document.getElementById('railAll').textContent = products.length;
+  render();
+  renderQr();
+</script>
+</body>
+</html>

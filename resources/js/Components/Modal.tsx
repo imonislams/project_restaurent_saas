@@ -38,12 +38,7 @@ export default function Modal({
 
     return (
         <Transition show={show} leave="duration-200">
-            <Dialog
-                as="div"
-                id="modal"
-                className="fixed inset-0 z-50 flex transform items-center justify-center overflow-y-auto p-4 transition-all"
-                onClose={close}
-            >
+            <Dialog as="div" id="modal" className="relative z-50" onClose={close}>
                 <TransitionChild
                     enter="ease-out duration-300"
                     enterFrom="opacity-0"
@@ -55,23 +50,34 @@ export default function Modal({
                     <div className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity" />
                 </TransitionChild>
 
-                <TransitionChild
-                    enter="ease-out duration-300"
-                    enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    enterTo="opacity-100 translate-y-0 sm:scale-100"
-                    leave="ease-in duration-200"
-                    leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-                    leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                >
-                    <DialogPanel
-                        className={cn(
-                            'relative my-8 w-full transform overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl transition-all',
-                            maxWidthClass
-                        )}
-                    >
-                        {children}
-                    </DialogPanel>
-                </TransitionChild>
+                {/*
+                 * The scroll container is a sibling of the panel rather than the centring
+                 * flex box itself. Centring and overflow on one node pushes a too-tall
+                 * panel above the scroll origin, clipping its top (e.g. the first field of
+                 * a long form) so it can never be scrolled into view. The inner
+                 * `min-h-full` wrapper grows with the content, keeping the full panel reachable.
+                 */}
+                <div className="fixed inset-0 overflow-y-auto">
+                    <div className="flex min-h-full items-center justify-center p-4">
+                        <TransitionChild
+                            enter="ease-out duration-300"
+                            enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                            enterTo="opacity-100 translate-y-0 sm:scale-100"
+                            leave="ease-in duration-200"
+                            leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                            leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                        >
+                            <DialogPanel
+                                className={cn(
+                                    'relative my-8 w-full transform overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl transition-all',
+                                    maxWidthClass
+                                )}
+                            >
+                                {children}
+                            </DialogPanel>
+                        </TransitionChild>
+                    </div>
+                </div>
             </Dialog>
         </Transition>
     );

@@ -77,6 +77,8 @@ export const translations: Record<string, Record<string, string>> = {
         'pos.delivery': 'Delivery',
         'pos.counter': 'Counter',
         'pos.no_products': 'No products match.',
+        'pos.sold_out': 'Sold out',
+        'pos.regular': 'Regular',
         'pos.orders_link': 'Orders',
 
         'auth.email': 'Email',
@@ -430,6 +432,8 @@ export const translations: Record<string, Record<string, string>> = {
         'pos.delivery': 'ডেলিভারি',
         'pos.counter': 'কাউন্টার',
         'pos.no_products': 'কোনো পণ্য মেলেনি।',
+        'pos.sold_out': 'স্টক শেষ',
+        'pos.regular': 'রেগুলার',
         'pos.orders_link': 'অর্ডার',
 
         'auth.email': 'ইমেইল',

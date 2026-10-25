@@ -31,7 +31,7 @@ import {
     Trash2,
     X,
 } from 'lucide-react';
-import { FormEventHandler, useMemo, useRef, useState } from 'react';
+import { DragEvent, FormEventHandler, useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/Components/ui/cn';
 
 // --- Interfaces ---
@@ -615,11 +615,17 @@ function ProductEditorModal({
         sort_order: product?.sort_order ?? 0,
         labels: (product?.labels ?? []).join(', '),
         image: null as File | null,
+        // Staged removal of the already-saved image (edit only). Kept distinct from a
+        // newly picked `image` file so "keep", "replace" and "remove" never blur.
+        remove_image: false,
         variants: (product?.variants ?? []).map((v) => ({
+            // Carried through so the server can update an existing variant in place
+            // instead of recreating it (which would blank past orders' variant link).
+            id: v.id ?? null,
             name: v.name,
             sku: v.sku ?? '',
             price: v.price ?? '',
-        })) as { name: string; sku: string; price: number | string }[],
+        })) as { id: number | null; name: string; sku: string; price: number | string }[],
     });
 
     // Gross margin preview calculation
@@ -634,23 +640,38 @@ function ProductEditorModal({
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        const payload = {
-            ...form.data,
-            labels: form.data.labels
-                ? form.data.labels.split(',').map((l) => l.trim()).filter(Boolean)
-                : [],
-        };
 
-        form.transform(() => payload);
+        const hasFile = Boolean(form.data.image);
+
+        form.transform(() => {
+            const payload: Record<string, unknown> = {
+                ...form.data,
+                labels: form.data.labels
+                    ? form.data.labels.split(',').map((l) => l.trim()).filter(Boolean)
+                    : [],
+            };
+
+            // PHP only parses multipart bodies for POST, not PATCH, so a file-carrying
+            // update is sent as POST with a spoofed method. Without this the body is
+            // silently dropped: no image arrives and every field looks missing.
+            if (product && hasFile) {
+                payload._method = 'patch';
+            }
+
+            return payload;
+        });
 
         const options = {
             preserveScroll: true,
             onSuccess: onClose,
-            // Send multipart when a new product carries an image.
-            forceFormData: Boolean(form.data.image),
+            // Multipart only when a new file is attached; a staged removal or an
+            // untouched image travels as a plain field.
+            forceFormData: hasFile,
         };
 
-        if (product) {
+        if (product && hasFile) {
+            form.post(route('menu.products.update', product.id), options);
+        } else if (product) {
             form.patch(route('menu.products.update', product.id), options);
         } else {
             form.post(route('menu.products.store'), options);
@@ -660,7 +681,7 @@ function ProductEditorModal({
     const addVariant = () =>
         form.setData('variants', [
             ...form.data.variants,
-            { name: '', sku: '', price: '' },
+            { id: null, name: '', sku: '', price: '' },
         ]);
 
     const updateVariant = (index: number, patch: Record<string, unknown>) => {
@@ -687,15 +708,21 @@ function ProductEditorModal({
                 </div>
 
                 <form onSubmit={submit} className="mt-4 space-y-4">
-                    {product ? (
-                        <ProductImageUploader product={product} />
-                    ) : (
-                        <ProductImageField
-                            value={form.data.image}
-                            error={form.errors.image}
-                            onChange={(file) => form.setData('image', file)}
-                        />
-                    )}
+                    <ProductImageSection
+                        savedUrl={product?.image_url ?? null}
+                        file={form.data.image}
+                        removeStaged={form.data.remove_image}
+                        error={form.errors.image ?? form.errors.remove_image}
+                        onSelect={(file) => {
+                            form.setData('image', file);
+                            form.setData('remove_image', false);
+                        }}
+                        onStageRemove={() => {
+                            form.setData('image', null);
+                            form.setData('remove_image', true);
+                        }}
+                        onUndoRemove={() => form.setData('remove_image', false)}
+                    />
                     {/* Basic Info */}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div className="sm:col-span-2">
@@ -1000,108 +1027,164 @@ function CategoryManagerModal({
 }
 
 /**
- * Product image upload / replace / remove. Available once the product exists.
+ * Product image picker / preview / remover, shared by the create and edit forms and
+ * wired into the outer form so it never saves on its own. It keeps the three intents
+ * distinct: keep the saved image, replace it with a new file, or remove it. Removing an
+ * already-saved image asks for confirmation inline; clearing a file the user has only
+ * just picked does not, because nothing has been stored yet.
  */
-function ProductImageUploader({ product }: { product: Product }) {
-    const imageRef = useRef<HTMLInputElement>(null);
-    const [preview, setPreview] = useState<string | null>(null);
-    const form = useForm<{ image: File | null }>({ image: null });
-
-    const pick = (file: File | null) => {
-        form.setData('image', file);
-        setPreview(file ? URL.createObjectURL(file) : null);
-    };
-
-    const upload = () => {
-        form.post(route('menu.products.image', product.id), {
-            preserveScroll: true,
-            forceFormData: true,
-            onSuccess: () => {
-                setPreview(null);
-                if (imageRef.current) imageRef.current.value = '';
-            },
-        });
-    };
-
-    const remove = () => router.delete(route('menu.products.image.destroy', product.id), { preserveScroll: true });
-
-    const shown = preview ?? product.image_url ?? null;
-
-    return (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
-            {shown ? (
-                <img src={shown} alt={product.name} className="h-14 w-14 rounded-lg object-cover ring-1 ring-border" />
-            ) : (
-                <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-background text-[10px] font-semibold text-muted-foreground ring-1 ring-border">
-                    No image
-                </div>
-            )}
-            <div className="flex items-center gap-2">
-                <input ref={imageRef} type="file" accept="image/png,image/jpeg,image/webp" className="block text-xs text-muted-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary/10 file:px-2.5 file:py-1.5 file:text-xs file:font-semibold file:text-primary" onChange={(e) => pick(e.target.files?.[0] ?? null)} />
-                <Button type="button" size="xs" onClick={upload} disabled={!form.data.image} loading={form.processing}>
-                    Upload
-                </Button>
-                {product.image_url && !preview && (
-                    <Button type="button" size="xs" variant="ghost" onClick={remove}>
-                        Remove
-                    </Button>
-                )}
-            </div>
-            {form.errors.image && <p className="w-full text-xs text-destructive">{form.errors.image}</p>}
-        </div>
-    );
-}
-
-/**
- * Image picker for a product that does not exist yet — the file rides along with
- * the create request (multipart) instead of a separate upload endpoint.
- */
-function ProductImageField({
-    value,
-    onChange,
+function ProductImageSection({
+    savedUrl,
+    file,
+    removeStaged,
     error,
+    onSelect,
+    onStageRemove,
+    onUndoRemove,
 }: {
-    value: File | null;
-    onChange: (file: File | null) => void;
+    savedUrl: string | null;
+    file: File | null;
+    removeStaged: boolean;
     error?: string;
+    onSelect: (file: File | null) => void;
+    onStageRemove: () => void;
+    onUndoRemove: () => void;
 }) {
-    const ref = useRef<HTMLInputElement>(null);
-    const [preview, setPreview] = useState<string | null>(value ? URL.createObjectURL(value) : null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [preview, setPreview] = useState<string | null>(null);
+    const [confirming, setConfirming] = useState(false);
+    const [dragging, setDragging] = useState(false);
 
-    const pick = (file: File | null) => {
-        onChange(file);
-        setPreview(file ? URL.createObjectURL(file) : null);
+    useEffect(() => {
+        if (!file) {
+            setPreview(null);
+            return;
+        }
+
+        const url = URL.createObjectURL(file);
+        setPreview(url);
+
+        return () => URL.revokeObjectURL(url);
+    }, [file]);
+
+    const accept = (picked: File | null) => {
+        setConfirming(false);
+        onSelect(picked);
     };
 
+    const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        setDragging(false);
+
+        const dropped = event.dataTransfer.files?.[0];
+
+        if (dropped && dropped.type.startsWith('image/')) {
+            accept(dropped);
+        }
+    };
+
+    const previewUrl = removeStaged ? null : preview ?? savedUrl;
+
     return (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
-            {preview ? (
-                <img src={preview} alt="Product" className="h-14 w-14 rounded-lg object-cover ring-1 ring-border" />
-            ) : (
-                <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-background text-[10px] font-semibold text-muted-foreground ring-1 ring-border">
-                    No image
+        <div className="rounded-xl border border-border bg-muted/30 p-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
+                {/* Preview with a consistent aspect ratio; never absolutely positioned. */}
+                <div className="aspect-[16/10] w-full shrink-0 overflow-hidden rounded-lg border border-border bg-background sm:w-56">
+                    {previewUrl ? (
+                        <img
+                            src={previewUrl}
+                            alt="Product image preview"
+                            className="h-full w-full object-cover"
+                        />
+                    ) : (
+                        <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-muted-foreground">
+                            <BookOpen className="h-5 w-5" />
+                            <span className="text-xs font-medium">
+                                {removeStaged ? 'Image will be removed' : 'No image'}
+                            </span>
+                        </div>
+                    )}
                 </div>
-            )}
-            <div className="flex items-center gap-2">
-                <input ref={ref} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => pick(e.target.files?.[0] ?? null)} />
-                <Button type="button" size="xs" variant="secondary" onClick={() => ref.current?.click()}>
-                    Choose image
-                </Button>
-                {preview && (
-                    <Button
-                        type="button"
-                        size="xs"
-                        variant="ghost"
-                        onClick={() => {
-                            pick(null);
-                            if (ref.current) ref.current.value = '';
-                        }}
-                    >
-                        Clear
-                    </Button>
-                )}
+
+                <div className="min-w-0 flex-1 space-y-2.5">
+                    {confirming ? (
+                        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                            <p className="text-xs font-medium text-foreground">
+                                Remove the saved image? It is deleted when you save changes.
+                            </p>
+                            <div className="mt-2 flex gap-2">
+                                <Button type="button" size="xs" variant="destructive" onClick={onStageRemove}>
+                                    Remove image
+                                </Button>
+                                <Button type="button" size="xs" variant="ghost" onClick={() => setConfirming(false)}>
+                                    Cancel
+                                </Button>
+                            </div>
+                        </div>
+                    ) : removeStaged ? (
+                        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-background p-3">
+                            <span className="text-xs font-medium text-muted-foreground">
+                                The saved image will be removed when you save changes.
+                            </span>
+                            <Button type="button" size="xs" variant="outline" onClick={onUndoRemove}>
+                                Keep image
+                            </Button>
+                        </div>
+                    ) : (
+                        <div
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                setDragging(true);
+                            }}
+                            onDragLeave={() => setDragging(false)}
+                            onDrop={handleDrop}
+                            className={cn(
+                                'flex flex-wrap items-center gap-2 rounded-lg border border-dashed p-3 transition-colors',
+                                dragging ? 'border-primary bg-primary/5' : 'border-border bg-background',
+                            )}
+                        >
+                            <input
+                                ref={inputRef}
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp"
+                                className="hidden"
+                                onChange={(e) => accept(e.target.files?.[0] ?? null)}
+                            />
+                            <Button
+                                type="button"
+                                size="xs"
+                                variant="secondary"
+                                onClick={() => inputRef.current?.click()}
+                            >
+                                {previewUrl ? 'Replace image' : 'Choose image'}
+                            </Button>
+                            <span className="text-xs text-muted-foreground">
+                                or drag &amp; drop · PNG, JPG or WebP · max 2 MB
+                            </span>
+                            {file && (
+                                <Button
+                                    type="button"
+                                    size="xs"
+                                    variant="ghost"
+                                    onClick={() => {
+                                        accept(null);
+                                        if (inputRef.current) inputRef.current.value = '';
+                                    }}
+                                >
+                                    Clear selection
+                                </Button>
+                            )}
+                            {savedUrl && !file && (
+                                <Button type="button" size="xs" variant="ghost" onClick={() => setConfirming(true)}>
+                                    Remove image
+                                </Button>
+                            )}
+                        </div>
+                    )}
+
+                    {error && <p className="text-xs text-destructive">{error}</p>}
+                </div>
             </div>
-            {error && <p className="w-full text-xs text-destructive">{error}</p>}
         </div>
     );
 }
