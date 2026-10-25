@@ -7,6 +7,37 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-25
+
+Subscription plan changes now follow payment: a requested change is held as *pending* and the
+tenant keeps their current plan, limits and features until its invoice is settled.
+
+### Added
+
+- **Pending plan changes.** Switching plan issues an invoice for the **target** plan and cycle
+  and records the change as pending on the subscription instead of activating it immediately.
+  The live plan is switched, the paid period started and a `subscription.plan_changed` audit
+  entry written only once that invoice settles. A zero-amount (free or fully discounted) change
+  still activates at once, and re-requesting the same change reuses the outstanding invoice.
+  New columns `subscription_invoices.plan_id` / `billing_cycle` and `subscriptions.pending_plan_id`
+  / `pending_billing_cycle` / `pending_invoice_id` / `pending_since` (additive and reversible).
+- **Subscription page** surfaces the pending change: the target plan is marked *Pending
+  activation* and a notice explains that the current plan stays active until the invoice is
+  paid. New audit action `subscription.plan_change_requested`.
+
+### Changed
+
+- Invoices now record and bill the **effective** plan/cycle they are issued for, so a pending
+  change is priced from — and described with — its target plan, and the provider price-id lookup
+  uses the invoice's effective plan/cycle rather than the subscription's still-current ones.
+
+### Fixed
+
+- **`docs/PHASES.md` shipped unresolved git merge-conflict markers.** The Phase 16D–16G records
+  were committed interleaved with `<<<<<<< HEAD` / `=======` / `>>>>>>>` markers, so the file was
+  not valid Markdown. Both sides are kept and re-ordered (16D → 16E(A) → 16E(B) → 16F → 16G);
+  all of those phases are implemented in the codebase.
+
 ## [0.1.0] - 2026-10-24
 
 First tagged release. Establishes the versioning baseline, makes the application
