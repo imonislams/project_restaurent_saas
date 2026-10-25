@@ -215,7 +215,7 @@ export default function CustomersIndex({
                     actions={
                         <div className="flex flex-wrap items-center gap-2">
                             <Badge tone={loyaltyEnabled ? 'success' : 'neutral'}>{loyaltyEnabled ? 'Loyalty active' : 'Loyalty off'}</Badge>
-                            <Button size="sm" variant="secondary" href={route('customers.export', { segment: filters.segment || undefined })} icon={<Download className="h-3.5 w-3.5" />}>
+                            <Button size="sm" variant="secondary" external href={route('customers.export', { segment: filters.segment || undefined })} icon={<Download className="h-3.5 w-3.5" />}>
                                 Export
                             </Button>
                             {canManage && (

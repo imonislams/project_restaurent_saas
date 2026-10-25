@@ -190,7 +190,7 @@ export default function SubscriptionIndex({
             render: (r) => {
                 if (r.status === 'paid' || r.outstanding <= 0) {
                     return (
-                        <Button size="xs" variant="ghost" href={r.download_url} icon={<Download className="h-3.5 w-3.5" />}>
+                        <Button size="xs" variant="ghost" external href={r.download_url} icon={<Download className="h-3.5 w-3.5" />}>
                             PDF
                         </Button>
                     );
@@ -198,7 +198,7 @@ export default function SubscriptionIndex({
 
                 return (
                     <div className="flex items-center justify-end gap-1.5">
-                        <Button size="xs" variant="ghost" href={r.download_url} icon={<Download className="h-3.5 w-3.5" />}>
+                        <Button size="xs" variant="ghost" external href={r.download_url} icon={<Download className="h-3.5 w-3.5" />}>
                             PDF
                         </Button>
                         {r.gateways.length === 0 ? (

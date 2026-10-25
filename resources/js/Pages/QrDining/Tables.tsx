@@ -109,7 +109,7 @@ export default function QrTablesIndex({
                     title="Table QR Codes"
                     description="Give every table its own secure QR code. Customers scan it to open the branded menu and order — no app required."
                     actions={
-                        <Button variant="secondary" href={printUrl} icon={<Icon name="download" className="h-4 w-4" />}>
+                        <Button variant="secondary" external href={printUrl} icon={<Icon name="download" className="h-4 w-4" />}>
                             Print all
                         </Button>
                     }

@@ -71,7 +71,7 @@ export default function PlatformAudit({
 
     return (
         <PlatformLayout title="Audit Logs">
-            <FilterBar actions={<Button size="sm" variant="secondary" href={route('platform.audit.export', state as unknown as Record<string, unknown>)}>Export CSV</Button>}>
+            <FilterBar actions={<Button size="sm" variant="secondary" external href={route('platform.audit.export', state as unknown as Record<string, unknown>)}>Export CSV</Button>}>
                 <TextField label="Action" value={state.action} placeholder="e.g. platform.tenant" onChange={(v) => setState((s) => ({ ...s, action: v }))} onEnter={() => apply()} />
                 <SelectField label="Actor" value={state.actor} options={[{ value: '', label: 'Any actor' }, ...actors]} onChange={(v) => apply({ actor: v })} />
                 <TextField label="From" type="date" value={state.from} onChange={(v) => apply({ from: v })} />

@@ -169,6 +169,7 @@ export default function TenantsIndex({
                 <Button
                     variant="outline"
                     size="sm"
+                    external
                     href={route('platform.tenants.export', state as unknown as Record<string, unknown>)}
                     icon={<Download className="h-3.5 w-3.5" />}
                 >

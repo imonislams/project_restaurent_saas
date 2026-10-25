@@ -48,6 +48,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     icon?: ReactNode;
     href?: string;
     method?: 'get' | 'post' | 'put' | 'patch' | 'delete';
+    external?: boolean;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -59,6 +60,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             icon,
             href,
             method,
+            external = false,
             className,
             children,
             disabled,
@@ -73,7 +75,22 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             className,
         );
 
+        const content = (
+            <>
+                {icon && <span className="inline-flex shrink-0 items-center">{icon}</span>}
+                {children}
+            </>
+        );
+
         if (href) {
+            if (external) {
+                return (
+                    <a href={href} target="_blank" rel="noopener noreferrer" className={classes}>
+                        {content}
+                    </a>
+                );
+            }
+
             return (
                 <Link
                     href={href}
@@ -81,8 +98,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                     as={method && method !== 'get' ? 'button' : 'a'}
                     className={classes}
                 >
-                    {icon && <span className="inline-flex shrink-0 items-center">{icon}</span>}
-                    {children}
+                    {content}
                 </Link>
             );
         }
@@ -92,8 +108,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 {loading && (
                     <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" />
                 )}
-                {icon && <span className="inline-flex shrink-0 items-center">{icon}</span>}
-                {children}
+                {content}
             </button>
         );
     }

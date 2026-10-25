@@ -148,13 +148,13 @@ export default function MenuIndex({
                     description="Configure restaurant catalog, multi-channel pricing, variants, and stock tracking."
                     actions={
                         <div className="flex flex-wrap items-center gap-2">
-                            <Button variant="outline" size="sm" href={route('menu.products.template')}>
+                            <Button variant="outline" size="sm" external href={route('menu.products.template')}>
                                 Template
                             </Button>
-                            <Button variant="outline" size="sm" href={route('menu.products.export', { format: 'csv' })}>
+                            <Button variant="outline" size="sm" external href={route('menu.products.export', { format: 'csv' })}>
                                 Export CSV
                             </Button>
-                            <Button variant="outline" size="sm" href={route('menu.products.export', { format: 'pdf' })}>
+                            <Button variant="outline" size="sm" external href={route('menu.products.export', { format: 'pdf' })}>
                                 Export PDF
                             </Button>
                             {canManage && (

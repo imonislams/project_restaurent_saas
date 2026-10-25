@@ -68,7 +68,7 @@ export default function InvoiceShow({ invoice, gateways }: { invoice: InvoiceVie
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="secondary" href={route('platform.billing.invoices.document', invoice.id)}>
+                    <Button size="sm" variant="secondary" external href={route('platform.billing.invoices.document', invoice.id)}>
                         Download PDF
                     </Button>
                     <Button size="sm" variant="secondary" loading={false} onClick={() => post('platform.billing.invoices.send')}>

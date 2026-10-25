@@ -336,8 +336,10 @@ export default function QrDesigner({
                             <Button
                                 variant="secondary"
                                 size="sm"
+                                external
+                                disabled={!current}
                                 icon={<Icon name="download" className="h-3.5 w-3.5" />}
-                                href={current ? route('qr-dining.designs.export', { design: current.id }) : '#'}
+                                href={current ? route('qr-dining.designs.export', { design: current.id }) : undefined}
                             >
                                 {t('qr_designer.download_pdf')}
                             </Button>

@@ -1,7 +1,7 @@
 import { Badge, Button, Card, ConfirmDialog, DataTable, FilterBar, KpiCard, Pagination, SelectField } from '@/Components/ui';
 import type { BadgeTone, Column, PageLink } from '@/Components/ui';
 import PlatformLayout from '@/Layouts/PlatformLayout';
-import { Link, router } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { useState } from 'react';
 
 interface BackupRow {
@@ -78,9 +78,14 @@ export default function BackupsIndex({
                     <button onClick={() => router.post(route('platform.backups.verify', r.id), {}, { preserveScroll: true })} className="font-medium text-primary hover:text-primary/80">
                         Verify
                     </button>
-                    <Link href={route('platform.backups.download', r.id)} className="font-medium text-gray-600 hover:text-gray-800">
+                    <a
+                        href={route('platform.backups.download', r.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-gray-600 hover:text-gray-800"
+                    >
                         Download
-                    </Link>
+                    </a>
                     <button onClick={() => setConfirmDelete(r)} className="font-medium text-red-600 hover:text-red-700">
                         Delete
                     </button>
