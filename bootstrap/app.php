@@ -3,6 +3,7 @@
 use App\Http\Middleware\AddCorrelationContext;
 use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\EnsureFeature;
+use App\Http\Middleware\EnsureNotInstalled;
 use App\Http\Middleware\EnsureOnboardingComplete;
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsurePlatformAdmin;
@@ -21,12 +22,18 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function (): void {
+            // The setup wizard must boot without the application middleware
+            // stack (which needs a configured database).
+            Route::middleware('install')->group(base_path('routes/install.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
@@ -47,12 +54,24 @@ return Application::configure(basePath: dirname(__DIR__))
             'branch.active' => ResolveActiveBranch::class,
             'permission' => EnsurePermission::class,
             'onboarding.completed' => EnsureOnboardingComplete::class,
+            'not.installed' => EnsureNotInstalled::class,
             'platform' => EnsurePlatformAdmin::class,
             'platform.permission' => EnsurePlatformPermission::class,
             'feature' => EnsureFeature::class,
             'pricing.region' => ResolvePricingRegion::class,
             'qr.context' => ResolveQrContext::class,
             'qr.session' => ResolveDiningSession::class,
+        ]);
+
+        // Minimal stack for the setup wizard: session + CSRF only, so it can run
+        // before a database is configured.
+        $middleware->group('install', [
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
 
         // The pricing-region cookie is written by the browser (public-site

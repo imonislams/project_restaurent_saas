@@ -1,0 +1,15 @@
+# Server-side configuration for scripts/deploy-release.sh.
+# Copy to scripts/deploy.conf (gitignored) on the production host and adjust.
+# Values here override the script defaults.
+
+# Application root that holds releases/, shared/ and the `current` symlink.
+APP_ROOT="$HOME/app"
+
+# PHP CLI binary for this account (cPanel MultiPHP — check "which php").
+PHP_BIN="/usr/local/bin/php"
+
+# How many past releases to keep on disk.
+KEEP_RELEASES=5
+
+# Health endpoint probed after the switch. Defaults to <APP_URL from shared/.env>/health.
+# HEALTH_URL="https://your-host/health"

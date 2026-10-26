@@ -17,7 +17,7 @@ cache:
   paths: [.composer-cache, .npm-cache]
 
 .setup: &setup
-  - apt-get update -qq && apt-get install -y -qq git unzip libzip-dev nodejs npm >/dev/null
+  - apt-get update -qq && apt-get install -y -qq git unzip zip libzip-dev nodejs npm >/dev/null
   - docker-php-ext-install zip pdo_mysql bcmath >/dev/null
   - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   - composer install --no-interaction --prefer-dist
@@ -59,11 +59,48 @@ build:assets:
     paths: [public/build]
     expire_in: 1 week
 
+# Versioned production package (ZIP + checksum) for cPanel install/upgrade.
+# Only built for release tags, and only after the test suites pass.
+build:package:
+  stage: build
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+  needs: ["test:php", "test:frontend", "build:assets"]
+  script:
+    - *setup
+    - composer install --no-dev --optimize-autoloader --no-interaction
+    - bash scripts/package.sh "$CI_COMMIT_TAG"
+  artifacts:
+    name: "package-$CI_COMMIT_TAG"
+    paths: [dist/]
+    expire_in: never
+
+# Publish the package + checksum as downloadable release assets.
+release:
+  stage: deploy
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+  needs: ["build:package"]
+  script:
+    - echo "Publishing release $CI_COMMIT_TAG"
+  release:
+    tag_name: $CI_COMMIT_TAG
+    name: "Release $CI_COMMIT_TAG"
+    description: "See CHANGELOG.md for details."
+    assets:
+      links:
+        - name: "application-$CI_COMMIT_TAG.zip"
+          url: "$CI_PROJECT_URL/-/jobs/artifacts/$CI_COMMIT_TAG/raw/dist/application-$CI_COMMIT_TAG.zip?job=build:package"
+        - name: "application-$CI_COMMIT_TAG.zip.sha256"
+          url: "$CI_PROJECT_URL/-/jobs/artifacts/$CI_COMMIT_TAG/raw/dist/application-$CI_COMMIT_TAG.zip.sha256?job=build:package"
+
 deploy:production:
   stage: deploy
   rules:
     - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
       when: manual
+  needs: ["build:package"]
   environment:
     name: production
     url: $APP_URL
@@ -71,6 +108,9 @@ deploy:production:
     - apt-get update -qq && apt-get install -y -qq openssh-client >/dev/null
     - eval "$(ssh-agent -s)"
     - echo "$DEPLOY_SSH_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh && ssh-keyscan "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+    - mkdir -p ~/.ssh && ssh-keyscan "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
   script:
-    - ssh "$DEPLOY_USER@$DEPLOY_HOST" "cd $DEPLOY_PATH && APP_URL=$APP_URL ./scripts/deploy.sh $CI_COMMIT_TAG"
+    - ssh "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p '$DEPLOY_PATH/tmp' '$DEPLOY_PATH/scripts'"
+    - scp scripts/deploy-release.sh "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/scripts/deploy-release.sh"
+    - scp "dist/application-$CI_COMMIT_TAG.zip" "dist/application-$CI_COMMIT_TAG.zip.sha256" "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/tmp/"
+    - ssh "$DEPLOY_USER@$DEPLOY_HOST" "APP_URL='$APP_URL' bash '$DEPLOY_PATH/scripts/deploy-release.sh' '$CI_COMMIT_TAG' '$DEPLOY_PATH/tmp/application-$CI_COMMIT_TAG.zip'"

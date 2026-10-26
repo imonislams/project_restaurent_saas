@@ -41,6 +41,13 @@ LOG_CHANNEL=stack           # structured logs
 ./scripts/deploy.sh               # on the server: deploy latest main
 ```
 
+Tagging a release also produces a versioned production package
+(`application-vX.Y.Z.zip` + `.sha256`) as a CI Release asset — see
+[RELEASE.md](./RELEASE.md) §5.1. On a cPanel host the package is deployed into release
+directories with an atomic switch (and automatic rollback on a failed health check) — see
+[DEPLOY-CPANEL.md](./DEPLOY-CPANEL.md).
+
+
 `scripts/deploy.sh` runs composer, `npm ci && npm run build`, then `php artisan app:deploy`
 (maintenance mode, migrate, config/route/view/event cache, `queue:restart`) and probes `/health`.
 GitLab CI (`.gitlab-ci.yml`) tests every branch and, on a `vX.Y.Z` tag, offers a manual

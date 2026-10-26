@@ -72,8 +72,29 @@ release **must** add an entry. Unreleased work accumulates under `## [Unreleased
 2. Bump `VERSION` (`php artisan version:bump patch|minor|major`).
 3. Merge `develop` → `main`.
 4. Tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"` and push the tag.
-5. Deploy per [PRODUCTION.md](./PRODUCTION.md) §2.
-6. Verify `/health` reports the new version; confirm queue workers restarted.
+5. CI builds the versioned package and publishes it as a Release asset (§5.1).
+6. Deploy per [PRODUCTION.md](./PRODUCTION.md) §2.
+7. Verify `/health` reports the new version; confirm queue workers restarted.
+
+### 5.1 Release artifact
+
+Tagging `vX.Y.Z` runs the `build:package` job once the test suites pass, producing
+`application-vX.Y.Z.zip` and its `application-vX.Y.Z.zip.sha256`; the `release` job attaches
+both to the GitLab Release so every tag has a downloadable, checksummed build. The archive
+contains the application source, `vendor/` (without dev packages), `public/build/` (compiled
+assets + PWA manifest and service worker), the empty writable `storage/` and `bootstrap/cache/`
+directories, install/upgrade instructions and a `RELEASE-MANIFEST.json` (version, commit, build
+time, PHP and Laravel versions). Build the same package locally with:
+
+```bash
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+bash scripts/package.sh vX.Y.Z
+```
+
+Always verify a package before installing or deploying it:
+`sha256sum -c application-vX.Y.Z.zip.sha256`.
+
 
 Pre-release gate (`composer release:check`) runs the type-check, code style and test suite.
 Tests are only executed when explicitly authorised.

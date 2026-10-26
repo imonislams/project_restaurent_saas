@@ -21,6 +21,12 @@ class DatabaseSeeder extends Seeder
         $this->call(PlanSeeder::class);
         $this->call(EmailTemplateSeeder::class);
 
+        // Production installs create their own administrator through the setup
+        // wizard (/install) or `php artisan app:install` — never a known account.
+        if (! app()->environment('local', 'testing')) {
+            return;
+        }
+
         $platformAdmin = User::factory()->platformAdmin()->create([
             'name' => 'Platform Admin',
             'email' => 'platform@example.com',
