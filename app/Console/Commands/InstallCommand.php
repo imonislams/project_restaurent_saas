@@ -4,16 +4,36 @@ namespace App\Console\Commands;
 
 use App\Domain\Installer\InstallerService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 use RuntimeException;
 
 /**
- * Headless equivalent of the setup wizard, for SSH/cPanel installs.
+ * Headless installation: environment, schema, platform data and the first
+ * administrator. Every prompt has a matching option, so it also runs unattended —
+ * for example from a cPanel cron job on a host without SSH:
+ *
+ *   php artisan app:install --url=https://host \
+ *     --db-database=user_db --db-username=user_db --db-password=secret \
+ *     --admin-email=admin@host --admin-password=secret12345
  */
 class InstallCommand extends Command
 {
     protected $signature = 'app:install
         {--force : Install over a database that already contains tables}
-        {--owner : Also create a first restaurant (tenant + owner)}';
+        {--owner : Also create a first restaurant (tenant + owner)}
+        {--app-name= : Application name}
+        {--url= : Application URL}
+        {--timezone= : Application timezone}
+        {--db-driver=mysql : mysql, mariadb or pgsql}
+        {--db-host=127.0.0.1 : Database host}
+        {--db-port=3306 : Database port}
+        {--db-database= : Database name}
+        {--db-username= : Database username}
+        {--db-password= : Database password}
+        {--admin-name= : Administrator name}
+        {--admin-email= : Administrator email}
+        {--admin-password= : Administrator password (min 12 characters)}';
 
     protected $description = 'Install the application: environment, schema, platform data and the first administrator';
 
@@ -37,14 +57,15 @@ class InstallCommand extends Command
             return self::FAILURE;
         }
 
-        $database = [
-            'driver' => $this->choice('Database driver', ['mysql', 'mariadb', 'pgsql'], 'mysql'),
-            'host' => (string) $this->ask('Database host', '127.0.0.1'),
-            'port' => (int) $this->ask('Database port', '3306'),
-            'database' => (string) $this->ask('Database name'),
-            'username' => (string) $this->ask('Database username'),
-            'password' => (string) $this->secret('Database password (blank for none)'),
-        ];
+        try {
+            $database = $this->database();
+            $application = $this->application();
+            $administrator = $this->administrator();
+        } catch (RuntimeException $e) {
+            $this->error($e->getMessage());
+
+            return self::FAILURE;
+        }
 
         $connection = $installer->testDatabase($database);
 
@@ -66,27 +87,15 @@ class InstallCommand extends Command
             $confirmExisting = true;
         }
 
-        $application = [
-            'name' => (string) $this->ask('Application name', 'Touch Dine'),
-            'url' => (string) $this->ask('Application URL', 'https://localhost'),
-            'timezone' => (string) $this->ask('Timezone', (string) config('app.timezone', 'UTC')),
-        ];
-
-        $administrator = [
-            'name' => (string) $this->ask('Administrator name', 'Platform Admin'),
-            'email' => (string) $this->ask('Administrator email'),
-            'password' => (string) $this->secret('Administrator password (min 12 characters)'),
-        ];
-
         $owner = ['create' => false];
 
         if ($this->option('owner')) {
             $owner = [
                 'create' => true,
-                'name' => (string) $this->ask('Owner name'),
-                'email' => (string) $this->ask('Owner email'),
-                'password' => (string) $this->secret('Owner password (min 12 characters)'),
-                'restaurant_name' => (string) $this->ask('Restaurant name'),
+                'name' => $this->value('admin-name', 'Owner name', 'Restaurant Owner'),
+                'email' => $this->value('admin-email', 'Owner email'),
+                'password' => (string) ($this->option('admin-password') ?: $this->secret('Owner password (min 12 characters)')),
+                'restaurant_name' => $this->value('app-name', 'Restaurant name', 'My Restaurant'),
             ];
         }
 
@@ -102,11 +111,82 @@ class InstallCommand extends Command
             $this->error($e->getMessage());
 
             return self::FAILURE;
+        } catch (\Throwable $e) {
+            // A migration or driver failure must show its reason, not just a trace.
+            report($e);
+            $this->error('Installation failed: '.$e->getMessage());
+
+            return self::FAILURE;
         }
 
         $this->info('Installed v'.$result['version'].'. Administrator: '.$result['admin_email']);
-        $this->line('Sign in at '.rtrim($application['url'], '/').'/login');
+        $this->line('Sign in at '.rtrim((string) $application['url'], '/').'/login');
 
         return self::SUCCESS;
+    }
+
+    /** @return array<string, mixed> */
+    protected function database(): array
+    {
+        return [
+            'driver' => $this->value('db-driver', 'Which database driver?', 'mysql'),
+            'host' => $this->value('db-host', 'Database host', '127.0.0.1'),
+            'port' => (int) $this->value('db-port', 'Database port', '3306'),
+            'database' => $this->value('db-database', 'Database name'),
+            'username' => $this->value('db-username', 'Database username'),
+            'password' => $this->option('db-password') ?? (string) $this->secret('Database password (blank for none)'),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    protected function application(): array
+    {
+        return [
+            'name' => $this->value('app-name', 'Application name', 'Touch Dine'),
+            'url' => $this->value('url', 'Application URL', 'https://localhost'),
+            'timezone' => $this->value('timezone', 'Timezone', (string) config('app.timezone', 'UTC')),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    protected function administrator(): array
+    {
+        $administrator = [
+            'name' => $this->value('admin-name', 'Administrator name', 'Platform Admin'),
+            'email' => $this->value('admin-email', 'Administrator email'),
+            'password' => (string) ($this->option('admin-password') ?: $this->secret('Administrator password (min 12 characters)')),
+        ];
+
+        $validator = Validator::make($administrator, [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'password' => ['required', Password::min(12)->letters()->numbers()],
+        ]);
+
+        if ($validator->fails()) {
+            throw new RuntimeException('Invalid administrator details: '.implode(' ', $validator->errors()->all()));
+        }
+
+        return $administrator;
+    }
+
+    /** An option value, falling back to a prompt for interactive runs. */
+    protected function value(string $option, string $question, ?string $default = null): string
+    {
+        $value = $this->option($option);
+
+        if (is_string($value) && $value !== '') {
+            return $value;
+        }
+
+        if ($this->input->isInteractive()) {
+            return (string) $this->ask($question, $default);
+        }
+
+        if ($default !== null) {
+            return $default;
+        }
+
+        throw new RuntimeException("Missing required option --{$option} (running non-interactively).");
     }
 }

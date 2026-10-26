@@ -56,6 +56,7 @@ $manifest = [
     'built_at' => gmdate('Y-m-d\TH:i:s\Z'),
     'php' => PHP_VERSION,
     'laravel' => $laravel,
+    'platform_check' => getenv('IGNORE_PLATFORM') === '1' ? 'disabled' : 'enforced',
     // Count includes this manifest, which is written below.
     'file_count' => $fileCount + 1,
 ];
@@ -63,6 +64,16 @@ $manifest = [
 file_put_contents(
     $dir.'/RELEASE-MANIFEST.json',
     json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n",
+);
+
+// A small web-reachable marker so a deployment can be verified from a browser
+// (GET /build-info.txt). It is a static file, served without booting the app.
+file_put_contents(
+    $dir.'/public/build-info.txt',
+    "application v".$version."\n"
+    ."commit: ".($manifest['commit'] ?? 'unknown')."\n"
+    ."built_at: ".$manifest['built_at']."\n"
+    ."platform_check: ".$manifest['platform_check']."\n",
 );
 
 echo json_encode($manifest, JSON_UNESCAPED_SLASHES)."\n";

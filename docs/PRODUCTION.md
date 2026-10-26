@@ -7,6 +7,10 @@ Operational guidance for deploying and running the Restaurant POS SaaS. Companio
 
 ## 1. Environment
 
+**Runtime:** PHP **8.4.1+** — the Composer lock requires it (pinned via `config.platform`),
+with the `pdo_mysql, mbstring, openssl, ctype, fileinfo, bcmath, tokenizer, xml, curl, zip`
+extensions and `gd` (or `imagick`). `php artisan app:install` checks all of this before installing.
+
 Set at minimum:
 
 ```

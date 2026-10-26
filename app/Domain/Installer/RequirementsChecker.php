@@ -3,12 +3,11 @@
 namespace App\Domain\Installer;
 
 /**
- * Verifies the server can run the application. Powers the first step of the
- * setup wizard and the `app:install` preflight.
+ * Verifies the server can run the application. Used by the `app:install` preflight.
  */
 class RequirementsChecker
 {
-    public const MIN_PHP = '8.2.0';
+    public const MIN_PHP = '8.4.1';
 
     /**
      * @return list<array{key: string, label: string, ok: bool, detail: string, required: bool}>

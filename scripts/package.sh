@@ -28,6 +28,13 @@ fi
 [ -d public/build ] || { echo "public/build/ missing — run npm ci && npm run build" >&2; exit 1; }
 command -v zip >/dev/null 2>&1 || { echo "zip is required" >&2; exit 1; }
 
+# IGNORE_PLATFORM=1 builds a package whose Composer platform check is disabled, for a
+# host that cannot run the PHP version the lock requires. The code still needs that
+# PHP at runtime — Composer's guard is removed, not the requirement. Recorded in the
+# manifest so the artifact is never mistaken for a normal build.
+IGNORE_PLATFORM="${IGNORE_PLATFORM:-0}"
+export IGNORE_PLATFORM
+
 DIST="$ROOT/dist"
 mkdir -p "$DIST"
 
@@ -37,7 +44,7 @@ trap 'rm -rf "$STAGING"' EXIT
 # --- application tree (explicit include set; dev files never copied) -------
 INCLUDE=(
   app bootstrap config database lang public resources routes
-  artisan composer.json composer.lock VERSION CHANGELOG.md .env.example vendor
+  artisan composer.json composer.lock VERSION CHANGELOG.md .env.example .htaccess vendor
 )
 for path in "${INCLUDE[@]}"; do
   [ -e "$path" ] || { echo "missing include: $path" >&2; exit 1; }
@@ -49,6 +56,18 @@ rm -rf "$STAGING"/public/hot "$STAGING"/public/storage "$STAGING"/public/build/.
 rm -f  "$STAGING"/bootstrap/cache/*.php
 find "$STAGING" -name '.DS_Store' -delete
 find "$STAGING" -name '*.log' -delete
+
+# Disable the generated platform check. autoload_real.php requires this file, so it
+# is replaced with a no-op rather than deleted.
+if [ "$IGNORE_PLATFORM" = "1" ]; then
+  cat > "$STAGING/vendor/composer/platform_check.php" <<'PHP'
+<?php
+
+// Platform check disabled at build time (IGNORE_PLATFORM=1).
+// The application still requires the PHP version declared in composer.json.
+return array();
+PHP
+fi
 
 # --- writable, shipped-empty runtime directories ---------------------------
 mkdir -p \
@@ -71,6 +90,15 @@ done
 # --- instructions + manifest ----------------------------------------------
 cp deploy/INSTALL.md deploy/UPGRADE.md "$STAGING/"
 php scripts/release-manifest.php "$VERSION" "$STAGING" >/dev/null
+
+# --- guard: files the application reads at runtime ------------------------
+# resources/views/app.blade.php uses Ziggy's @routes, which reads this asset from
+# vendor/ at render time. A build that drops vendor/*/dist (for example an
+# over-broad "dist" exclusion when staging) produces a package that 500s on
+# every page, so fail loudly here instead.
+for required in vendor/autoload.php vendor/tightenco/ziggy/dist/route.umd.js; do
+  [ -f "$STAGING/$required" ] || { echo "PACKAGE INCOMPLETE: missing $required" >&2; exit 1; }
+done
 
 # --- archive + checksum ----------------------------------------------------
 PKG="application-v$VERSION.zip"

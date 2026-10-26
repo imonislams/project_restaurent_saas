@@ -21,19 +21,34 @@ class DatabaseSeeder extends Seeder
         $this->call(PlanSeeder::class);
         $this->call(EmailTemplateSeeder::class);
 
-        // Production installs create their own administrator through the setup
-        // wizard (/install) or `php artisan app:install` — never a known account.
+        // Production installs create their own administrator with
+        // `php artisan app:install` — never a known account.
         if (! app()->environment('local', 'testing')) {
             return;
         }
 
-        $platformAdmin = User::factory()->platformAdmin()->create([
-            'name' => 'Platform Admin',
-            'email' => 'platform@example.com',
-        ]);
-        $platformAdmin->assignRole(RoleName::SaasSuperAdmin);
+        // Re-seeding must not fail or duplicate: the account is found by email.
+        $platformAdmin = User::query()->firstOrCreate(
+            ['email' => 'platform@example.com'],
+            [
+                'tenant_id' => null,
+                'is_platform_admin' => true,
+                'status' => 'active',
+                'name' => 'Platform Admin',
+                'password' => 'password',
+            ],
+        );
 
-        if (app()->environment('local')) {
+        if ($platformAdmin->email_verified_at === null) {
+            $platformAdmin->forceFill(['email_verified_at' => now()])->save();
+        }
+
+        if (! $platformAdmin->hasRole([RoleName::SaasSuperAdmin])) {
+            $platformAdmin->assignRole(RoleName::SaasSuperAdmin);
+        }
+
+        // The demo tenant is created once only.
+        if (app()->environment('local') && ! User::query()->where('email', 'owner@example.com')->exists()) {
             app(RegisterTenant::class)->execute([
                 'name' => 'Demo Owner',
                 'email' => 'owner@example.com',

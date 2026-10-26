@@ -14,8 +14,7 @@ use Symfony\Component\Process\Process;
 
 /**
  * First-time provisioning: environment, schema, platform data, the first
- * administrator, and the install lock. Shared by the setup wizard and the
- * `app:install` command.
+ * administrator, and the install lock. Driven by `php artisan app:install`.
  */
 class InstallerService
 {
@@ -98,10 +97,18 @@ class InstallerService
 
         $this->applyDatabaseConfig($database);
 
+        // Keep an existing key: rotating it would invalidate sessions and every
+        // value encrypted at rest (gateway credentials, backups).
+        $appKey = (string) config('app.key');
+
+        if ($appKey === '') {
+            $appKey = 'base64:'.base64_encode(random_bytes(32));
+        }
+
         $this->env->set([
             'APP_NAME' => $application['name'] ?? 'Restaurant SaaS',
             'APP_ENV' => 'production',
-            'APP_KEY' => 'base64:'.base64_encode(random_bytes(32)),
+            'APP_KEY' => $appKey,
             'APP_DEBUG' => 'false',
             'APP_URL' => rtrim((string) $application['url'], '/'),
             'APP_TIMEZONE' => $application['timezone'] ?? 'UTC',
@@ -167,19 +174,29 @@ class InstallerService
     /** @param array<string, mixed> $administrator */
     protected function createAdministrator(array $administrator): User
     {
-        $admin = User::create([
-            'tenant_id' => null,
+        // updateOrCreate: the credentials supplied to the installer are authoritative.
+        // Re-running must also work, so an existing row is claimed rather than
+        // duplicated — and its password is set to the one just provided.
+        $admin = User::query()->updateOrCreate(
+            ['email' => $administrator['email']],
+            [
+                'tenant_id' => null,
+                'is_platform_admin' => true,
+                'status' => 'active',
+                'name' => $administrator['name'],
+                'password' => $administrator['password'],
+            ],
+        );
+
+        $admin->forceFill([
             'is_platform_admin' => true,
             'status' => 'active',
-            'name' => $administrator['name'],
-            'email' => $administrator['email'],
-            'password' => $administrator['password'],
-        ]);
+            'email_verified_at' => $admin->email_verified_at ?? now(),
+        ])->save();
 
-        // Not mass-assignable by design; the first administrator is verified.
-        $admin->forceFill(['email_verified_at' => now()])->save();
-
-        $admin->assignRole(RoleName::SaasSuperAdmin);
+        if (! $admin->hasRole([RoleName::SaasSuperAdmin])) {
+            $admin->assignRole(RoleName::SaasSuperAdmin);
+        }
 
         return $admin;
     }

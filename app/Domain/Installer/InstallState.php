@@ -3,9 +3,9 @@
 namespace App\Domain\Installer;
 
 /**
- * Records whether the application has been installed. The lock file is the
- * single source of truth: its presence hides the setup wizard and is written
- * only once an installation completes.
+ * Records whether the application has been installed. The lock file is the single
+ * source of truth: its presence makes `app:install` refuse to run again, and it is
+ * written only once an installation completes.
  */
 class InstallState
 {

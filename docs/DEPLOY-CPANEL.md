@@ -15,7 +15,8 @@ Related: [PRODUCTION.md](./PRODUCTION.md) · [RELEASE.md](./RELEASE.md) · [SECU
 2. **Document root → `app/current/public`.** cPanel → *Domains* → the domain → *Manage* →
    Document Root: `/home/<user>/app/current/public`. Never serve the repository root — that
    would expose `.env`, `storage/` and `vendor/`.
-3. **PHP version + extensions.** MultiPHP Manager: select **PHP 8.2+** for the domain. Ensure
+3. **PHP version + extensions.** MultiPHP Manager: select **PHP 8.4** (8.4.1 or newer —
+   the lock requires it) for the domain. Ensure
    `pdo_mysql, mbstring, openssl, ctype, fileinfo, bcmath, tokenizer, xml, curl, zip` and
    `gd` (or `imagick`) are enabled (MultiPHP INI Editor / *Select PHP Version → Extensions*).
 4. **HTTPS.** Enable AutoSSL (or install a certificate) and force HTTPS redirects.
@@ -31,8 +32,34 @@ Related: [PRODUCTION.md](./PRODUCTION.md) · [RELEASE.md](./RELEASE.md) · [SECU
      current -> releases/<version>
      scripts/deploy-release.sh
    ```
-7. **First install.** Upload/extract the first package and run the setup wizard (or
-   `php artisan app:install`) — see the package's `INSTALL.md`.
+7. **First install.** Upload/extract the first package, create `.env`, then run
+   `php artisan app:install` (unattended options make it runnable from a Cron Jobs entry on a
+   host without SSH) — see the package's `INSTALL.md`.
+
+### If you cannot change the document root
+
+Some plans keep the document root at `public_html`. The package ships a `.htaccess` at the
+application root for exactly that case — it routes every request through `public/`:
+
+- Extract the package **inside** the document root, and keep the root `.htaccess` in place.
+- Verify: `https://your-host/.env` must return **404**, and `https://your-host/health` must
+  return JSON.
+- A **500** here means the host disallows `Options`/`RewriteRule` in `.htaccess`
+  (`AllowOverride`). Ask the host to allow it, or move `public/` into the document root
+  instead — with the root exposed and rewriting unavailable, `.env`, `storage/` and
+  `vendor/` are downloadable.
+- Do **not** add a `%{REQUEST_URI}` condition to the rewrite — `REQUEST_URI` does not change
+  during an internal rewrite, so the rule then loops (500).
+- A **403 on `/`** while static files still load means the bare URL resolved to a *directory*
+  instead of the front controller, and the host's `DirectoryIndex` does not list `index.php`.
+  Both `.htaccess` files shipped in the package handle this (root and `public/`), so `/` reaches
+  `index.php` whichever layout you use.
+- `https://your-host/build-info.txt` reports which build is actually deployed (version, commit,
+  build time). It is a static file, so it answers even when the application is erroring —
+  use it to confirm an upload really took effect.
+
+`/resources/*` and `/storage/*` are real application URLs (marketing pages and uploaded
+files) — never add a deny rule for those prefixes.
 
 ## 2. Scheduled tasks and background work
 

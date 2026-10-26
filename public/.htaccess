@@ -5,6 +5,11 @@
 
     RewriteEngine On
 
+    # The bare document root must reach the front controller. Apache otherwise
+    # resolves "/" to this directory and, on hosts whose DirectoryIndex does not
+    # list index.php, answers 403 Forbidden instead of running the application.
+    RewriteRule ^$ index.php [L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

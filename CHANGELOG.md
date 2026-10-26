@@ -7,6 +7,50 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-26
+
+A production release pipeline: versioned packages built by CI, a self-locking first-run
+installer, and atomic release-directory deployment.
+
+### Added
+
+- **Versioned production package.** Tagging `vX.Y.Z` builds `application-vX.Y.Z.zip` — production
+  `vendor/` (no dev packages), compiled `public/build/`, empty writable `storage/` and
+  `bootstrap/cache/`, plus `RELEASE-MANIFEST.json`, `INSTALL.md` and `UPGRADE.md` — with a
+  `.sha256` checksum, published as a GitLab Release asset (`build:package` + `release` jobs).
+  `bash scripts/package.sh vX.Y.Z` builds the same artifact locally.
+- **Headless installer** — `php artisan app:install` checks server requirements, tests the
+  database connection (refusing a populated database without explicit confirmation), writes `.env`
+  (generating `APP_KEY`), migrates, seeds roles/plans/email templates, creates the first platform
+  administrator and then **locks itself** (`storage/app/private/installed.lock`). Every prompt has
+  a matching option, so it also runs unattended — for example from a cPanel Cron Jobs entry on a
+  host without SSH.
+- **cPanel release-directory deployment** — `scripts/deploy-release.sh` verifies the package
+  checksum, backs the database up, extracts into `releases/<version>`, links `shared/.env` and
+  `shared/storage`, runs **only the pending migrations**, swaps the `current` symlink atomically,
+  rebuilds caches, probes `/health`, rolls back automatically when the check fails, records the
+  deployment and prunes old releases; `--rollback` reverts to the previous release. Runbook in
+  `docs/DEPLOY-CPANEL.md`.
+
+### Changed
+
+- `DatabaseSeeder` no longer creates a known platform administrator outside `local`/`testing` —
+  production installs create their own via `app:install`.
+- `.env.example` documents the version/build keys, `SESSION_SECURE_COOKIE` and a production
+  (cPanel) reference block.
+- The CI `deploy:production` job consumes the packaged artifact instead of building on the server.
+
+### Fixed
+
+- **A failed installation reported nothing useful.** `app:install` caught `RuntimeException` but
+  not driver or migration failures, so a failing install gave a stack trace instead of the reason.
+  It now prints the underlying message and reports the exception to the log.
+- **The package could not boot below PHP 8.4.1 while `composer.json` advertised `^8.2`.** The
+  lock had resolved `symfony/* 8.1.x` and `endroid/qr-code 6.1.x`, both requiring PHP `>= 8.4.1`,
+  because no `config.platform` was pinned. The requirement is now declared as `^8.4.1`, the
+  platform is pinned to `8.4.1` so the lock cannot drift above the supported runtime, and
+  `RequirementsChecker` enforces it before installing.
+
 ## [0.2.0] - 2026-10-25
 
 Subscription plan changes now follow payment: a requested change is held as *pending* and the
