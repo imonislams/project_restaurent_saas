@@ -193,6 +193,23 @@ class TenantSubscriptionTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_the_tenant_can_download_an_invoice_pdf(): void
+    {
+        [$tenant, $owner] = $this->tenantWithOwner();
+
+        $subscription = Subscription::withoutGlobalScopes()->where('tenant_id', $tenant->id)->firstOrFail();
+        app(TenantContext::class)->set($tenant);
+        $invoice = app(SubscriptionService::class)->issueInvoice($subscription);
+        app(TenantContext::class)->forget();
+
+        // A paid invoice used to 500 here: the view cast the paid_at Carbon to float.
+        $invoice->forceFill(['paid_at' => now()])->save();
+
+        $this->actingAs($owner)->get("/subscription/invoices/{$invoice->id}/document")
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
     public function test_a_manual_payment_keeps_the_reference_and_asks_for_confirmation(): void
     {
         [$tenant, $owner] = $this->tenantWithOwner();

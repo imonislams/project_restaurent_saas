@@ -19,6 +19,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class PlatformPaymentTest extends TestCase
@@ -382,6 +383,28 @@ class PlatformPaymentTest extends TestCase
             'tran_id' => $payment->provider_ref,
             'val_id' => 'VAL-GONE',
         ]))->assertRedirect(route('payments.result', ['status' => 'pending']));
+    }
+
+    public function test_the_browser_return_does_not_touch_the_visitors_session(): void
+    {
+        // The provider POSTs back from its own origin: with a Lax session cookie the
+        // browser withholds it, so starting a session on that route would replace the
+        // visitor's signed-in session (they were being logged out after paying).
+        $session = \Illuminate\Session\Middleware\StartSession::class;
+
+        // Both browser returns live outside the web group: no session, cookie or
+        // CSRF middleware may run there.
+        $callback = Route::getRoutes()->getByName('payments.callback');
+        $return = Route::getRoutes()->getByName('payments.tenant-return');
+
+        $this->assertNotContains($session, $callback->gatherMiddleware());
+        $this->assertNotContains($session, $return->gatherMiddleware());
+        $this->assertSame([], $callback->gatherMiddleware());
+        $this->assertSame([], $return->gatherMiddleware());
+
+        $admin = $this->admin();
+        $this->actingAs($admin)->get('/payments/callback/sslcommerz/success')->assertRedirect();
+        $this->assertAuthenticatedAs($admin);
     }
 
     public function test_a_usd_payment_verified_in_bdt_settles_without_a_false_mismatch(): void

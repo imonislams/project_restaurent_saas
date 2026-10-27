@@ -408,11 +408,8 @@ class SubscriptionService
         $coupon = $subscription->coupon;
 
         if (! $coupon && $plan) {
+            // Redemption is recorded when the invoice settles, not here.
             $coupon = $this->coupons->bestAutoApply($plan, $subscription->tenant, $subtotal);
-
-            if ($coupon) {
-                $this->coupons->redeem($coupon, $subscription->tenant, $subscription, $coupon->discountFor($subtotal));
-            }
         }
 
         if ($coupon) {
@@ -456,12 +453,20 @@ class SubscriptionService
 
     public function payInvoice(SubscriptionInvoice $invoice, ?User $actor = null): SubscriptionInvoice
     {
+        $alreadyPaid = $invoice->status === InvoiceStatus::Paid && $invoice->paid_at !== null;
+
         $invoice->forceFill([
             'status' => InvoiceStatus::Paid,
             'paid_at' => now(),
         ])->save();
 
         $this->audit->log('subscription.invoice_paid', $invoice, ['number' => $invoice->number], $actor, $invoice->tenant_id);
+
+        // The discount is only "used" once the invoice is actually settled, so an
+        // abandoned invoice never consumes a redemption.
+        if (! $alreadyPaid) {
+            $this->redeemInvoiceCoupon($invoice, $invoice->subscription);
+        }
 
         // Settling the invoice for a pending plan change is what activates it.
         $subscription = $invoice->subscription;
@@ -542,36 +547,125 @@ class SubscriptionService
         });
     }
 
-    /** Apply a coupon to a subscription and record the redemption once. */
-    public function applyCoupon(Subscription $subscription, string $code, User $actor): Coupon
+    /** Apply a coupon to a subscription and the invoice it will be paid on. */
+    public function applyCoupon(Subscription $subscription, string $code, User $actor, ?SubscriptionInvoice $invoice = null): Coupon
     {
-        $coupon = $this->coupons->findValid($code, $subscription->plan, $subscription->tenant);
+        $tenant = $subscription->tenant;
+
+        abort_if($tenant === null, 422, 'There is no subscription on record.');
+
+        $invoice ??= $this->outstandingInvoice($subscription);
+        $plan = $invoice?->plan ?? $subscription->pendingPlan ?? $subscription->plan;
+        $subtotal = $invoice
+            ? (float) $invoice->subtotal
+            : $this->pricing->subscriptionPrice($subscription, $plan, $subscription->billing_cycle)['amount'];
+
+        // Every rule is checked here: window, usage limits, plan eligibility,
+        // minimum amount and first-purchase.
+        [$coupon, $reason] = $this->coupons->validate($code, $plan, $tenant, $subtotal);
 
         if (! $coupon) {
-            throw ValidationException::withMessages([
-                'code' => 'This coupon is not valid for this subscription.',
-            ]);
+            throw ValidationException::withMessages(['code' => $reason ?? 'That coupon cannot be applied.']);
         }
 
-        $price = $this->pricing->subscriptionPrice($subscription);
-        $discount = $coupon->discountFor($price['amount']);
+        $discount = $coupon->discountFor($subtotal);
 
-        return DB::transaction(function () use ($subscription, $coupon, $discount, $actor) {
+        return DB::transaction(function () use ($subscription, $coupon, $discount, $invoice, $actor) {
             $subscription->forceFill(['coupon_id' => $coupon->getKey()])->save();
-            $this->coupons->redeem($coupon, $subscription->tenant, $subscription, $discount);
+
+            // Reprice the invoice the tenant is about to pay, so the amount they
+            // are charged reflects the discount.
+            if ($invoice) {
+                $this->priceInvoice($invoice, $coupon->code, $discount);
+            }
+
             $this->coupons->logApplied($coupon, $subscription, $discount, $actor);
 
             return $coupon;
         });
     }
 
-    public function removeCoupon(Subscription $subscription, User $actor): Subscription
+    /** Write a discount onto an unpaid invoice; a settled invoice is history. */
+    protected function priceInvoice(SubscriptionInvoice $invoice, ?string $code, float $discount): SubscriptionInvoice
+    {
+        if ($invoice->status->isSettled()) {
+            return $invoice;
+        }
+
+        $subtotal = (float) $invoice->subtotal;
+        $applied = round(min(max($discount, 0.0), $subtotal), 2);
+
+        $invoice->forceFill([
+            'discount_amount' => $applied,
+            'coupon_code' => $code,
+            'amount' => round($subtotal - $applied, 2),
+        ])->save();
+
+        return $invoice;
+    }
+
+    public function removeCoupon(Subscription $subscription, User $actor, ?SubscriptionInvoice $invoice = null): Subscription
     {
         $subscription->forceFill(['coupon_id' => null])->save();
+
+        $invoice ??= $this->outstandingInvoice($subscription);
+
+        if ($invoice) {
+            $this->priceInvoice($invoice, null, 0.0);
+        }
 
         $this->audit->log('subscription.coupon_removed', $subscription, [], $actor, $subscription->tenant_id);
 
         return $subscription;
+    }
+
+    /**
+     * The invoice a tenant still owes on: the pending plan change first (that is
+     * the one being paid), otherwise the oldest open invoice with a balance.
+     */
+    public function outstandingInvoice(Subscription $subscription): ?SubscriptionInvoice
+    {
+        $pending = $subscription->pendingInvoice;
+
+        if ($pending && ! $pending->status->isSettled() && (float) $pending->outstandingAmount() > 0) {
+            return $pending;
+        }
+
+        return $subscription->invoices()
+            ->whereIn('status', [
+                InvoiceStatus::Issued->value,
+                InvoiceStatus::Open->value,
+                InvoiceStatus::PartiallyPaid->value,
+                InvoiceStatus::Overdue->value,
+            ])
+            ->orderBy('id')
+            ->get()
+            ->first(fn (SubscriptionInvoice $invoice) => (float) $invoice->outstandingAmount() > 0);
+    }
+
+    /** Record the redemption of a settled invoice's coupon (usage limits). */
+    protected function redeemInvoiceCoupon(SubscriptionInvoice $invoice, ?Subscription $subscription): void
+    {
+        $code = $invoice->coupon_code;
+
+        if (! $code || (float) $invoice->discount_amount <= 0) {
+            return;
+        }
+
+        $coupon = Coupon::query()->where('code', $code)->first();
+        $tenant = $subscription?->tenant ?? Tenant::query()->find($invoice->tenant_id);
+
+        if (! $coupon || ! $tenant) {
+            return;
+        }
+
+        // The discount was already quoted to the tenant: honour it even if the
+        // final redemption went to someone else in the meantime.
+        if ($coupon->isExhausted()) {
+            return;
+        }
+
+        $this->coupons->redeem($coupon, $tenant, $subscription, (float) $invoice->discount_amount);
     }
 
     /**

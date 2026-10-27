@@ -17,7 +17,7 @@ import type { BadgeTone, Column, SortState } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Download, RefreshCw } from 'lucide-react';
+import { Download, RefreshCw, Ticket, X } from 'lucide-react';
 import { cn } from '@/Components/ui/cn';
 
 interface PlanView {
@@ -44,6 +44,7 @@ interface SubscriptionView {
     days_remaining: number | null;
     cancel_at_period_end: boolean;
     provider: string | null;
+    coupon: string | null;
 }
 
 interface PendingPlanView {
@@ -68,6 +69,7 @@ interface InvoiceView {
     amount: number;
     subtotal: number;
     discount_amount: number;
+    coupon_code: string | null;
     currency: string;
     status: string;
     status_label: string;
@@ -152,15 +154,42 @@ export default function SubscriptionIndex({
     access_granted: boolean;
 }) {
     const tenant = (usePage().props as any).tenant;
+    const errors = (usePage().props as any).errors as Record<string, string> | undefined;
     const [pending, setPending] = useState<PlanView | null>(null);
     const [cancelOpen, setCancelOpen] = useState(false);
     const [cycle, setCycle] = useState<'monthly' | 'yearly'>((subscription?.billing_cycle as 'monthly' | 'yearly') ?? 'monthly');
+    const [couponCode, setCouponCode] = useState('');
+    const [planCoupon, setPlanCoupon] = useState('');
     const [invoiceGateway, setInvoiceGateway] = useState<Record<number, string>>({});
     const [invoiceReferences, setInvoiceReferences] = useState<Record<number, string>>({});
 
     const switchPlan = () => {
         if (!pending) return;
-        router.post(route('subscription.plan'), { plan_id: pending.id, billing_cycle: cycle }, { preserveScroll: true, onFinish: () => setPending(null) });
+        router.post(
+            route('subscription.plan'),
+            { plan_id: pending.id, billing_cycle: cycle, coupon_code: planCoupon.trim() || null },
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setPending(null);
+                    setPlanCoupon('');
+                },
+            },
+        );
+    };
+
+    const applyCoupon = () => {
+        const code = couponCode.trim();
+        if (!code) return;
+        router.post(
+            route('subscription.coupon.apply'),
+            { code },
+            { preserveScroll: true, onSuccess: () => setCouponCode('') },
+        );
+    };
+
+    const removeCoupon = () => {
+        router.delete(route('subscription.coupon.remove'), { preserveScroll: true });
     };
 
     // Each invoice is paid with a gateway eligible for *its* currency.
@@ -187,7 +216,22 @@ export default function SubscriptionIndex({
     const invoiceColumns: Column<InvoiceView>[] = [
         { key: 'number', label: 'Invoice', render: (r) => <span className="font-medium text-foreground">{r.number}</span> },
         { key: 'status', label: 'Status', render: (r) => <Badge tone={INVOICE_TONE[r.status] ?? 'neutral'}>{r.status_label}</Badge> },
-        { key: 'amount', label: 'Amount', align: 'right', render: (r) => <span className="tabular-nums">{formatMoney(r.amount, r.currency)}</span> },
+        {
+            key: 'amount',
+            label: 'Amount',
+            align: 'right',
+            render: (r) => (
+                <div className="tabular-nums">
+                    <span>{formatMoney(r.amount, r.currency)}</span>
+                    {r.discount_amount > 0 && (
+                        <span className="block text-[11px] text-muted-foreground">
+                            −{formatMoney(r.discount_amount, r.currency)}
+                            {r.coupon_code ? ` · ${r.coupon_code}` : ''}
+                        </span>
+                    )}
+                </div>
+            ),
+        },
         { key: 'issued_at', label: 'Issued', render: (r) => formatDate(r.issued_at) },
         { key: 'due_date', label: 'Due', render: (r) => (r.due_date ? formatDate(r.due_date) : '—') },
         {
@@ -515,6 +559,49 @@ export default function SubscriptionIndex({
                 </Card>
 
                 <Card>
+                    <CardHeader
+                        title="Coupon"
+                        description="Apply a discount code before paying an invoice — the amount below is recalculated."
+                    />
+                    <CardBody>
+                        {subscription?.coupon ? (
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div className="flex items-center gap-2 text-sm">
+                                    <Ticket className="h-4 w-4 text-primary" />
+                                    <span className="font-medium text-foreground">{subscription.coupon}</span>
+                                    <span className="text-muted-foreground">applied to your unpaid invoices</span>
+                                </div>
+                                <Button size="xs" variant="ghost" icon={<X className="h-3.5 w-3.5" />} onClick={removeCoupon}>
+                                    Remove
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-wrap items-end gap-2">
+                                <div className="min-w-[12rem] flex-1">
+                                    <label htmlFor="coupon-code" className="mb-1 block text-xs font-medium text-muted-foreground">
+                                        Coupon code
+                                    </label>
+                                    <input
+                                        id="coupon-code"
+                                        value={couponCode}
+                                        onChange={(event) => setCouponCode(event.target.value)}
+                                        onKeyDown={(event) => {
+                                            if (event.key === 'Enter') applyCoupon();
+                                        }}
+                                        placeholder="SAVE20"
+                                        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm uppercase text-foreground placeholder:normal-case focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                    />
+                                    {errors?.code && <p className="mt-1 text-xs text-danger">{errors.code}</p>}
+                                </div>
+                                <Button size="sm" onClick={applyCoupon} disabled={couponCode.trim().length === 0}>
+                                    Apply coupon
+                                </Button>
+                            </div>
+                        )}
+                    </CardBody>
+                </Card>
+
+                <Card>
                     <CardHeader title="Invoices" description="Download a PDF or pay outstanding invoices online." />
                     <CardBody>
                         <DataTable columns={invoiceColumns} rows={invoices} rowKey={(r) => r.id} sort={sort} empty={<EmptyState title="No invoices yet" />} />
@@ -540,6 +627,19 @@ export default function SubscriptionIndex({
             >
                 <div className="text-sm text-muted-foreground">
                     Billing cycle: <span className="font-medium capitalize text-foreground">{cycle}</span> · {pending ? formatMoney(priceFor(pending), pending.currency) : ''}
+                </div>
+                <div className="mt-3">
+                    <label htmlFor="plan-coupon" className="mb-1 block text-xs font-medium text-muted-foreground">
+                        Coupon code (optional)
+                    </label>
+                    <input
+                        id="plan-coupon"
+                        value={planCoupon}
+                        onChange={(event) => setPlanCoupon(event.target.value)}
+                        placeholder="SAVE20"
+                        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm uppercase text-foreground placeholder:normal-case focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    />
+                    {errors?.code && <p className="mt-1 text-xs text-danger">{errors.code}</p>}
                 </div>
             </ConfirmDialog>
 

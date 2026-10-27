@@ -22,12 +22,19 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function () {
+            // Provider browser-return endpoints: no session/cookie/CSRF middleware.
+            // A cross-site POST from the provider (SameSite=Lax) would otherwise
+            // start a fresh session and log the visitor out.
+            Route::group([], base_path('routes/payments.php'));
+        },
     )
     // Registers /broadcasting/auth (session-authenticated) and the channel rules.
     ->withBroadcasting(__DIR__.'/../routes/channels.php')

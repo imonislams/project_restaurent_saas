@@ -82,7 +82,7 @@
             <tr><td class="muted">Discount {{ $invoice->coupon_code ? '('.$invoice->coupon_code.')' : '' }}</td><td class="right">-{{ $invoice->currency }} {{ number_format((float) $invoice->discount_amount, 2) }}</td></tr>
         @endif
         <tr class="grand"><td>Total</td><td class="right">{{ $invoice->currency }} {{ number_format((float) $invoice->amount, 2) }}</td></tr>
-        @if ((float) $invoice->paid_at)
+        @if ($invoice->paid_at)
             <tr><td class="muted">Paid</td><td class="right">{{ optional($invoice->paid_at)->format('Y-m-d') }}</td></tr>
         @endif
     </table>

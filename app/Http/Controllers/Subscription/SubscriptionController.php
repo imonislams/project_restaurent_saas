@@ -51,7 +51,7 @@ class SubscriptionController extends Controller
     public function index(Request $request): Response
     {
         $tenant = $request->user()->tenant;
-        $subscription = $tenant?->subscription?->load('plan', 'pendingPlan', 'pendingInvoice');
+        $subscription = $tenant?->subscription?->load('plan', 'pendingPlan', 'pendingInvoice', 'coupon');
 
         // Offer only the tenant's regional ladder (Bangladesh or International),
         // exactly like the public pricing page.
@@ -105,6 +105,7 @@ class SubscriptionController extends Controller
                 'days_remaining' => $subscription->daysRemaining(),
                 'cancel_at_period_end' => $subscription->cancel_at_period_end,
                 'provider' => $subscription->provider,
+                'coupon' => $subscription->coupon?->code,
             ] : null,
             'pending_plan' => $subscription?->hasPendingPlanChange() ? [
                 'plan' => $subscription->pendingPlan?->name,
@@ -146,6 +147,7 @@ class SubscriptionController extends Controller
                 'amount' => (float) $invoice->amount,
                 'subtotal' => (float) $invoice->subtotal,
                 'discount_amount' => (float) $invoice->discount_amount,
+                'coupon_code' => $invoice->coupon_code,
                 'currency' => $invoice->currency,
                 'status' => $invoice->status->value,
                 'status_label' => $invoice->status->label(),
@@ -195,6 +197,7 @@ class SubscriptionController extends Controller
         $data = $request->validate([
             'plan_id' => ['required', 'integer', Rule::exists('plans', 'id')],
             'billing_cycle' => ['required', Rule::in(BillingCycle::values())],
+            'coupon_code' => ['nullable', 'string', 'max:64'],
         ]);
 
         $tenant = $request->user()->tenant;
@@ -221,6 +224,19 @@ class SubscriptionController extends Controller
         $invoice = $subscription === null
             ? $this->subscriptions->startSubscription($tenant, $plan, $cycle, $request->user())
             : $this->subscriptions->requestPlanChange($subscription, $plan, $cycle, $request->user());
+
+        // A code sent with the plan change is applied to that invoice before any
+        // checkout starts, so the tenant is charged the discounted amount.
+        if (filled($data['coupon_code'] ?? null)) {
+            $this->subscriptions->applyCoupon(
+                $subscription ?? $tenant->subscription()->first(),
+                $data['coupon_code'],
+                $request->user(),
+                $invoice,
+            );
+
+            $invoice = $invoice->fresh();
+        }
 
         // Nothing to pay (free plan / fully discounted) — activate immediately.
         if ((float) $invoice->amount <= 0) {
@@ -320,6 +336,54 @@ class SubscriptionController extends Controller
         $this->subscriptions->scheduleCancelAtPeriodEnd($tenant->subscription, $request->user());
 
         return back()->with('success', 'Your subscription will not renew. Access continues until the end of the period.');
+    }
+
+    /**
+     * Apply a coupon to the invoice the tenant is about to pay. Every rule —
+     * active, redemption window, total and per-tenant usage limits, plan
+     * eligibility, minimum amount, first purchase — is enforced in
+     * CouponService::validate, and the invoice is repriced so the amount charged
+     * reflects the discount.
+     */
+    public function applyCoupon(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'code' => ['required', 'string', 'max:64'],
+        ]);
+
+        $tenant = $request->user()->tenant;
+        $subscription = $tenant?->subscription;
+
+        abort_if($subscription === null, 422, 'There is no subscription on record.');
+
+        $coupon = $this->subscriptions->applyCoupon($subscription, $data['code'], $request->user());
+
+        $invoice = $this->subscriptions->outstandingInvoice($subscription->fresh());
+
+        // A coupon can cover the whole invoice (100% or a fixed amount above the
+        // total) — settle it instead of leaving an invoice nobody can pay.
+        if ($invoice && (float) $invoice->amount <= 0) {
+            $this->subscriptions->payInvoice($invoice, $request->user());
+
+            return back()->with('success', "Coupon {$coupon->code} applied — invoice {$invoice->number} is fully covered.");
+        }
+
+        return back()->with('success', $invoice
+            ? "Coupon {$coupon->code} applied — invoice {$invoice->number} is now "
+                .$invoice->currency.' '.number_format((float) $invoice->amount, 2).'.'
+            : "Coupon {$coupon->code} applied — it will be used on your next invoice.");
+    }
+
+    public function removeCoupon(Request $request): RedirectResponse
+    {
+        $tenant = $request->user()->tenant;
+        $subscription = $tenant?->subscription;
+
+        abort_if($subscription === null, 422, 'There is no subscription on record.');
+
+        $this->subscriptions->removeCoupon($subscription, $request->user());
+
+        return back()->with('success', 'Coupon removed — any unpaid invoice is back to its full price.');
     }
 
     public function resume(Request $request): RedirectResponse

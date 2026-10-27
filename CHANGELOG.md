@@ -90,6 +90,13 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Paying a gateway invoice logged the customer out.** The provider POSTs the browser back from
+  its own origin; with a `SameSite=Lax` session cookie the browser withholds it, so Laravel started
+  a fresh session there and its `Set-Cookie` replaced the signed-in one — the visitor landed on
+  `/payments/result?status=success` already logged out. Both browser-return endpoints now live
+  outside the `web` group (`routes/payments.php`: no session, cookie or CSRF middleware), so they
+  verify server-side and redirect without touching the session. The result page also links back
+  into the app (Control Center for admins, Subscription for tenants).
 - **SSLCommerz payments could never be verified — in sandbox *and* live.** The transaction
   validation endpoint was built as `/validatorapi/validationserverAPI.php`, which answers
   **404** on both `sandbox.sslcommerz.com` and `securepay.sslcommerz.com`; the provider

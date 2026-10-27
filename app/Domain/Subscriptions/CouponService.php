@@ -20,21 +20,71 @@ class CouponService
 
     public function findValid(string $code, ?Plan $plan = null, ?Tenant $tenant = null, ?float $amount = null): ?Coupon
     {
+        return $this->validate($code, $plan, $tenant, $amount)[0];
+    }
+
+    /**
+     * Validate a code against every eligibility rule: active, redemption window
+     * (valid_from / valid_to), total and per-tenant usage limits, the plan it
+     * applies to, the minimum invoice amount and the first-purchase rule.
+     *
+     * Returns the coupon, or null plus a reason the customer can act on.
+     *
+     * @return array{0: ?Coupon, 1: ?string}
+     */
+    public function validate(string $code, ?Plan $plan = null, ?Tenant $tenant = null, ?float $amount = null): array
+    {
         $coupon = Coupon::query()->where('code', strtoupper(trim($code)))->first();
 
-        if (! $coupon || ! $coupon->isRedeemable($tenant)) {
-            return null;
+        if (! $coupon) {
+            return [null, 'We could not find that coupon code.'];
+        }
+
+        if (! $coupon->is_active) {
+            return [null, 'That coupon is no longer active.'];
+        }
+
+        if ($coupon->valid_from && now()->lessThan($coupon->valid_from)) {
+            return [null, 'That coupon is not active yet.'];
+        }
+
+        if ($coupon->valid_to && now()->greaterThan($coupon->valid_to)) {
+            return [null, 'That coupon has expired.'];
+        }
+
+        if ($coupon->isExhausted()) {
+            return [null, 'That coupon has reached its usage limit.'];
+        }
+
+        if ($tenant && $this->redemptionsFor($coupon, $tenant) >= ($coupon->per_tenant_limit ?? 1)) {
+            return [null, 'You have already used that coupon.'];
         }
 
         if ($plan && ! $coupon->appliesTo($plan)) {
-            return null;
+            return [null, "That coupon is not valid for the {$plan->name} plan."];
         }
 
-        if (! $this->qualifies($coupon, $amount, $tenant)) {
-            return null;
+        if ($coupon->min_amount !== null && $amount !== null && $amount < (float) $coupon->min_amount) {
+            return [null, 'That coupon needs a minimum invoice of '
+                .number_format((float) $coupon->min_amount, 2).' '.$coupon->currency.'.'];
         }
 
-        return $coupon;
+        if ($coupon->first_purchase_only && $tenant && $this->hasPaidBefore($tenant)) {
+            return [null, 'That coupon is only valid on your first purchase.'];
+        }
+
+        return [$coupon, null];
+    }
+
+    /** How many times this tenant has already redeemed a coupon. */
+    public function redemptionsFor(Coupon $coupon, Tenant $tenant): int
+    {
+        return $coupon->redemptions()->where('tenant_id', $tenant->getKey())->count();
+    }
+
+    protected function hasPaidBefore(Tenant $tenant): bool
+    {
+        return $tenant->subscription?->invoices()->where('status', 'paid')->exists() ?? false;
     }
 
     /**

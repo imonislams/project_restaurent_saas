@@ -22,7 +22,6 @@ use App\Http\Controllers\Orders\ReceiptController;
 use App\Http\Controllers\Payments\PaddleCheckoutController;
 use App\Http\Controllers\Payments\PaymentWebhookController;
 use App\Http\Controllers\Payments\PlatformCallbackController;
-use App\Http\Controllers\Payments\TenantPaymentReturnController;
 use App\Http\Controllers\Payments\PlatformWebhookController;
 use App\Http\Controllers\Platform\AdminController as PlatformAdminController;
 use App\Http\Controllers\Platform\AnalyticsController as PlatformAnalyticsController;
@@ -129,12 +128,10 @@ Route::get('/health', HealthController::class)->name('health');
 // Payment provider webhooks (authenticated by signature, not session/CSRF).
 Route::post('/webhooks/payments/{provider}', PaymentWebhookController::class)->name('webhooks.payments');
 
-// Platform subscription payment gateway callbacks (browser return + server IPN).
+// Platform subscription payment gateway callbacks (server IPN; the browser
+// return lives in routes/payments.php so it never touches the session).
 Route::get('/payments/result', [PlatformCallbackController::class, 'result'])->name('payments.result');
-Route::match(['get', 'post'], '/payments/callback/{provider}/{result}', [PlatformCallbackController::class, 'callback'])->name('payments.callback');
 Route::post('/payments/ipn/{provider}', [PlatformCallbackController::class, 'ipn'])->name('payments.ipn');
-// Tenant (restaurant) payments: SSLCommerz POSTs the customer back here.
-Route::match(['get', 'post'], '/payments/order-return/{provider}/{result}', TenantPaymentReturnController::class)->name('payments.tenant-return');
 
 // Paddle Billing checkout (Paddle.js) + server-side verification return.
 Route::get('/payments/paddle', PaddleCheckoutController::class)->name('payments.paddle.checkout');
@@ -532,6 +529,10 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->g
             ->middleware('permission:subscription.manage')->name('pay');
         Route::get('/invoices/{invoice}/document', [TenantSubscriptionController::class, 'downloadInvoice'])
             ->middleware('permission:subscription.view')->name('invoices.document');
+        Route::post('/coupon', [TenantSubscriptionController::class, 'applyCoupon'])
+            ->middleware('permission:subscription.manage')->name('coupon.apply');
+        Route::delete('/coupon', [TenantSubscriptionController::class, 'removeCoupon'])
+            ->middleware('permission:subscription.manage')->name('coupon.remove');
         Route::post('/cancel', [TenantSubscriptionController::class, 'cancel'])
             ->middleware('permission:subscription.manage')->name('cancel');
         Route::post('/resume', [TenantSubscriptionController::class, 'resume'])
