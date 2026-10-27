@@ -39,7 +39,7 @@ class ResolveQrContext
         $branch = Branch::query()->withoutGlobalScope('tenant')->find($qr->branch_id);
         $table = Table::query()->withoutGlobalScope('tenant')->find($qr->table_id);
 
-        if (! $tenant || ! $tenant->canAccess() || ! $branch || ! $branch->is_active || ! $table || ! $table->is_active) {
+        if (! $tenant || ! $tenant->canAccess() || ! $tenant->subscriptionAccess() || ! $branch || ! $branch->is_active || ! $table || ! $table->is_active) {
             abort(404);
         }
 

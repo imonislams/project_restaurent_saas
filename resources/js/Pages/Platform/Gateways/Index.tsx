@@ -1,22 +1,9 @@
-import {
-    Badge,
-    Button,
-    Card,
-    CardBody,
-    ConfirmDialog,
-    Drawer,
-    EmptyState,
-    Input,
-    SelectField,
-    Tabs,
-    TextField,
-    useToast,
-} from '@/Components/ui';
+import { Badge, Button, Card, CardBody, CardHeader, ConfirmDialog, Input, SelectField, Switch, Tabs, TextField, useToast } from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { router, useForm } from '@inertiajs/react';
-import { FormEventHandler, useState } from 'react';
-import { Check, Copy, CreditCard, Plus, Trash2 } from 'lucide-react';
+import { FormEventHandler, useEffect, useState } from 'react';
+import { Check, Copy, CreditCard, Trash2 } from 'lucide-react';
 import { cn } from '@/Components/ui/cn';
 
 interface CredentialField {
@@ -79,7 +66,7 @@ function MultiCheck({
 }) {
     return (
         <div>
-            <span className="mb-1.5 block text-xs font-semibold text-foreground tracking-tight">{title}</span>
+            <span className="mb-1.5 block text-xs font-semibold tracking-tight text-foreground">{title}</span>
             <div
                 className={cn(
                     'flex gap-x-3 gap-y-2 rounded-md border border-border bg-background p-3',
@@ -108,7 +95,6 @@ export default function GatewaysIndex({
     providers,
     provider_labels,
     provider_schema,
-    required_credentials,
     capabilities,
     currencies,
     countries,
@@ -126,16 +112,13 @@ export default function GatewaysIndex({
     plans: Option[];
 }) {
     const { push: pushToast } = useToast();
-    const [open, setOpen] = useState(false);
-    const [editing, setEditing] = useState<GatewayConfig | null>(null);
+    const [active, setActive] = useState(provider_filter && providers.includes(provider_filter) ? provider_filter : providers[0] ?? 'manual');
     const [confirmDelete, setConfirmDelete] = useState<GatewayConfig | null>(null);
     const [copied, setCopied] = useState<number | null>(null);
 
     const form = useForm({
         name: '',
-        provider: providers[0] ?? 'manual',
         environment: 'sandbox',
-        is_enabled: true,
         supported_currencies: [] as string[],
         allowed_countries: [] as string[],
         capabilities: [] as string[],
@@ -143,54 +126,51 @@ export default function GatewaysIndex({
         credentials: {} as Record<string, string>,
     });
 
-    const openCreate = () => {
-        setEditing(null);
+    const meta = provider_schema[active];
+    const configs = gateways.filter((gateway) => gateway.provider === active);
+    const primary = configs.find((gateway) => gateway.is_enabled) ?? configs.find((gateway) => gateway.is_default) ?? configs[0] ?? null;
+    const extras = configs.filter((gateway) => gateway.id !== primary?.id);
+
+    const load = (gateway: GatewayConfig | null) => {
         form.setData({
-            name: '',
-            provider: provider_filter ?? providers[0] ?? 'manual',
-            environment: 'sandbox',
-            is_enabled: true,
-            supported_currencies: [],
-            allowed_countries: [],
-            capabilities: [],
-            plan_ids: [],
+            name: gateway?.name ?? '',
+            environment: gateway?.environment ?? 'sandbox',
+            supported_currencies: gateway?.supported_currencies ?? [],
+            allowed_countries: gateway?.allowed_countries ?? [],
+            capabilities: gateway?.capabilities ?? [],
+            plan_ids: gateway?.plan_ids ?? [],
             credentials: {},
         });
         form.clearErrors();
-        setOpen(true);
     };
 
-    const openEdit = (gateway: GatewayConfig) => {
-        setEditing(gateway);
-        form.setData({
-            name: gateway.name,
-            provider: gateway.provider,
-            environment: gateway.environment,
-            is_enabled: gateway.is_enabled,
-            supported_currencies: gateway.supported_currencies,
-            allowed_countries: gateway.allowed_countries,
-            capabilities: gateway.capabilities,
-            plan_ids: gateway.plan_ids,
-            credentials: {},
-        });
-        form.clearErrors();
-        setOpen(true);
-    };
+    // One tab = one gateway: seed the form from that gateway's configuration.
+    useEffect(() => {
+        load(primary);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [active]);
 
     const toggleIn = (key: 'supported_currencies' | 'allowed_countries' | 'capabilities' | 'plan_ids', value: string) => {
         const current = form.data[key];
-        form.setData(key, current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
+        form.setData(key, current.includes(value) ? current.filter((item) => item !== value) : [...current, value]);
     };
 
-    const submit: FormEventHandler = (e) => {
-        e.preventDefault();
-        const options = { preserveScroll: true, onSuccess: () => { setOpen(false); setEditing(null); } };
+    const submit: FormEventHandler = (event) => {
+        event.preventDefault();
+
+        const options = {
+            preserveScroll: true,
+            onSuccess: () => form.setData('credentials', {}),
+        };
+
         form.transform((data) => ({
             ...data,
+            provider: active,
             plan_ids: data.plan_ids.map((id) => Number(id)),
         }));
-        if (editing) {
-            form.patch(route('platform.gateways.update', editing.id), options);
+
+        if (primary) {
+            form.patch(route('platform.gateways.update', primary.id), options);
         } else {
             form.post(route('platform.gateways.store'), options);
         }
@@ -206,271 +186,245 @@ export default function GatewaysIndex({
         }
     };
 
-    const credentialFields = provider_schema[form.data.provider]?.credential_fields ?? [];
-    const providerMeta = provider_schema[form.data.provider];
+    const visibility = primary?.is_enabled
+        ? `Shown to customers on plan change — ${primary.supported_currencies.length > 0 ? primary.supported_currencies.join(', ') : 'all currencies'} invoices · ${
+              primary.allowed_countries.length > 0 ? primary.allowed_countries.join(', ') : 'all countries'
+          }${primary.plan_ids.length > 0 ? ' · selected plans only' : ' · all plans'}.`
+        : 'Hidden from customers — plan upgrades and downgrades will not offer this gateway.';
 
     return (
         <PlatformLayout
-            title={provider_filter ? provider_labels[provider_filter] ?? 'Payment Gateways' : 'Payment Gateways'}
-            description="Configure multiple payment gateways and manage each one's credentials here (encrypted at rest). Enable as many as you need — customers choose from the enabled ones — and mark one as the default pre-selection. A payment is only marked successful after server-side verification."
-            actions={
-                <Button size="sm" onClick={openCreate} icon={<Plus className="h-4 w-4" />}>
-                    Add Gateway
-                </Button>
-            }
+            title="Payment Gateways"
+            description="One tab per gateway. Switch a gateway on to offer it to customers when they upgrade or downgrade their plan; switch it off and it disappears from their checkout. Credentials are encrypted at rest."
         >
             <Tabs
-                tabs={[{ key: '', label: 'All' }, ...providers.map((p) => ({ key: p, label: provider_labels[p] ?? p }))]}
-                value={provider_filter ?? ''}
-                onChange={(key) => router.get(route('platform.gateways.index'), key ? { provider: key } : {}, { preserveScroll: true })}
+                tabs={providers.map((provider) => ({ key: provider, label: provider_labels[provider] ?? provider }))}
+                value={active}
+                onChange={setActive}
                 className="mb-5"
             />
 
-            {gateways.length === 0 ? (
-                <Card>
-                    <EmptyState
-                        title="No gateways configured"
-                        description="Add a payment gateway integration to start accepting online subscription payments."
-                        action={
-                            <Button size="sm" onClick={openCreate}>
-                                Add Gateway
-                            </Button>
-                        }
-                    />
-                </Card>
-            ) : (
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    {gateways.map((gateway) => (
-                        <Card key={gateway.id}>
-                            <CardBody className="space-y-4">
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <h3 className="truncate text-sm font-semibold tracking-tight text-foreground">{gateway.name}</h3>
-                                        <p className="text-xs text-muted-foreground">
-                                            {gateway.provider_label} · <span className="capitalize">{gateway.environment}</span>
-                                            {gateway.recurring && ' · recurring'}
-                                        </p>
-                                    </div>
-                                    <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
-                                        {gateway.is_default && <Badge tone="info">Default</Badge>}
-                                        <Badge tone={gateway.is_enabled ? 'success' : 'neutral'}>{gateway.is_enabled ? 'Enabled' : 'Disabled'}</Badge>
-                                        {gateway.is_ready ? (
-                                            <Badge tone="success">Ready</Badge>
-                                        ) : gateway.health_status ? (
-                                            <Badge tone={HEALTH_TONE[gateway.health_status] ?? 'neutral'}>
-                                                {gateway.health_status === 'ok' ? 'Meta OK' : 'Config error'}
-                                            </Badge>
-                                        ) : (
-                                            <Badge tone="warning">Not verified</Badge>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3 text-xs">
-                                    <div>
-                                        <span className="text-muted-foreground">Currencies</span>
-                                        <div className="mt-1 flex flex-wrap gap-1">
-                                            {gateway.supported_currencies.length === 0 ? (
-                                                <span className="text-muted-foreground/70">All</span>
-                                            ) : (
-                                                gateway.supported_currencies.map((c) => (
-                                                    <span key={c} className="rounded border border-border bg-muted/40 px-1.5 py-0.5 font-mono text-[11px]">{c}</span>
-                                                ))
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <span className="text-muted-foreground">Countries</span>
-                                        <div className="mt-1 flex flex-wrap gap-1">
-                                            {gateway.allowed_countries.length === 0 ? (
-                                                <span className="text-muted-foreground/70">All</span>
-                                            ) : (
-                                                gateway.allowed_countries.map((c) => (
-                                                    <span key={c} className="rounded border border-border bg-muted/40 px-1.5 py-0.5 font-mono text-[11px]">{c}</span>
-                                                ))
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="text-xs text-muted-foreground">
-                                    Credentials:{' '}
-                                    {(provider_schema[gateway.provider]?.credential_fields ?? []).map((field) => (
-                                        <span
-                                            key={field.key}
-                                            className={cn(
-                                                'mr-1.5 font-medium',
-                                                gateway.credential_keys.includes(field.key) ? 'text-emerald-600' : field.optional ? 'text-muted-foreground/70' : 'text-destructive',
-                                            )}
-                                        >
-                                            {field.label}
-                                        </span>
-                                    ))}
-                                    {(provider_schema[gateway.provider]?.credential_fields ?? []).length === 0 && (
-                                        <span className="text-muted-foreground/70">None required</span>
+            <Card>
+                <CardHeader
+                    title={meta?.label ?? active}
+                    description={primary ? (primary.name || 'Saved configuration') : 'Not configured yet — fill in the details below and save.'}
+                    action={
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                            {primary && (
+                                <>
+                                    <Badge tone={primary.is_enabled ? 'success' : 'neutral'}>{primary.is_enabled ? 'Enabled' : 'Disabled'}</Badge>
+                                    {primary.is_ready ? (
+                                        <Badge tone="success">Ready</Badge>
+                                    ) : primary.health_status ? (
+                                        <Badge tone={HEALTH_TONE[primary.health_status] ?? 'neutral'}>
+                                            {primary.health_status === 'ok' ? 'Meta OK' : 'Config error'}
+                                        </Badge>
+                                    ) : (
+                                        <Badge tone="warning">Not verified</Badge>
                                     )}
-                                </div>
-
-                                {gateway.last_error && <p className="text-xs text-destructive">{gateway.last_error}</p>}
-
-                                <div className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/20 px-2.5 py-1.5">
-                                    <span className="truncate font-mono text-[11px] text-muted-foreground" title={gateway.webhook_url}>
-                                        {gateway.webhook_url}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => copyWebhook(gateway)}
-                                        aria-label="Copy webhook URL"
-                                        className="ml-auto shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                                    >
-                                        {copied === gateway.id ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                                    </button>
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-3">
-                                    <Button size="xs" variant="outline" onClick={() => router.post(route('platform.gateways.toggle', gateway.id), {}, { preserveScroll: true })}>
-                                        {gateway.is_enabled ? 'Disable' : 'Enable'}
-                                    </Button>
-                                    {!gateway.is_default && gateway.is_enabled && (
-                                        <Button size="xs" variant="outline" onClick={() => router.post(route('platform.gateways.default', gateway.id), {}, { preserveScroll: true })}>
-                                            Set Default
-                                        </Button>
-                                    )}
-                                    <Button size="xs" variant="outline" onClick={() => router.post(route('platform.gateways.test', gateway.id), {}, { preserveScroll: true })}>
-                                        Test connection
-                                    </Button>
-                                    <Button size="xs" variant="ghost" onClick={() => openEdit(gateway)}>
-                                        Edit
-                                    </Button>
-                                    <Button
-                                        size="xs"
-                                        variant="ghost"
-                                        className="ml-auto text-destructive hover:bg-destructive/10"
-                                        onClick={() => setConfirmDelete(gateway)}
-                                        icon={<Trash2 className="h-3.5 w-3.5" />}
-                                    >
-                                        Delete
-                                    </Button>
-                                </div>
-                            </CardBody>
-                        </Card>
-                    ))}
-                </div>
-            )}
-
-            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-                Secrets are encrypted at rest and never returned to the browser. Leaving a credential field blank keeps the stored value. A gateway is only
-                shown as <span className="font-medium text-foreground">Ready</span> once its required credentials are saved and a connection test has passed.
-            </p>
-
-            <Drawer
-                show={open}
-                onClose={() => setOpen(false)}
-                title={editing ? `Edit ${editing.name}` : 'Add Gateway'}
-                footer={
-                    <Button size="sm" loading={form.processing} onClick={submit}>
-                        {editing ? 'Save Changes' : 'Create Gateway'}
-                    </Button>
-                }
-            >
-                <form onSubmit={submit} className="space-y-4">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <CreditCard className="h-3.5 w-3.5" />
-                        <span>{providerMeta?.label ?? 'Manual'}</span>
-                        {providerMeta?.recurring && <Badge tone="brand">Recurring</Badge>}
+                                    {primary.is_default && <Badge tone="info">Default</Badge>}
+                                </>
+                            )}
+                            <div className="flex items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1.5">
+                                <Switch
+                                    checked={primary?.is_enabled ?? false}
+                                    disabled={!primary}
+                                    onCheckedChange={() => primary && router.post(route('platform.gateways.toggle', primary.id), {}, { preserveScroll: true })}
+                                    aria-label="Offer this gateway to customers"
+                                />
+                                <span className="text-xs font-medium text-foreground">Offer to customers</span>
+                            </div>
+                        </div>
+                    }
+                />
+                <CardBody className="space-y-5">
+                    <div
+                        className={cn(
+                            'rounded-md border px-3 py-2 text-xs',
+                            primary?.is_enabled ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-900',
+                        )}
+                    >
+                        {visibility}
                     </div>
 
-                    <TextField
-                        label="Configuration name"
-                        value={form.data.name}
-                        hint="e.g. Paddle Production, bKash Sandbox"
-                        error={form.errors.name}
-                        onChange={(v) => form.setData('name', v)}
-                    />
-                    <SelectField
-                        label="Provider"
-                        value={form.data.provider}
-                        options={providers.map((p) => ({ value: p, label: provider_labels[p] ?? p }))}
-                        onChange={(v) => form.setData('provider', v)}
-                    />
-                    <SelectField
-                        label="Environment"
-                        value={form.data.environment}
-                        options={[
-                            { value: 'sandbox', label: 'Sandbox (test mode)' },
-                            { value: 'production', label: 'Production (live)' },
-                        ]}
-                        onChange={(v) => form.setData('environment', v)}
-                    />
+                    <form onSubmit={submit} className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <TextField
+                                label="Configuration name"
+                                value={form.data.name}
+                                hint="Optional — e.g. SSLCommerz Live"
+                                error={form.errors.name}
+                                onChange={(value) => form.setData('name', value)}
+                            />
+                            <SelectField
+                                label="Environment"
+                                value={form.data.environment}
+                                options={[
+                                    { value: 'sandbox', label: 'Sandbox (test mode)' },
+                                    { value: 'production', label: 'Production (live)' },
+                                ]}
+                                onChange={(value) => form.setData('environment', value)}
+                            />
+                        </div>
 
-                    <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-foreground">
-                        <input
-                            type="checkbox"
-                            checked={form.data.is_enabled}
-                            onChange={(e) => form.setData('is_enabled', e.target.checked)}
-                            className="h-4 w-4 rounded border-input text-primary shadow-xs focus:ring-ring"
-                        />
-                        Enable this gateway
-                    </label>
+                        {(meta?.credential_fields ?? []).length > 0 ? (
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                {(meta?.credential_fields ?? []).map((field) => (
+                                    <label key={field.key} className="block space-y-1">
+                                        <span className="block text-xs font-semibold tracking-tight text-foreground">
+                                            {field.label}
+                                            {field.optional ? <span className="ml-1 font-normal text-muted-foreground">(optional)</span> : <span className="ml-1 text-destructive">*</span>}
+                                        </span>
+                                        <Input
+                                            type={field.secret ? 'password' : 'text'}
+                                            value={form.data.credentials[field.key] ?? ''}
+                                            placeholder={primary?.credential_keys.includes(field.key) ? '•••••••• stored' : 'Not set'}
+                                            onChange={(event) => form.setData('credentials', { ...form.data.credentials, [field.key]: event.target.value })}
+                                            className="font-mono text-xs"
+                                        />
+                                    </label>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-xs text-muted-foreground">This gateway needs no credentials — an administrator settles the payment from the payments screen.</p>
+                        )}
 
-                    <MultiCheck
-                        title="Supported currencies (none = all)"
-                        options={currencies}
-                        selected={form.data.supported_currencies}
-                        onToggle={(v) => toggleIn('supported_currencies', v)}
-                    />
-                    <MultiCheck
-                        title="Allowed countries (none = all)"
-                        options={countries}
-                        selected={form.data.allowed_countries}
-                        onToggle={(v) => toggleIn('allowed_countries', v)}
-                        scroll
-                    />
-                    <MultiCheck
-                        title="Payment capabilities"
-                        options={capabilities}
-                        selected={form.data.capabilities}
-                        onToggle={(v) => toggleIn('capabilities', v)}
-                    />
-                    {plans.length > 0 && (
                         <MultiCheck
-                            title="Plans this gateway may collect for (none = all plans)"
-                            options={plans}
-                            selected={form.data.plan_ids}
-                            onToggle={(v) => toggleIn('plan_ids', v)}
+                            title="Supported currencies (none = all)"
+                            options={currencies}
+                            selected={form.data.supported_currencies}
+                            onToggle={(value) => toggleIn('supported_currencies', value)}
                         />
-                    )}
+                        <MultiCheck
+                            title="Allowed countries (none = all)"
+                            options={countries}
+                            selected={form.data.allowed_countries}
+                            onToggle={(value) => toggleIn('allowed_countries', value)}
+                            scroll
+                        />
+                        <MultiCheck
+                            title="Payment capabilities"
+                            options={capabilities}
+                            selected={form.data.capabilities}
+                            onToggle={(value) => toggleIn('capabilities', value)}
+                        />
+                        {plans.length > 0 && (
+                            <MultiCheck
+                                title="Plans this gateway may collect for (none = all plans)"
+                                options={plans}
+                                selected={form.data.plan_ids}
+                                onToggle={(value) => toggleIn('plan_ids', value)}
+                            />
+                        )}
 
-                    {credentialFields.length > 0 && (
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            {credentialFields.map((field) => (
-                                <label key={field.key} className="block space-y-1">
-                                    <span className="block text-xs font-semibold tracking-tight text-foreground">
-                                        {field.label}
-                                        {field.optional && <span className="ml-1 font-normal text-muted-foreground">(optional)</span>}
-                                    </span>
-                                    <Input
-                                        type={field.secret ? 'password' : 'text'}
-                                        value={form.data.credentials[field.key] ?? ''}
-                                        placeholder={editing?.credential_keys.includes(field.key) ? '•••••••• stored' : 'Not set'}
-                                        onChange={(e) => form.setData('credentials', { ...form.data.credentials, [field.key]: e.target.value })}
-                                        className="font-mono text-xs"
-                                    />
-                                </label>
-                            ))}
+                        {form.errors.credentials && <p className="text-xs text-destructive">{form.errors.credentials}</p>}
+                        {Object.values(form.errors)[0] && !form.errors.credentials && (
+                            <p className="text-xs text-destructive">{Object.values(form.errors)[0]}</p>
+                        )}
+
+                        <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+                            <Button type="submit" size="sm" loading={form.processing}>
+                                {primary ? 'Save changes' : 'Save configuration'}
+                            </Button>
+                            {primary && (
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => router.post(route('platform.gateways.test', primary.id), {}, { preserveScroll: true })}
+                                >
+                                    Test connection
+                                </Button>
+                            )}
+                            {primary && primary.is_enabled && !primary.is_default && (
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => router.post(route('platform.gateways.default', primary.id), {}, { preserveScroll: true })}
+                                >
+                                    Make default
+                                </Button>
+                            )}
+                            {primary && (
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    className="ml-auto text-destructive hover:bg-destructive/10"
+                                    onClick={() => setConfirmDelete(primary)}
+                                    icon={<Trash2 className="h-3.5 w-3.5" />}
+                                >
+                                    Delete configuration
+                                </Button>
+                            )}
+                        </div>
+                    </form>
+
+                    {primary && (
+                        <div className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/20 px-2.5 py-1.5">
+                            <CreditCard className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            <span className="truncate font-mono text-[11px] text-muted-foreground" title={primary.webhook_url}>
+                                {primary.webhook_url}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => copyWebhook(primary)}
+                                aria-label="Copy webhook URL"
+                                className="ml-auto shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                            >
+                                {copied === primary.id ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                            </button>
                         </div>
                     )}
 
-                    {form.errors.credentials && <p className="text-xs text-destructive">{form.errors.credentials}</p>}
-                    {Object.values(form.errors)[0] && !form.errors.credentials && (
-                        <p className="text-xs text-destructive">{Object.values(form.errors)[0]}</p>
+                    {primary?.last_error && <p className="text-xs text-destructive">{primary.last_error}</p>}
+
+                    {extras.length > 0 && (
+                        <div className="rounded-md border border-border bg-muted/20 p-3">
+                            <p className="text-xs font-semibold text-foreground">
+                                {extras.length} other saved configuration{extras.length > 1 ? 's' : ''} for this gateway
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                Left over from the old "Add Gateway" screen — anything enabled here is also offered to customers.
+                            </p>
+                            <div className="mt-2 space-y-2">
+                                {extras.map((gateway) => (
+                                    <div key={gateway.id} className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1.5">
+                                        <span className="text-xs font-medium text-foreground">{gateway.name || `#${gateway.id}`}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {gateway.environment} · {gateway.is_enabled ? 'enabled' : 'disabled'}
+                                        </span>
+                                        <div className="ml-auto flex gap-1.5">
+                                            <Button
+                                                type="button"
+                                                size="xs"
+                                                variant="outline"
+                                                onClick={() => router.post(route('platform.gateways.toggle', gateway.id), {}, { preserveScroll: true })}
+                                            >
+                                                {gateway.is_enabled ? 'Disable' : 'Enable'}
+                                            </Button>
+                                            <Button type="button" size="xs" variant="ghost" className="text-destructive" onClick={() => setConfirmDelete(gateway)}>
+                                                Delete
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     )}
-                </form>
-            </Drawer>
+
+                    <p className="text-xs text-muted-foreground">
+                        Secrets are encrypted at rest and never returned to the browser. Leaving a credential field blank keeps the stored value. A
+                        gateway is only shown as <span className="font-medium text-foreground">Ready</span> once its required credentials are saved and a
+                        connection test has passed.
+                    </p>
+                </CardBody>
+            </Card>
 
             <ConfirmDialog
                 show={confirmDelete !== null}
-                title={`Delete ${confirmDelete?.name ?? 'gateway'}?`}
+                title={`Delete ${confirmDelete?.name || 'this configuration'}?`}
                 description="The gateway configuration is permanently deleted. Historical payments and records are preserved."
                 confirmLabel="Delete gateway"
                 onConfirm={() => {

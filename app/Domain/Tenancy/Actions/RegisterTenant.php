@@ -5,6 +5,7 @@ namespace App\Domain\Tenancy\Actions;
 use App\Domain\Accounting\Actions\ProvisionAccountingDefaults;
 use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
+use App\Domain\Notifications\PlatformNotificationService;
 use App\Domain\Payments\Actions\ProvisionPaymentDefaults;
 use App\Domain\Subscriptions\Models\Plan;
 use App\Domain\Subscriptions\SubscriptionService;
@@ -26,7 +27,7 @@ class RegisterTenant
      */
     public function execute(array $data): User
     {
-        return DB::transaction(function () use ($data) {
+        $user = DB::transaction(function () use ($data) {
             $tenant = Tenant::create([
                 'name' => $data['restaurant_name'],
                 'slug' => $this->uniqueSlug($data['restaurant_name']),
@@ -53,6 +54,18 @@ class RegisterTenant
 
             return $user;
         });
+
+        // Tell the control center after the commit, never inside it.
+        app(PlatformNotificationService::class)->send(
+            'tenants',
+            'platform.tenants.view',
+            'New tenant registered',
+            ($user->tenant?->name ?? 'A new restaurant').' started a subscription trial.',
+            'success',
+            route('platform.tenants.index'),
+        );
+
+        return $user;
     }
 
     protected function selectedPlan(?string $slug): ?Plan

@@ -7,6 +7,7 @@ use App\Domain\Billing\Enums\PlatformPaymentStatus;
 use App\Domain\Billing\Models\PaymentGateway;
 use App\Domain\Billing\Models\PlatformPayment;
 use App\Domain\Billing\Models\PlatformPaymentEvent;
+use App\Domain\Notifications\PlatformNotificationService;
 use App\Domain\PaymentGateways\PlatformGatewayManager;
 use App\Domain\Subscriptions\Models\SubscriptionInvoice;
 use App\Domain\Subscriptions\SubscriptionService;
@@ -90,6 +91,20 @@ class PlatformPaymentService
             'amount' => (float) $payment->amount,
         ], $actor, $invoice->tenant_id);
 
+        // A manual payment waits for an administrator to confirm the money arrived
+        // — that is an actionable alert, not something to discover by chance.
+        if ($provider === 'manual' && $payment->status === PlatformPaymentStatus::Pending) {
+            $invoice->loadMissing('tenant');
+
+            $this->alertPayments(
+                'Manual payment awaiting approval',
+                ($invoice->tenant?->name ?? 'A tenant').' reported '.number_format((float) $payment->amount, 2)
+                    .' '.$payment->currency.' for '.$invoice->number.'.',
+                'warning',
+                $payment,
+            );
+        }
+
         return ['payment' => $payment->fresh(), 'redirect_url' => $result['redirect_url']];
     }
 
@@ -102,6 +117,17 @@ class PlatformPaymentService
      */
     public function handleNotification(string $provider, array $payload, ?string $rawBody = null, array $headers = [], ?User $actor = null): array
     {
+        // Manual payments are confirmed by an administrator, never by a callback:
+        // the provider has no verification API, so an unauthenticated POST could
+        // otherwise settle or fail a payment only a human can judge.
+        if ($provider === 'manual') {
+            return [
+                'processed' => false,
+                'duplicate' => false,
+                'reason' => 'Manual payments are confirmed by an administrator.',
+            ];
+        }
+
         $driver = $this->gateways->driver($provider);
         $reference = $driver->notificationReference($payload);
         $eventId = $driver->notificationEventId($payload) ?? $reference;
@@ -301,20 +327,99 @@ class PlatformPaymentService
         return true;
     }
 
-    /** Settle a pending manual payment (no external gateway to confirm). */
+    /**
+     * Approve a manual payment: an administrator has verified the money arrived.
+     * Only a pending payment can be approved.
+     */
+    public function approve(PlatformPayment $payment, User $actor, ?string $note = null, ?string $reference = null): void
+    {
+        if ($payment->status !== PlatformPaymentStatus::Pending) {
+            throw ValidationException::withMessages([
+                'payment' => 'Only a pending payment can be approved.',
+            ]);
+        }
+
+        $payment->forceFill([
+            'confirmed_by' => $actor->getKey(),
+            'confirmed_at' => now(),
+            'confirmation_note' => $note,
+            'settlement_status' => 'settled',
+        ])->save();
+
+        $this->succeed(
+            $payment,
+            array_filter(['settled_by' => $actor->getKey(), 'reference' => $reference]),
+            array_filter(['note' => $note, 'reference' => $reference]),
+            $actor,
+        );
+
+        // Tell the tenant their money was received (best-effort).
+        try {
+            $payment->loadMissing(['tenant', 'invoice']);
+
+            app(\App\Domain\Notifications\NotificationService::class)->paymentSucceeded(
+                $payment->tenant,
+                $payment->invoice,
+                (float) $payment->amount,
+                $payment->currency,
+                $payment->gateway,
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    /**
+     * Reject a manual payment: the money did not arrive, or it could not be
+     * matched. The invoice stays open and the tenant may try again.
+     */
+    public function reject(PlatformPayment $payment, User $actor, string $reason): void
+    {
+        if ($payment->status !== PlatformPaymentStatus::Pending) {
+            throw ValidationException::withMessages([
+                'payment' => 'Only a pending payment can be rejected.',
+            ]);
+        }
+
+        $payment->forceFill([
+            'confirmed_by' => $actor->getKey(),
+            'confirmed_at' => now(),
+            'confirmation_note' => $reason,
+            'settlement_status' => 'rejected',
+        ])->save();
+
+        $this->fail($payment, $reason);
+
+        try {
+            $payment->loadMissing(['tenant', 'invoice']);
+
+            app(\App\Domain\Notifications\NotificationService::class)->paymentFailed(
+                $payment->tenant,
+                $payment->invoice,
+                (float) $payment->amount,
+                $payment->currency,
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    /** Settle a pending manual payment — the "Mark settled" entry point. */
     public function settleManually(PlatformPayment $payment, User $actor): void
     {
         if ($payment->status === PlatformPaymentStatus::Succeeded) {
             return;
         }
 
-        $this->succeed($payment, ['settled_by' => $actor->getKey()], ['note' => 'Settled manually by an administrator.'], $actor);
+        $this->approve($payment, $actor, 'Settled manually by an administrator.');
     }
 
     /** @param array<string, mixed> $raw */
     public function succeed(PlatformPayment $payment, array $payload, array $raw, ?User $actor = null): void
     {
-        DB::transaction(function () use ($payment, $payload, $raw, $actor) {
+        $settled = false;
+
+        DB::transaction(function () use ($payment, $payload, $raw, $actor, &$settled) {
             // Idempotent: never re-apply an already-succeeded payment.
             if ($payment->status === PlatformPaymentStatus::Succeeded) {
                 return;
@@ -339,7 +444,20 @@ class PlatformPaymentService
                 'gateway' => $payment->gateway,
                 'amount' => (float) $payment->amount,
             ], $actor, $payment->tenant_id);
+
+            $settled = true;
         });
+
+        // Tell the administrators once — a duplicate webhook must not re-alert.
+        if ($settled) {
+            $this->alertPayments(
+                'Payment settled',
+                number_format((float) $payment->fresh()->amount, 2).' '.$payment->currency
+                    .' — '.$payment->gateway.' payment confirmed.',
+                'success',
+                $payment,
+            );
+        }
     }
 
     public function fail(PlatformPayment $payment, string $reason): void
@@ -356,6 +474,23 @@ class PlatformPaymentService
         $payment->attempts()->create(['status' => 'failed', 'reference' => $payment->provider_ref, 'payload' => ['reason' => $reason]]);
 
         $this->audit->log('platform.payment_failed', $payment, ['reason' => $reason], null, $payment->tenant_id);
+
+        $this->alertPayments('Payment failed', $reason, 'danger', $payment);
+    }
+
+    /** Alert the administrators who handle payments (best-effort). */
+    protected function alertPayments(string $title, string $body, string $level, ?PlatformPayment $payment = null): void
+    {
+        app(PlatformNotificationService::class)->send(
+            'payments',
+            'platform.payments.view',
+            $title,
+            $body,
+            $level,
+            $payment
+                ? route('platform.billing.payments.show', $payment)
+                : route('platform.billing.payments.index'),
+        );
     }
 
     /**

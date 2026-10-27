@@ -2,6 +2,10 @@
 
 namespace App\Domain\Tenancy\Factories;
 
+use App\Domain\Subscriptions\Enums\PlanFeature;
+use App\Domain\Subscriptions\Enums\SubscriptionStatus;
+use App\Domain\Subscriptions\Models\Plan;
+use App\Domain\Subscriptions\Models\Subscription;
 use App\Domain\Tenancy\Enums\TenantStatus;
 use App\Domain\Tenancy\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -13,6 +17,51 @@ use Illuminate\Support\Str;
 class TenantFactory extends Factory
 {
     protected $model = Tenant::class;
+
+    /**
+     * A fully provisioned restaurant also has a working subscription — without one
+     * the workspace is closed (see EnsureSubscriptionAccess). The fixture plan
+     * carries every feature and no limits, so feature behaviour is unchanged.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Tenant $tenant) {
+            if ($tenant->subscription()->exists()) {
+                return;
+            }
+
+            $plan = Plan::query()->firstOrCreate(
+                ['slug' => 'factory-plan'],
+                [
+                    'name' => 'Factory Plan',
+                    'description' => 'Test fixture: every feature, no limits.',
+                    'price_monthly' => 0,
+                    'price_yearly' => 0,
+                    'trial_days' => 14,
+                    'features' => array_map(fn (PlanFeature $feature) => $feature->value, PlanFeature::cases()),
+                    'limits' => [],
+                    'is_active' => true,
+                    'visibility' => 'hidden',
+                    'sort_order' => 999,
+                ],
+            );
+
+            Subscription::create([
+                'tenant_id' => $tenant->getKey(),
+                'plan_id' => $plan->getKey(),
+                'status' => SubscriptionStatus::Active,
+                'billing_cycle' => 'monthly',
+                'current_period_start' => now(),
+                'current_period_end' => now()->addMonth(),
+            ]);
+        });
+    }
+
+    /** A tenant with no subscription row at all (lapsed / never provisioned). */
+    public function withoutSubscription(): static
+    {
+        return $this->afterCreating(fn (Tenant $tenant) => $tenant->subscription()->delete());
+    }
 
     public function definition(): array
     {

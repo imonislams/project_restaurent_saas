@@ -4,7 +4,9 @@ namespace App\Domain\PaymentGateways\Drivers;
 
 use App\Domain\PaymentGateways\Contracts\GatewayDriver;
 use App\Domain\PaymentGateways\Models\TenantGateway;
+use App\Domain\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 /**
  * SSLCommerz driver (Bangladesh). Hosted checkout + server-side validation API.
@@ -37,17 +39,48 @@ class SslCommerzDriver implements GatewayDriver
 
     public function createCheckout(TenantGateway $config, array $payload): array
     {
-        $body = array_merge($payload, $this->credentials($config));
+        $credentials = $this->credentials($config);
+        $tenant = Tenant::query()->find($config->tenant_id);
+        $reference = (string) ($payload['reference'] ?? 'ORDER');
+
+        // SSLCommerz needs its own field names and a unique tran_id. Its
+        // success/fail/cancel URLs are POSTed to, so they point at our return
+        // handler — the diner's tracking page is a GET page — which then forwards
+        // them back to their tracking page.
+        $tranId = $reference.'-'.Str::upper(Str::random(6));
+
+        $body = array_filter([
+            'store_id' => $credentials['store_id'],
+            'store_passwd' => $credentials['store_passwd'],
+            'total_amount' => number_format((float) ($payload['amount'] ?? 0), 2, '.', ''),
+            'currency' => strtoupper((string) ($payload['currency'] ?? 'BDT')),
+            'tran_id' => $tranId,
+            'product_name' => (string) ($payload['description'] ?? 'Order '.$reference),
+            'product_category' => 'Food',
+            'product_profile' => 'physical-goods',
+            'shipping_method' => 'NO',
+            'num_of_item' => 1,
+            'cus_name' => $tenant?->name,
+            'cus_email' => $tenant?->getSetting('company.email', $tenant?->business_email),
+            'cus_phone' => $tenant?->getSetting('company.phone'),
+            'cus_add1' => $tenant?->getSetting('company.address'),
+            'cus_city' => $tenant?->getSetting('billing.city'),
+            'cus_country' => $tenant?->getSetting('region.country', 'Bangladesh'),
+            'success_url' => route('payments.tenant-return', ['provider' => 'sslcommerz', 'result' => 'success']),
+            'fail_url' => route('payments.tenant-return', ['provider' => 'sslcommerz', 'result' => 'fail']),
+            'cancel_url' => route('payments.tenant-return', ['provider' => 'sslcommerz', 'result' => 'cancel']),
+            'ipn_url' => route('webhooks.payments', ['provider' => 'sslcommerz']),
+        ], fn ($value) => $value !== null && $value !== '');
 
         try {
             $data = Http::asForm()->timeout(20)->post($this->endpoints($config)['process'], $body)->json() ?? [];
-            $url = $data['GatewayPageURL'] ?? null;
+            $url = is_array($data) ? ($data['GatewayPageURL'] ?? null) : null;
 
             return [
                 'status' => $url ? 'pending' : 'failed',
-                'reference' => $payload['tran_id'] ?? null,
+                'reference' => $url ? $tranId : null,
                 'redirect_url' => $url,
-                'raw' => $data,
+                'raw' => is_array($data) ? $data : [],
             ];
         } catch (\Throwable $e) {
             return ['status' => 'failed', 'reference' => null, 'redirect_url' => null, 'raw' => ['error' => $e->getMessage()]];

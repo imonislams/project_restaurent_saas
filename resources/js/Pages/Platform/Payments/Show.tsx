@@ -20,6 +20,9 @@ interface PaymentView {
     status_label: string;
     failure_reason: string | null;
     settlement_status: string;
+    confirmed_by: string | null;
+    confirmed_at: string | null;
+    confirmation_note: string | null;
     refunded_amount: number;
     refundable: number;
     paid_at: string | null;
@@ -32,10 +35,22 @@ const STATUS_TONE: Record<string, BadgeTone> = { succeeded: 'success', pending: 
 export default function PaymentShow({ payment }: { payment: PaymentView }) {
     const [open, setOpen] = useState(false);
     const refund = useForm({ amount: '', reason: '' });
+    const approve = useForm({ note: '', reference: '' });
+    const rejection = useForm({ reason: '' });
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
         refund.post(route('platform.billing.payments.refund', payment.id), { preserveScroll: true, onSuccess: () => { refund.reset(); setOpen(false); } });
+    };
+
+    const submitApprove = (e: FormEvent) => {
+        e.preventDefault();
+        approve.post(route('platform.billing.payments.approve', payment.id), { preserveScroll: true, onSuccess: () => approve.reset() });
+    };
+
+    const submitReject = (e: FormEvent) => {
+        e.preventDefault();
+        rejection.post(route('platform.billing.payments.reject', payment.id), { preserveScroll: true, onSuccess: () => rejection.reset() });
     };
 
     return (
@@ -66,11 +81,6 @@ export default function PaymentShow({ payment }: { payment: PaymentView }) {
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    {payment.status !== 'succeeded' && payment.status !== 'refunded' && (
-                        <Button size="sm" variant="success" onClick={() => router.post(route('platform.billing.payments.settle', payment.id), {}, { preserveScroll: true })}>
-                            Mark settled
-                        </Button>
-                    )}
                     <Button size="sm" variant="danger" disabled={payment.status !== 'succeeded'} onClick={() => setOpen(true)}>
                         Refund
                     </Button>
@@ -79,6 +89,81 @@ export default function PaymentShow({ payment }: { payment: PaymentView }) {
 
             {payment.failure_reason && (
                 <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{payment.failure_reason}</div>
+            )}
+
+            {payment.status === 'pending' && (
+                <Card className="mt-5">
+                    <CardHeader
+                        title="Awaiting your confirmation"
+                        description="Check that the money arrived, then approve — or reject and tell the tenant why."
+                    />
+                    <CardBody>
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                            <form onSubmit={submitApprove} className="space-y-3">
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="approve-reference" className="text-xs font-medium text-muted-foreground">
+                                        Reference you verified (optional)
+                                    </Label>
+                                    <Input
+                                        id="approve-reference"
+                                        value={approve.data.reference}
+                                        placeholder="Bank / bKash transaction reference"
+                                        onChange={(e) => approve.setData('reference', e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="approve-note" className="text-xs font-medium text-muted-foreground">Note (optional)</Label>
+                                    <Input
+                                        id="approve-note"
+                                        value={approve.data.note}
+                                        placeholder="Matched the statement for today."
+                                        onChange={(e) => approve.setData('note', e.target.value)}
+                                    />
+                                </div>
+                                <Button type="submit" size="sm" variant="success" loading={approve.processing}>
+                                    Approve payment
+                                </Button>
+                                <p className="text-xs text-muted-foreground">
+                                    Approving settles {payment.invoice ?? 'the invoice'} and activates the tenant's pending plan change.
+                                </p>
+                            </form>
+
+                            <form onSubmit={submitReject} className="space-y-3">
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="reject-reason" className="text-xs font-medium text-muted-foreground">
+                                        Reason for rejecting <span className="text-destructive">*</span>
+                                    </Label>
+                                    <Input
+                                        id="reject-reason"
+                                        value={rejection.data.reason}
+                                        placeholder="No matching transfer found."
+                                        onChange={(e) => rejection.setData('reason', e.target.value)}
+                                    />
+                                    {rejection.errors.reason && <span className="text-xs text-destructive">{rejection.errors.reason}</span>}
+                                </div>
+                                <Button type="submit" size="sm" variant="danger" loading={rejection.processing}>
+                                    Reject payment
+                                </Button>
+                                <p className="text-xs text-muted-foreground">
+                                    The invoice stays open and the tenant is told why, so they can try again.
+                                </p>
+                            </form>
+                        </div>
+                    </CardBody>
+                </Card>
+            )}
+
+            {(payment.confirmed_at || payment.confirmation_note) && (
+                <Card className="mt-5">
+                    <CardHeader title="Confirmation" description="Recorded against this payment for the audit trail." />
+                    <CardBody>
+                        <dl className="space-y-1 text-sm">
+                            <div className="flex justify-between"><dt className="text-gray-500">By</dt><dd>{payment.confirmed_by ?? '—'}</dd></div>
+                            <div className="flex justify-between"><dt className="text-gray-500">When</dt><dd>{formatDate(payment.confirmed_at)}</dd></div>
+                            <div className="flex justify-between"><dt className="text-gray-500">Note</dt><dd>{payment.confirmation_note ?? '—'}</dd></div>
+                        </dl>
+                    </CardBody>
+                </Card>
             )}
 
             <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">

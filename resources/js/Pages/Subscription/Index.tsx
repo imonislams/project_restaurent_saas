@@ -137,6 +137,7 @@ export default function SubscriptionIndex({
     gateways,
     currency,
     billing,
+    access_granted,
 }: {
     subscription: SubscriptionView | null;
     pending_plan: PendingPlanView | null;
@@ -148,12 +149,14 @@ export default function SubscriptionIndex({
     gateways: GatewayOption[];
     currency: string;
     billing: { country: string | null; configured: boolean; settings_url: string };
+    access_granted: boolean;
 }) {
     const tenant = (usePage().props as any).tenant;
     const [pending, setPending] = useState<PlanView | null>(null);
     const [cancelOpen, setCancelOpen] = useState(false);
     const [cycle, setCycle] = useState<'monthly' | 'yearly'>((subscription?.billing_cycle as 'monthly' | 'yearly') ?? 'monthly');
     const [invoiceGateway, setInvoiceGateway] = useState<Record<number, string>>({});
+    const [invoiceReferences, setInvoiceReferences] = useState<Record<number, string>>({});
 
     const switchPlan = () => {
         if (!pending) return;
@@ -167,7 +170,11 @@ export default function SubscriptionIndex({
     const pay = (invoice: InvoiceView) => {
         const gatewayId = gatewayFor(invoice);
         if (!gatewayId) return;
-        router.post(route('subscription.pay', invoice.id), { gateway_id: gatewayId }, { preserveScroll: true });
+        router.post(
+            route('subscription.pay', invoice.id),
+            { gateway_id: gatewayId, reference: invoiceReferences[invoice.id] ?? '' },
+            { preserveScroll: true },
+        );
     };
 
     const priceFor = (plan: PlanView) => (cycle === 'yearly' ? plan.price_yearly : plan.price_monthly);
@@ -196,11 +203,22 @@ export default function SubscriptionIndex({
                     );
                 }
 
+                const chosenGateway = r.gateways.find((gateway) => gateway.value === gatewayFor(r));
+
                 return (
-                    <div className="flex items-center justify-end gap-1.5">
+                    <div className="flex flex-wrap items-center justify-end gap-1.5">
                         <Button size="xs" variant="ghost" external href={r.download_url} icon={<Download className="h-3.5 w-3.5" />}>
                             PDF
                         </Button>
+                        {chosenGateway?.provider === 'manual' && (
+                            <input
+                                value={invoiceReferences[r.id] ?? ''}
+                                onChange={(event) => setInvoiceReferences((state) => ({ ...state, [r.id]: event.target.value }))}
+                                placeholder="Transfer reference"
+                                aria-label={`Transfer reference for invoice ${r.number}`}
+                                className="h-7 w-36 rounded-md border border-input bg-background px-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            />
+                        )}
                         {r.gateways.length === 0 ? (
                             <span className="text-xs text-muted-foreground">No method for {r.currency}</span>
                         ) : r.gateways.length === 1 ? (
@@ -282,6 +300,18 @@ export default function SubscriptionIndex({
                                 to unlock online payment.
                             </>
                         )}
+                    </div>
+                )}
+
+                {!access_granted && (
+                    <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">
+                        <p className="font-semibold">
+                            {subscription === null ? 'Your account has no plan yet.' : 'Your subscription is not active, so the workspace is closed.'}
+                        </p>
+                        <p className="mt-1">
+                            This page stays available: choose a plan below and settle the outstanding invoice — the workspace unlocks as
+                            soon as the payment is confirmed.
+                        </p>
                     </div>
                 )}
 

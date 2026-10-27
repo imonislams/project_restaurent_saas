@@ -1,7 +1,8 @@
 import QrLayout from '@/Layouts/QrLayout';
 import type { QrBranding } from '@/Components/Qr/qrBranding';
+import { onPublic } from '@/realtime';
 import { Head, Link } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface Step {
     key: string;
@@ -56,7 +57,7 @@ interface TrackingProps {
     initial: TrackingPayload;
 }
 
-const POLL_MS = 8000;
+const POLL_MS = 30000;
 
 export default function QrTracking({ token, restaurant, table, branding, participant_token, initial }: TrackingProps) {
     const [data, setData] = useState<TrackingPayload>(initial);
@@ -70,31 +71,41 @@ export default function QrTracking({ token, restaurant, table, branding, partici
 
     const onlineOptions = data.payment_options.filter((option) => !option.is_cash);
 
+    const refresh = useCallback(async () => {
+        try {
+            const { data: fresh } = await window.axios.get(route('qr.status', { token }), {
+                headers: { 'X-Dining-Participant': participant_token ?? '' },
+            });
+            setData(fresh);
+            lastSync.current = Date.now();
+            setSecondsAgo(0);
+            setLive(true);
+        } catch {
+            setLive(false);
+        }
+    }, [token, participant_token]);
+
     useEffect(() => {
         if (!data.live_tracking) return;
 
-        const poll = async () => {
-            try {
-                const { data: fresh } = await window.axios.get(route('qr.status', { token }), {
-                    headers: { 'X-Dining-Participant': participant_token ?? '' },
-                });
-                setData(fresh);
-                lastSync.current = Date.now();
-                setSecondsAgo(0);
-                setLive(true);
-            } catch {
-                setLive(false);
-            }
-        };
-
-        const poller = setInterval(poll, POLL_MS);
+        // Slow fallback; the socket below normally refreshes first.
+        const poller = setInterval(refresh, POLL_MS);
         const ticker = setInterval(() => setSecondsAgo(Math.round((Date.now() - lastSync.current) / 1000)), 1000);
 
         return () => {
             clearInterval(poller);
             clearInterval(ticker);
         };
-    }, [token, participant_token, data.live_tracking]);
+    }, [refresh, data.live_tracking]);
+
+    // Live: an order moved or the payment landed — refresh now, not on the next poll.
+    useEffect(() => {
+        if (!data.live_tracking) return;
+
+        return onPublic(`qr.${token}`, 'qr.updated', () => {
+            void refresh();
+        });
+    }, [token, data.live_tracking, refresh]);
 
     const requestBill = async () => {
         setBillBusy(true);

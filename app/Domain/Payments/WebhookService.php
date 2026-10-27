@@ -88,10 +88,17 @@ class WebhookService
     protected function process(PaymentWebhookEvent $event, array $data): void
     {
         $nested = is_array($data['data'] ?? null) ? $data['data'] : [];
-        $reference = $data['reference'] ?? $nested['reference'] ?? null;
-        $status = $data['status'] ?? $nested['status'] ?? null;
 
-        if (! $reference || ! in_array($status, ['succeeded', 'paid'], true)) {
+        // Providers name the reference differently: a local reference, bKash's
+        // paymentID, or SSLCommerz's tran_id (validated with val_id).
+        $reference = $data['reference'] ?? $nested['reference'] ?? $data['tran_id'] ?? $data['paymentID'] ?? null;
+        $status = strtolower((string) ($data['status'] ?? $nested['status'] ?? ''));
+
+        $approved = in_array($status, ['succeeded', 'paid'], true)
+            || ($event->provider === 'sslcommerz' && $status === 'valid')
+            || ($event->provider === 'bkash' && in_array($status, ['completed', 'success'], true));
+
+        if (! $reference || ! $approved) {
             return;
         }
 
@@ -114,11 +121,26 @@ class WebhookService
                 return;
             }
 
+            $verificationId = $event->provider === 'sslcommerz'
+                ? (string) ($data['val_id'] ?? $reference)
+                : $reference;
+
             $verified = app(TenantGatewayManager::class)
                 ->driverFor($config)
-                ->verifyTransaction($config, $reference);
+                ->verifyTransaction($config, $verificationId);
 
             if (! ($verified['valid'] ?? false)) {
+                return;
+            }
+
+            // Never settle a different amount than the one we asked for.
+            if (isset($verified['amount']) && abs((float) $verified['amount'] - (float) $payment->amount) > 0.01) {
+                return;
+            }
+
+            $currency = $payment->order?->currency;
+
+            if ($currency && isset($verified['currency']) && strtoupper((string) $verified['currency']) !== strtoupper((string) $currency)) {
                 return;
             }
         }

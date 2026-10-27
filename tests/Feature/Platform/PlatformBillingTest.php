@@ -175,7 +175,7 @@ class PlatformBillingTest extends TestCase
 
     public function test_scheduled_cancellation_expires_after_the_period(): void
     {
-        $tenant = Tenant::factory()->create();
+        $tenant = Tenant::factory()->withoutSubscription()->create();
         $plan = Plan::where('slug', 'starter')->firstOrFail();
 
         Subscription::create([
@@ -191,6 +191,8 @@ class PlatformBillingTest extends TestCase
 
         $subscription = Subscription::withoutGlobalScopes()->firstOrFail();
         $this->assertSame('expired', $subscription->status->value);
-        $this->assertSame('suspended', $tenant->fresh()->status->value);
+        // Expiry is a billing state: the account stays active and the subscription
+        // gate closes the workspace, keeping the Subscription page reachable.
+        $this->assertSame('active', $tenant->fresh()->status->value);
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\EnsurePlatformOperational;
 use App\Http\Middleware\EnsurePlatformPermission;
+use App\Http\Middleware\EnsureSubscriptionAccess;
 use App\Http\Middleware\EnsureTenantIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveActiveBranch;
@@ -28,6 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    // Registers /broadcasting/auth (session-authenticated) and the channel rules.
+    ->withBroadcasting(__DIR__.'/../routes/channels.php')
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             AddCorrelationContext::class,
@@ -44,6 +47,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'tenant.active' => EnsureTenantIsActive::class,
+            'subscribed' => EnsureSubscriptionAccess::class,
             'branch.active' => ResolveActiveBranch::class,
             'permission' => EnsurePermission::class,
             'onboarding.completed' => EnsureOnboardingComplete::class,

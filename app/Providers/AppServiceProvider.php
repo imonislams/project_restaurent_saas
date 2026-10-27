@@ -15,6 +15,7 @@ use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\Policies\TenantPolicy;
 use App\Domain\Tenancy\TenantContext;
 use App\Listeners\LogOutboundEmail;
+use App\Listeners\NotifyPlatformOnFailedJob;
 use App\Listeners\RecordAuthSecurityEvents;
 use App\Listeners\RecordScheduledTask;
 use App\Models\User;
@@ -29,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Mail\Events\MessageSendingFailed;
+use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -92,6 +94,9 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(ScheduledTaskFinished::class, [RecordScheduledTask::class, 'finished']);
         Event::listen(ScheduledTaskFailed::class, [RecordScheduledTask::class, 'failed']);
 
+        // Queue monitoring: a failed job is an operator alert, not just a row.
+        Event::listen(JobFailed::class, [NotifyPlatformOnFailedJob::class, 'handle']);
+
         // Security center: record authentication events.
         Event::listen(Login::class, [RecordAuthSecurityEvents::class, 'login']);
         Event::listen(Failed::class, [RecordAuthSecurityEvents::class, 'failed']);
@@ -101,6 +106,12 @@ class AppServiceProvider extends ServiceProvider
             $this->app->make(MailConfigurator::class)->apply();
         } catch (\Throwable) {
             // Mail settings unavailable (e.g. before migration) — keep env config.
+        }
+
+        try {
+            $this->app->make(\App\Domain\Realtime\BroadcastConfigurator::class)->apply();
+        } catch (\Throwable) {
+            // Real-time settings unavailable — keep the configured broadcaster.
         }
 
         try {

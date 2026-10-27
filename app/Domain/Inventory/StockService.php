@@ -7,6 +7,8 @@ use App\Domain\Inventory\Enums\StockMovementReason;
 use App\Domain\Inventory\Models\StockBalance;
 use App\Domain\Inventory\Models\StockLocation;
 use App\Domain\Inventory\Models\StockMovement;
+use App\Domain\Realtime\Events\TenantAlert;
+use App\Domain\Realtime\RealtimeBroadcaster;
 use App\Domain\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -34,10 +36,13 @@ class StockService
         ?string $note = null,
         ?bool $allowNegative = null,
     ): StockMovement {
-        return DB::transaction(function () use ($stockable, $location, $delta, $reason, $unitCost, $source, $note, $allowNegative) {
+        $lowStock = null;
+
+        $movement = DB::transaction(function () use ($stockable, $location, $delta, $reason, $unitCost, $source, $note, $allowNegative, &$lowStock) {
             $balance = $this->lockBalance($stockable, $location);
 
-            $newQuantity = round((float) $balance->quantity + $delta, 3);
+            $previous = (float) $balance->quantity;
+            $newQuantity = round($previous + $delta, 3);
             $allow = $allowNegative ?? $this->allowsNegativeStock();
 
             if ($newQuantity < 0 && ! $allow) {
@@ -48,6 +53,20 @@ class StockService
 
             $balance->quantity = $newQuantity;
             $balance->save();
+
+            // Crossing the low-stock threshold on the way down deserves an alert
+            // now, not at the next nightly scan.
+            $threshold = (float) ($this->context->tenant()?->getSetting('inventory.low_stock_threshold', 0) ?? 0);
+
+            if ($threshold > 0 && $previous > $threshold && $newQuantity <= $threshold) {
+                $lowStock = [
+                    'tenant_id' => $location->tenant_id,
+                    'branch_id' => $location->branch_id,
+                    'name' => (string) ($stockable->name ?? 'An item'),
+                    'quantity' => $newQuantity,
+                    'threshold' => $threshold,
+                ];
+            }
 
             return StockMovement::create([
                 'tenant_id' => $location->tenant_id,
@@ -64,6 +83,20 @@ class StockService
                 'created_by' => auth()->id(),
             ]);
         });
+
+        if ($lowStock !== null) {
+            app(RealtimeBroadcaster::class)->send(new TenantAlert(
+                $lowStock['tenant_id'],
+                'inventory',
+                'Low stock',
+                $lowStock['name'].' dropped to '.rtrim(rtrim(number_format((float) $lowStock['quantity'], 3), '0'), '.')
+                    .' (threshold '.rtrim(rtrim(number_format((float) $lowStock['threshold'], 3), '0'), '.').').',
+                'warning',
+                $lowStock['branch_id'],
+            ), 'billing');
+        }
+
+        return $movement;
     }
 
     public function receiveOpening(Model $stockable, StockLocation $location, float $quantity, ?float $unitCost = null): StockMovement

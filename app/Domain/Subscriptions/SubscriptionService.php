@@ -249,8 +249,9 @@ class SubscriptionService
                 'suspended_at' => now(),
             ])->save();
 
-            $this->setTenantStatus($subscription, TenantStatus::Suspended);
-
+            // Billing state only: the account stays active so the owner can still
+            // sign in and pay. Access is closed by EnsureSubscriptionAccess; an
+            // account-level suspension is a separate, deliberate admin action.
             $this->audit->log('subscription.suspended', $subscription, [], $actor, $subscription->tenant_id);
 
             return $subscription->fresh();
@@ -302,8 +303,8 @@ class SubscriptionService
                 'cancelled_at' => $subscription->cancelled_at ?? now(),
             ])->save();
 
-            $this->setTenantStatus($subscription, TenantStatus::Suspended);
-
+            // Billing state only — see suspend(): the tenant keeps its login and can
+            // reach the Subscription page to renew.
             $this->audit->log('subscription.expired', $subscription, [], $actor, $subscription->tenant_id);
 
             return $subscription->fresh();
@@ -469,9 +470,76 @@ class SubscriptionService
             && $subscription->pending_invoice_id !== null
             && (int) $subscription->pending_invoice_id === (int) $invoice->getKey()) {
             $this->applyPendingPlanChange($subscription, $actor);
+        } elseif ($subscription && ! $subscription->isActive()) {
+            // Paying a lapsed subscription's invoice restores access (suspension,
+            // expiry or a cancelled plan), so the tenant is never stuck locked out
+            // after paying.
+            $this->restoreAfterPayment($subscription, $invoice, $actor);
         }
 
         return $invoice;
+    }
+
+    /**
+     * Reactivate a lapsed subscription whose invoice has just been settled.
+     */
+    protected function restoreAfterPayment(Subscription $subscription, SubscriptionInvoice $invoice, ?User $actor = null): Subscription
+    {
+        $subscription->forceFill([
+            'status' => SubscriptionStatus::Active,
+            'grace_ends_at' => null,
+            'suspended_at' => null,
+            'cancel_at_period_end' => false,
+            'current_period_start' => $invoice->period_start ?? now(),
+            'current_period_end' => $invoice->period_end ?? now()->addMonths($subscription->billing_cycle->months()),
+        ])->save();
+
+        $this->setTenantStatus($subscription, TenantStatus::Active);
+
+        $this->audit->log('subscription.reactivated', $subscription, [
+            'invoice' => $invoice->number,
+        ], $actor, $subscription->tenant_id);
+
+        return $subscription->fresh();
+    }
+
+    /**
+     * Start a subscription for a tenant that has none (e.g. registration found no
+     * plan, or the previous subscription was removed). No access is granted until
+     * the first invoice is settled.
+     */
+    public function startSubscription(Tenant $tenant, Plan $plan, BillingCycle $cycle, ?User $actor = null): SubscriptionInvoice
+    {
+        return DB::transaction(function () use ($tenant, $plan, $cycle, $actor) {
+            $subscription = Subscription::updateOrCreate(
+                ['tenant_id' => $tenant->getKey()],
+                [
+                    'plan_id' => $plan->getKey(),
+                    'billing_cycle' => $cycle,
+                    'status' => SubscriptionStatus::Suspended,
+                    'current_period_start' => now(),
+                    'current_period_end' => now(),
+                    'suspended_at' => now(),
+                    'cancel_at_period_end' => false,
+                    'cancelled_at' => null,
+                    'grace_ends_at' => null,
+                    'pending_plan_id' => $plan->getKey(),
+                    'pending_billing_cycle' => $cycle,
+                    'pending_since' => now(),
+                ],
+            );
+
+            $invoice = $this->issueInvoice($subscription, $plan, $cycle);
+
+            $subscription->forceFill(['pending_invoice_id' => $invoice->getKey()])->save();
+
+            $this->audit->log('subscription.started', $subscription, [
+                'plan' => $plan->name,
+                'invoice' => $invoice->number,
+            ], $actor, $tenant->getKey());
+
+            return $invoice;
+        });
     }
 
     /** Apply a coupon to a subscription and record the redemption once. */

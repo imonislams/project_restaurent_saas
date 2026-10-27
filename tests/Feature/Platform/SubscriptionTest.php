@@ -76,7 +76,7 @@ class SubscriptionTest extends TestCase
         $this->assertSame(BillingCycle::Yearly, $subscription->billing_cycle);
     }
 
-    public function test_suspending_a_subscription_suspends_the_tenant_and_blocks_access(): void
+    public function test_suspending_a_subscription_closes_the_workspace_but_keeps_the_subscription_page(): void
     {
         [$tenant, $owner] = $this->tenantWithOwner();
         $subscription = app(SubscriptionService::class)->startTrial($tenant);
@@ -84,10 +84,12 @@ class SubscriptionTest extends TestCase
         app(SubscriptionService::class)->suspend($subscription, $owner);
 
         $this->assertSame(SubscriptionStatus::Suspended, $subscription->fresh()->status);
-        $this->assertSame('suspended', $tenant->fresh()->status->value);
 
-        $this->actingAs($owner)->get('/dashboard')->assertRedirect(route('login'));
-        $this->assertGuest();
+        // Suspension is a billing state, not an account suspension: the tenant stays
+        // signed in and lands on the one page where they can pay.
+        $this->assertSame('active', $tenant->fresh()->status->value);
+        $this->actingAs($owner)->get('/dashboard')->assertRedirect(route('subscription.index'));
+        $this->assertAuthenticatedAs($owner);
     }
 
     public function test_reactivating_restores_the_tenant(): void

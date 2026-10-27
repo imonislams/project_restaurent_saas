@@ -99,7 +99,9 @@ class GatewayController extends Controller
             'name' => $data['name'] ?? $gateway->name,
             'provider' => $data['provider'],
             'environment' => $data['environment'],
-            'is_enabled' => $data['is_enabled'] ?? false,
+            // The enable switch owns this state; a PATCH that omits the flag must
+            // not silently disable a live gateway.
+            'is_enabled' => $data['is_enabled'] ?? $gateway->is_enabled,
             'supported_currencies' => array_map('strtoupper', $data['supported_currencies'] ?? []),
             'credentials' => array_merge($gateway->credentials ?? [], $supplied),
             'settings' => array_merge($gateway->settings ?? [], [

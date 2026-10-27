@@ -9,6 +9,7 @@ use App\Domain\Dining\Enums\DiningSessionStatus;
 use App\Domain\Dining\Factories\DiningSessionFactory;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Tables\Models\Table;
+use App\Domain\Tables\Models\TableQrToken;
 use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Models\User;
@@ -126,5 +127,18 @@ class DiningSession extends Model
         return (float) $this->orders()
             ->whereNotIn('status', ['voided'])
             ->sum('total');
+    }
+
+    /** The table's active QR token — the diner's tracking channel name. */
+    public function qrToken(): ?string
+    {
+        return TableQrToken::query()
+            ->withoutGlobalScope('tenant')
+            ->where('tenant_id', $this->tenant_id)
+            ->where('table_id', $this->table_id)
+            ->where('is_active', true)
+            ->whereNull('revoked_at')
+            ->latest('id')
+            ->value('token');
     }
 }

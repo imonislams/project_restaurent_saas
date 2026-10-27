@@ -28,6 +28,9 @@ class PlatformPayment extends Model
         'attempt_number',
         'failure_reason',
         'paid_at',
+        'confirmed_by',
+        'confirmed_at',
+        'confirmation_note',
         'settlement_status',
         'refunded_amount',
         'idempotency_key',
@@ -42,6 +45,7 @@ class PlatformPayment extends Model
             'refunded_amount' => 'decimal:2',
             'attempt_number' => 'integer',
             'paid_at' => 'datetime',
+            'confirmed_at' => 'datetime',
             'meta' => 'array',
         ];
     }

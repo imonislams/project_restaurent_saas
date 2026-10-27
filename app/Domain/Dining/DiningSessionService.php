@@ -157,6 +157,19 @@ class DiningSessionService
             report($e);
         }
 
+        try {
+            app(\App\Domain\Realtime\RealtimeBroadcaster::class)->send(new \App\Domain\Realtime\Events\TenantAlert(
+                $session->tenant_id,
+                'billing',
+                'Bill requested',
+                'Table '.($session->table?->name ?? '—').' asked for the bill.',
+                'warning',
+                $session->branch_id,
+            ), 'billing');
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         return $request;
     }
 

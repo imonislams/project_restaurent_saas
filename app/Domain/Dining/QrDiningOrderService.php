@@ -9,6 +9,8 @@ use App\Domain\Notifications\NotificationService;
 use App\Domain\Orders\Enums\AcceptanceStatus;
 use App\Domain\Orders\Models\Order;
 use App\Domain\POS\SaleService;
+use App\Domain\Realtime\Events\OrderAwaitingApproval;
+use App\Domain\Realtime\RealtimeBroadcaster;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -57,6 +59,9 @@ class QrDiningOrderService
             } catch (\Throwable $e) {
                 report($e);
             }
+
+            // The same moment, pushed live so the badge, toast and chime are instant.
+            app(RealtimeBroadcaster::class)->send(new OrderAwaitingApproval($order));
         }
 
         return $order->fresh(['items.modifiers']);

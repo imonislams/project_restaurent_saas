@@ -168,8 +168,12 @@ class SubscriptionController extends Controller
                         'amount' => (float) $payment->amount,
                         'currency' => $payment->currency,
                         'status' => $payment->status->value,
-                        'status_label' => $payment->status->label(),
+                        // A manual transfer waits for an administrator — say so.
+                        'status_label' => $payment->status === PlatformPaymentStatus::Pending
+                            ? 'Awaiting confirmation'
+                            : $payment->status->label(),
                         'provider_ref' => $payment->provider_ref,
+                        'reference' => $payment->meta['tenant_reference'] ?? null,
                         'paid_at' => $payment->paid_at?->toIso8601String(),
                         'failure_reason' => $payment->failure_reason,
                         'invoice_id' => $payment->subscription_invoice_id,
@@ -177,6 +181,7 @@ class SubscriptionController extends Controller
                 : [],
             'gateways' => $gatewaysByCurrency[$currency] ?? [],
             'currency' => $currency,
+            'access_granted' => $tenant?->subscriptionAccess() ?? false,
             'billing' => [
                 'country' => $tenant?->getSetting('billing.country', $tenant?->getSetting('region.country')),
                 'configured' => (bool) $tenant?->getSetting('billing.country', $tenant?->getSetting('region.country')),
@@ -193,7 +198,7 @@ class SubscriptionController extends Controller
         ]);
 
         $tenant = $request->user()->tenant;
-        abort_if($tenant?->subscription === null, 422, 'There is no subscription on record.');
+        abort_if($tenant === null, 422, 'There is no subscription on record.');
 
         $plan = Plan::query()->findOrFail($data['plan_id']);
         abort_if($plan->isArchived(), 422, 'That plan is not available.');
@@ -209,13 +214,13 @@ class SubscriptionController extends Controller
         $subscription = $tenant->subscription;
 
         // Hold the requested change as pending and bill the target plan (no
-        // proration). The live plan is only activated once this invoice is paid.
-        $invoice = $this->subscriptions->requestPlanChange(
-            $subscription,
-            $plan,
-            BillingCycle::from($data['billing_cycle']),
-            $request->user(),
-        );
+        // proration). The live plan is only activated once this invoice is paid —
+        // a tenant with no subscription at all starts one the same way.
+        $cycle = BillingCycle::from($data['billing_cycle']);
+
+        $invoice = $subscription === null
+            ? $this->subscriptions->startSubscription($tenant, $plan, $cycle, $request->user())
+            : $this->subscriptions->requestPlanChange($subscription, $plan, $cycle, $request->user());
 
         // Nothing to pay (free plan / fully discounted) — activate immediately.
         if ((float) $invoice->amount <= 0) {
@@ -261,7 +266,10 @@ class SubscriptionController extends Controller
         abort_unless($invoice->tenant_id === $request->user()->tenant_id, 404);
         abort_unless(app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('features.gateway_checkout', true), 403, 'Online checkout is disabled.');
 
-        $data = $request->validate(['gateway_id' => ['required', 'integer', 'exists:payment_gateways,id']]);
+        $data = $request->validate([
+            'gateway_id' => ['required', 'integer', 'exists:payment_gateways,id'],
+            'reference' => ['nullable', 'string', 'max:255'],
+        ]);
 
         $config = PaymentGateway::query()->findOrFail($data['gateway_id']);
         $tenant = $request->user()->tenant;
@@ -275,6 +283,15 @@ class SubscriptionController extends Controller
 
         $result = $this->payments->initiate($invoice, $config, $request->user());
 
+        // A manual payment is confirmed by an administrator: keep the reference the
+        // tenant says they paid with so it can be matched against the statement.
+        if ($config->provider === 'manual' && filled($data['reference'] ?? null)) {
+            $payment = $result['payment'];
+            $payment->forceFill([
+                'meta' => array_merge($payment->meta ?? [], ['tenant_reference' => trim((string) $data['reference'])]),
+            ])->save();
+        }
+
         if ($result['redirect_url']) {
             return Inertia::location($result['redirect_url']);
         }
@@ -287,7 +304,12 @@ class SubscriptionController extends Controller
                 : 'We could not start the checkout at the gateway. Please try again or contact support.');
         }
 
-        return back()->with('success', 'Payment initiated. It will be confirmed once the payment is verified.');
+        return back()->with(
+            'success',
+            $config->provider === 'manual'
+                ? 'Payment reported — waiting for confirmation by the Touch Dine team.'
+                : 'Payment initiated. It will be confirmed once the payment is verified.',
+        );
     }
 
     public function cancel(Request $request): RedirectResponse

@@ -1,5 +1,6 @@
 import Icon from '@/Components/Icon';
 import Badge from '@/Components/ui/Badge';
+import { onPrivate } from '@/realtime';
 import { BranchSummary } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -112,16 +113,19 @@ export default function KitchenIndex({
     ticketStatuses: { value: string; label: string }[];
     itemStatuses: { value: string; label: string }[];
 }) {
-    const { auth } = usePage().props as Record<string, any>;
+    const pageProps = usePage().props as Record<string, any>;
+    const { auth } = pageProps;
     const permissions: string[] = auth?.permissions ?? [];
     const canManage = permissions.includes('kitchen.manage');
+    const tenantId: number | undefined = pageProps.tenant?.id;
+    const realtimeDriver: string = pageProps.realtime?.driver ?? 'off';
 
     // UI Configuration & Display Preferences
     const [isDarkMode, setIsDarkMode] = useState(true);
     const [viewMode, setViewMode] = useState<'kanban' | 'grid'>('kanban');
     const [soundEnabled, setSoundEnabled] = useState(true);
     const [autoRefresh, setAutoRefresh] = useState(true);
-    const [refreshCountdown, setRefreshCountdown] = useState(12);
+    const [refreshCountdown, setRefreshCountdown] = useState(60);
 
     // Live clock for second-by-second elapsed timers
     const [now, setNow] = useState(Date.now());
@@ -143,7 +147,19 @@ export default function KitchenIndex({
         prevTicketCountRef.current = tickets.length;
     }, [tickets.length, soundEnabled]);
 
-    // Auto-polling refresh every 12 seconds
+    // Live: a ticket appears (or changes status) the moment it happens.
+    useEffect(() => {
+        if (!tenantId || realtimeDriver === 'off') {
+            return;
+        }
+
+        return onPrivate(`tenant.${tenantId}.kitchen`, 'kitchen.ticket', () => {
+            router.reload({ only: ['tickets'] });
+        });
+    }, [tenantId, realtimeDriver]);
+
+    // Fallback polling — slow, because live updates carry the load; it only
+    // matters when the socket is blocked or the terminal is offline.
     useEffect(() => {
         if (!autoRefresh) return;
         const countdownTimer = setInterval(() => {
@@ -153,7 +169,7 @@ export default function KitchenIndex({
                     router.reload({
                         only: ['tickets'],
                     });
-                    return 12;
+                    return 60;
                 }
                 return prev - 1;
             });

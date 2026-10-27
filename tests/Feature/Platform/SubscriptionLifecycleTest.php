@@ -30,7 +30,7 @@ class SubscriptionLifecycleTest extends TestCase
 
     public function test_expired_trials_move_to_past_due(): void
     {
-        $tenant = Tenant::factory()->create();
+        $tenant = Tenant::factory()->withoutSubscription()->create();
         $plan = Plan::where('slug', 'starter')->firstOrFail();
 
         Subscription::create([
@@ -50,7 +50,7 @@ class SubscriptionLifecycleTest extends TestCase
 
     public function test_past_due_subscriptions_enter_grace_after_dunning(): void
     {
-        $tenant = Tenant::factory()->create();
+        $tenant = Tenant::factory()->withoutSubscription()->create();
         $plan = Plan::where('slug', 'starter')->firstOrFail();
 
         Subscription::create([
@@ -72,7 +72,7 @@ class SubscriptionLifecycleTest extends TestCase
 
     public function test_grace_period_expiry_suspends_the_subscription_and_tenant(): void
     {
-        $tenant = Tenant::factory()->create();
+        $tenant = Tenant::factory()->withoutSubscription()->create();
         $plan = Plan::where('slug', 'starter')->firstOrFail();
 
         Subscription::create([
@@ -87,12 +87,14 @@ class SubscriptionLifecycleTest extends TestCase
         $this->artisan('subscriptions:process')->assertSuccessful();
 
         $this->assertSame(SubscriptionStatus::Suspended, Subscription::withoutGlobalScopes()->first()->status);
-        $this->assertSame('suspended', $tenant->fresh()->status->value);
+        // Billing suspension no longer suspends the account: the owner keeps their
+        // login and the subscription gate closes the workspace instead.
+        $this->assertSame('active', $tenant->fresh()->status->value);
     }
 
     public function test_expiring_subscriptions_are_warned(): void
     {
-        $tenant = Tenant::factory()->create();
+        $tenant = Tenant::factory()->withoutSubscription()->create();
         $owner = User::factory()->forTenant($tenant)->create();
         $owner->assignRole(RoleName::TenantOwner);
 

@@ -113,12 +113,29 @@ class Tenant extends Model
         Cache::forget("tenant:{$tenantId}:plan");
     }
 
-    /** Feature entitlements resolved server-side from the plan. No plan = unrestricted. */
+    /** Feature entitlements resolved server-side from the plan. No plan = no features. */
     public function hasFeature(string $feature): bool
     {
-        $plan = $this->currentPlan();
+        return $this->currentPlan()?->hasFeature($feature) ?? false;
+    }
 
-        return $plan === null ? true : $plan->hasFeature($feature);
+    /**
+     * Whether the tenant may use the workspace: an active subscription with a plan.
+     *
+     * A lapsed subscription is a billing state, not an account suspension: the
+     * tenant stays signed in and can always reach the Subscription page to pay,
+     * but nothing else is available until it is settled.
+     */
+    public function subscriptionAccess(): bool
+    {
+        // Query rather than read the relation: the same Tenant instance can outlive
+        // a subscription change (request lifecycle, impersonation), and access must
+        // follow the current row, not a stale eager load.
+        $subscription = $this->subscription()->first();
+
+        return $subscription !== null
+            && $subscription->isActive()
+            && $this->currentPlan() !== null;
     }
 
     public function planLimit(string $metric): ?int

@@ -59,6 +59,8 @@ Operations, Security, Data Retention, Feature Flags.
 | `operations.backup_retention_days` | Backup expiry. |
 | `features.impersonation` | Blocks support impersonation when off. |
 | `features.gateway_checkout` | Blocks gateway invoice checkout when off. |
+| `realtime.driver` / `realtime.credentials.{driver}` | Websocket provider (off / reverb / pusher), applied to `broadcasting.*` at boot; credentials encrypted. |
+| `realtime.streams` | Which alert streams are pushed live (staff, platform, customer, billing). |
 
 Credentials are **never** stored here — email passwords live in the Email Provider
 screen and gateway credentials in Payment Infrastructure (both encrypted at rest).
@@ -94,6 +96,24 @@ the provider's validation API; the browser return URL is never trusted.
 Monitor under **Communications**. Provider configured under **Email Provider**
 (encrypted password; blank fields keep the stored secret). Failed invoice emails can be
 retried.
+
+### Real-time notifications (Pusher / Reverb)
+
+Configure under **Platform Configuration → Real-time Notifications**. One driver is active
+at a time — **Pusher** (cloud; nothing to run, works on shared hosting) or **Reverb**
+(self-hosted; needs a persistent process and a reachable secure port). Credentials are
+encrypted at rest and only the public key/endpoint are shared with the browser. Use
+**Send test event** to prove the driver really delivers — *configured* is not the same as
+*verified*.
+
+Each alert stream (staff, platform admin, customer tracking, billing/dashboard) can be
+switched off without a deploy. With real-time off, every page keeps its slow fallback
+refresh: the socket changes *when* counts arrive, never *what* they are, so a blocked
+socket or an offline till loses nothing.
+
+- Pusher: set App ID, key, secret and cluster.
+- Reverb: run `php artisan reverb:start` (Supervisor/systemd on a VPS), expose it on a
+  secure port, then set App ID, app key/secret, host, port and scheme.
 
 ---
 

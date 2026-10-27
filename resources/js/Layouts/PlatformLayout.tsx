@@ -1,10 +1,11 @@
 import { IconName } from '@/Components/Icon';
+import PlatformRealtime from '@/Components/PlatformRealtime';
 import { PageHeader, ToastProvider } from '@/Components/ui';
 import { useT } from '@/i18n';
 import AppShell, { NavGroup, NavItem } from '@/Layouts/AppShell';
 import { Link, router, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode } from 'react';
-import { Store } from 'lucide-react';
+import { Bell, Store } from 'lucide-react';
 
 interface NavSpec {
     label: string;
@@ -139,6 +140,7 @@ const NAV: NavSection[] = [
             { label: 'Localization', icon: 'sliders', permission: 'platform.settings.view', routeName: 'platform.settings.localization', pattern: 'platform.settings.localization' },
             { label: 'Billing Settings', icon: 'wallet', permission: 'platform.settings.view', routeName: 'platform.settings.billing', pattern: 'platform.settings.billing' },
             { label: 'Payment Gateways', icon: 'credit-card', permission: 'platform.gateways.configure', routeName: 'platform.gateways.index', pattern: 'platform.gateways.*' },
+            { label: 'Real-time Notifications', icon: 'bell', permission: 'platform.settings.view', routeName: 'platform.realtime.index', pattern: 'platform.realtime.*' },
             { label: 'Operations', icon: 'server', permission: 'platform.settings.view', routeName: 'platform.settings.operations', pattern: 'platform.settings.operations' },
             { label: 'Security Policy', icon: 'shield', permission: 'platform.settings.view', routeName: 'platform.settings.security', pattern: 'platform.settings.security' },
             { label: 'Receipt Branding', icon: 'receipt', permission: 'platform.settings.view', routeName: 'platform.settings.receipts', pattern: 'platform.settings.receipts' },
@@ -175,9 +177,23 @@ export default function PlatformLayout({
     const page = usePage().props as Record<string, any>;
     const locale = page.locale ?? 'en';
     const locales: { value: string; label: string }[] = page.locales ?? [];
+    const unread: number = Number(page.platform_notifications?.unread ?? 0);
 
     const topbarRight = (
         <div className="flex items-center gap-2">
+            <Link
+                href={route('platform.notifications.index')}
+                className="relative flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background text-foreground shadow-2xs transition-colors hover:bg-accent cursor-pointer"
+                title="Notifications"
+                aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
+            >
+                <Bell className="h-4 w-4" />
+                {unread > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-xs">
+                        {unread > 9 ? '9+' : unread}
+                    </span>
+                )}
+            </Link>
             <Link
                 href={route('dashboard')}
                 className="flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-accent transition-colors shadow-2xs cursor-pointer"
@@ -205,6 +221,7 @@ export default function PlatformLayout({
 
     return (
         <ToastProvider>
+            <PlatformRealtime />
             <AppShell
                 dark={false}
                 padded

@@ -17,6 +17,9 @@ use App\Domain\Orders\Enums\FulfillmentStatus;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Payments\Enums\PaymentStatus;
+use App\Domain\Realtime\Events\OrderActivity;
+use App\Domain\Realtime\QrRealtime;
+use App\Domain\Realtime\RealtimeBroadcaster;
 use App\Domain\Tables\TableService;
 use App\Domain\Tenancy\TenantContext;
 use App\Jobs\OpenKitchenTicket;
@@ -93,6 +96,9 @@ class OrderService
 
         $this->kitchen->cancelForOrder($order);
         $this->tables->refreshForOrder($order);
+
+        app(RealtimeBroadcaster::class)->send(new OrderActivity($order, 'voided'));
+        app(QrRealtime::class)->notifyOrder($order, 'voided');
 
         return $order->fresh(['items', 'payments']);
     }
@@ -178,6 +184,9 @@ class OrderService
             $this->openKitchenTicket($accepted);
         }
 
+        app(RealtimeBroadcaster::class)->send(new OrderActivity($accepted, 'accepted'));
+        app(QrRealtime::class)->notifyOrder($accepted, 'accepted');
+
         return $accepted->fresh();
     }
 
@@ -243,6 +252,9 @@ class OrderService
 
         $this->tables->refreshForOrder($order);
 
+        app(RealtimeBroadcaster::class)->send(new OrderActivity($order, 'rejected'));
+        app(QrRealtime::class)->notifyOrder($order, 'rejected');
+
         return $order->fresh();
     }
 
@@ -276,6 +288,9 @@ class OrderService
                 report($e);
             }
         }
+
+        app(RealtimeBroadcaster::class)->send(new OrderActivity($order, $status->value));
+        app(QrRealtime::class)->notifyOrder($order, $status->value);
 
         return $order;
     }

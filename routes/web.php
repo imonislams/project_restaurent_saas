@@ -22,6 +22,7 @@ use App\Http\Controllers\Orders\ReceiptController;
 use App\Http\Controllers\Payments\PaddleCheckoutController;
 use App\Http\Controllers\Payments\PaymentWebhookController;
 use App\Http\Controllers\Payments\PlatformCallbackController;
+use App\Http\Controllers\Payments\TenantPaymentReturnController;
 use App\Http\Controllers\Payments\PlatformWebhookController;
 use App\Http\Controllers\Platform\AdminController as PlatformAdminController;
 use App\Http\Controllers\Platform\AnalyticsController as PlatformAnalyticsController;
@@ -41,6 +42,7 @@ use App\Http\Controllers\Platform\GatewayEventController as PlatformGatewayEvent
 use App\Http\Controllers\Platform\ImpersonationController as PlatformImpersonationController;
 use App\Http\Controllers\Platform\InvoiceController as PlatformInvoiceController;
 use App\Http\Controllers\Platform\NotificationController as PlatformNotificationController;
+use App\Http\Controllers\Platform\RealtimeController as PlatformRealtimeController;
 use App\Http\Controllers\Platform\OpsController as PlatformOpsController;
 use App\Http\Controllers\Platform\OfflineConflictController as PlatformOfflineConflictController;
 use App\Http\Controllers\Platform\PaymentController as PlatformPaymentController;
@@ -131,6 +133,8 @@ Route::post('/webhooks/payments/{provider}', PaymentWebhookController::class)->n
 Route::get('/payments/result', [PlatformCallbackController::class, 'result'])->name('payments.result');
 Route::match(['get', 'post'], '/payments/callback/{provider}/{result}', [PlatformCallbackController::class, 'callback'])->name('payments.callback');
 Route::post('/payments/ipn/{provider}', [PlatformCallbackController::class, 'ipn'])->name('payments.ipn');
+// Tenant (restaurant) payments: SSLCommerz POSTs the customer back here.
+Route::match(['get', 'post'], '/payments/order-return/{provider}/{result}', TenantPaymentReturnController::class)->name('payments.tenant-return');
 
 // Paddle Billing checkout (Paddle.js) + server-side verification return.
 Route::get('/payments/paddle', PaddleCheckoutController::class)->name('payments.paddle.checkout');
@@ -192,7 +196,7 @@ Route::prefix('qr')->name('qr.')->middleware(['qr.context', 'throttle:qr-public'
     });
 });
 
-Route::middleware(['auth', 'verified', 'onboarding.completed'])->group(function () {
+Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::prefix('staff')->name('staff.')->group(function () {
@@ -640,6 +644,10 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
         ->middleware('platform.permission:platform.refunds.manage')->name('billing.payments.refund');
     Route::post('/payments/{payment}/settle', [PlatformPaymentController::class, 'settle'])
         ->middleware('platform.permission:platform.payments.manage')->name('billing.payments.settle');
+    Route::post('/payments/{payment}/approve', [PlatformPaymentController::class, 'approve'])
+        ->middleware('platform.permission:platform.payments.manage')->name('billing.payments.approve');
+    Route::post('/payments/{payment}/reject', [PlatformPaymentController::class, 'reject'])
+        ->middleware('platform.permission:platform.payments.manage')->name('billing.payments.reject');
 
     Route::middleware('platform.permission:platform.gateways.configure')->group(function () {
         Route::get('/gateways', [PlatformGatewayController::class, 'index'])->name('gateways.index');
@@ -659,6 +667,13 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
         ->middleware('platform.permission:platform.settings.manage')->name('sms.update');
     Route::post('/sms/test', [PlatformSmsController::class, 'test'])
         ->middleware('platform.permission:platform.settings.manage')->name('sms.test');
+
+    Route::get('/realtime', [PlatformRealtimeController::class, 'index'])
+        ->middleware('platform.permission:platform.settings.view')->name('realtime.index');
+    Route::post('/realtime', [PlatformRealtimeController::class, 'update'])
+        ->middleware('platform.permission:platform.settings.manage')->name('realtime.update');
+    Route::post('/realtime/test', [PlatformRealtimeController::class, 'test'])
+        ->middleware('platform.permission:platform.settings.manage')->name('realtime.test');
 
     Route::middleware('platform.permission:platform.email.view')->group(function () {
         Route::get('/email', [PlatformEmailController::class, 'index'])->name('email.dashboard');

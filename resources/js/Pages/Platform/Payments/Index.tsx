@@ -86,12 +86,17 @@ export default function PaymentsIndex({
             label: '',
             align: 'right',
             render: (r) =>
-                r.status === 'succeeded' || r.status === 'refunded' ? (
-                    <span className="text-xs text-gray-300">—</span>
+                r.status === 'pending' ? (
+                    <div className="flex items-center justify-end gap-3">
+                        <button onClick={() => router.post(route('platform.billing.payments.approve', r.id), {}, { preserveScroll: true })} className="text-xs font-medium text-emerald-600 hover:text-emerald-700">
+                            Approve
+                        </button>
+                        <Link href={route('platform.billing.payments.show', r.id)} className="text-xs font-medium text-gray-500 hover:text-gray-700">
+                            Review
+                        </Link>
+                    </div>
                 ) : (
-                    <button onClick={() => router.post(route('platform.billing.payments.settle', r.id), {}, { preserveScroll: true })} className="text-xs font-medium text-emerald-600 hover:text-emerald-700">
-                        Mark settled
-                    </button>
+                    <span className="text-xs text-gray-300">—</span>
                 ),
         },
     ];

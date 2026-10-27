@@ -192,4 +192,37 @@ class TenantSubscriptionTest extends TestCase
         $this->actingAs($owner)->post("/subscription/invoices/{$otherInvoice->id}/pay", ['gateway_id' => $config->id])
             ->assertNotFound();
     }
+
+    public function test_a_manual_payment_keeps_the_reference_and_asks_for_confirmation(): void
+    {
+        [$tenant, $owner] = $this->tenantWithOwner();
+
+        $config = PaymentGateway::create([
+            'name' => 'Manual',
+            'provider' => 'manual',
+            'environment' => 'production',
+            'is_enabled' => true,
+            'supported_currencies' => [],
+        ]);
+
+        $subscription = Subscription::withoutGlobalScopes()->where('tenant_id', $tenant->id)->firstOrFail();
+        app(TenantContext::class)->set($tenant);
+        $invoice = app(SubscriptionService::class)->issueInvoice($subscription);
+        app(TenantContext::class)->forget();
+
+        $this->actingAs($owner)->post("/subscription/invoices/{$invoice->id}/pay", [
+            'gateway_id' => $config->id,
+            'reference' => 'bKash TRX 8H2K91',
+        ])->assertRedirect()
+            ->assertSessionHas('success', fn (string $message) => str_contains($message, 'waiting for confirmation'));
+
+        $payment = PlatformPayment::firstOrFail();
+
+        $this->assertSame('pending', $payment->status->value);
+        $this->assertSame('bKash TRX 8H2K91', $payment->meta['tenant_reference']);
+
+        // The tenant is told an administrator will confirm it, not just "pending".
+        $this->actingAs($owner)->get('/subscription')->assertOk()
+            ->assertInertia(fn ($page) => $page->where('payments.0.status_label', 'Awaiting confirmation'));
+    }
 }

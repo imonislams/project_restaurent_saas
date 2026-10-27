@@ -3,6 +3,7 @@
 namespace App\Domain\Support;
 
 use App\Domain\Auditing\AuditLogger;
+use App\Domain\Notifications\PlatformNotificationService;
 use App\Domain\Support\Enums\TicketPriority;
 use App\Domain\Support\Enums\TicketStatus;
 use App\Domain\Support\Models\SupportTicket;
@@ -23,7 +24,7 @@ class SupportService
      */
     public function create(Tenant $tenant, array $data, User $actor): SupportTicket
     {
-        return DB::transaction(function () use ($tenant, $data, $actor) {
+        $ticket = DB::transaction(function () use ($tenant, $data, $actor) {
             $ticket = SupportTicket::create([
                 'tenant_id' => $tenant->getKey(),
                 'subject' => $data['subject'],
@@ -46,6 +47,17 @@ class SupportService
 
             return $ticket;
         });
+
+        app(PlatformNotificationService::class)->send(
+            'support',
+            'platform.support.view',
+            'New support ticket',
+            $ticket->subject.' — '.$tenant->name,
+            'info',
+            route('platform.support.index'),
+        );
+
+        return $ticket;
     }
 
     public function reply(SupportTicket $ticket, string $body, bool $internal, User $actor): SupportTicket

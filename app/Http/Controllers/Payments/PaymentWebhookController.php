@@ -16,8 +16,23 @@ class PaymentWebhookController extends Controller
         $data = json_decode($payload, true);
 
         if (! is_array($data)) {
+            // SSLCommerz and bKash post form-encoded IPNs, not JSON.
+            $data = $request->all();
+            $payload = json_encode($data) ?: '';
+        }
+
+        if ($data === []) {
             return response()->json(['error' => 'Invalid payload'], 422);
         }
+
+        // Deduplicate on the provider's own id when it sends one, else on the body:
+        // a null event id would make every later notification look like a duplicate.
+        $data['event_id'] ??= $data['id']
+            ?? $data['val_id']
+            ?? $data['bank_tran_id']
+            ?? $data['tran_id']
+            ?? $data['paymentID']
+            ?? 'sha1:'.sha1($payload);
 
         $event = $webhooks->handle($provider, $payload, $signature, $data);
 

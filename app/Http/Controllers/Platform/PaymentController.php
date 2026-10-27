@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Platform;
 
+use App\Domain\Auditing\AuditLogger;
 use App\Domain\Billing\Enums\PlatformPaymentStatus;
 use App\Domain\Billing\Models\PlatformPayment;
 use App\Domain\Billing\Models\PlatformRefund;
@@ -21,6 +22,7 @@ class PaymentController extends Controller
         protected RefundService $refunds,
         protected ReconciliationService $reconciliation,
         protected GatewayProviderRegistry $registry,
+        protected AuditLogger $audit,
     ) {}
 
     public function index(Request $request): Response
@@ -105,6 +107,11 @@ class PaymentController extends Controller
                 'status_label' => $payment->status->label(),
                 'failure_reason' => $payment->failure_reason,
                 'settlement_status' => $payment->settlement_status,
+                'confirmed_by' => $payment->confirmed_by
+                    ? \App\Models\User::query()->find($payment->confirmed_by)?->name
+                    : null,
+                'confirmed_at' => $payment->confirmed_at?->toIso8601String(),
+                'confirmation_note' => $payment->confirmation_note,
                 'refunded_amount' => (float) $payment->refunded_amount,
                 'refundable' => $payment->refundableAmount(),
                 'paid_at' => $payment->paid_at?->toIso8601String(),
@@ -131,6 +138,43 @@ class PaymentController extends Controller
         $payments->settleManually($payment, $request->user());
 
         return back()->with('success', 'Payment marked as settled.');
+    }
+
+    /** Confirm a manual payment after checking the money arrived. */
+    public function approve(Request $request, PlatformPayment $payment, PlatformPaymentService $payments): RedirectResponse
+    {
+        $data = $request->validate([
+            'note' => ['nullable', 'string', 'max:255'],
+            'reference' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $payments->approve($payment, $request->user(), $data['note'] ?? null, $data['reference'] ?? null);
+
+        $this->audit->log('platform.payment_approved', $payment, [
+            'amount' => (float) $payment->amount,
+            'currency' => $payment->currency,
+            'reference' => $data['reference'] ?? null,
+        ], $request->user(), $payment->tenant_id);
+
+        return back()->with('success', 'Payment approved — the invoice is settled.');
+    }
+
+    /** Refuse a manual payment; the invoice stays open so the tenant can retry. */
+    public function reject(Request $request, PlatformPayment $payment, PlatformPaymentService $payments): RedirectResponse
+    {
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'max:255'],
+        ]);
+
+        $payments->reject($payment, $request->user(), $data['reason']);
+
+        $this->audit->log('platform.payment_rejected', $payment, [
+            'amount' => (float) $payment->amount,
+            'currency' => $payment->currency,
+            'reason' => $data['reason'],
+        ], $request->user(), $payment->tenant_id);
+
+        return back()->with('success', 'Payment rejected — the tenant can try again.');
     }
 
     public function refund(Request $request, PlatformPayment $payment): RedirectResponse

@@ -9,6 +9,9 @@ use App\Domain\Orders\Models\Order;
 use App\Domain\PaymentGateways\TenantGatewayManager;
 use App\Domain\Payments\Enums\PaymentStatus;
 use App\Domain\Payments\PaymentGatewayManager;
+use App\Domain\Realtime\Events\TenantAlert;
+use App\Domain\Realtime\QrRealtime;
+use App\Domain\Realtime\RealtimeBroadcaster;
 use App\Domain\Tables\TableService;
 use App\Domain\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\DB;
@@ -126,11 +129,14 @@ class QrPaymentService
         ]);
 
         $succeeded = ($result['status'] ?? 'pending') === 'succeeded';
+        $failed = ($result['status'] ?? null) === 'failed';
 
         $payment = $order->payments()->create([
             'tenant_id' => $order->tenant_id,
             'amount' => $outstanding,
-            'status' => $succeeded ? PaymentStatus::Succeeded->value : PaymentStatus::Pending->value,
+            'status' => $succeeded
+                ? PaymentStatus::Succeeded->value
+                : ($failed ? PaymentStatus::Failed->value : PaymentStatus::Pending->value),
             'reference' => $result['reference'] ?? null,
             'idempotency_key' => $idempotencyKey,
             'paid_at' => $succeeded ? now() : null,
@@ -206,6 +212,22 @@ class QrPaymentService
 
         try {
             app(\App\Domain\Notifications\NotificationService::class)->onlinePaymentReceived($order->fresh(), $paid);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        // Live: tell the billing screens, and let the diner's page refresh.
+        try {
+            app(RealtimeBroadcaster::class)->send(new TenantAlert(
+                $order->tenant_id,
+                'billing',
+                'Online payment received',
+                'Order '.$order->order_number.' · '.number_format($paid, 2).' '.$order->currency,
+                'success',
+                $order->branch_id,
+            ), 'billing');
+
+            app(QrRealtime::class)->notifyOrder($order->fresh(), 'paid');
         } catch (\Throwable $e) {
             report($e);
         }

@@ -67,6 +67,13 @@ class HandleInertiaRequests extends Middleware
             'notifications' => [
                 'unread' => fn () => $user ? $user->unreadNotifications()->count() : 0,
             ],
+            // Platform admin bell (the platform header has its own count so the
+            // Notifications page can keep using `notifications` for its list).
+            'platform_notifications' => [
+                'unread' => fn () => $user && $user->isPlatformAdmin() ? $user->unreadNotifications()->count() : 0,
+            ],
+            // Public websocket connection values for the browser (never the secret).
+            'realtime' => fn () => app(\App\Domain\Realtime\RealtimeManager::class)->publicConfig(),
             // Orders awaiting staff confirmation (QR orders when auto-accept is off,
             // table-staff orders under central approval). Tenant + branch global
             // scopes apply, so this is limited to the user's branches.

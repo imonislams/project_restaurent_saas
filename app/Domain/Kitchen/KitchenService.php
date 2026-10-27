@@ -8,6 +8,8 @@ use App\Domain\Kitchen\Enums\KitchenTicketStatus;
 use App\Domain\Kitchen\Models\KitchenTicket;
 use App\Domain\Kitchen\Models\KitchenTicketItem;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Realtime\Events\KitchenTicketActivity;
+use App\Domain\Realtime\RealtimeBroadcaster;
 use App\Domain\Tenancy\TenantContext;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -48,7 +50,7 @@ class KitchenService
         }
 
         try {
-            return DB::transaction(function () use ($order) {
+            $ticket = DB::transaction(function () use ($order) {
                 // Serialize concurrent creation for this order, then re-check.
                 $locked = Order::query()->whereKey($order->getKey())->lockForUpdate()->first();
 
@@ -95,6 +97,11 @@ class KitchenService
             // A concurrent creation won the unique(order_id) race.
             return $order->kitchenTicket()->with('items')->first();
         }
+
+        // A ticket really was created — tell the kitchen board and the order list.
+        app(RealtimeBroadcaster::class)->send(new KitchenTicketActivity($ticket, KitchenTicketStatus::New->value));
+
+        return $ticket;
     }
 
     public function setTicketStatus(KitchenTicket $ticket, KitchenTicketStatus $status): KitchenTicket
@@ -141,6 +148,9 @@ class KitchenService
 
         $this->sync->sync($ticket);
         $this->notifyStaff($ticket, $status);
+
+        // Push the new status to the kitchen board and any open order list.
+        app(RealtimeBroadcaster::class)->send(new KitchenTicketActivity($ticket, $status->value));
 
         return $ticket->fresh('items');
     }

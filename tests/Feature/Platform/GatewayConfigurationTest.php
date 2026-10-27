@@ -122,4 +122,54 @@ class GatewayConfigurationTest extends TestCase
         $this->actingAs($admin)->delete("/platform/gateways/{$config->id}")->assertRedirect();
         $this->assertDatabaseMissing('payment_gateways', ['id' => $config->id]);
     }
+
+    public function test_saving_a_configuration_does_not_silently_disable_the_gateway(): void
+    {
+        $admin = $this->admin();
+        $config = PaymentGateway::create([
+            'name' => 'SSLCommerz',
+            'provider' => 'sslcommerz',
+            'environment' => 'sandbox',
+            'is_enabled' => true,
+            'supported_currencies' => ['USD'],
+            'credentials' => ['store_id' => 'a', 'store_password' => 'b'],
+        ]);
+
+        // The tabbed form owns "enabled" through its own switch, so the save
+        // payload no longer carries the flag.
+        $this->actingAs($admin)->patch("/platform/gateways/{$config->id}", [
+            'name' => 'SSLCommerz',
+            'provider' => 'sslcommerz',
+            'environment' => 'sandbox',
+            'supported_currencies' => ['USD', 'BDT'],
+        ])->assertRedirect();
+
+        $config->refresh();
+        $this->assertTrue($config->is_enabled);
+        $this->assertSame(['USD', 'BDT'], $config->supported_currencies);
+    }
+
+    public function test_disabling_a_gateway_removes_it_from_the_tenant_plan_change_flow(): void
+    {
+        $admin = $this->admin();
+        $config = PaymentGateway::create([
+            'name' => 'SSLCommerz',
+            'provider' => 'sslcommerz',
+            'environment' => 'sandbox',
+            'is_enabled' => true,
+            'supported_currencies' => ['USD'],
+            'credentials' => ['store_id' => 'a', 'store_password' => 'b'],
+        ]);
+
+        $tenant = Tenant::factory()->create();
+        $plan = $tenant->subscription->plan;
+
+        $eligibility = app(\App\Domain\Billing\GatewayEligibilityService::class);
+
+        $this->assertTrue($eligibility->eligibleFor($tenant, $plan, 'USD')->contains('id', $config->id));
+
+        $this->actingAs($admin)->post("/platform/gateways/{$config->id}/toggle")->assertRedirect();
+
+        $this->assertFalse($eligibility->eligibleFor($tenant, $plan, 'USD')->contains('id', $config->id));
+    }
 }
