@@ -81,15 +81,30 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   form-encoded IPNs (SSLCommerz/bKash) with a dedupe id and the `VALID` / `Completed` statuses,
   verifies with `val_id`, and refuses a settled amount or currency that does not match ours. A
   failed checkout is recorded as failed instead of leaving a phantom pending payment.
+- **Tenant coupon application.** The Subscription page now has a coupon field (and every plan-change
+  dialog takes an optional code), so a tenant can enter a code and see the discount *before* paying.
+  Applying reprices the outstanding invoice — subtotal, discount, coupon code and total — and the
+  checkout charges the discounted amount. Every rule lives in `CouponService::validate`: unknown code,
+  inactive, `valid_from`/`valid_to` window, total `max_redemptions`, per-tenant limit, the plan the
+  code applies to, `min_amount` and `first_purchase_only`, each with a reason the tenant can act on.
+  A coupon that covers the whole invoice settles it and activates the pending plan. A code can be
+  removed again, and a redemption is recorded **when the invoice settles**, not when it is issued —
+  an abandoned invoice no longer burns a use.
 
 ### Changed
 
+- Coupon redemption moved from invoice issue to invoice settlement, so usage limits
+  (`max_redemptions`, `per_tenant_limit`) count coupons that were actually paid for.
 - Test fixture: `Tenant::factory()` now provisions an active subscription on a
   every-feature/no-limit fixture plan (a factory tenant is a ready-to-use restaurant), with a
   `withoutSubscription()` state for the lapsed cases.
 
 ### Fixed
 
+- **Downloading an invoice PDF returned a 500 once the invoice was paid.** The document view tested
+  `(float) $invoice->paid_at`, casting a Carbon date to a float
+  (`Object of class Illuminate\Support\Carbon could not be converted to float`). It now tests the
+  date itself, and the tenant download is covered by a test that marks the invoice paid.
 - **Paying a gateway invoice logged the customer out.** The provider POSTs the browser back from
   its own origin; with a `SameSite=Lax` session cookie the browser withholds it, so Laravel started
   a fresh session there and its `Set-Cookie` replaced the signed-in one — the visitor landed on

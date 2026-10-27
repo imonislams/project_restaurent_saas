@@ -577,6 +577,15 @@ class SubscriptionService
             // are charged reflects the discount.
             if ($invoice) {
                 $this->priceInvoice($invoice, $coupon->code, $discount);
+
+                // A coupon that covers the whole invoice leaves nothing to pay:
+                // settle it so a pending plan change activates instead of leaving
+                // an invoice nobody can pay.
+                $invoice->refresh();
+
+                if ((float) $invoice->amount <= 0 && ! $invoice->status->isSettled()) {
+                    $this->payInvoice($invoice, $actor);
+                }
             }
 
             $this->coupons->logApplied($coupon, $subscription, $discount, $actor);

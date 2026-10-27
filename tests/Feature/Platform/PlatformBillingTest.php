@@ -133,6 +133,12 @@ class PlatformBillingTest extends TestCase
         $this->assertSame('2.90', $invoice->discount_amount);
         $this->assertSame('26.10', $invoice->amount);
         $this->assertSame('SAVE10', $invoice->coupon_code);
+        // The discount is quoted at issue time; the redemption — and therefore the
+        // usage count — is recorded when the invoice actually settles.
+        $this->assertSame(0, Coupon::where('code', 'SAVE10')->first()->redeemed_count);
+
+        app(SubscriptionService::class)->payInvoice($invoice, $admin);
+
         $this->assertSame(1, Coupon::where('code', 'SAVE10')->first()->redeemed_count);
     }
 
@@ -144,6 +150,11 @@ class PlatformBillingTest extends TestCase
         Coupon::create(['code' => 'ONCE', 'type' => 'percent', 'value' => 10, 'is_active' => true]);
 
         app(SubscriptionService::class)->applyCoupon($subscription, 'ONCE', $admin);
+
+        // The per-tenant limit counts real redemptions, so the first invoice has to
+        // be paid before the coupon counts as used.
+        $invoice = app(SubscriptionService::class)->issueInvoice($subscription->fresh());
+        app(SubscriptionService::class)->payInvoice($invoice, $admin);
 
         $this->expectException(ValidationException::class);
         app(SubscriptionService::class)->applyCoupon($subscription, 'ONCE', $admin);

@@ -5,7 +5,10 @@ namespace Tests\Feature\Subscription;
 use App\Domain\Billing\Models\PaymentGateway;
 use App\Domain\Billing\Models\PlatformPayment;
 use App\Domain\Identity\Enums\RoleName;
+use App\Domain\Subscriptions\Enums\CouponType;
 use App\Domain\Subscriptions\Enums\PlanRegion;
+use App\Domain\Subscriptions\Models\Coupon;
+use App\Domain\Subscriptions\Models\CouponRedemption;
 use App\Domain\Subscriptions\Models\Plan;
 use App\Domain\Subscriptions\Models\Subscription;
 use App\Domain\Subscriptions\Models\SubscriptionInvoice;
@@ -208,6 +211,191 @@ class TenantSubscriptionTest extends TestCase
         $this->actingAs($owner)->get("/subscription/invoices/{$invoice->id}/document")
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');
+    }
+
+    /** @return array{0: Tenant, 1: User, 2: Subscription} */
+    protected function pendingPlanChange(): array
+    {
+        [$tenant, $owner] = $this->tenantWithOwner();
+        $growth = Plan::where('slug', 'growth')->firstOrFail();
+
+        $this->actingAs($owner)->post('/subscription/plan', [
+            'plan_id' => $growth->getKey(),
+            'billing_cycle' => 'monthly',
+        ])->assertRedirect();
+
+        return [$tenant, $owner, Subscription::withoutGlobalScopes()->where('tenant_id', $tenant->id)->firstOrFail()];
+    }
+
+    protected function coupon(array $attributes = []): Coupon
+    {
+        return Coupon::create(array_merge([
+            'code' => 'SAVE20',
+            'type' => CouponType::Percent,
+            'value' => 20,
+            'currency' => 'USD',
+            'is_active' => true,
+        ], $attributes));
+    }
+
+    public function test_a_valid_coupon_discounts_the_invoice_before_payment(): void
+    {
+        [, $owner, $subscription] = $this->pendingPlanChange();
+        $this->coupon();
+
+        $invoice = SubscriptionInvoice::withoutGlobalScopes()->findOrFail($subscription->pending_invoice_id);
+        $subtotal = (float) $invoice->subtotal;
+
+        // Lower-case input is accepted; codes are stored upper-case.
+        $this->actingAs($owner)->post('/subscription/coupon', ['code' => 'save20'])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $invoice->refresh();
+
+        $this->assertSame('SAVE20', $invoice->coupon_code);
+        $this->assertSame(round($subtotal * 0.2, 2), (float) $invoice->discount_amount);
+        $this->assertSame(round($subtotal * 0.8, 2), (float) $invoice->amount);
+        // The amount the tenant is asked to pay matches the discounted total.
+        $this->assertSame(round($subtotal * 0.8, 2), $invoice->outstandingAmount());
+        $this->assertDatabaseHas('audit_logs', ['action' => 'subscription.coupon_applied']);
+        // Applying is not a redemption — that happens when the invoice settles.
+        $this->assertSame(0, CouponRedemption::query()->count());
+    }
+
+    public function test_expired_and_not_yet_valid_coupons_are_rejected(): void
+    {
+        [, $owner, $subscription] = $this->pendingPlanChange();
+        $this->coupon(['code' => 'OLD', 'valid_to' => now()->subDay()]);
+        $this->coupon(['code' => 'SOON', 'valid_from' => now()->addDay()]);
+
+        $this->actingAs($owner)->post('/subscription/coupon', ['code' => 'OLD'])
+            ->assertSessionHasErrors('code');
+        $this->assertStringContainsString('expired', session('errors')->first('code'));
+
+        $this->actingAs($owner)->post('/subscription/coupon', ['code' => 'SOON'])
+            ->assertSessionHasErrors('code');
+
+        $invoice = SubscriptionInvoice::withoutGlobalScopes()->findOrFail($subscription->pending_invoice_id);
+        $this->assertNull($invoice->coupon_code);
+        $this->assertSame(0.0, (float) $invoice->discount_amount);
+    }
+
+    public function test_total_and_per_tenant_usage_limits_are_enforced(): void
+    {
+        [$tenant, $owner] = $this->pendingPlanChange();
+        $this->coupon(['code' => 'EXHAUSTED', 'max_redemptions' => 1, 'redeemed_count' => 1]);
+        $used = $this->coupon(['code' => 'ONCE']);
+        $used->redemptions()->create(['tenant_id' => $tenant->id, 'amount' => 10, 'redeemed_at' => now()]);
+
+        $this->actingAs($owner)->post('/subscription/coupon', ['code' => 'EXHAUSTED'])
+            ->assertSessionHasErrors('code');
+        $this->assertStringContainsString('usage limit', session('errors')->first('code'));
+
+        $this->actingAs($owner)->post('/subscription/coupon', ['code' => 'ONCE'])
+            ->assertSessionHasErrors('code');
+        $this->assertStringContainsString('already used', session('errors')->first('code'));
+    }
+
+    public function test_plan_eligibility_minimum_amount_and_unknown_codes_are_enforced(): void
+    {
+        [, $owner, $subscription] = $this->pendingPlanChange();
+        $starter = Plan::where('slug', 'starter')->firstOrFail();
+        $this->coupon(['code' => 'STARTERONLY', 'applies_to_plan_id' => $starter->getKey()]);
+        $this->coupon(['code' => 'BIGMIN', 'min_amount' => 100000]);
+        $this->coupon(['code' => 'OFF', 'is_active' => false]);
+
+        // The pending change bills Growth — a Starter-only coupon does not apply.
+        $this->actingAs($owner)->post('/subscription/coupon', ['code' => 'STARTERONLY'])
+            ->assertSessionHasErrors('code');
+        $this->actingAs($owner)->post('/subscription/coupon', ['code' => 'BIGMIN'])
+            ->assertSessionHasErrors('code');
+        $this->assertStringContainsString('minimum invoice', session('errors')->first('code'));
+        $this->actingAs($owner)->post('/subscription/coupon', ['code' => 'OFF'])
+            ->assertSessionHasErrors('code');
+        $this->actingAs($owner)->post('/subscription/coupon', ['code' => 'NOPE'])
+            ->assertSessionHasErrors('code');
+        $this->assertStringContainsString('could not find', session('errors')->first('code'));
+
+        $invoice = SubscriptionInvoice::withoutGlobalScopes()->findOrFail($subscription->pending_invoice_id);
+        $this->assertNull($invoice->coupon_code);
+    }
+
+    public function test_a_fixed_coupon_can_cover_the_invoice_and_activate_the_plan(): void
+    {
+        [$tenant, $owner, $subscription] = $this->pendingPlanChange();
+        $this->coupon(['code' => 'FULL', 'type' => CouponType::Fixed, 'value' => 100000]);
+
+        $this->actingAs($owner)->post('/subscription/coupon', ['code' => 'FULL'])->assertRedirect();
+
+        $invoice = SubscriptionInvoice::withoutGlobalScopes()->findOrFail($subscription->pending_invoice_id);
+
+        // The discount is clamped to the subtotal — never a negative invoice.
+        $this->assertSame(0.0, (float) $invoice->amount);
+        $this->assertSame('paid', $invoice->status->value);
+
+        $fresh = Subscription::withoutGlobalScopes()->findOrFail($subscription->id);
+        $this->assertNull($fresh->pending_plan_id);
+        $this->assertSame('active', $fresh->status->value);
+
+        // Settling the invoice is what records the redemption.
+        $this->assertSame(1, CouponRedemption::query()->count());
+        $this->assertSame(1, Coupon::where('code', 'FULL')->firstOrFail()->redeemed_count);
+    }
+
+    public function test_a_redemption_is_recorded_when_the_invoice_is_paid(): void
+    {
+        [$tenant, $owner, $subscription] = $this->pendingPlanChange();
+        $coupon = $this->coupon();
+
+        $this->actingAs($owner)->post('/subscription/coupon', ['code' => 'SAVE20'])->assertRedirect();
+        $this->assertSame(0, CouponRedemption::query()->count());
+
+        $invoice = SubscriptionInvoice::withoutGlobalScopes()->findOrFail($subscription->pending_invoice_id);
+
+        app(TenantContext::class)->set($tenant);
+        app(SubscriptionService::class)->payInvoice($invoice->fresh(), $owner);
+        app(TenantContext::class)->forget();
+
+        $this->assertSame(1, CouponRedemption::query()->where('coupon_id', $coupon->id)->count());
+        $this->assertSame(1, $coupon->fresh()->redeemed_count);
+    }
+
+    public function test_a_code_sent_with_the_plan_change_discounts_that_invoice(): void
+    {
+        [$tenant, $owner] = $this->tenantWithOwner();
+        $this->coupon();
+        $growth = Plan::where('slug', 'growth')->firstOrFail();
+
+        $this->actingAs($owner)->post('/subscription/plan', [
+            'plan_id' => $growth->getKey(),
+            'billing_cycle' => 'monthly',
+            'coupon_code' => 'SAVE20',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $invoice = SubscriptionInvoice::withoutGlobalScopes()
+            ->where('tenant_id', $tenant->id)
+            ->latest('id')
+            ->firstOrFail();
+
+        $this->assertSame('SAVE20', $invoice->coupon_code);
+        $this->assertSame(round((float) $invoice->subtotal * 0.8, 2), (float) $invoice->amount);
+    }
+
+    public function test_removing_a_coupon_restores_the_full_price(): void
+    {
+        [, $owner, $subscription] = $this->pendingPlanChange();
+        $this->coupon();
+
+        $this->actingAs($owner)->post('/subscription/coupon', ['code' => 'SAVE20'])->assertRedirect();
+        $this->actingAs($owner)->delete('/subscription/coupon')->assertRedirect();
+
+        $invoice = SubscriptionInvoice::withoutGlobalScopes()->findOrFail($subscription->pending_invoice_id);
+
+        $this->assertNull($invoice->coupon_code);
+        $this->assertSame(0.0, (float) $invoice->discount_amount);
+        $this->assertSame((float) $invoice->subtotal, (float) $invoice->amount);
+        $this->assertNull($subscription->fresh()->coupon_id);
     }
 
     public function test_a_manual_payment_keeps_the_reference_and_asks_for_confirmation(): void

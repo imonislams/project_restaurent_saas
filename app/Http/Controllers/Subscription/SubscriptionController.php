@@ -240,7 +240,9 @@ class SubscriptionController extends Controller
 
         // Nothing to pay (free plan / fully discounted) — activate immediately.
         if ((float) $invoice->amount <= 0) {
-            $this->subscriptions->payInvoice($invoice, $request->user());
+            if (! $invoice->status->isSettled()) {
+                $this->subscriptions->payInvoice($invoice, $request->user());
+            }
 
             return back()->with('success', "Your plan is now {$plan->name}.");
         }
@@ -356,22 +358,21 @@ class SubscriptionController extends Controller
 
         abort_if($subscription === null, 422, 'There is no subscription on record.');
 
-        $coupon = $this->subscriptions->applyCoupon($subscription, $data['code'], $request->user());
+        $invoice = $this->subscriptions->outstandingInvoice($subscription);
+        $coupon = $this->subscriptions->applyCoupon($subscription, $data['code'], $request->user(), $invoice);
 
-        $invoice = $this->subscriptions->outstandingInvoice($subscription->fresh());
+        if ($invoice) {
+            $invoice->refresh();
 
-        // A coupon can cover the whole invoice (100% or a fixed amount above the
-        // total) — settle it instead of leaving an invoice nobody can pay.
-        if ($invoice && (float) $invoice->amount <= 0) {
-            $this->subscriptions->payInvoice($invoice, $request->user());
-
-            return back()->with('success', "Coupon {$coupon->code} applied — invoice {$invoice->number} is fully covered.");
+            // A coupon can cover the whole invoice (100% or a fixed amount above
+            // the total) — the service settles it and the plan change activates.
+            return back()->with('success', (float) $invoice->amount <= 0
+                ? "Coupon {$coupon->code} applied — invoice {$invoice->number} is fully covered."
+                : "Coupon {$coupon->code} applied — invoice {$invoice->number} is now "
+                    .$invoice->currency.' '.number_format((float) $invoice->amount, 2).'.');
         }
 
-        return back()->with('success', $invoice
-            ? "Coupon {$coupon->code} applied — invoice {$invoice->number} is now "
-                .$invoice->currency.' '.number_format((float) $invoice->amount, 2).'.'
-            : "Coupon {$coupon->code} applied — it will be used on your next invoice.");
+        return back()->with('success', "Coupon {$coupon->code} applied — it will be used on your next invoice.");
     }
 
     public function removeCoupon(Request $request): RedirectResponse
