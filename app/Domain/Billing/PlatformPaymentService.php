@@ -98,7 +98,7 @@ class PlatformPaymentService
      *
      * @param  array<string, mixed>  $payload
      * @param  array<string, string>  $headers
-     * @return array{processed: bool, duplicate: bool, reason: ?string}
+     * @return array{processed: bool, duplicate: bool, reason: ?string, awaiting_verification?: bool}
      */
     public function handleNotification(string $provider, array $payload, ?string $rawBody = null, array $headers = [], ?User $actor = null): array
     {
@@ -153,8 +153,35 @@ class PlatformPaymentService
 
         $event->forceFill(['signature_valid' => $signatureValid && $verification['valid']])->save();
 
+        // The gateway could not be reached (timeout, a 404 or an HTML error page):
+        // that says nothing about the payment, so it must not be marked failed —
+        // that would erase a payment the customer really made. It stays pending
+        // for a human (or a later retry) and the reason is recorded.
+        if (($verification['reachable'] ?? true) === false) {
+            $error = (string) ($verification['raw']['error'] ?? 'The validation response could not be read.');
+
+            $payment->forceFill(['meta' => array_merge($payment->meta ?? [], [
+                'verification_error' => $error,
+                'verification_checked_at' => now()->toIso8601String(),
+            ])])->save();
+
+            $event->forceFill(['processed' => true, 'processed_at' => now(), 'note' => 'Gateway unreachable — payment left pending'])->save();
+
+            return [
+                'processed' => false,
+                'duplicate' => false,
+                'reason' => "Could not verify with {$provider}: {$error}",
+                'awaiting_verification' => true,
+            ];
+        }
+
         if (! $verification['valid']) {
-            $this->fail($payment, 'Transaction could not be verified with the gateway.');
+            $status = (string) ($verification['status'] ?? '');
+
+            $this->fail($payment, $status !== ''
+                ? "The gateway rejected this transaction ({$status})."
+                : 'Transaction could not be verified with the gateway.');
+
             $event->forceFill(['processed' => true, 'processed_at' => now(), 'note' => 'Verification failed'])->save();
 
             return ['processed' => false, 'duplicate' => false, 'reason' => 'Verification failed'];
@@ -182,7 +209,8 @@ class PlatformPaymentService
     }
 
     /**
-     * Whether the payment a notification refers to is settled.
+     * The payment's real state behind a return URL, for the result page the
+     * customer lands on: settled, still waiting for confirmation, or failed.
      *
      * A provider sends both a server IPN and a browser return for the same
      * transaction. Whichever arrives second is a duplicate, so the browser
@@ -191,12 +219,18 @@ class PlatformPaymentService
      *
      * @param  array<string, mixed>  $payload
      */
-    public function notificationSettled(string $provider, array $payload): bool
+    public function notificationStatus(string $provider, array $payload): string
     {
         $reference = $this->gateways->driver($provider)->notificationReference($payload);
         $payment = $this->findPayment($reference);
 
-        return $payment !== null && $payment->status === PlatformPaymentStatus::Succeeded;
+        return match (true) {
+            $payment === null => 'unknown',
+            $payment->status === PlatformPaymentStatus::Succeeded => 'success',
+            $payment->status === PlatformPaymentStatus::Pending,
+            $payment->status === PlatformPaymentStatus::Processing => 'pending',
+            default => 'failed',
+        };
     }
 
     /**
@@ -333,7 +367,8 @@ class PlatformPaymentService
      */
     protected function failureReason(array $raw, string $fallback = 'Checkout could not be created at the gateway.'): string
     {
-        $error = $raw['error'] ?? null;
+        // SSLCommerz reports "failedreason"; Paddle uses a structured "error".
+        $error = $raw['error'] ?? $raw['failedreason'] ?? $raw['reason'] ?? null;
 
         if (is_string($error) && trim($error) !== '') {
             return $error;
@@ -384,8 +419,9 @@ class PlatformPaymentService
             'cus_name' => $tenant?->name,
             'cus_email' => $tenant?->getSetting('billing.email', $tenant?->getSetting('company.email', $tenant?->business_email)),
             'cus_phone' => $tenant?->getSetting('company.phone'),
-            'cus_add1' => $tenant?->getSetting('company.address'),
+            'cus_add1' => $tenant?->getSetting('billing.address', $tenant?->getSetting('company.address')),
             'cus_city' => $tenant?->getSetting('billing.city'),
+            'cus_postcode' => $tenant?->getSetting('billing.postal_code'),
             'cus_country' => $tenant?->getSetting('billing.country', $tenant?->getSetting('region.country', 'Bangladesh')),
             'product_name' => 'Subscription '.$invoice->number,
             'product_category' => 'Software',

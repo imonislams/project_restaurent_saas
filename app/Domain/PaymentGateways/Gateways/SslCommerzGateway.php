@@ -24,11 +24,11 @@ class SslCommerzGateway implements PlatformGateway
         return $config->environment->value === 'production'
             ? [
                 'process' => 'https://securepay.sslcommerz.com/gwprocess/v4/api.php',
-                'validate' => 'https://securepay.sslcommerz.com/validatorapi/validationserverAPI.php',
+                'validate' => 'https://securepay.sslcommerz.com/validator/api/validationserverAPI.php',
             ]
             : [
                 'process' => 'https://sandbox.sslcommerz.com/gwprocess/v4/api.php',
-                'validate' => 'https://sandbox.sslcommerz.com/validatorapi/validationserverAPI.php',
+                'validate' => 'https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php',
             ];
     }
 
@@ -80,16 +80,26 @@ class SslCommerzGateway implements PlatformGateway
             $data = $response->json();
             $data = is_array($data) ? $data : [];
         } catch (\Throwable $e) {
-            return ['valid' => false, 'status' => null, 'amount' => null, 'currency' => null, 'reference' => null, 'raw' => ['error' => $e->getMessage()]];
+            return ['valid' => false, 'reachable' => false, 'status' => null, 'amount' => null, 'currency' => null, 'reference' => null, 'raw' => ['error' => $e->getMessage()]];
         }
 
         $status = strtoupper((string) ($data['status'] ?? ''));
 
+        // SSLCommerz settles in BDT: `amount`/`currency` are the converted figures,
+        // while `currency_amount`/`currency_type` carry what the merchant asked for.
+        // Comparing the converted figures would fail every non-BDT payment.
+        $amount = $data['currency_amount'] ?? $data['amount'] ?? null;
+        $currency = $data['currency_type'] ?? $data['currency'] ?? null;
+
         return [
             'valid' => in_array($status, ['VALID', 'VALIDATED'], true),
+            // A 404, an HTML error page or an empty body means we could not ask the
+            // gateway — not that the transaction is bad. The caller keeps the
+            // payment pending in that case instead of failing a real payment.
+            'reachable' => $response->successful() && $status !== '',
             'status' => $status !== '' ? $status : null,
-            'amount' => isset($data['amount']) ? (float) $data['amount'] : null,
-            'currency' => isset($data['currency']) ? strtoupper((string) $data['currency']) : null,
+            'amount' => is_numeric($amount) ? (float) $amount : null,
+            'currency' => is_string($currency) && $currency !== '' ? strtoupper($currency) : null,
             'reference' => isset($data['tran_id']) ? (string) $data['tran_id'] : null,
             'raw' => $data,
         ];

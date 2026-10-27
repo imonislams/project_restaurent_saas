@@ -145,7 +145,7 @@ class PlatformPaymentTest extends TestCase
         $payment = PlatformPayment::firstOrFail();
 
         Http::fake([
-            'sandbox.sslcommerz.com/validatorapi/*' => Http::response([
+            'sandbox.sslcommerz.com/validator/api/*' => Http::response([
                 'status' => 'VALID',
                 'amount' => '29.00',
                 'currency' => 'USD',
@@ -174,7 +174,7 @@ class PlatformPaymentTest extends TestCase
         $payment = PlatformPayment::firstOrFail();
 
         Http::fake([
-            'sandbox.sslcommerz.com/validatorapi/*' => Http::response([
+            'sandbox.sslcommerz.com/validator/api/*' => Http::response([
                 'status' => 'VALID',
                 'amount' => '9.00',
                 'currency' => 'USD',
@@ -201,7 +201,7 @@ class PlatformPaymentTest extends TestCase
         $payment = PlatformPayment::firstOrFail();
 
         Http::fake([
-            'sandbox.sslcommerz.com/validatorapi/*' => Http::response([
+            'sandbox.sslcommerz.com/validator/api/*' => Http::response([
                 'status' => 'VALID', 'amount' => '29.00', 'currency' => 'USD', 'tran_id' => $payment->provider_ref,
             ], 200),
         ]);
@@ -225,7 +225,7 @@ class PlatformPaymentTest extends TestCase
         $payment = PlatformPayment::firstOrFail();
 
         Http::fake([
-            'sandbox.sslcommerz.com/validatorapi/*' => Http::response([
+            'sandbox.sslcommerz.com/validator/api/*' => Http::response([
                 'status' => 'VALID', 'amount' => '29.00', 'currency' => 'USD', 'tran_id' => $payment->provider_ref,
             ], 200),
         ]);
@@ -321,5 +321,118 @@ class PlatformPaymentTest extends TestCase
         $this->actingAs($auditor)->get('/platform/payments')->assertOk();
         $gateway = $this->sslcommerzConfig();
         $this->actingAs($auditor)->post("/platform/gateways/{$gateway->id}/test")->assertForbidden();
+    }
+
+    public function test_sslcommerz_verification_calls_the_validator_path_the_provider_serves(): void
+    {
+        // Regression guard: the "/validatorapi/..." path answers 404, which made
+        // every genuinely paid transaction fail verification.
+        $config = $this->sslcommerzConfig();
+        $invoice = $this->invoice();
+
+        Http::fake([
+            'sandbox.sslcommerz.com/gwprocess/*' => Http::response(['GatewayPageURL' => 'https://sandbox.sslcommerz.com/pay/xyz'], 200),
+            'sandbox.sslcommerz.com/validator/api/*' => Http::response([
+                'status' => 'VALID',
+                'amount' => '29.00',
+                'currency' => 'USD',
+                'tran_id' => 'PAY-INV',
+            ], 200),
+        ]);
+
+        $this->actingAs($this->admin())->post("/platform/invoices/{$invoice->id}/checkout", ['gateway_id' => $config->id]);
+        $payment = PlatformPayment::firstOrFail();
+
+        $this->post('/payments/ipn/sslcommerz', [
+            'tran_id' => $payment->provider_ref,
+            'val_id' => 'VAL-URL',
+        ])->assertJson(['processed' => true]);
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/validator/api/validationserverAPI.php'));
+        $this->assertSame(PlatformPaymentStatus::Succeeded, $payment->fresh()->status);
+    }
+
+    public function test_an_unreachable_validator_leaves_the_payment_pending_instead_of_failing_it(): void
+    {
+        $config = $this->sslcommerzConfig();
+        $invoice = $this->invoice();
+
+        Http::fake([
+            'sandbox.sslcommerz.com/gwprocess/*' => Http::response(['GatewayPageURL' => 'https://sandbox.sslcommerz.com/pay/xyz'], 200),
+            'sandbox.sslcommerz.com/validator/api/*' => Http::response('<html>404 Not Found</html>', 404),
+        ]);
+
+        $this->actingAs($this->admin())->post("/platform/invoices/{$invoice->id}/checkout", ['gateway_id' => $config->id]);
+        $payment = PlatformPayment::firstOrFail();
+
+        $this->post('/payments/ipn/sslcommerz', [
+            'tran_id' => $payment->provider_ref,
+            'val_id' => 'VAL-GONE',
+        ])->assertJson(['processed' => false]);
+
+        // A gateway we could not ask says nothing about the payment — it must stay
+        // pending (and payable/confirmable by a human), never be marked failed.
+        $payment->refresh();
+        $this->assertSame(PlatformPaymentStatus::Pending, $payment->status);
+        $this->assertNotEmpty($payment->meta['verification_error'] ?? null);
+        $this->assertNotSame('paid', $invoice->fresh()->status->value);
+
+        // The customer's return page reports that it is still being confirmed.
+        $this->get('/payments/callback/sslcommerz/success?'.http_build_query([
+            'tran_id' => $payment->provider_ref,
+            'val_id' => 'VAL-GONE',
+        ]))->assertRedirect(route('payments.result', ['status' => 'pending']));
+    }
+
+    public function test_a_usd_payment_verified_in_bdt_settles_without_a_false_mismatch(): void
+    {
+        // SSLCommerz settles in BDT and reports the original figures separately:
+        // comparing the converted ones would fail a payment that really succeeded.
+        $config = $this->sslcommerzConfig();
+        $invoice = $this->invoice();
+
+        Http::fake([
+            'sandbox.sslcommerz.com/gwprocess/*' => Http::response(['GatewayPageURL' => 'https://sandbox.sslcommerz.com/pay/xyz'], 200),
+            'sandbox.sslcommerz.com/validator/api/*' => Http::response([
+                'status' => 'VALIDATED',
+                'amount' => '3540.00',
+                'currency' => 'BDT',
+                'currency_amount' => '29.00',
+                'currency_type' => 'USD',
+                'tran_id' => 'PAY-INV',
+            ], 200),
+        ]);
+
+        $this->actingAs($this->admin())->post("/platform/invoices/{$invoice->id}/checkout", ['gateway_id' => $config->id]);
+        $payment = PlatformPayment::firstOrFail();
+
+        $this->post('/payments/ipn/sslcommerz', [
+            'tran_id' => $payment->provider_ref,
+            'val_id' => 'VAL-BDT',
+        ])->assertJson(['processed' => true]);
+
+        $this->assertSame(PlatformPaymentStatus::Succeeded, $payment->fresh()->status);
+        $this->assertSame('paid', $invoice->fresh()->status->value);
+    }
+
+    public function test_a_rejected_checkout_records_the_providers_own_reason(): void
+    {
+        $config = $this->sslcommerzConfig();
+        $invoice = $this->invoice();
+
+        Http::fake([
+            'sandbox.sslcommerz.com/gwprocess/*' => Http::response([
+                'status' => 'FAILED',
+                'failedreason' => 'Mandatory field missing: cus_phone',
+            ], 200),
+        ]);
+
+        $this->actingAs($this->admin())->post("/platform/invoices/{$invoice->id}/checkout", ['gateway_id' => $config->id])
+            ->assertRedirect()
+            ->assertSessionHas('error', fn (string $message) => str_contains($message, 'cus_phone'));
+
+        $payment = PlatformPayment::firstOrFail();
+        $this->assertSame(PlatformPaymentStatus::Failed, $payment->status);
+        $this->assertSame('Mandatory field missing: cus_phone', $payment->failure_reason);
     }
 }

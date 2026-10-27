@@ -20,8 +20,8 @@ class SslCommerzDriver implements GatewayDriver
     protected function endpoints(TenantGateway $config): array
     {
         return $config->environment === 'production'
-            ? ['process' => 'https://securepay.sslcommerz.com/gwprocess/v4/api.php', 'validate' => 'https://securepay.sslcommerz.com/validatorapi/validationserverAPI.php']
-            : ['process' => 'https://sandbox.sslcommerz.com/gwprocess/v4/api.php', 'validate' => 'https://sandbox.sslcommerz.com/validatorapi/validationserverAPI.php'];
+            ? ['process' => 'https://securepay.sslcommerz.com/gwprocess/v4/api.php', 'validate' => 'https://securepay.sslcommerz.com/validator/api/validationserverAPI.php']
+            : ['process' => 'https://sandbox.sslcommerz.com/gwprocess/v4/api.php', 'validate' => 'https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php'];
     }
 
     /** @return array{store_id: string, store_passwd: string} */
@@ -68,11 +68,18 @@ class SslCommerzDriver implements GatewayDriver
 
             $status = strtoupper((string) ($data['status'] ?? ''));
 
+            // SSLCommerz settles in BDT: `amount`/`currency` are the converted
+            // figures, while `currency_amount`/`currency_type` carry what the
+            // merchant asked for. Comparing the converted figures would fail every
+            // non-BDT payment.
+            $amount = $data['currency_amount'] ?? $data['amount'] ?? null;
+            $currency = $data['currency_type'] ?? $data['currency'] ?? null;
+
             return [
                 'valid' => in_array($status, ['VALID', 'VALIDATED'], true),
                 'status' => $status !== '' ? $status : null,
-                'amount' => isset($data['amount']) ? (float) $data['amount'] : null,
-                'currency' => isset($data['currency']) ? strtoupper((string) $data['currency']) : null,
+                'amount' => is_numeric($amount) ? (float) $amount : null,
+                'currency' => is_string($currency) && $currency !== '' ? strtoupper($currency) : null,
                 'reference' => isset($data['tran_id']) ? (string) $data['tran_id'] : $reference,
                 'raw' => $data,
             ];

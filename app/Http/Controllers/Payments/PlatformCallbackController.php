@@ -23,11 +23,10 @@ class PlatformCallbackController extends Controller
 
             // The provider also posts a server IPN for the same transaction, so
             // this return is often a duplicate. Report the payment's real state
-            // rather than treating "already processed" as a failure.
-            $settled = $this->payments->notificationSettled($provider, $request->all());
-
+            // rather than treating "already processed" as a failure — and a
+            // payment that is still awaiting confirmation is not a failure.
             return redirect()->route('payments.result', [
-                'status' => $settled ? 'success' : 'failed',
+                'status' => $this->payments->notificationStatus($provider, $request->all()),
             ]);
         }
 
@@ -47,6 +46,7 @@ class PlatformCallbackController extends Controller
 
         $messages = [
             'success' => 'Thank you — your payment was received and verified.',
+            'pending' => 'We are confirming this payment with the gateway. You will be notified as soon as it clears — no action is needed.',
             'failed' => 'We could not verify this payment. If you were charged, please contact support.',
             'cancelled' => 'The payment was cancelled.',
             'unknown' => 'Payment result unavailable.',

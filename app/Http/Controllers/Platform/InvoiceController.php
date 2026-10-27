@@ -336,7 +336,7 @@ class InvoiceController extends Controller
         return back()->with(
             $result['payment']->status === PlatformPaymentStatus::Failed ? 'error' : 'success',
             $result['payment']->status === PlatformPaymentStatus::Failed
-                ? 'Checkout could not be started.'
+                ? 'Checkout could not be started'.($result['payment']->failure_reason ? ': '.$result['payment']->failure_reason : '.')
                 : 'Payment initiated. Settle it from the payments screen.',
         );
     }

@@ -9,6 +9,26 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **SSLCommerz payments could never be verified — in sandbox *and* live.** The transaction
+  validation endpoint was built as `/validatorapi/validationserverAPI.php`, which answers
+  **404** on both `sandbox.sslcommerz.com` and `securepay.sslcommerz.com`; the provider
+  serves it from `/validator/api/validationserverAPI.php`. Every notification therefore
+  looked unverifiable, so a customer who really paid had the payment marked failed and the
+  invoice left unsettled (the plan change never activated). Fixed in the platform gateway
+  *and* the tenant driver, with regression tests pinning the path.
+  Three further defects in the same path, all of which would have kept failing after the URL
+  was corrected:
+  - SSLCommerz reports `amount`/`currency` **converted to BDT** and the merchant's original
+    figures in `currency_amount`/`currency_type`. The verification compared the converted
+    ones, so **every non-BDT payment** was failed with an amount/currency mismatch. Both
+    drivers now compare the original figures.
+  - A rejected session creation returns `failedreason`; only `error` was read, so the operator
+    always saw a generic "Checkout could not be started." The provider's own reason is now
+    stored on the payment *and* shown in the flash message.
+  - A gateway that could not be reached (timeout, 404, an HTML error page) no longer marks the
+    payment failed — that says nothing about the payment, so it stays **pending** with the
+    reason recorded for an operator, and the customer's return page reports "still being
+    confirmed" instead of "could not verify".
 - **Platform email was accepted by the provider but never delivered.** The sender address
   fell back to `config/mail.php`'s `hello@example.com` placeholder, so every message left
   the platform claiming to be from a domain reserved for documentation — `example.com`
