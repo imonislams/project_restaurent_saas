@@ -7,6 +7,20 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Platform email was accepted by the provider but never delivered.** The sender address
+  fell back to `config/mail.php`'s `hello@example.com` placeholder, so every message left
+  the platform claiming to be from a domain reserved for documentation — `example.com`
+  publishes `v=spf1 -all` with `DMARC p=reject`, so receiving servers rejected or
+  quarantined it and the failure was invisible (the SMTP server accepts the mail, the
+  email log records `sent`, and the bounce is discarded because it is addressed to the same
+  placeholder). The Email Provider settings screen also pre-filled that placeholder as a
+  value to save. `MailConfigurator` now sends from the configured address only when it is
+  deliverable and otherwise uses the authenticated SMTP mailbox, the settings screen shows
+  the sender that will actually be used, and the From Address field explains the
+  requirement.
+
 ## [0.3.0] - 2026-10-26
 
 A production release pipeline: versioned packages built by CI, a self-locking first-run

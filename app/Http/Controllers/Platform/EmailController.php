@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Platform;
 
 use App\Domain\Auditing\AuditLogger;
 use App\Domain\Communications\Models\EmailLog;
+use App\Domain\PlatformSettings\MailConfigurator;
 use App\Domain\PlatformSettings\PlatformSettings;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -176,7 +177,7 @@ class EmailController extends Controller
 
         return [
             'mailer' => $settings['mail.mailer'] ?? config('mail.default'),
-            'from_address' => $settings['mail.from_address'] ?? config('mail.from.address'),
+            'from_address' => $this->effectiveFromAddress($settings) ?? '',
             'configured' => ($settings['mail.mailer'] ?? null) !== null,
             'host' => $settings['mail.host'] ?? null,
         ];
@@ -193,9 +194,23 @@ class EmailController extends Controller
             'port' => $settings['mail.port'] ?? '',
             'username' => $settings['mail.username'] ?? '',
             'encryption' => $settings['mail.encryption'] ?? '',
-            'from_address' => $settings['mail.from_address'] ?? config('mail.from.address'),
+            'from_address' => $this->effectiveFromAddress($settings) ?? '',
             'from_name' => $settings['mail.from_name'] ?? config('mail.from.name'),
             'has_password' => ! empty($settings['mail.password']),
         ];
+    }
+
+    /**
+     * The sender mail is actually sent from: the configured address when it can
+     * be delivered, otherwise the SMTP mailbox (see MailConfigurator).
+     *
+     * @param  array<string, mixed>  $settings
+     */
+    protected function effectiveFromAddress(array $settings): ?string
+    {
+        return MailConfigurator::deliverableFromAddress(
+            $settings['mail.from_address'] ?? config('mail.from.address'),
+            $settings['mail.username'] ?? null,
+        );
     }
 }

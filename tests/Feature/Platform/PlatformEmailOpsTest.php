@@ -4,6 +4,7 @@ namespace Tests\Feature\Platform;
 
 use App\Domain\Communications\Models\EmailLog;
 use App\Domain\Identity\Enums\RoleName;
+use App\Domain\PlatformSettings\MailConfigurator;
 use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Subscriptions\SubscriptionService;
 use App\Domain\Tenancy\Models\Tenant;
@@ -117,5 +118,52 @@ class PlatformEmailOpsTest extends TestCase
 
         $this->actingAs($billing)->get('/platform/email')->assertForbidden();
         $this->actingAs($billing)->get('/platform/email/settings')->assertForbidden();
+    }
+
+    public function test_placeholder_from_address_falls_back_to_the_smtp_mailbox(): void
+    {
+        $settings = app(PlatformSettings::class);
+        $settings->set('mail.mailer', 'smtp', 'mail');
+        $settings->set('mail.host', 'smtp.touchandsolve.com', 'mail');
+        $settings->set('mail.username', 'hello@touchandsolve.com', 'mail');
+        $settings->set('mail.from_address', 'hello@example.com', 'mail');
+
+        app(MailConfigurator::class)->apply();
+
+        // example.com is reserved (SPF -all, DMARC p=reject), so mail sent from it
+        // is rejected by the receiving server: the provider mailbox must be used.
+        $this->assertSame('hello@touchandsolve.com', config('mail.from.address'));
+    }
+
+    public function test_a_deliverable_from_address_is_kept(): void
+    {
+        $settings = app(PlatformSettings::class);
+        $settings->set('mail.mailer', 'smtp', 'mail');
+        $settings->set('mail.username', 'hello@touchandsolve.com', 'mail');
+        $settings->set('mail.from_address', 'no-reply@touchandsolve.com', 'mail');
+
+        app(MailConfigurator::class)->apply();
+
+        $this->assertSame('no-reply@touchandsolve.com', config('mail.from.address'));
+    }
+
+    public function test_settings_screen_reports_the_sender_that_will_be_used(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->post('/platform/email/settings', [
+            'mailer' => 'smtp',
+            'host' => 'smtp.touchandsolve.com',
+            'port' => 465,
+            'username' => 'hello@touchandsolve.com',
+            'encryption' => 'ssl',
+            'from_address' => 'hello@example.com',
+            'from_name' => 'Touch Dine',
+        ])->assertRedirect();
+
+        $this->actingAs($admin)->get('/platform/email/settings')->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Platform/Email/Settings')
+                ->where('settings.from_address', 'hello@touchandsolve.com'));
     }
 }

@@ -2,6 +2,7 @@ import { Button, Card, CardBody, CardHeader } from '@/Components/ui';
 import { Input } from '@/Components/ui/Input';
 import { Label } from '@/Components/ui/Label';
 import PlatformLayout from '@/Layouts/PlatformLayout';
+import { useT } from '@/i18n';
 import { useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 import { Mail, Send, Save, KeyRound } from 'lucide-react';
@@ -18,6 +19,7 @@ interface Settings {
 }
 
 export default function EmailSettings({ settings, mailers }: { settings: Settings; mailers: string[] }) {
+    const t = useT();
     const form = useForm({
         mailer: settings.mailer,
         host: settings.host,
@@ -122,9 +124,10 @@ export default function EmailSettings({ settings, mailers }: { settings: Setting
                                 <Input 
                                     id="from_address"
                                     value={form.data.from_address} 
-                                    placeholder="noreply@touchdine.cafe"
+                                    placeholder="noreply@your-domain.com"
                                     onChange={(e) => form.setData('from_address', e.target.value)} 
                                 />
+                                <p className="text-xs text-muted-foreground">{t('platform.email.fromAddressHint')}</p>
                             </div>
 
                             <div className="space-y-1.5">

@@ -48,6 +48,8 @@ export const translations: Record<string, Record<string, string>> = {
         'shell.toggleSidebar': 'Toggle sidebar',
         'shell.language': 'Language',
 
+        'platform.email.fromAddressHint': "Use an address on your mail provider's domain — reserved addresses like example.com are never delivered.",
+
         'common.save': 'Save',
         'common.cancel': 'Cancel',
         'common.delete': 'Delete',
@@ -402,6 +404,8 @@ export const translations: Record<string, Record<string, string>> = {
         'shell.control': 'কন্ট্রোল সেন্টার',
         'shell.toggleSidebar': 'সাইডবার টগল করুন',
         'shell.language': 'ভাষা',
+
+        'platform.email.fromAddressHint': 'মেইল প্রোভাইডারের ডোমেইনের ঠিকানা দিন — example.com-এর মতো রিজার্ভড ঠিকানায় মেইল কখনো পৌঁছায় না।',
 
         'common.save': 'সংরক্ষণ',
         'common.cancel': 'বাতিল',
