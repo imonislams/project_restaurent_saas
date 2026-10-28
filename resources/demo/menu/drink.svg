@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-label="Glass of iced drink">
+  <rect width="320" height="200" rx="16" fill="#F3F2F2"/>
+  <ellipse cx="160" cy="172" rx="62" ry="8" fill="#E9E4DF"/>
+  <path d="M118 74h84l-10 88c-1 8-8 12-16 12h-32c-8 0-15-4-16-12z" fill="#FBF9F6" stroke="#201E1D" stroke-width="2"/>
+  <path d="M122 96h76l-8 66c-1 6-6 8-12 8h-36c-6 0-11-2-12-8z" fill="#D9A263"/>
+  <g fill="#F7F4EF" stroke="#E3DCD2" stroke-width="2">
+    <rect x="136" y="104" width="18" height="18" rx="4" transform="rotate(-12 136 104)"/>
+    <rect x="162" y="118" width="18" height="18" rx="4" transform="rotate(14 162 118)"/>
+  </g>
+  <path d="M186 60l-12 30" stroke="#EC3013" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="206" cy="120" r="16" fill="#F7EAD3" stroke="#201E1D" stroke-width="2"/>
+  <path d="M206 104v32M190 120h32" stroke="#E3DCD2" stroke-width="2"/>
+  <circle cx="126" cy="86" r="4" fill="#6B7A5A"/>
+</svg>

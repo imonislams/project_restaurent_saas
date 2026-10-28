@@ -6,6 +6,7 @@ use App\Domain\Accounting\Actions\ProvisionAccountingDefaults;
 use App\Domain\Auditing\AuditLogger;
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
+use App\Domain\Subscriptions\UsageService;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,10 @@ use Illuminate\Validation\ValidationException;
  */
 class BranchService
 {
-    public function __construct(protected AuditLogger $audit) {}
+    public function __construct(
+        protected AuditLogger $audit,
+        protected UsageService $usage,
+    ) {}
 
     public function assertWithinLimit(Tenant $tenant): void
     {
@@ -27,7 +31,9 @@ class BranchService
             return;
         }
 
-        if ($tenant->branches()->count() >= $limit) {
+        // Counts real branches only — demo branches are showcase content and
+        // never consume the plan's allowance (see App\Domain\Demo).
+        if ($this->usage->metrics($tenant)['branches'] >= $limit) {
             throw ValidationException::withMessages([
                 'name' => "Your plan allows {$limit} branch(es). Upgrade your plan to add more.",
             ]);

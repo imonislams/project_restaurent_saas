@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Onboarding;
 
 use App\Domain\Branches\Enums\ServiceType;
+use App\Domain\Demo\DemoDataService;
 use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Onboarding\Enums\OnboardingStep;
@@ -196,7 +197,26 @@ class OnboardingController extends Controller
                 ->with('error', 'Please complete the required steps before activating.');
         }
 
+        $request->validate(['demo_enabled' => ['nullable', 'boolean']]);
+
         $this->onboarding->complete($tenant);
+
+        // Sample data is on by default: a workspace with something in it teaches
+        // the product far better than empty screens, and the owner can remove it
+        // from Settings → Demo data at any time.
+        if ($request->boolean('demo_enabled', true)) {
+            try {
+                app(DemoDataService::class)->start($tenant, $request->user());
+
+                return redirect()->route('demo.setup')
+                    ->with('success', 'Setup complete. Now building your demo restaurant.');
+            } catch (\Throwable $e) {
+                report($e);
+
+                return redirect()->route('dashboard')
+                    ->with('error', 'Setup complete, but the demo data could not be started: '.$e->getMessage());
+            }
+        }
 
         return redirect()->route('dashboard')
             ->with('success', 'Setup complete. Your restaurant is ready.');
@@ -280,7 +300,12 @@ class OnboardingController extends Controller
                 'name' => '',
                 'role' => 'branch_manager',
             ],
-            OnboardingStep::Review => [],
+            OnboardingStep::Review => [
+                'demo' => [
+                    'days' => DemoDataService::DEFAULT_DAYS,
+                    'min_days' => DemoDataService::MIN_DAYS,
+                ],
+            ],
         };
     }
 

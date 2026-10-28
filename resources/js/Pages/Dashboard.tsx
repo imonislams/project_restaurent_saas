@@ -19,6 +19,7 @@ import {
 import type { BadgeTone } from '@/Components/ui';
 import PeriodFilter from '@/Components/ui/PeriodFilter';
 import type { PeriodValue } from '@/Components/ui/PeriodFilter';
+import DemoBanner from '@/Components/Demo/DemoBanner';
 import { useT } from '@/i18n';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -278,6 +279,9 @@ export default function Dashboard({
                             <span>{flash.success}</span>
                         </div>
                     )}
+
+                    {/* Sample-data banner: states what is demo, and how to remove it. */}
+                    <DemoBanner />
 
                     {analytics && business360 ? (
                         <>

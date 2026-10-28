@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-label="Pizza slice">
+  <rect width="320" height="200" rx="16" fill="#F3F2F2"/>
+  <ellipse cx="162" cy="170" rx="78" ry="9" fill="#E9E4DF"/>
+  <path d="M160 44l72 112c-46 18-98 18-144 0z" fill="#F1E2C8" stroke="#201E1D" stroke-width="2"/>
+  <path d="M160 60l56 88c-36 13-76 13-112 0z" fill="#E8C48C"/>
+  <g fill="#EC3013">
+    <circle cx="150" cy="98" r="7"/>
+    <circle cx="176" cy="124" r="7"/>
+    <circle cx="136" cy="134" r="6"/>
+    <circle cx="160" cy="146" r="5"/>
+  </g>
+  <g fill="#6B7A5A">
+    <ellipse cx="170" cy="92" rx="6" ry="3" transform="rotate(20 170 92)"/>
+    <ellipse cx="146" cy="120" rx="6" ry="3" transform="rotate(-16 146 120)"/>
+  </g>
+  <path d="M160 44l14 22" stroke="#201E1D" stroke-width="2" stroke-linecap="round"/>
+</svg>

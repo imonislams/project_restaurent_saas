@@ -45,7 +45,7 @@ export default function OnboardingShow({
             case 'team':
                 return <TeamStep form={form} options={options} />;
             case 'review':
-                return <ReviewStep progress={progress} />;
+                return <ReviewStep progress={progress} demo={form?.demo ?? { days: 21, min_days: 15 }} />;
             default:
                 return null;
         }

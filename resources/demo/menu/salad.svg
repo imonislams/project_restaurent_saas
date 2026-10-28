@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-label="Salad bowl">
+  <rect width="320" height="200" rx="16" fill="#F3F2F2"/>
+  <ellipse cx="160" cy="170" rx="80" ry="9" fill="#E9E4DF"/>
+  <path d="M90 110h140c-6 36-32 58-70 58s-64-22-70-58z" fill="#FBF9F6" stroke="#201E1D" stroke-width="2"/>
+  <g fill="#6B7A5A">
+    <ellipse cx="128" cy="100" rx="20" ry="12" transform="rotate(-16 128 100)"/>
+    <ellipse cx="166" cy="94" rx="22" ry="13" transform="rotate(12 166 94)"/>
+    <ellipse cx="196" cy="104" rx="18" ry="11" transform="rotate(-6 196 104)"/>
+  </g>
+  <g fill="#8C9B76">
+    <ellipse cx="146" cy="108" rx="16" ry="9" transform="rotate(22 146 108)"/>
+    <ellipse cx="182" cy="112" rx="14" ry="8" transform="rotate(-18 182 112)"/>
+  </g>
+  <circle cx="138" cy="118" r="8" fill="#EC3013"/>
+  <circle cx="176" cy="122" r="7" fill="#D94A31"/>
+  <path d="M112 128c6-4 12-4 18 0" stroke="#E3DCD2" stroke-width="3" stroke-linecap="round" fill="none"/>
+</svg>

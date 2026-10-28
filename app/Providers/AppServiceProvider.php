@@ -2,15 +2,22 @@
 
 namespace App\Providers;
 
+use App\Domain\Auditing\Models\AuditLog;
 use App\Domain\Billing\PricingRegionContext;
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Branches\Policies\BranchPolicy;
+use App\Domain\Demo\DemoContext;
+use App\Domain\Demo\DemoRecorder;
+use App\Domain\Demo\Models\DemoDataRecord;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Policies\RolePolicy;
 use App\Domain\Identity\Policies\UserPolicy;
 use App\Domain\Inventory\Models\Ingredient;
 use App\Domain\Menu\Models\Product;
 use App\Domain\PlatformSettings\MailConfigurator;
+use App\Domain\PlatformSettings\PlatformSettings;
+use App\Domain\Realtime\BroadcastConfigurator;
+use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\Policies\TenantPolicy;
 use App\Domain\Tenancy\TenantContext;
@@ -26,10 +33,11 @@ use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
-use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Mail\Events\MessageSendingFailed;
+use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -46,6 +54,15 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(TenantContext::class);
         $this->app->singleton(PricingRegionContext::class);
+
+        // Marks the demo batch currently generating, so the ledger recorder can
+        // trace every row a demo run creates. Always null outside a run.
+        $this->app->singleton(DemoContext::class);
+
+        // Must be a singleton: the recording hook resolves it on every model
+        // write, so separate instances would each buffer a single row and never
+        // reach the flush threshold — silently losing the whole ledger.
+        $this->app->singleton(DemoRecorder::class);
 
         // Memoised so the git commit probe runs at most once per request.
         $this->app->singleton(AppVersion::class);
@@ -86,6 +103,28 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasPermission($ability) ? true : null;
         });
 
+        // Demo data: while a demo batch is generating, every tenant-scoped row
+        // it creates is traced in the demo ledger. The recorder only runs when a
+        // batch is active, so this costs one boolean check on every other write,
+        // and it captures rows written indirectly by the domain services too.
+        Event::listen('eloquent.created: *', function (string $event, array $payload) {
+            $model = $payload[0] ?? null;
+
+            if (! $model instanceof Model || ! app(DemoContext::class)->active()) {
+                return;
+            }
+
+            if (! in_array(BelongsToTenant::class, class_uses_recursive($model), true)) {
+                return;
+            }
+
+            if ($model instanceof AuditLog || $model instanceof DemoDataRecord) {
+                return;
+            }
+
+            app(DemoRecorder::class)->remember($model);
+        });
+
         // Email operations: record outbound email and apply UI-configured mail settings.
         Event::listen(MessageSent::class, [LogOutboundEmail::class, 'sent']);
         Event::listen(MessageSendingFailed::class, [LogOutboundEmail::class, 'failed']);
@@ -109,13 +148,13 @@ class AppServiceProvider extends ServiceProvider
         }
 
         try {
-            $this->app->make(\App\Domain\Realtime\BroadcastConfigurator::class)->apply();
+            $this->app->make(BroadcastConfigurator::class)->apply();
         } catch (\Throwable) {
             // Real-time settings unavailable — keep the configured broadcaster.
         }
 
         try {
-            $lifetime = $this->app->make(\App\Domain\PlatformSettings\PlatformSettings::class)->get('security.session_lifetime_minutes');
+            $lifetime = $this->app->make(PlatformSettings::class)->get('security.session_lifetime_minutes');
 
             if ($lifetime) {
                 config(['session.lifetime' => (int) $lifetime]);

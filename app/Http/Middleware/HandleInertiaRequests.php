@@ -4,7 +4,10 @@ namespace App\Http\Middleware;
 
 use App\Domain\Billing\PricingRegionContext;
 use App\Domain\Communications\AnnouncementService;
+use App\Domain\Demo\DemoDataService;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Realtime\RealtimeManager;
+use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
 use App\Support\AppVersion;
 use Illuminate\Http\Request;
@@ -18,6 +21,24 @@ class HandleInertiaRequests extends Middleware
      * @var string
      */
     protected $rootView = 'app';
+
+    /**
+     * Demo workspace state for the banner and the demo screens.
+     *
+     * @return array<string, mixed>
+     */
+    protected function demoState(?Tenant $tenant): array
+    {
+        if ($tenant === null) {
+            return ['status' => 'none', 'has_data' => false, 'days' => 0];
+        }
+
+        try {
+            return app(DemoDataService::class)->state($tenant);
+        } catch (\Throwable $e) {
+            return ['status' => 'none', 'has_data' => false, 'days' => 0];
+        }
+    }
 
     /**
      * Determine the current asset version.
@@ -60,6 +81,10 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 'import_result' => fn () => $request->session()->get('import_result'),
             ],
+            // Demo workspace state, driving the dashboard banner and the demo
+            // screens. Deliberately fail-safe: a missing table on a deployment
+            // that has not migrated yet must never break an authenticated page.
+            'demo' => fn () => $this->demoState($tenant),
             'impersonation' => $request->session()->has('impersonator_id') ? [
                 'admin_id' => $request->session()->get('impersonator_id'),
                 'tenant_id' => $request->session()->get('impersonating_tenant_id'),
@@ -73,12 +98,12 @@ class HandleInertiaRequests extends Middleware
                 'unread' => fn () => $user && $user->isPlatformAdmin() ? $user->unreadNotifications()->count() : 0,
             ],
             // Public websocket connection values for the browser (never the secret).
-            'realtime' => fn () => app(\App\Domain\Realtime\RealtimeManager::class)->publicConfig(),
+            'realtime' => fn () => app(RealtimeManager::class)->publicConfig(),
             // Orders awaiting staff confirmation (QR orders when auto-accept is off,
             // table-staff orders under central approval). Tenant + branch global
             // scopes apply, so this is limited to the user's branches.
             'pending_approvals' => fn () => ($user && $tenant && $user->hasPermission('orders.approve'))
-                ? (int) \App\Domain\Orders\Models\Order::query()
+                ? (int) Order::query()
                     ->where('acceptance_status', 'pending')
                     ->count()
                 : 0,

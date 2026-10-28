@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-label="Starter plate with dipping sauce">
+  <rect width="320" height="200" rx="16" fill="#F3F2F2"/>
+  <ellipse cx="160" cy="168" rx="88" ry="9" fill="#E9E4DF"/>
+  <circle cx="160" cy="118" r="62" fill="#FBF9F6" stroke="#201E1D" stroke-width="2"/>
+  <circle cx="160" cy="118" r="50" fill="#F1EDE8"/>
+  <circle cx="132" cy="104" r="14" fill="#C98B3F"/>
+  <circle cx="150" cy="128" r="15" fill="#B87A32"/>
+  <circle cx="178" cy="116" r="16" fill="#C98B3F"/>
+  <circle cx="190" cy="92" r="8" fill="#EC3013"/>
+  <path d="M120 148c8 6 16 8 24 6" stroke="#6B7A5A" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <circle cx="214" cy="140" r="13" fill="#FBF9F6" stroke="#201E1D" stroke-width="2"/>
+  <circle cx="214" cy="140" r="7" fill="#6B7A5A"/>
+</svg>

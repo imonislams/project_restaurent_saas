@@ -2,9 +2,12 @@
 
 namespace App\Domain\Subscriptions;
 
+use App\Domain\Branches\Models\Branch;
+use App\Domain\Demo\Models\DemoDataRecord;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Subscriptions\Models\UsageRecord;
 use App\Domain\Tenancy\Models\Tenant;
+use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -16,13 +19,18 @@ class UsageService
     /** @return array<string, int> */
     public function metrics(Tenant $tenant): array
     {
+        // Sample (demo) rows are excluded: they are showcase content, never real
+        // usage, and must not block the owner from adding real staff, branches
+        // or orders. See App\Domain\Demo.
         return [
-            'branches' => $tenant->branches()->count(),
-            'users' => $tenant->users()->count(),
-            'orders_this_month' => Order::query()
-                ->where('tenant_id', $tenant->getKey())
-                ->whereBetween('placed_at', [now()->startOfMonth(), now()->endOfMonth()])
-                ->count(),
+            'branches' => DemoDataRecord::excludingDemo($tenant->branches()->getQuery(), Branch::class)->count(),
+            'users' => DemoDataRecord::excludingDemo($tenant->users()->getQuery(), User::class)->count(),
+            'orders_this_month' => DemoDataRecord::excludingDemo(
+                Order::query()
+                    ->where('tenant_id', $tenant->getKey())
+                    ->whereBetween('placed_at', [now()->startOfMonth(), now()->endOfMonth()]),
+                Order::class,
+            )->count(),
         ];
     }
 

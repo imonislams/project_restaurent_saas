@@ -1,3 +1,4 @@
+import { SETTINGS_TABS, settingsTabHref } from '@/Components/Settings/tabs';
 import { Badge, Button, Card, CardBody, ConfirmDialog, Drawer, EmptyState, Input, CheckboxField, SelectField, TextField, PageHeader, Tabs } from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -5,8 +6,6 @@ import { useT } from '@/i18n';
 import { router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
 import { Plus, ShieldCheck } from 'lucide-react';
-
-const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'pos', 'notifications', 'qr', 'payments'] as const;
 
 interface GatewayConfig {
     id: number;
@@ -101,9 +100,9 @@ export default function SettingsPayments({
                     {flash?.error && <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{flash.error}</div>}
 
                     <Tabs
-                        tabs={GROUPS.map((key) => ({ key, label: t(`settings.tab.${key}`) }))}
+                        tabs={SETTINGS_TABS.map((key) => ({ key, label: t(`settings.tab.${key}`) }))}
                         value="payments"
-                        onChange={(key) => router.get(key === 'payments' ? route('settings.payments.index') : route('settings.show', { group: key }))}
+                        onChange={(key) => router.get(settingsTabHref(key))}
                     />
 
                     <div className="flex items-center justify-between">

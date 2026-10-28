@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-label="Bowl of pasta with a fork">
+  <rect width="320" height="200" rx="16" fill="#F3F2F2"/>
+  <ellipse cx="154" cy="170" rx="80" ry="9" fill="#E9E4DF"/>
+  <path d="M90 112h128c-6 34-30 54-64 54s-58-20-64-54z" fill="#FBF9F6" stroke="#201E1D" stroke-width="2"/>
+  <g stroke="#E0B25E" stroke-width="5" stroke-linecap="round" fill="none">
+    <path d="M106 106c14-16 34-18 50-8"/>
+    <path d="M112 112c18-18 42-18 58-4"/>
+    <path d="M120 118c16-14 36-14 52-2"/>
+    <path d="M134 104c14-8 28-6 38 4"/>
+  </g>
+  <circle cx="140" cy="120" r="6" fill="#EC3013"/>
+  <circle cx="170" cy="116" r="5" fill="#D94A31"/>
+  <g stroke="#8C8279" stroke-width="3" stroke-linecap="round">
+    <path d="M226 78v70"/>
+    <path d="M218 78v16M226 78v16M234 78v16"/>
+  </g>
+  <path d="M112 96c8-6 16-6 24 0" stroke="#6B7A5A" stroke-width="3" stroke-linecap="round" fill="none"/>
+</svg>

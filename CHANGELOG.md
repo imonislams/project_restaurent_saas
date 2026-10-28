@@ -9,6 +9,17 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **A populated demo workspace for every new restaurant.** The wizard's final step offers sample
+  data (on by default); activation builds it on `/demo/setup`, one step per request, with a live
+  progress screen. It creates a second branch, ~12 staff with roles and branch access, ~50 menu
+  items with recipes, modifiers and per-branch availability, ingredients and opening stock, a
+  purchasing/waste/expenses back office, ~38 customers with loyalty, and 15–60 days (default 21)
+  of orders, payments, kitchen history, QR dining sessions and feedback — written through the real
+  POS, cash, kitchen and accounting services and back-dated with a simulated clock. Every row is
+  traced in a `demo_data_records` ledger, so **Settings → Demo data** (or the dashboard banner) can
+  rebuild or remove it exactly: only demo rows are deleted, the tenant's own records and audit
+  trail remain, changed settings are restored, and demo rows never count toward plan limits.
+  `demo:seed` / `demo:purge` offer the same from the CLI and the platform command runner.
 - **Real-time notifications with a driver the Platform Admin chooses.** New *Real-time
   Notifications* screen (Platform Configuration) selects **Pusher** (cloud) or **Reverb**
   (self-hosted); credentials are encrypted at rest and only the public key/endpoint reach the

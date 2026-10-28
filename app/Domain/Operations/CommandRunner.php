@@ -30,6 +30,8 @@ class CommandRunner
             'verify_backup' => ['label' => 'Verify last backup', 'command' => '{php} artisan db:verify-backup', 'danger' => false],
             'prune_backups' => ['label' => 'Prune expired backups', 'command' => '{php} artisan backups:prune', 'danger' => false],
             'platform_check' => ['label' => 'Platform readiness check', 'command' => '{php} artisan platform:check', 'danger' => false],
+            'demo_seed' => ['label' => 'Generate demo data (demo:seed)', 'command' => '{php} artisan demo:seed', 'danger' => true],
+            'demo_purge' => ['label' => 'Remove all demo data (demo:purge)', 'command' => '{php} artisan demo:purge --force', 'danger' => true],
             'npm_build' => ['label' => 'Build frontend (npm run build)', 'command' => '{npm} run build', 'danger' => true],
         ];
     }

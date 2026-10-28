@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-label="Wrap cut in half">
+  <rect width="320" height="200" rx="16" fill="#F3F2F2"/>
+  <ellipse cx="160" cy="170" rx="80" ry="9" fill="#E9E4DF"/>
+  <g transform="rotate(-14 150 110)">
+    <rect x="86" y="86" width="118" height="46" rx="20" fill="#F1E2C8" stroke="#201E1D" stroke-width="2"/>
+    <path d="M120 90c6 10 6 28 0 38" stroke="#D8B981" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <circle cx="160" cy="108" r="9" fill="#6B7A5A"/>
+    <circle cx="180" cy="102" r="8" fill="#EC3013"/>
+    <path d="M96 96c8 4 16 4 24 0" stroke="#D8B981" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </g>
+  <g transform="rotate(16 196 132)">
+    <rect x="150" y="112" width="96" height="40" rx="18" fill="#F7EAD3" stroke="#201E1D" stroke-width="2"/>
+    <ellipse cx="196" cy="132" rx="20" ry="10" fill="#C98B3F"/>
+    <circle cx="214" cy="128" r="6" fill="#6B7A5A"/>
+  </g>
+  <path d="M104 150c10 6 20 8 30 6" stroke="#6B7A5A" stroke-width="3" stroke-linecap="round" fill="none"/>
+</svg>

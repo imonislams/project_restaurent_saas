@@ -41,11 +41,11 @@ use App\Http\Controllers\Platform\GatewayEventController as PlatformGatewayEvent
 use App\Http\Controllers\Platform\ImpersonationController as PlatformImpersonationController;
 use App\Http\Controllers\Platform\InvoiceController as PlatformInvoiceController;
 use App\Http\Controllers\Platform\NotificationController as PlatformNotificationController;
-use App\Http\Controllers\Platform\RealtimeController as PlatformRealtimeController;
-use App\Http\Controllers\Platform\OpsController as PlatformOpsController;
 use App\Http\Controllers\Platform\OfflineConflictController as PlatformOfflineConflictController;
+use App\Http\Controllers\Platform\OpsController as PlatformOpsController;
 use App\Http\Controllers\Platform\PaymentController as PlatformPaymentController;
 use App\Http\Controllers\Platform\PlanController as PlatformPlanController;
+use App\Http\Controllers\Platform\RealtimeController as PlatformRealtimeController;
 use App\Http\Controllers\Platform\RestoreController as PlatformRestoreController;
 use App\Http\Controllers\Platform\RoleController as PlatformRoleController;
 use App\Http\Controllers\Platform\SecurityController as PlatformSecurityController;
@@ -80,6 +80,7 @@ use App\Http\Controllers\Subscription\SubscriptionController as TenantSubscripti
 use App\Http\Controllers\Tables\TableController;
 use App\Http\Controllers\Tenant\BranchController as TenantBranchController;
 use App\Http\Controllers\Tenant\BranchSwitchController;
+use App\Http\Controllers\Tenant\DemoController as TenantDemoController;
 use App\Http\Controllers\Tenant\InvoiceController as TenantInvoiceController;
 use App\Http\Controllers\Tenant\PaymentGatewayController as TenantPaymentGatewayController;
 use App\Http\Controllers\Tenant\RoleController as TenantRoleController;
@@ -195,6 +196,22 @@ Route::prefix('qr')->name('qr.')->middleware(['qr.context', 'throttle:qr-public'
 
 Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Demo workspace
+    |--------------------------------------------------------------------------
+    | The progress screen shown right after onboarding, plus the driving
+    | endpoints (one generation step per request) and removal. Generation is
+    | gated by settings.manage — it writes a large amount of tenant data.
+    */
+    Route::get('/demo/setup', [TenantDemoController::class, 'setup'])->name('demo.setup');
+
+    Route::middleware('permission:settings.manage')->group(function () {
+        Route::post('/demo/step', [TenantDemoController::class, 'step'])->name('demo.step');
+        Route::post('/demo/generate', [TenantDemoController::class, 'generate'])->name('demo.generate');
+        Route::post('/demo/purge', [TenantDemoController::class, 'purge'])->name('demo.purge');
+    });
 
     Route::prefix('staff')->name('staff.')->group(function () {
         Route::get('/', [StaffController::class, 'index'])
@@ -515,6 +532,10 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->g
         Route::post('/payments/{gateway}/default', [TenantPaymentGatewayController::class, 'setDefault'])->name('payments.default');
         Route::post('/payments/{gateway}/test', [TenantPaymentGatewayController::class, 'test'])->name('payments.test');
         Route::delete('/payments/{gateway}', [TenantPaymentGatewayController::class, 'destroy'])->name('payments.destroy');
+
+        // Demo data tab (registered before the /{group} catch-all below).
+        Route::get('/demo', [TenantDemoController::class, 'settings'])->name('demo.index');
+        Route::post('/demo/rebuild', [TenantDemoController::class, 'rebuild'])->name('demo.rebuild');
 
         Route::get('/{group}', [TenantSettingsController::class, 'show'])->name('show');
         Route::post('/{group}', [TenantSettingsController::class, 'update'])->name('update');

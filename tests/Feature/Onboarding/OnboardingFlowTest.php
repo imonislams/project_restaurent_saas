@@ -285,8 +285,10 @@ class OnboardingFlowTest extends TestCase
         $this->actingAs($user)->post('/onboarding/company', $this->validCompanyPayload());
         $this->actingAs($user)->post('/onboarding/branch', $this->validBranchPayload());
 
+        // Sample data is offered by default; opting out lands on the dashboard
+        // (see DemoSetupTest for the default path).
         $this->actingAs($user)
-            ->post('/onboarding/complete')
+            ->post('/onboarding/complete', ['demo_enabled' => false])
             ->assertRedirect(route('dashboard'))
             ->assertSessionHas('success');
 
@@ -312,7 +314,8 @@ class OnboardingFlowTest extends TestCase
         $this->actingAs($user)->post('/onboarding/profile', $this->validProfilePayload());
         $this->actingAs($user)->post('/onboarding/company', $this->validCompanyPayload());
         $this->actingAs($user)->post('/onboarding/branch', $this->validBranchPayload());
-        $this->actingAs($user)->post('/onboarding/complete');
+        // Opt out of sample data so this stays a pure dashboard test.
+        $this->actingAs($user)->post('/onboarding/complete', ['demo_enabled' => false]);
 
         $this->actingAs($user)
             ->get('/dashboard')

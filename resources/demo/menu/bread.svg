@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-label="Stack of flatbreads">
+  <rect width="320" height="200" rx="16" fill="#F3F2F2"/>
+  <ellipse cx="160" cy="168" rx="82" ry="9" fill="#E9E4DF"/>
+  <ellipse cx="160" cy="140" rx="62" ry="22" fill="#F1E2C8" stroke="#201E1D" stroke-width="2"/>
+  <ellipse cx="160" cy="120" rx="58" ry="21" fill="#F7EAD3" stroke="#201E1D" stroke-width="2"/>
+  <ellipse cx="160" cy="101" rx="54" ry="20" fill="#FBF1DE" stroke="#201E1D" stroke-width="2"/>
+  <g fill="#D8B981">
+    <circle cx="140" cy="98" r="3.5"/>
+    <circle cx="168" cy="104" r="3"/>
+    <circle cx="156" cy="92" r="2.5"/>
+    <circle cx="178" cy="94" r="3"/>
+  </g>
+  <path d="M132 118c14 6 42 6 56 0" stroke="#D8B981" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M120 74c10-10 24-12 34-4" stroke="#6B7A5A" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <circle cx="196" cy="78" r="5" fill="#EC3013"/>
+</svg>

@@ -9,13 +9,12 @@ import QrFields from '@/Components/Settings/QrFields';
 import ReceiptFields from '@/Components/Settings/ReceiptFields';
 import TaxFields from '@/Components/Settings/TaxFields';
 import type { SettingsOptions } from '@/Components/Settings/types';
+import { SETTINGS_TABS, settingsTabHref } from '@/Components/Settings/tabs';
 import { Button, PageHeader, Tabs } from '@/Components/ui';
 import { useT } from '@/i18n';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useEffect } from 'react';
-
-const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'billing', 'pos', 'orders', 'notifications', 'qr', 'payments'] as const;
 
 export default function SettingsShow({
     group,
@@ -75,9 +74,9 @@ export default function SettingsShow({
                     {flash?.success && <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{flash.success}</div>}
 
                     <Tabs
-                        tabs={GROUPS.map((key) => ({ key, label: t(`settings.tab.${key}`) }))}
+                        tabs={SETTINGS_TABS.map((key) => ({ key, label: t(`settings.tab.${key}`) }))}
                         value={group}
-                        onChange={(key) => router.get(key === 'payments' ? route('settings.payments.index') : route('settings.show', { group: key }), {}, { preserveScroll: true })}
+                        onChange={(key) => router.get(settingsTabHref(key), {}, { preserveScroll: true })}
                     />
 
                     <form onSubmit={submit} className="space-y-5">

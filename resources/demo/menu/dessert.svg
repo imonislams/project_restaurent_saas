@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-label="Dessert in a small pot">
+  <rect width="320" height="200" rx="16" fill="#F3F2F2"/>
+  <ellipse cx="156" cy="170" rx="74" ry="9" fill="#E9E4DF"/>
+  <path d="M112 112h88l-8 40c-2 8-10 12-18 12h-36c-8 0-16-4-18-12z" fill="#FBF9F6" stroke="#201E1D" stroke-width="2"/>
+  <ellipse cx="156" cy="112" rx="44" ry="14" fill="#E8D6BE" stroke="#201E1D" stroke-width="2"/>
+  <ellipse cx="156" cy="108" rx="34" ry="9" fill="#C98B3F"/>
+  <circle cx="146" cy="104" r="4" fill="#EC3013"/>
+  <circle cx="166" cy="108" r="3.5" fill="#EC3013"/>
+  <path d="M200 96c14 2 22 10 22 20" stroke="#8C8279" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M126 136h60" stroke="#E3DCD2" stroke-width="3" stroke-linecap="round"/>
+  <path d="M120 84c8-8 18-10 26-4" stroke="#6B7A5A" stroke-width="3" stroke-linecap="round" fill="none"/>
+</svg>

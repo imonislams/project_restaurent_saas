@@ -271,7 +271,9 @@ class PosSaleTest extends TestCase
 
     public function test_discount_above_threshold_requires_a_manager_pin(): void
     {
-        $this->tenant->mergeSettings(['pos' => ['discount_approval_percent' => 10]]);
+        // Dot-notation on purpose: merging the whole `pos` array would drop the
+        // `pos.require_table_for_dine_in => false` configured in setUp().
+        $this->tenant->mergeSettings(['pos.discount_approval_percent' => 10]);
         $this->tenant->save();
         app(TenantContext::class)->set($this->tenant);
 

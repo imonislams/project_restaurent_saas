@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Touch Dine is coming soon</title>
+    <meta name="description" content="Touch Dine is coming soon.">
+    <meta name="theme-color" content="#EC3013">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red: #EC3013;
+            --ink: #201E1D;
+            --paper: #F3F2F2;
+            --stone: #78716c;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; }
+        body {
+            position: relative;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 24px;
+            overflow: hidden;
+            font-family: 'Plus Jakarta Sans', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            color: var(--ink);
+            background: var(--paper);
+            text-align: center;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Floating background squares */
+        .bg { position: absolute; inset: 0; pointer-events: none; }
+        .bg i {
+            position: absolute;
+            display: block;
+            width: var(--s);
+            height: var(--s);
+            left: var(--x);
+            top: var(--y);
+            background: var(--c);
+            opacity: .12;
+            animation: float var(--d) ease-in-out infinite alternate;
+            animation-delay: var(--delay, 0s);
+        }
+        @keyframes float {
+            from { transform: translate3d(0, 0, 0) rotate(0deg); }
+            to   { transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--r)); }
+        }
+
+        main { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
+
+        /* Animated logo */
+        .logo { width: clamp(120px, 24vw, 168px); height: auto; margin-bottom: 36px; }
+        .logo .bgr { fill: var(--red); }
+        .logo .sq {
+            transform-box: fill-box;
+            transform-origin: center;
+            opacity: 0;
+            animation: drop .7s cubic-bezier(.2, .8, .2, 1) forwards, pulse 3.2s ease-in-out 2.2s infinite;
+        }
+        .logo .a { fill: var(--paper); --fx: -40px; --fy: -40px; animation-delay: .1s, 2.2s; }
+        .logo .b { fill: var(--ink);   --fx: 40px;  --fy: -40px; animation-delay: .25s, 2.5s; }
+        .logo .c { fill: var(--paper); --fx: -40px; --fy: 40px;  animation-delay: .4s, 2.8s; }
+        .logo .d { fill: var(--paper); --fx: 40px;  --fy: 40px;  animation-delay: .55s, 3.1s; }
+        @keyframes drop {
+            from { opacity: 0; transform: translate(var(--fx), var(--fy)) scale(.4); }
+            to   { opacity: 1; transform: none; }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(.82); }
+        }
+
+        h1 {
+            margin: 0 0 14px;
+            font-size: clamp(38px, 8vw, 76px);
+            line-height: 1.05;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+        h1 span { color: var(--red); }
+        p { margin: 0; max-width: 28em; font-size: 18px; line-height: 1.6; color: #57534e; }
+
+        .badge {
+            display: inline-flex; align-items: center; gap: 10px;
+            margin-top: 32px; padding: 8px 16px;
+            background: #fff; border: 1px solid #e7e5e4; border-radius: 999px;
+            font-size: 14px; font-weight: 600;
+        }
+        .dots { display: inline-flex; gap: 4px; }
+        .dots b { width: 6px; height: 6px; background: var(--red); border-radius: 50%; animation: blink 1.2s ease-in-out infinite; }
+        .dots b:nth-child(2) { animation-delay: .2s; }
+        .dots b:nth-child(3) { animation-delay: .4s; }
+        @keyframes blink { 0%, 80%, 100% { opacity: .2; transform: scale(.8); } 40% { opacity: 1; transform: scale(1.1); } }
+
+        .rise { opacity: 0; transform: translateY(16px); animation: rise .7s ease forwards; }
+        .r1 { animation-delay: .9s; } .r2 { animation-delay: 1.05s; } .r3 { animation-delay: 1.2s; }
+        @keyframes rise { to { opacity: 1; transform: none; } }
+
+        footer { position: absolute; bottom: 20px; z-index: 1; font-size: 13px; color: var(--stone); }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; }
+            .logo .sq, .rise { opacity: 1; transform: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg" aria-hidden="true">
+        <i style="--s:56px;--x:8%;--y:14%;--c:#EC3013;--dx:30px;--dy:40px;--r:25deg;--d:7s"></i>
+        <i style="--s:32px;--x:84%;--y:12%;--c:#201E1D;--dx:-30px;--dy:36px;--r:-30deg;--d:6s;--delay:-2s"></i>
+        <i style="--s:72px;--x:88%;--y:66%;--c:#EC3013;--dx:-36px;--dy:-30px;--r:20deg;--d:9s;--delay:-4s"></i>
+        <i style="--s:40px;--x:12%;--y:72%;--c:#201E1D;--dx:34px;--dy:-34px;--r:-20deg;--d:8s;--delay:-1s"></i>
+        <i style="--s:24px;--x:30%;--y:88%;--c:#EC3013;--dx:20px;--dy:-30px;--r:45deg;--d:6.5s;--delay:-3s"></i>
+        <i style="--s:28px;--x:68%;--y:8%;--c:#EC3013;--dx:-24px;--dy:30px;--r:-40deg;--d:7.5s;--delay:-5s"></i>
+    </div>
+
+    <main>
+        <svg class="logo" viewBox="0 0 96 96" role="img" aria-label="Touch Dine logo">
+            <rect class="bgr" width="96" height="96"/>
+            <rect class="sq a" x="21" y="21" width="24" height="24"/>
+            <rect class="sq b" x="51" y="21" width="24" height="24"/>
+            <rect class="sq c" x="21" y="51" width="24" height="24"/>
+            <rect class="sq d" x="51" y="51" width="24" height="24"/>
+        </svg>
+
+        <h1 class="rise r1">We're <span>coming soon</span></h1>
+        <p class="rise r2">Touch Dine is getting ready. Something new for restaurants is on its way.</p>
+        <div class="badge rise r3">Almost there <span class="dots" aria-hidden="true"><b></b><b></b><b></b></span></div>
+    </main>
+
+    <footer>&copy; <script>document.write(new Date().getFullYear())</script> Touch Dine</footer>
+</body>
+</html>

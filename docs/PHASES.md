@@ -231,8 +231,10 @@ skip rejection, completion gating, activation, dashboard checklist, tenant isola
 - Menu, inventory, staff-invite and payment-method onboarding steps are **not yet**
   implemented — the checklist shows them as pending and the wizard does not include them.
   These arrive with Phases 04–06.
-- Sample/demo data import is not implemented yet; `data_mode` separation is deferred to
-  the menu phase.
+- Sample/demo data is implemented as a traced demo workspace (`app/Domain/Demo/`, Settings →
+  Demo data): it generates a populated environment through the real services and removes it
+  exactly via a record ledger. Per-row `data_mode` separation is still deferred; provenance and
+  removal are handled by the ledger instead. See [DEMO-DATA.md](./DEMO-DATA.md).
 - `first_sale_at` (time-to-first-sale) is stored but not yet set — Phase 06.
 - No company logo upload yet (receipt `show_logo` is stored only).
 - Country/currency/timezone are validated by format (ISO size 2/3, valid tz) but the

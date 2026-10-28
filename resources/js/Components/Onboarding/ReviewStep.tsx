@@ -1,12 +1,20 @@
-import { Badge, Button, Card, CardBody, CardHeader } from '@/Components/ui';
+import { Badge, Button, Card, CardBody, CardHeader, CheckboxField } from '@/Components/ui';
 import { useT } from '@/i18n';
 import { OnboardingProgress } from '@/types/onboarding';
 import { Link, useForm } from '@inertiajs/react';
+import { Check } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
-export default function ReviewStep({ progress }: { progress: OnboardingProgress }) {
+export default function ReviewStep({
+    progress,
+    demo,
+}: {
+    progress: OnboardingProgress;
+    demo: { days: number; min_days: number };
+}) {
     const t = useT();
-    const { post, processing } = useForm({});
+    // Sample data is offered by default — the owner can still switch it off here.
+    const { data, setData, post, processing } = useForm({ demo_enabled: true });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -15,6 +23,14 @@ export default function ReviewStep({ progress }: { progress: OnboardingProgress 
 
     const blocked = progress.steps.some((step) => step.required && !step.complete);
     const setupSteps = progress.steps.filter((step) => step.value !== 'review');
+
+    const included = [
+        t('onboarding.demo_include_menu'),
+        t('onboarding.demo_include_team'),
+        t('onboarding.demo_include_sales', { days: demo.days }),
+        t('onboarding.demo_include_stock'),
+        t('onboarding.demo_include_guests'),
+    ];
 
     return (
         <div className="space-y-6">
@@ -69,6 +85,29 @@ export default function ReviewStep({ progress }: { progress: OnboardingProgress 
                             </li>
                         ))}
                     </ul>
+                </CardBody>
+            </Card>
+
+            <Card>
+                <CardHeader title={t('onboarding.demo_title')} description={t('onboarding.demo_hint')} />
+                <CardBody className="space-y-3">
+                    <CheckboxField
+                        label={t('onboarding.demo_populate')}
+                        hint={t('onboarding.demo_populate_hint', { days: demo.days })}
+                        checked={Boolean(data.demo_enabled)}
+                        onChange={(checked) => setData('demo_enabled', checked)}
+                    />
+
+                    {data.demo_enabled && (
+                        <ul className="grid grid-cols-1 gap-1.5 border-t border-border/60 pt-3 sm:grid-cols-2">
+                            {included.map((item) => (
+                                <li key={item} className="flex items-start gap-2 text-xs text-muted-foreground">
+                                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden />
+                                    <span>{item}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </CardBody>
             </Card>
 
