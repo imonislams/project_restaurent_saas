@@ -4,6 +4,7 @@ namespace App\Domain\Demo\Steps;
 
 use App\Domain\Branches\Models\Branch;
 use App\Domain\CashManagement\CashService;
+use App\Domain\CashManagement\Models\Register;
 use App\Domain\CashManagement\Models\Shift;
 use App\Domain\CashManagement\ShiftService;
 use App\Domain\Demo\Data\DemoRandom;
@@ -825,10 +826,45 @@ class SalesDayStep implements DemoStep
 
         $float = $run->profile()->openingFloat() * ($branch->is_primary ? 1.0 : 0.5);
 
+        // A till that is open right now belongs to live trade, so the demo takes
+        // a free one (or its own) instead of refusing to back-date a shift.
+        $registerId = $this->freeRegister($run, $branch, $branch->is_primary ? 'primary' : 'annex', $registerId);
+
         return DemoClock::at(
             $this->openingTime($run, $branch->is_primary ? 'primary' : 'annex', $dayStart),
             fn () => app(ShiftService::class)->open($branch, $cashier, $float, $registerId),
         );
+    }
+
+    /**
+     * The register to open this day's shift on: the preferred one when it is free,
+     * otherwise any free one, otherwise a dedicated demo till. Never one that is
+     * open right now — that belongs to someone using the system.
+     */
+    protected function freeRegister(DemoRun $run, Branch $branch, string $branchKey, ?int $preferred): ?int
+    {
+        $candidates = array_values(array_unique(array_filter(array_merge(
+            $preferred !== null ? [$preferred] : [],
+            (array) $run->ref("registers.$branchKey", []),
+        ))));
+
+        foreach ($candidates as $candidate) {
+            $busy = Shift::query()->withoutGlobalScopes()
+                ->where('register_id', $candidate)
+                ->where('status', 'open')
+                ->exists();
+
+            if (! $busy) {
+                return (int) $candidate;
+            }
+        }
+
+        $register = Register::query()->withoutGlobalScopes()->firstOrCreate(
+            ['tenant_id' => $run->batch->tenant_id, 'branch_id' => $branch->getKey(), 'name' => 'Demo Till'],
+            ['is_active' => true],
+        );
+
+        return $register->getKey();
     }
 
     protected function closeShift(Shift $shift, User $manager, Carbon $at): void

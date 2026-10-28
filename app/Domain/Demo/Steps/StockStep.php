@@ -7,7 +7,6 @@ use App\Domain\Delivery\Models\DeliveryZone;
 use App\Domain\Demo\Data\DemoProfile;
 use App\Domain\Demo\DemoRun;
 use App\Domain\Inventory\Models\Ingredient;
-use App\Domain\Inventory\StockService;
 use App\Domain\Purchasing\Models\Supplier;
 
 /**
@@ -108,7 +107,6 @@ class StockStep implements DemoStep
      */
     protected function openingStock(DemoRun $run, DemoProfile $profile, array $ingredients): void
     {
-        $stock = app(StockService::class);
         $factor = $profile->openingStockFactor();
         $random = $run->random('opening-stock');
 
@@ -127,17 +125,17 @@ class StockStep implements DemoStep
 
             $ingredient = Ingredient::query()->withoutGlobalScopes()->find($ingredients[$key]);
 
-            if (! $ingredient || $run->hasOpeningStock($ingredient)) {
+            if (! $ingredient) {
                 continue;
             }
 
             $base = $baseByUnit[$definition['unit']] ?? 20.0;
             $primaryQuantity = round($base * $factor * $random->float(0.85, 1.15, 2), 2);
 
-            $stock->receiveOpening($ingredient, $primaryLocation, $primaryQuantity, (float) $ingredient->cost_per_unit);
+            $run->establishStock($ingredient, $primaryLocation, $primaryQuantity);
 
             // The secondary branch carries a smaller pantry.
-            $stock->receiveOpening($ingredient, $annexLocation, round($primaryQuantity * 0.4, 2), (float) $ingredient->cost_per_unit);
+            $run->establishStock($ingredient, $annexLocation, round($primaryQuantity * 0.4, 2));
         }
     }
 

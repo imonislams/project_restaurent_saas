@@ -19,7 +19,6 @@ use App\Domain\Dining\Models\DiningEvent;
 use App\Domain\Dining\Models\DiningFeedback;
 use App\Domain\Dining\Models\DiningParticipant;
 use App\Domain\Dining\Models\DiningSession;
-use App\Domain\Documents\Models\DocumentSequence;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Inventory\Models\Ingredient;
 use App\Domain\Inventory\Models\StockBalance;
@@ -45,7 +44,6 @@ use App\Domain\Menu\Models\RecipeItem;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Orders\Models\OrderItem;
 use App\Domain\Orders\Models\OrderItemModifier;
-use App\Domain\Orders\Models\OrderSequence;
 use App\Domain\Orders\Models\OrderStatusHistory;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentAttempt;
@@ -90,7 +88,9 @@ class DemoPurgePlan
             Payment::class,
             Invoice::class,
             Order::class,
-            OrderSequence::class,
+            // OrderSequence is deliberately NOT removed: it is a counter, not a
+            // business record. Deleting it would restart order numbering at 0001
+            // and collide with real orders that kept their own numbers.
 
             // Dining / QR sessions
             DiningEvent::class,
@@ -118,7 +118,8 @@ class DemoPurgePlan
             PurchaseOrderItem::class,
             PurchaseOrder::class,
             Supplier::class,
-            DocumentSequence::class,
+            // DocumentSequence (purchase order / goods receipt / transfer /
+            // invoice numbers) is a counter too, and is left in place.
 
             // Inventory and transfers
             StockTransferItem::class,

@@ -41,6 +41,10 @@ Removal replays the ledger — a table of every row each run created — childre
 
 - Only demo rows are deleted. The owner's own orders, staff, branches, settings and the **audit
   trail** are not touched.
+- **Numbering counters are kept** (orders, purchase orders, receipts, transfers). They are
+  counters rather than records: resetting them would restart numbering at 0001 and collide with
+  real orders that kept their own numbers. Generation also lifts a counter to the highest number
+  already in use, so a demo can never collide with real trade.
 - Settings the demo changed (loyalty, low-stock threshold, waste approval threshold) are restored
   from the values captured when the run started.
 - Notifications and usage snapshots created while demo data existed are cleared.

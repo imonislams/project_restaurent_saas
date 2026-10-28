@@ -40,7 +40,14 @@ class DemoPurgeTest extends DemoTestCase
         $this->assertSame(0, Category::query()->withoutGlobalScopes()->where('tenant_id', $tenant->getKey())->count());
         $this->assertSame(0, Order::query()->withoutGlobalScopes()->where('tenant_id', $tenant->getKey())->count());
         $this->assertSame(0, Customer::query()->withoutGlobalScopes()->where('tenant_id', $tenant->getKey())->whereKeyNot($realCustomer->getKey())->count());
-        $this->assertSame(0, OrderSequence::query()->withoutGlobalScopes()->where('tenant_id', $tenant->getKey())->count());
+
+        // Numbering counters are NOT business records: resetting them would make
+        // the next demo (or real sale) collide with existing order numbers.
+        $this->assertGreaterThan(
+            0,
+            OrderSequence::query()->withoutGlobalScopes()->where('tenant_id', $tenant->getKey())->count(),
+            'the order-number counter must survive removal',
+        );
 
         // The tenant's own records are not.
         $this->assertDatabaseHas('customers', ['id' => $realCustomer->getKey()]);
@@ -71,5 +78,54 @@ class DemoPurgeTest extends DemoTestCase
 
         $this->assertSame(0, $result['records']);
         $this->assertSame(DemoDataBatch::STATUS_REMOVED, $batch->fresh()->status);
+    }
+
+    /**
+     * Regression: removal used to delete the order-number counter, so numbering
+     * restarted at 0001 and a regenerated demo collided with a real order that
+     * had kept its number (duplicate key on orders.branch_id + order_number).
+     */
+    public function test_numbering_continues_above_real_orders_after_removal(): void
+    {
+        [$tenant, $owner, $branch] = $this->tenantReadyForDemo();
+
+        $this->runDemo($tenant, $owner, 1);
+
+        $sequence = OrderSequence::query()->withoutGlobalScopes()
+            ->where('tenant_id', $tenant->getKey())
+            ->where('branch_id', $branch->getKey())
+            ->firstOrFail();
+
+        $used = (int) $sequence->last_number;
+        $this->assertGreaterThan(0, $used);
+
+        app(DemoDataService::class)->purge($tenant, $owner);
+
+        $this->assertSame($used, (int) $sequence->fresh()->last_number);
+
+        // A real order keeps the next number, outside the demo ledger.
+        $realNumber = ($branch->code ?: 'BR'.$branch->getKey()).'-'.now()->format('Ymd').'-'.str_pad((string) ($used + 1), 4, '0', STR_PAD_LEFT);
+
+        Order::create([
+            'tenant_id' => $tenant->getKey(),
+            'branch_id' => $branch->getKey(),
+            'user_id' => $owner->getKey(),
+            'order_number' => $realNumber,
+            'order_type' => 'counter',
+            'status' => 'completed',
+            'acceptance_status' => 'auto_accepted',
+            'fulfillment_status' => 'served',
+            'subtotal' => 100,
+            'total' => 100,
+            'paid_total' => 100,
+            'currency' => 'BDT',
+            'placed_at' => now(),
+        ]);
+
+        // A fresh run must complete instead of throwing a duplicate-key error.
+        $batch = $this->runDemo($tenant, $owner, 1);
+
+        $this->assertSame(DemoDataBatch::STATUS_COMPLETED, $batch->status);
+        $this->assertDatabaseHas('orders', ['order_number' => $realNumber, 'tenant_id' => $tenant->getKey()]);
     }
 }

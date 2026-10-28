@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tenant;
 use App\Domain\Demo\DemoDataService;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -33,21 +34,33 @@ class DemoController extends Controller
     }
 
     /**
-     * Run the next pending step. Answers with a redirect back to the screen the
-     * caller is on, so both the progress screen and the dashboard banner can
-     * drive it.
+     * Run the next pending step.
+     *
+     * Answers a JSON caller (the progress screen drives this sequentially, one
+     * request at a time) with the fresh state, and redirects back for a plain
+     * form/Inertia post.
      */
-    public function step(Request $request): RedirectResponse
+    public function step(Request $request): Response|RedirectResponse|JsonResponse
     {
         $tenant = $this->tenant($request);
         $batch = $this->demo->latest($tenant);
 
         if ($batch === null) {
-            return redirect()->route('dashboard')->with('error', 'There is no demo setup to continue.');
+            return $request->expectsJson()
+                ? response()->json(['demo' => $this->demo->state($tenant), 'error' => 'There is no demo setup to continue.'], 409)
+                : redirect()->route('dashboard')->with('error', 'There is no demo setup to continue.');
         }
 
         if (! $batch->isActive()) {
-            return back();
+            return $request->expectsJson()
+                ? response()->json(['demo' => $this->demo->state($tenant), 'error' => null])
+                : back();
+        }
+
+        // A step writes a batch of rows; a browser that navigates away must not
+        // abort it half-way. Steps are idempotent, so the next call resumes.
+        if (function_exists('ignore_user_abort')) {
+            @ignore_user_abort(true);
         }
 
         try {
@@ -55,12 +68,21 @@ class DemoController extends Controller
         } catch (\Throwable $e) {
             report($e);
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'demo' => $this->demo->state($tenant),
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             // The batch stores the same failure; surfacing it here is what makes
             // it visible on screen instead of a silently stuck progress bar.
             return back()->with('error', $e->getMessage());
         }
 
-        return back();
+        return $request->expectsJson()
+            ? response()->json(['demo' => $this->demo->state($tenant), 'error' => null])
+            : back();
     }
 
     /**

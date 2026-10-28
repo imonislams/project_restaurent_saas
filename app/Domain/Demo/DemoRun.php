@@ -10,9 +10,8 @@ use App\Domain\Demo\Data\DemoRandom;
 use App\Domain\Demo\Models\DemoDataBatch;
 use App\Domain\Demo\Models\DemoDataRecord;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
-use App\Domain\Inventory\Enums\StockMovementReason;
 use App\Domain\Inventory\Models\StockLocation;
-use App\Domain\Inventory\Models\StockMovement;
+use App\Domain\Inventory\StockService;
 use App\Domain\Payments\Models\PaymentMethod;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
@@ -161,16 +160,29 @@ final class DemoRun
     }
 
     /**
-     * Whether opening stock is already recorded for an item — re-running a
-     * failed step must never double the pantry.
+     * Make sure an item holds at least the quantity the demo needs, at a location.
+     *
+     * This is a *reconcile*, not an increment: opening stock is set to the target
+     * (or left alone when it is already at/above it), so re-running a step never
+     * doubles the pantry and a leftover balance from earlier activity is never
+     * mistaken for a stocked one.
      */
-    public function hasOpeningStock(Model $stockable): bool
+    public function establishStock(Model $item, StockLocation $location, float $quantity): void
     {
-        return StockMovement::query()->withoutGlobalScopes()
-            ->where('stockable_type', $stockable->getMorphClass())
-            ->where('stockable_id', $stockable->getKey())
-            ->where('reason', StockMovementReason::Opening->value)
-            ->exists();
+        $stock = app(StockService::class);
+        $current = $stock->balanceFor($item, $location);
+
+        if ($current >= $quantity - 0.0001) {
+            return;
+        }
+
+        if (abs($current) > 0.0001) {
+            $stock->adjustTo($item, $location, $quantity, 'Stocked for the demo');
+
+            return;
+        }
+
+        $stock->receiveOpening($item, $location, $quantity, (float) ($item->cost_per_unit ?? $item->cost_price ?? 0));
     }
 
     public function uniqueSlug(string $model, string $name): string

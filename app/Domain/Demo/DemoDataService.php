@@ -17,6 +17,7 @@ use App\Domain\Demo\Steps\SalesDayStep;
 use App\Domain\Demo\Steps\StockStep;
 use App\Domain\Demo\Steps\TeamStep;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
+use App\Domain\Orders\Models\OrderSequence;
 use App\Domain\Payments\Actions\ProvisionPaymentDefaults;
 use App\Domain\Subscriptions\Models\UsageRecord;
 use App\Domain\Tenancy\Models\Tenant;
@@ -139,6 +140,11 @@ class DemoDataService
             'day_plan' => $this->dayPlan($tenant, $days),
             'settings_backup' => $this->applyDemoSettings($tenant, DemoProfile::for($tenant)),
         ]);
+
+        // Order numbering is a monotonic counter that removal never resets, so a
+        // tenant with real orders must continue above the highest number already
+        // in use — otherwise a regenerated demo would collide with them.
+        $this->syncOrderSequences($tenant);
 
         $batch->forceFill(['steps_total' => count($this->stepsFor($batch))])->save();
 
@@ -420,6 +426,42 @@ class DemoDataService
         ], $actor, $tenant->getKey());
 
         return ['batches' => $batches->count(), 'records' => $deleted];
+    }
+
+    /**
+     * Lift the per-branch order counter to at least the highest number already
+     * in use. Removal never deletes the counter (numbers must stay monotonic),
+     * but a tenant whose counter is missing or behind must still be able to
+     * generate without colliding with a real order.
+     */
+    protected function syncOrderSequences(Tenant $tenant): void
+    {
+        foreach ($tenant->branches()->get() as $branch) {
+            $highest = DB::table('orders')
+                ->where('branch_id', $branch->getKey())
+                ->pluck('order_number')
+                ->map(function ($number) {
+                    $number = (string) $number;
+                    $position = strrpos($number, '-');
+                    $tail = $position === false ? $number : substr($number, $position + 1);
+
+                    return ctype_digit($tail) ? (int) $tail : 0;
+                })
+                ->max() ?? 0;
+
+            if ($highest < 1) {
+                continue;
+            }
+
+            $sequence = OrderSequence::query()->withoutGlobalScopes()->firstOrCreate(
+                ['tenant_id' => $tenant->getKey(), 'branch_id' => $branch->getKey()],
+                ['last_number' => 0],
+            );
+
+            if ((int) $sequence->last_number < $highest) {
+                $sequence->forceFill(['last_number' => $highest])->save();
+            }
+        }
     }
 
     /**

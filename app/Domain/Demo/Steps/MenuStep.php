@@ -4,7 +4,6 @@ namespace App\Domain\Demo\Steps;
 
 use App\Domain\Demo\Data\DemoProfile;
 use App\Domain\Demo\DemoRun;
-use App\Domain\Inventory\StockService;
 use App\Domain\Menu\Enums\InventoryMode;
 use App\Domain\Menu\Models\Category;
 use App\Domain\Menu\Models\ModifierGroup;
@@ -353,19 +352,12 @@ class MenuStep implements DemoStep
      */
     protected function packagedStock(DemoRun $run, Product $product, array $item): void
     {
-        if (empty($item['stock']) || $run->hasOpeningStock($product)) {
+        if (empty($item['stock'])) {
             return;
         }
 
-        $stock = app(StockService::class);
-
         foreach (['primary' => self::PACKAGED_STOCK, 'annex' => (int) (self::PACKAGED_STOCK * 0.4)] as $branchKey => $quantity) {
-            $stock->receiveOpening(
-                $product,
-                $run->location($run->branch($branchKey)),
-                (float) $quantity,
-                (float) $product->cost_price,
-            );
+            $run->establishStock($product, $run->location($run->branch($branchKey)), (float) $quantity);
         }
     }
 
