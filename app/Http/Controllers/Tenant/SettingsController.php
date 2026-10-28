@@ -11,9 +11,12 @@ use App\Http\Requests\Onboarding\CompanyRequest;
 use App\Http\Requests\Onboarding\HoursRequest;
 use App\Http\Requests\Onboarding\ReceiptRequest;
 use App\Http\Requests\Onboarding\TaxRequest;
+use App\Http\Requests\Tenant\BillingSettingsRequest;
 use App\Http\Requests\Tenant\NotificationSettingsRequest;
 use App\Http\Requests\Tenant\OrderSettingsRequest;
 use App\Http\Requests\Tenant\PosSettingsRequest;
+use App\Http\Requests\Tenant\QrSettingsRequest;
+use App\Http\Requests\Tenant\TeamSettingsRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -26,7 +29,7 @@ use Inertia\Response;
  */
 class SettingsController extends Controller
 {
-    public const GROUPS = ['company', 'branches', 'hours', 'tax', 'receipt', 'billing', 'pos', 'orders', 'notifications', 'qr'];
+    public const GROUPS = ['company', 'branches', 'team', 'hours', 'tax', 'receipt', 'billing', 'pos', 'orders', 'notifications', 'qr'];
 
     public function __construct(
         protected OnboardingService $onboarding,
@@ -68,6 +71,7 @@ class SettingsController extends Controller
             'orders' => $this->onboarding->saveOrders($tenant, $data),
             'notifications' => $this->onboarding->saveNotifications($tenant, $data),
             'qr' => $this->onboarding->saveQr($tenant, $data),
+            'team' => $this->onboarding->saveTeamSettings($tenant, $data),
         };
 
         $this->audit->log("settings.{$group}_updated", $tenant, [], $request->user(), $tenant->getKey());
@@ -84,11 +88,12 @@ class SettingsController extends Controller
             'hours' => app(HoursRequest::class)->rules(),
             'tax' => app(TaxRequest::class)->rules(),
             'receipt' => app(ReceiptRequest::class)->rules(),
-            'billing' => app(\App\Http\Requests\Tenant\BillingSettingsRequest::class)->rules(),
+            'billing' => app(BillingSettingsRequest::class)->rules(),
             'pos' => app(PosSettingsRequest::class)->rules(),
             'orders' => app(OrderSettingsRequest::class)->rules(),
             'notifications' => app(NotificationSettingsRequest::class)->rules(),
-            'qr' => app(\App\Http\Requests\Tenant\QrSettingsRequest::class)->rules(),
+            'qr' => app(QrSettingsRequest::class)->rules(),
+            'team' => app(TeamSettingsRequest::class)->rules(),
         };
     }
 

@@ -6,6 +6,7 @@ use App\Domain\Auditing\AuditLogger;
 use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Identity\Models\Invitation;
 use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Notifications\StaffAccountCreatedNotification;
 use App\Domain\Identity\Notifications\StaffInvitationNotification;
 use App\Domain\Subscriptions\UsageService;
 use App\Domain\Tenancy\Models\Tenant;
@@ -16,10 +17,12 @@ use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
 /**
- * Creates, sends, accepts and revokes staff invitations.
+ * Creates, sends, accepts and revokes staff invitations — and creates staff
+ * accounts directly when the owner sets a password.
  *
  * Token handling: the plaintext token exists only long enough to build the invite
- * link; only its SHA-256 hash is persisted.
+ * link; only its SHA-256 hash is persisted. A password chosen by the owner is
+ * never stored in plaintext, never emailed and never written to the audit trail.
  */
 class InvitationService
 {
@@ -31,6 +34,8 @@ class InvitationService
     ) {}
 
     /**
+     * Email an invitation link. The invitee chooses their own password.
+     *
      * @param  array{email: string, name?: ?string, roles: list<string>, branch_ids?: list<int>}  $data
      */
     public function invite(Tenant $tenant, array $data, ?User $inviter = null): Invitation
@@ -67,6 +72,66 @@ class InvitationService
         return $invitation;
     }
 
+    /**
+     * Create the account immediately with a password chosen by the owner. No
+     * invitation is issued: the person can sign in as soon as the owner shares it.
+     *
+     * @param  array{email: string, name: string, password: string, roles: list<string>, branch_ids?: list<int>}  $data
+     */
+    public function createStaff(Tenant $tenant, array $data, ?User $inviter = null): User
+    {
+        $roles = $this->tenantRoleSlugs($data['roles'], $tenant->getKey());
+
+        if ($roles === []) {
+            throw ValidationException::withMessages([
+                'roles' => 'Select at least one valid role.',
+            ]);
+        }
+
+        $this->usage->guard($tenant, 'users');
+
+        // Authoritative read: this decides whether the new account may sign in
+        // before confirming its address, so a stale in-memory tenant must never
+        // decide it.
+        $settings = InvitationSettings::for($tenant->fresh() ?? $tenant);
+
+        $user = DB::transaction(function () use ($tenant, $data, $roles, $settings, $inviter) {
+            $user = User::create([
+                'tenant_id' => $tenant->getKey(),
+                'name' => $data['name'],
+                'email' => strtolower($data['email']),
+                'password' => $data['password'],
+                'status' => 'active',
+            ]);
+
+            // The tenant's policy decides whether the address still has to be
+            // confirmed; the password itself is never recorded anywhere.
+            if (! $settings->requiresDoubleOptIn()) {
+                $user->forceFill(['email_verified_at' => now()])->save();
+            }
+
+            $user->roles()->sync($this->roleIds($roles, $tenant->getKey()));
+            $user->unsetRelation('roles');
+
+            $this->syncBranches($user, $data['branch_ids'] ?? []);
+
+            $this->audit->log('staff.created', $user, [
+                'email' => $user->email,
+                'roles' => $roles,
+            ], $inviter, $tenant->getKey());
+
+            return $user;
+        });
+
+        if ($settings->requiresDoubleOptIn()) {
+            $this->sendVerification($user);
+        }
+
+        $this->sendWelcome($user, $tenant);
+
+        return $user;
+    }
+
     public function resend(Invitation $invitation): void
     {
         $plain = Invitation::generateToken();
@@ -96,7 +161,9 @@ class InvitationService
      */
     public function accept(Invitation $invitation, array $data): User
     {
-        return DB::transaction(function () use ($invitation, $data) {
+        $settings = InvitationSettings::for($invitation->tenant);
+
+        $user = DB::transaction(function () use ($invitation, $data, $settings) {
             if ($invitation->isAccepted()) {
                 throw ValidationException::withMessages([
                     'email' => 'This invitation has already been accepted.',
@@ -117,18 +184,16 @@ class InvitationService
                 'status' => 'active',
             ]);
 
-            // Accepting the emailed invite proves control of the address.
-            $user->forceFill(['email_verified_at' => now()])->save();
+            // Opening the emailed link proves control of the address, unless the
+            // tenant asked for a separate confirmation step.
+            if (! $settings->requiresDoubleOptIn()) {
+                $user->forceFill(['email_verified_at' => now()])->save();
+            }
 
-            $roleIds = Role::whereIn('slug', $invitation->roles)
-                ->where(function ($query) use ($invitation) {
-                    $query->whereNull('tenant_id')->orWhere('tenant_id', $invitation->tenant_id);
-                })
-                ->pluck('id')
-                ->all();
-            $user->roles()->sync($roleIds);
+            $user->roles()->sync($this->roleIds($invitation->roles ?? [], $invitation->tenant_id));
+            $user->unsetRelation('roles');
 
-            $this->syncBranches($user, $invitation);
+            $this->syncBranches($user, $invitation->branch_ids ?? []);
 
             $invitation->forceFill([
                 'accepted_at' => now(),
@@ -142,27 +207,67 @@ class InvitationService
 
             return $user;
         });
+
+        if ($settings->requiresDoubleOptIn()) {
+            $this->sendVerification($user);
+        }
+
+        return $user;
     }
 
-    protected function syncBranches(User $user, Invitation $invitation): void
+    /** @param list<int> $branchIds */
+    protected function syncBranches(User $user, array $branchIds): void
     {
-        $branchIds = collect($invitation->branch_ids ?? [])
-            ->filter()
-            ->unique()
-            ->all();
+        $ids = collect($branchIds)->filter()->unique()->all();
 
-        if ($branchIds === []) {
+        if ($ids === []) {
             return;
         }
 
-        // Only grant branches that belong to the invitation's tenant.
-        $validIds = $user->tenant
-            ->branches()
-            ->whereIn('id', $branchIds)
+        // Only grants branches that belong to the user's tenant (and refreshes
+        // the memoised branch access).
+        $user->syncBranchAccess($ids);
+    }
+
+    /**
+     * @param  list<string>  $slugs
+     * @return list<int>
+     */
+    protected function roleIds(array $slugs, ?int $tenantId): array
+    {
+        return Role::whereIn('slug', $slugs)
+            ->where(function ($query) use ($tenantId) {
+                $query->whereNull('tenant_id');
+
+                if ($tenantId !== null) {
+                    $query->orWhere('tenant_id', $tenantId);
+                }
+            })
             ->pluck('id')
             ->all();
+    }
 
-        $user->branches()->syncWithPivotValues($validIds, ['tenant_id' => $user->tenant_id]);
+    /**
+     * Ask the new member to confirm their address. Secondary to creating the
+     * account, so a mail failure is reported, never fatal.
+     */
+    protected function sendVerification(User $user): void
+    {
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    protected function sendWelcome(User $user, Tenant $tenant): void
+    {
+        try {
+            Notification::route('mail', $user->email)
+                ->notify(new StaffAccountCreatedNotification($tenant, (string) $user->email, (string) $user->name));
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /**

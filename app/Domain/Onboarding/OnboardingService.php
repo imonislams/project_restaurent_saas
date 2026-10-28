@@ -6,6 +6,7 @@ use App\Domain\Accounting\Actions\ProvisionAccountingDefaults;
 use App\Domain\Branches\Enums\ServiceType;
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Identity\InvitationService;
+use App\Domain\Identity\InvitationSettings;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
 use App\Domain\Menu\Enums\InventoryMode;
 use App\Domain\Menu\Models\Category;
@@ -466,6 +467,21 @@ class OnboardingService
     }
 
     /**
+     * Invitation policy: how the email address of an invited team member is
+     * confirmed when their account is created.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function saveTeamSettings(Tenant $tenant, array $data): void
+    {
+        $tenant->mergeSettings([
+            'invitations.verification' => (string) $data['invitation_verification'],
+        ]);
+
+        $tenant->save();
+    }
+
+    /**
      * Persist the tenant's billing profile (used for gateway eligibility and for
      * invoice details). Distinct from the restaurant's own company details.
      *
@@ -590,6 +606,9 @@ class OnboardingService
                 'low_stock_threshold' => (float) $tenant->getSetting('inventory.low_stock_threshold', 0),
                 'loyalty_enabled' => (bool) $tenant->getSetting('loyalty.enabled', false),
                 'loyalty_points_per_currency' => (float) $tenant->getSetting('loyalty.points_per_currency', 1),
+            ],
+            'team' => [
+                'invitation_verification' => InvitationSettings::for($tenant)->mode()->value,
             ],
             'qr' => [
                 'qr_enabled' => (bool) $tenant->getSetting('qr.enabled', true),

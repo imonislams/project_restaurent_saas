@@ -5,6 +5,7 @@
 export const SETTINGS_TABS = [
     'company',
     'branches',
+    'team',
     'hours',
     'tax',
     'receipt',

@@ -115,6 +115,45 @@ class SettingsTest extends TestCase
         $this->assertSame(3.0, (float) $tenant->getSetting('inventory.low_stock_threshold'));
     }
 
+    public function test_team_settings_render_and_persist(): void
+    {
+        [$tenant, $owner] = $this->tenantWithOwner();
+
+        $this->actingAs($owner)->get('/settings/team')->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Settings/Show')
+                ->where('group', 'team')
+                ->where('form.invitation_verification', 'invite_link'));
+
+        $this->actingAs($owner)->post('/settings/team', [
+            'invitation_verification' => 'email_link',
+        ])->assertRedirect();
+
+        $tenant->refresh();
+        $this->assertSame('email_link', $tenant->getSetting('invitations.verification'));
+        $this->assertDatabaseHas('audit_logs', ['action' => 'settings.team_updated']);
+    }
+
+    public function test_team_settings_reject_an_unknown_policy(): void
+    {
+        [$tenant, $owner] = $this->tenantWithOwner();
+
+        $this->actingAs($owner)
+            ->post('/settings/team', ['invitation_verification' => 'whatever'])
+            ->assertSessionHasErrors('invitation_verification');
+    }
+
+    public function test_cashier_cannot_change_team_settings(): void
+    {
+        [$tenant] = $this->tenantWithOwner();
+
+        $cashier = User::factory()->forTenant($tenant)->create();
+        $cashier->assignRole(RoleName::Cashier);
+
+        $this->actingAs($cashier)->get('/settings/team')->assertForbidden();
+        $this->actingAs($cashier)->post('/settings/team', ['invitation_verification' => 'none'])->assertForbidden();
+    }
+
     public function test_checklist_items_are_actionable_and_complete_truthfully(): void
     {
         [$tenant] = $this->tenantWithOwner();

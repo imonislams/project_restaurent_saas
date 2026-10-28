@@ -9,6 +9,14 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Team invitations: a password the owner sets, and a verification policy.** The invite drawer
+  accepts an optional password — the account is created immediately with its roles and branch
+  access, and the owner shares the password out of band (it is never stored in plaintext, emailed
+  or audited). Leaving it blank keeps the emailed invitation link. A new **Settings → Team** tab
+  chooses how invited staff confirm their email: the invitation link confirms it (default), they
+  must confirm a verification email before signing in, or no verification for invited staff. The
+  policy applies when the account is created and never retroactively, and the invite drawer states
+  the active policy.
 - **A populated demo workspace for every new restaurant.** The wizard's final step offers sample
   data (on by default); activation builds it on `/demo/setup`, one step per request, with a live
   progress screen. It creates a second branch, 9 staff with roles and branch access, ~50 menu items with recipes,

@@ -9,6 +9,7 @@ import {
     ConfirmDialog,
     Drawer,
     EmptyState,
+    Input,
     KpiCard,
     PageHeader,
     Table,
@@ -19,6 +20,7 @@ import {
     TableRow,
     TextField,
 } from '@/Components/ui';
+import { useT } from '@/i18n';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Search, X } from 'lucide-react';
@@ -86,16 +88,20 @@ export default function StaffIndex({
     invitations,
     roles,
     branches,
+    invitationSettings,
 }: {
     staff: StaffMember[];
     invitations: InvitationRow[];
     roles: { value: string; label: string }[];
     branches: { id: number; name: string }[];
+    invitationSettings: { mode: string };
 }) {
     const { flash, auth } = usePage().props as Record<string, any>;
+    const t = useT();
     const canManage = auth.permissions.includes('staff.manage');
 
     const [showInviteDrawer, setShowInviteDrawer] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [editing, setEditing] = useState<StaffMember | null>(null);
     const [confirmDeactivate, setConfirmDeactivate] = useState<StaffMember | null>(null);
     const [search, setSearch] = useState('');
@@ -106,7 +112,22 @@ export default function StaffIndex({
         email: '',
         roles: ['cashier'] as string[],
         branch_ids: [] as number[],
+        password: '',
     });
+
+    // A password creates the account immediately; without one the person is
+    // emailed an invitation instead.
+    const setPasswordMode = inviteForm.data.password.length > 0;
+
+    const generatePassword = () => {
+        const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+        const bytes = new Uint32Array(12);
+        crypto.getRandomValues(bytes);
+        const value = Array.from(bytes, (n) => alphabet[n % alphabet.length]).join('');
+
+        inviteForm.setData('password', value);
+        setShowPassword(true);
+    };
 
     const editForm = useForm({
         roles: [] as string[],
@@ -125,6 +146,7 @@ export default function StaffIndex({
             preserveScroll: true,
             onSuccess: () => {
                 inviteForm.reset();
+                setShowPassword(false);
                 setShowInviteDrawer(false);
             },
         });
@@ -550,7 +572,7 @@ export default function StaffIndex({
             <Drawer
                 show={showInviteDrawer}
                 onClose={() => setShowInviteDrawer(false)}
-                title="Invite Team Member"
+                title={setPasswordMode ? t('staff.add_title') : t('staff.invite_title')}
                 width="max-w-lg"
                 footer={
                     <div className="flex justify-end gap-2.5">
@@ -558,14 +580,14 @@ export default function StaffIndex({
                             Cancel
                         </Button>
                         <Button loading={inviteForm.processing} onClick={submitInvite}>
-                            Send Invitation
+                            {setPasswordMode ? t('staff.create_account') : t('staff.send_invitation')}
                         </Button>
                     </div>
                 }
             >
                 <form onSubmit={submitInvite} className="space-y-4">
                     <TextField
-                        label="Full Name (optional)"
+                        label={setPasswordMode ? t('staff.name_required') : t('staff.name_optional')}
                         placeholder="e.g. John Doe"
                         value={inviteForm.data.name}
                         error={inviteForm.errors.name}
@@ -580,6 +602,31 @@ export default function StaffIndex({
                         error={inviteForm.errors.email}
                         onChange={(v) => inviteForm.setData('email', v)}
                     />
+
+                    <div>
+                        <label htmlFor="invite-password" className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-700">
+                            {t('staff.password_label')}
+                        </label>
+                        <div className="flex items-center gap-2">
+                            <Input
+                                id="invite-password"
+                                type={showPassword ? 'text' : 'password'}
+                                autoComplete="new-password"
+                                value={inviteForm.data.password}
+                                placeholder={t('staff.password_placeholder')}
+                                onChange={(event) => inviteForm.setData('password', event.target.value)}
+                                className="flex-1"
+                            />
+                            <Button type="button" variant="outline" size="sm" onClick={() => setShowPassword((value) => !value)}>
+                                {showPassword ? t('staff.hide') : t('staff.show')}
+                            </Button>
+                            <Button type="button" variant="outline" size="sm" onClick={generatePassword}>
+                                {t('staff.generate')}
+                            </Button>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">{t('staff.password_hint')}</p>
+                        {inviteForm.errors.password && <p className="mt-1 text-xs text-rose-600">{inviteForm.errors.password}</p>}
+                    </div>
 
                     <div>
                         <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-700">
@@ -628,6 +675,10 @@ export default function StaffIndex({
                             </div>
                         </div>
                     )}
+
+                    <p className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+                        {t(`staff.invitation_policy.${invitationSettings.mode}`)}
+                    </p>
                 </form>
             </Drawer>
 

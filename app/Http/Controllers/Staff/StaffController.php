@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Staff;
 
 use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Identity\InvitationService;
+use App\Domain\Identity\InvitationSettings;
 use App\Domain\Identity\Models\Invitation;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\StaffService;
@@ -68,16 +69,25 @@ class StaffController extends Controller
             'roles' => $this->roleOptions($actor->tenant_id),
             'branches' => $tenant->branches()->whereIn('id', $request->user()->accessibleBranchIds())->active()->orderBy('name')->get()
                 ->map(fn ($branch) => ['id' => $branch->getKey(), 'name' => $branch->name]),
+            // The active verification policy, so the invite drawer can explain
+            // what will happen to the person being added.
+            'invitationSettings' => InvitationSettings::for($tenant)->toArray(),
         ]);
     }
 
     public function store(StoreInvitationRequest $request): RedirectResponse
     {
-        $this->invitations->invite(
-            $request->user()->tenant,
-            $request->validated(),
-            $request->user(),
-        );
+        $data = $request->validated();
+        $tenant = $request->user()->tenant;
+
+        // A password creates the account now; without one we email an invitation.
+        if (! empty($data['password'])) {
+            $this->invitations->createStaff($tenant, $data, $request->user());
+
+            return back()->with('success', 'Team member added. Share the password with them directly.');
+        }
+
+        $this->invitations->invite($tenant, $data, $request->user());
 
         return back()->with('success', 'Invitation sent.');
     }

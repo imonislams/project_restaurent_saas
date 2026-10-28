@@ -6,6 +6,7 @@ use App\Domain\Identity\Enums\RoleName;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules;
 
 class StoreInvitationRequest extends FormRequest
 {
@@ -24,7 +25,10 @@ class StoreInvitationRequest extends FormRequest
                 Rule::unique(User::class, 'email'),
                 Rule::unique('invitations', 'email')->where('tenant_id', $tenantId)->whereNull('accepted_at'),
             ],
-            'name' => ['nullable', 'string', 'max:255'],
+            'name' => ['nullable', 'string', 'max:255', 'required_with:password'],
+            // Optional: when the owner supplies a password the account is created
+            // immediately instead of emailing an invitation link.
+            'password' => ['nullable', 'string', Rules\Password::defaults()],
             'roles' => ['required', 'array', 'min:1'],
             'roles.*' => [
                 'string',
@@ -51,6 +55,7 @@ class StoreInvitationRequest extends FormRequest
         return [
             'email.unique' => 'This email has already been invited or registered.',
             'roles.*.not_in' => 'The selected role cannot be assigned.',
+            'name.required_with' => 'Give the team member a name when you set a password.',
         ];
     }
 }

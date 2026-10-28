@@ -8,6 +8,7 @@ import PosFields from '@/Components/Settings/PosFields';
 import QrFields from '@/Components/Settings/QrFields';
 import ReceiptFields from '@/Components/Settings/ReceiptFields';
 import TaxFields from '@/Components/Settings/TaxFields';
+import TeamFields from '@/Components/Settings/TeamFields';
 import type { SettingsOptions } from '@/Components/Settings/types';
 import { SETTINGS_TABS, settingsTabHref } from '@/Components/Settings/tabs';
 import { Button, PageHeader, Tabs } from '@/Components/ui';
@@ -46,6 +47,8 @@ export default function SettingsShow({
                 return <CompanyFields data={data} setData={setData} errors={errors} options={options} />;
             case 'branches':
                 return <BranchFields data={data} setData={setData} errors={errors} options={options} />;
+            case 'team':
+                return <TeamFields data={data} setData={setData} errors={errors} options={options} />;
             case 'hours':
                 return <HoursFields data={data} setData={setData} errors={errors} options={options} />;
             case 'tax':
