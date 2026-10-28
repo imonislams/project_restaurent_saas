@@ -16,7 +16,7 @@ class DemoSeedCommand extends Command
 {
     protected $signature = 'demo:seed
         {tenant? : Tenant id or slug (defaults to the only/first tenant)}
-        {--days=21 : Days of sales history to generate (15-60)}
+        {--days=3 : Days of sales history to generate (3-30)}
         {--fresh : Remove any existing demo data first}';
 
     protected $description = 'Generate a complete demo workspace for a tenant (menu, team, inventory, sales history)';

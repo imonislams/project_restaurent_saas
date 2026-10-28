@@ -27,7 +27,7 @@ use Illuminate\Support\Str;
 class MenuStep implements DemoStep
 {
     /** Bottles and cans held per branch. */
-    protected const PACKAGED_STOCK = 150;
+    protected const PACKAGED_STOCK = 60;
 
     public function key(): string
     {

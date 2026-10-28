@@ -100,17 +100,16 @@ class DemoController extends Controller
     }
 
     /**
-     * Rebuild: remove what exists, then generate a fresh workspace with the same
-     * number of days as the previous run.
+     * Rebuild: remove what exists, then generate a fresh, standard-sized
+     * workspace.
      */
     public function rebuild(Request $request): RedirectResponse
     {
         $tenant = $this->tenant($request);
-        $previousDays = $this->demo->latest($tenant, true)?->days;
 
         try {
             $this->demo->purge($tenant, $request->user());
-            $this->demo->start($tenant, $request->user(), $previousDays);
+            $this->demo->start($tenant, $request->user());
         } catch (\Throwable $e) {
             report($e);
 

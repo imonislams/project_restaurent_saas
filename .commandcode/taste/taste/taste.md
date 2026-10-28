@@ -106,6 +106,7 @@
 - Will not sacrifice necessary operational/business information for visual polish: information may only be dropped from a screen with a stated reason, and hiding functional details merely to look "clean" is forbidden. Confidence: 0.6
 - Wants UI text treated as variable-length input: short, long and oversized names (including unbroken words) must wrap/clamp gracefully while the full value stays reachable (tooltip/aria-label/full text elsewhere), critical information such as the price must never be truncated or overlapped, spacing/line-height/contrast stay consistent, and there must be no horizontal overflow on desktop, tablet or mobile. Confidence: 0.65
 - On the POS menu card, does not want a separate `+` (add) button or other unnecessary icons — the whole card stays the single tap target for adding an item, matching the existing workflow. Confidence: 0.5
+- Prefers demo/sample data to be deliberately **minimal** — just enough volume for the audience to understand and try each module (a short window of a few days, small staff/guest table counts), never a large, realistic wall of data; explicitly "the data need no more just for demo … need minimal for their understanding and testing". Confidence: 0.6
 
 ## Design system
 For all UI work follow `docs/DESIGN-SYSTEM.md` (brand colours, logo, fonts, motion, page patterns).

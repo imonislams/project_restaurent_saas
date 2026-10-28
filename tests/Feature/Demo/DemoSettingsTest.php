@@ -21,7 +21,7 @@ class DemoSettingsTest extends DemoTestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Settings/Demo')
                 ->where('demo.status', 'completed')
-                ->where('demo.days', 15)
+                ->where('demo.days', 3)
                 ->where('demo.records', 1)
                 ->where('currency', 'BDT')
                 ->has('history', 1));
@@ -99,7 +99,7 @@ class DemoSettingsTest extends DemoTestCase
 
         $this->assertNotNull($batch);
         $this->assertSame('pending', $batch->status);
-        $this->assertSame(15, $batch->days, 'rebuild keeps the previous coverage');
+        $this->assertSame(DemoDataService::DEFAULT_DAYS, $batch->days, 'rebuild uses the standard coverage');
         $this->assertDatabaseHas('demo_data_batches', ['tenant_id' => $tenant->getKey(), 'status' => 'removed']);
     }
 

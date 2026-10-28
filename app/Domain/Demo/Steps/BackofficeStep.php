@@ -218,12 +218,8 @@ class BackofficeStep implements DemoStep
 
             $count++;
 
-            // Records above the tenant's approval threshold stay pending — they
-            // are the ones waiting for a manager, which is the point of the
-            // approval queue. Auto-approved records need no action.
-            if ($record->status === 'pending' && $index % 3 === 2) {
-                DemoClock::at($at->copy()->addHours(3), fn () => $waste->approve($record, $inventory));
-            }
+            // Records above the approval threshold stay pending on purpose:
+            // they are the ones waiting for a manager.
         }
 
         return $count;
@@ -347,8 +343,8 @@ class BackofficeStep implements DemoStep
         $threshold = $profile->lowStockThreshold();
 
         $targets = $profile->isBangladeshi()
-            ? ['basmati_rice' => 6.0, 'soybean_oil' => 4.0, 'chicken' => 5.0, 'milk' => 8.0]
-            : ['pasta' => 3.0, 'olive_oil' => 2.5, 'chicken_breast' => 3.0, 'milk' => 4.0];
+            ? ['basmati_rice' => 6.0, 'soybean_oil' => 4.0, 'chicken' => 5.0]
+            : ['pasta' => 3.0, 'olive_oil' => 2.5, 'chicken_breast' => 3.0];
 
         foreach ($targets as $key => $quantity) {
             $ingredientId = $run->ref('ingredients.'.$key);
@@ -392,7 +388,7 @@ class BackofficeStep implements DemoStep
             ->where('tenant_id', $run->batch->tenant_id)
             ->where('points_balance', '>=', 200)
             ->orderByDesc('points_balance')
-            ->limit(3)
+            ->limit(2)
             ->get();
 
         foreach ($accounts as $account) {

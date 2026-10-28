@@ -17,16 +17,16 @@ Code lives in `app/Domain/Demo/` (service, steps, catalogs) with the UI in
 
 | Area | Content |
 |---|---|
-| Team & roles | ~12 staff with real names and role assignments, 2 tenant-defined roles, branch access, manager PINs for approvals |
+| Team & roles | 9 staff with real names and role assignments, 2 tenant-defined roles, branch access, manager PINs for approvals |
 | Branch | A second branch with mirrored hours, till, stock location and cash account (the owner's own branch is untouched) |
 | Menu | 8–9 categories, ~50 products with prices, costs, labels, size variants, modifier groups, recipes and per-branch availability |
-| Floor | Dining areas, ~20 tables with mixed covers, QR token per table, table staff |
+| Floor | Dining areas, ~11 tables with mixed covers, QR token per table, table staff |
 | Kitchen | Stations per branch; a ticket per order with a realistic lifecycle, the newest few left live |
-| Sales | 15–60 days (default **21**) of orders through the POS engine: shifts, payments, cash movements, invoices, kitchen history, voids |
+| Sales | **3 days** of orders (configurable 3–30) through the POS engine: shifts, payments, cash movements, invoices, kitchen history, voids |
 | QR dining | Closed sessions with participants and feedback, plus live sessions with orders awaiting approval |
-| Guests | ~38 customers (repeat visits weighted), loyalty accrual and redemptions |
+| Guests | 12 customers (repeat visits weighted), loyalty accrual and redemptions |
 | Inventory | ~40 ingredients, recipes, opening stock, low-stock items, suppliers, purchase orders at every lifecycle stage, stock transfers |
-| Back office | Waste (including records awaiting approval), expenses across categories, account ledger entries |
+| Back office | Waste (including a record awaiting approval), 8 expenses across categories, account ledger entries |
 | Images | Flat menu illustrations copied to `storage/app/public/demo/menu/` and attached per product |
 
 Region decides the catalog: `BDT`/`BD` tenants get the Bangladeshi menu, names and prices;
@@ -76,11 +76,12 @@ Both commands are also available in **Platform → Operations → Commands** (`d
 - **Menu images** need the public storage link (`php artisan storage:link`, also available as the
   *Link storage* command). Without it images are skipped and products fall back to the branded
   tile — nothing breaks.
-- Generation writes a large amount of data (~20k traced rows for 15 days). One day of trade is
-  one request, which keeps each call well inside normal PHP limits; a failed step is resumable
-  and never duplicates orders (deterministic idempotency keys).
+- Default generation is deliberately small — three days of trade, a nine-person team and a
+dozen guests, enough to understand and try every module without a wall of data. One day of
+trade is one request, which keeps each call well inside normal PHP limits; a failed step is
+resumable and never duplicates orders (deterministic idempotency keys).
 - The current day only covers the hours that have already elapsed, so a fresh demo generated
-  before the restaurant opens has no "today" figures — the last 15–21 days are complete.
+  before the restaurant opens has no "today" figures — the previous days are complete.
 
 ## Known limitations
 

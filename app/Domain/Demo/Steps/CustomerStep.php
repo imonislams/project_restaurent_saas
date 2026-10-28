@@ -11,7 +11,7 @@ use App\Domain\Demo\DemoRun;
  */
 class CustomerStep implements DemoStep
 {
-    protected const CUSTOMER_COUNT = 38;
+    protected const CUSTOMER_COUNT = 12;
 
     public function key(): string
     {

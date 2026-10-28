@@ -551,23 +551,13 @@ class InternationalMenu
     {
         return [
             ['day' => '-1', 'type' => 'Rent', 'description' => 'Monthly unit rent — main branch', 'amount' => 4200, 'category' => 'Rent', 'method' => 'bank_transfer'],
-            ['day' => '-3', 'type' => 'Utilities', 'description' => 'Electricity bill', 'amount' => 780, 'category' => 'Utilities', 'method' => 'bank_transfer'],
-            ['day' => '-4', 'type' => 'Utilities', 'description' => 'Water and waste', 'amount' => 240, 'category' => 'Utilities', 'method' => 'bank_transfer'],
-            ['day' => '-5', 'type' => 'Utilities', 'description' => 'Gas supply', 'amount' => 310, 'category' => 'Utilities', 'method' => 'bank_transfer'],
-            ['day' => '-2', 'type' => 'Marketing', 'description' => 'Social media advertising', 'amount' => 600, 'category' => 'Marketing', 'method' => 'card'],
-            ['day' => '-8', 'type' => 'Marketing', 'description' => 'Menu photography and print', 'amount' => 450, 'category' => 'Marketing', 'method' => 'card'],
-            ['day' => '-6', 'type' => 'Salaries', 'description' => 'Kitchen porter — weekly wages', 'amount' => 520, 'category' => 'Staff Salaries', 'method' => 'bank_transfer'],
-            ['day' => '-13', 'type' => 'Salaries', 'description' => 'Service crew — weekly wages', 'amount' => 1450, 'category' => 'Staff Salaries', 'method' => 'bank_transfer'],
-            ['day' => '-7', 'type' => 'Maintenance', 'description' => 'Refrigeration service', 'amount' => 280, 'category' => 'Maintenance', 'method' => 'card'],
-            ['day' => '-10', 'type' => 'Maintenance', 'description' => 'Glasswasher repair', 'amount' => 165, 'category' => 'Maintenance', 'method' => 'cash'],
-            ['day' => '-11', 'type' => 'Supplies', 'description' => 'Takeaway packaging', 'amount' => 390, 'category' => 'Supplies', 'method' => 'card'],
-            ['day' => '-14', 'type' => 'Supplies', 'description' => 'Cleaning supplies', 'amount' => 175, 'category' => 'Supplies', 'method' => 'cash'],
-            ['day' => '-16', 'type' => 'Licences', 'description' => 'Premises licence renewal', 'amount' => 950, 'category' => 'Licences & Permits', 'method' => 'bank_transfer'],
-            ['day' => '-9', 'type' => 'Utilities', 'description' => 'Broadband and phone', 'amount' => 120, 'category' => 'Utilities', 'method' => 'card'],
-            ['day' => '-18', 'type' => 'Marketing', 'description' => 'Local sponsorship', 'amount' => 300, 'category' => 'Marketing', 'method' => 'bank_transfer'],
-            ['day' => '-12', 'type' => 'Maintenance', 'description' => 'Pest control contract', 'amount' => 210, 'category' => 'Maintenance', 'method' => 'card'],
-            ['day' => '-15', 'type' => 'Supplies', 'description' => 'Kitchen linen', 'amount' => 260, 'category' => 'Supplies', 'method' => 'card'],
-            ['day' => '-19', 'type' => 'Utilities', 'description' => 'Waste collection', 'amount' => 145, 'category' => 'Utilities', 'method' => 'bank_transfer'],
+            ['day' => '-2', 'type' => 'Utilities', 'description' => 'Electricity bill', 'amount' => 780, 'category' => 'Utilities', 'method' => 'bank_transfer'],
+            ['day' => '-2', 'type' => 'Utilities', 'description' => 'Water and waste', 'amount' => 240, 'category' => 'Utilities', 'method' => 'bank_transfer'],
+            ['day' => '-3', 'type' => 'Utilities', 'description' => 'Gas supply', 'amount' => 310, 'category' => 'Utilities', 'method' => 'bank_transfer'],
+            ['day' => '-3', 'type' => 'Marketing', 'description' => 'Social media advertising', 'amount' => 600, 'category' => 'Marketing', 'method' => 'card'],
+            ['day' => '-2', 'type' => 'Salaries', 'description' => 'Kitchen porter — weekly wages', 'amount' => 520, 'category' => 'Staff Salaries', 'method' => 'bank_transfer'],
+            ['day' => '-1', 'type' => 'Maintenance', 'description' => 'Refrigeration service', 'amount' => 280, 'category' => 'Maintenance', 'method' => 'card'],
+            ['day' => '-3', 'type' => 'Supplies', 'description' => 'Takeaway packaging', 'amount' => 390, 'category' => 'Supplies', 'method' => 'card'],
         ];
     }
 

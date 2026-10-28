@@ -166,13 +166,10 @@ class DemoProfile
             ['key' => 'manager', 'role' => 'branch_manager', 'branch' => 'primary', 'pin' => '2468', 'title' => 'Branch Manager'],
             ['key' => 'supervisor', 'role' => 'supervisor', 'branch' => 'primary', 'pin' => '1357', 'title' => 'Floor Supervisor'],
             ['key' => 'cashier1', 'role' => 'cashier', 'branch' => 'primary', 'custom_role' => 'shift_lead', 'registers' => true],
-            ['key' => 'cashier2', 'role' => 'cashier', 'branch' => 'primary', 'registers' => true],
-            ['key' => 'cashier3', 'role' => 'cashier', 'branch' => 'annex', 'registers' => true],
+            ['key' => 'cashier2', 'role' => 'cashier', 'branch' => 'annex', 'registers' => true],
             ['key' => 'waiter1', 'role' => 'table_staff', 'branch' => 'primary', 'serves' => true],
-            ['key' => 'waiter2', 'role' => 'table_staff', 'branch' => 'primary', 'serves' => true],
-            ['key' => 'waiter3', 'role' => 'table_staff', 'branch' => 'annex', 'serves' => true],
+            ['key' => 'waiter2', 'role' => 'table_staff', 'branch' => 'annex', 'serves' => true],
             ['key' => 'kitchen1', 'role' => 'kitchen_staff', 'branch' => 'primary'],
-            ['key' => 'kitchen2', 'role' => 'kitchen_staff', 'branch' => 'annex'],
             ['key' => 'inventory', 'role' => 'inventory_manager', 'branch' => 'primary'],
             ['key' => 'accountant', 'role' => 'accountant', 'branch' => 'primary', 'custom_role' => 'billing_clerk'],
         ];
@@ -271,18 +268,12 @@ class DemoProfile
             ? [
                 ['item' => 'onion', 'reason' => 'spoilage', 'quantity' => 3.0, 'note' => 'Soft onions found during prep'],
                 ['item' => 'tomato', 'reason' => 'damage', 'quantity' => 2.5, 'note' => 'Crushed in delivery'],
-                ['item' => 'milk', 'reason' => 'expiry', 'quantity' => 4.0, 'note' => 'Past use-by date'],
-                ['item' => 'chicken', 'reason' => 'preparation_error', 'quantity' => 2.0, 'note' => 'Overcooked batch discarded'],
                 ['item' => 'beef', 'reason' => 'spoilage', 'quantity' => 1.5, 'note' => 'Left out of the chiller overnight'],
-                ['item' => 'ilish', 'reason' => 'preparation_error', 'quantity' => 1.0, 'note' => 'Burnt during service'],
             ]
             : [
                 ['item' => 'lettuce', 'reason' => 'spoilage', 'quantity' => 1.5, 'note' => 'Wilted leaves'],
                 ['item' => 'tomato', 'reason' => 'damage', 'quantity' => 2.0, 'note' => 'Crushed in transit'],
-                ['item' => 'milk', 'reason' => 'expiry', 'quantity' => 3.0, 'note' => 'Past use-by date'],
-                ['item' => 'chicken_breast', 'reason' => 'preparation_error', 'quantity' => 1.2, 'note' => 'Overcooked batch discarded'],
-                ['item' => 'salmon', 'reason' => 'spoilage', 'quantity' => 0.8, 'note' => 'Missed date check'],
-                ['item' => 'beef_steak', 'reason' => 'preparation_error', 'quantity' => 0.6, 'note' => 'Returned by guest as overcooked'],
+                ['item' => 'salmon', 'reason' => 'spoilage', 'quantity' => 1.5, 'note' => 'Missed date check'],
             ];
     }
 
@@ -295,24 +286,20 @@ class DemoProfile
     {
         return $this->isBangladeshi()
             ? [
-                ['day' => '-17', 'supplier' => 0, 'state' => 'received', 'items' => [['ingredient' => 'basmati_rice', 'quantity' => 60], ['ingredient' => 'soybean_oil', 'quantity' => 30]]],
-                ['day' => '-12', 'supplier' => 1, 'state' => 'received', 'items' => [['ingredient' => 'onion', 'quantity' => 50], ['ingredient' => 'potato', 'quantity' => 40], ['ingredient' => 'tomato', 'quantity' => 25]]],
-                ['day' => '-9', 'supplier' => 2, 'state' => 'partially_received', 'items' => [['ingredient' => 'chicken', 'quantity' => 45], ['ingredient' => 'mutton', 'quantity' => 20]]],
-                ['day' => '-5', 'supplier' => 0, 'state' => 'approved', 'items' => [['ingredient' => 'ghee', 'quantity' => 8], ['ingredient' => 'spice_mix', 'quantity' => 4]]],
-                ['day' => '-3', 'supplier' => 4, 'state' => 'submitted', 'items' => [['ingredient' => 'sugar', 'quantity' => 30], ['ingredient' => 'tea_leaf', 'quantity' => 6]]],
-                ['day' => '-1', 'supplier' => 3, 'state' => 'draft', 'items' => [['ingredient' => 'milk', 'quantity' => 40], ['ingredient' => 'yogurt', 'quantity' => 20]]],
+                ['day' => '-3', 'supplier' => 0, 'state' => 'received', 'items' => [['ingredient' => 'basmati_rice', 'quantity' => 30], ['ingredient' => 'soybean_oil', 'quantity' => 12]]],
+                ['day' => '-2', 'supplier' => 2, 'state' => 'partially_received', 'items' => [['ingredient' => 'chicken', 'quantity' => 20], ['ingredient' => 'mutton', 'quantity' => 8]]],
+                ['day' => '-1', 'supplier' => 0, 'state' => 'approved', 'items' => [['ingredient' => 'ghee', 'quantity' => 4], ['ingredient' => 'spice_mix', 'quantity' => 2]]],
+                ['day' => '-1', 'supplier' => 3, 'state' => 'draft', 'items' => [['ingredient' => 'milk', 'quantity' => 20], ['ingredient' => 'yogurt', 'quantity' => 10]]],
             ]
             : [
-                ['day' => '-17', 'supplier' => 0, 'state' => 'received', 'items' => [['ingredient' => 'tomato', 'quantity' => 40], ['ingredient' => 'lettuce', 'quantity' => 20]]],
-                ['day' => '-12', 'supplier' => 1, 'state' => 'received', 'items' => [['ingredient' => 'beef_mince', 'quantity' => 30], ['ingredient' => 'chicken_breast', 'quantity' => 35]]],
-                ['day' => '-9', 'supplier' => 4, 'state' => 'partially_received', 'items' => [['ingredient' => 'milk', 'quantity' => 40], ['ingredient' => 'cream', 'quantity' => 15], ['ingredient' => 'butter', 'quantity' => 10]]],
-                ['day' => '-5', 'supplier' => 3, 'state' => 'approved', 'items' => [['ingredient' => 'salmon', 'quantity' => 18], ['ingredient' => 'prawn', 'quantity' => 10]]],
-                ['day' => '-3', 'supplier' => 2, 'state' => 'submitted', 'items' => [['ingredient' => 'pasta', 'quantity' => 25], ['ingredient' => 'pizza_flour', 'quantity' => 30], ['ingredient' => 'olive_oil', 'quantity' => 12]]],
-                ['day' => '-1', 'supplier' => 0, 'state' => 'draft', 'items' => [['ingredient' => 'potato', 'quantity' => 45], ['ingredient' => 'onion', 'quantity' => 30]]],
+                ['day' => '-3', 'supplier' => 0, 'state' => 'received', 'items' => [['ingredient' => 'tomato', 'quantity' => 20], ['ingredient' => 'lettuce', 'quantity' => 10]]],
+                ['day' => '-2', 'supplier' => 4, 'state' => 'partially_received', 'items' => [['ingredient' => 'milk', 'quantity' => 20], ['ingredient' => 'cream', 'quantity' => 8]]],
+                ['day' => '-1', 'supplier' => 3, 'state' => 'approved', 'items' => [['ingredient' => 'salmon', 'quantity' => 8], ['ingredient' => 'prawn', 'quantity' => 6]]],
+                ['day' => '-1', 'supplier' => 2, 'state' => 'draft', 'items' => [['ingredient' => 'pasta', 'quantity' => 12], ['ingredient' => 'olive_oil', 'quantity' => 6]]],
             ];
     }
 
-    /** Opening stock multiplier so 21 days of trade never runs dry. */
+    /** Opening stock multiplier so the trading window never runs dry. */
     public function openingStockFactor(): float
     {
         return 3.0;

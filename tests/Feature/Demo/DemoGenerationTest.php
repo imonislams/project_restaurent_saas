@@ -36,12 +36,12 @@ class DemoGenerationTest extends DemoTestCase
         // Menu, team and guests.
         $this->assertGreaterThanOrEqual(45, $scope(Product::class)->count());
         $this->assertSame(2, $scope(Branch::class)->count(), 'the demo adds exactly one branch');
-        $this->assertGreaterThanOrEqual(10, User::query()->where('tenant_id', $tenant->getKey())->count());
-        $this->assertGreaterThanOrEqual(30, $scope(Customer::class)->count());
+        $this->assertGreaterThanOrEqual(9, User::query()->where('tenant_id', $tenant->getKey())->count());
+        $this->assertGreaterThanOrEqual(10, $scope(Customer::class)->count());
 
         // Two trading days of orders, none dated in the future.
         $orders = $scope(Order::class)->get();
-        $this->assertGreaterThan(40, $orders->count());
+        $this->assertGreaterThan(25, $orders->count());
         $this->assertSame(0, $orders->filter(fn (Order $order) => $order->placed_at->isFuture())->count());
 
         foreach ((array) $batch->ref('day_plan') as $date) {

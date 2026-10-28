@@ -35,11 +35,11 @@ use Illuminate\Validation\ValidationException;
  */
 class DemoDataService
 {
-    public const MIN_DAYS = 15;
+    public const MIN_DAYS = 3;
 
-    public const DEFAULT_DAYS = 21;
+    public const DEFAULT_DAYS = 3;
 
-    public const MAX_DAYS = 60;
+    public const MAX_DAYS = 30;
 
     public function __construct(
         protected DemoRecorder $recorder,

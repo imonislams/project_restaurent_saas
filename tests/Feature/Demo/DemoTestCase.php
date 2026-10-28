@@ -116,14 +116,14 @@ abstract class DemoTestCase extends TestCase
         $batch = DemoDataBatch::create([
             'tenant_id' => $tenant->getKey(),
             'status' => DemoDataBatch::STATUS_COMPLETED,
-            'days' => 15,
+            'days' => 3,
             'steps_total' => 3,
             'steps_done' => 3,
             'completed_steps' => ['team', 'menu', 'finalize'],
             'counts' => [
                 'currency' => 'BDT',
-                'days' => 15,
-                'orders' => 120,
+                'days' => 3,
+                'orders' => 40,
                 'revenue' => 45000,
                 'customers' => 12,
                 'products' => 50,

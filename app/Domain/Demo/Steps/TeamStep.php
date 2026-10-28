@@ -224,12 +224,12 @@ class TeamStep implements DemoStep
 
         $plan = [
             'primary' => [
-                ['area' => $areaNames[0], 'prefix' => 'T', 'seats' => [2, 2, 4, 4, 4, 6, 6, 8]],
-                ['area' => $areaNames[1], 'prefix' => 'R', 'seats' => [2, 4, 4, 6]],
-                ['area' => $areaNames[2], 'prefix' => 'C', 'seats' => [6, 8]],
+                ['area' => $areaNames[0], 'prefix' => 'T', 'seats' => [2, 2, 4, 4, 6]],
+                ['area' => $areaNames[1], 'prefix' => 'R', 'seats' => [2, 4]],
+                ['area' => $areaNames[2], 'prefix' => 'C', 'seats' => [6]],
             ],
             'annex' => [
-                ['area' => $areaNames[0], 'prefix' => 'A', 'seats' => [2, 2, 4, 4, 6, 6]],
+                ['area' => $areaNames[0], 'prefix' => 'A', 'seats' => [2, 4, 4]],
             ],
         ];
 
@@ -398,11 +398,10 @@ class TeamStep implements DemoStep
         $byBranch = [
             'primary' => array_values(array_filter([
                 $staffIds['waiter1'] ?? null,
-                $staffIds['waiter2'] ?? null,
                 $staffIds['supervisor'] ?? null,
             ])),
             'annex' => array_values(array_filter([
-                $staffIds['waiter3'] ?? null,
+                $staffIds['waiter2'] ?? null,
             ])),
         ];
 

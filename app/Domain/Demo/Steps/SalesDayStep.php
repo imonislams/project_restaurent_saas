@@ -42,7 +42,7 @@ class SalesDayStep implements DemoStep
     protected const LIVE_TABLES = 2;
 
     /** Tickets left in progress on the current day. */
-    protected const LIVE_TICKETS = 3;
+    protected const LIVE_TICKETS = 2;
 
     public function __construct(protected string $date) {}
 
@@ -86,7 +86,7 @@ class SalesDayStep implements DemoStep
     {
         $branch = $run->branch($branchKey);
         $random = $run->random('day-'.$branchKey);
-        $cashier = $run->user($branchKey === 'primary' ? 'cashier1' : 'cashier3');
+        $cashier = $run->user($branchKey === 'primary' ? 'cashier1' : 'cashier2');
         $manager = $run->user('manager');
 
         $dayStart = Carbon::parse($this->date, $timezone)->startOfDay();
@@ -158,7 +158,7 @@ class SalesDayStep implements DemoStep
             $span = max(1, $windowStart->diffInSeconds($now->copy()->subMinutes(5)));
             $slots = [];
 
-            foreach (range(1, $random->int(8, 13)) as $ignored) {
+            foreach (range(1, $random->int(4, 7)) as $ignored) {
                 $slots[] = $windowStart->copy()->addSeconds($random->int(0, (int) $span));
             }
 
@@ -167,9 +167,9 @@ class SalesDayStep implements DemoStep
             return $slots;
         }
 
-        $base = $branchKey === 'primary' ? 24 : 14;
+        $base = $branchKey === 'primary' ? 12 : 7;
         $weekendLift = in_array($dayStart->dayOfWeek, [5, 6], true) ? 1.35 : 1.0;
-        $count = max(6, (int) round($base * $weekendLift * $random->float(0.85, 1.15, 3)));
+        $count = max(4, (int) round($base * $weekendLift * $random->float(0.85, 1.15, 3)));
 
         $parts = [
             ['start' => 11.75, 'end' => 15.5, 'weight' => 34],
@@ -704,7 +704,7 @@ class SalesDayStep implements DemoStep
      */
     protected function isVoidDay(string $branchKey): bool
     {
-        return $branchKey === 'primary' && Carbon::parse($this->date)->day % 4 === 0;
+        return $branchKey === 'primary' && Carbon::parse($this->date)->day % 3 === 0;
     }
 
     protected function voidOne(DemoRun $run, User $manager, array $orders, DemoRandom $random): int

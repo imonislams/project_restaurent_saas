@@ -631,23 +631,13 @@ class BengaliMenu
     {
         return [
             ['day' => '-1', 'type' => 'Rent', 'description' => 'Monthly shop rent — main branch', 'amount' => 120000, 'category' => 'Rent', 'method' => 'bank_transfer'],
-            ['day' => '-3', 'type' => 'Utilities', 'description' => 'Electricity bill (DPDC)', 'amount' => 24500, 'category' => 'Utilities', 'method' => 'bank_transfer'],
-            ['day' => '-4', 'type' => 'Utilities', 'description' => 'Water bill (WASA)', 'amount' => 4200, 'category' => 'Utilities', 'method' => 'cash'],
-            ['day' => '-5', 'type' => 'Utilities', 'description' => 'Gas bill (Titas)', 'amount' => 9800, 'category' => 'Utilities', 'method' => 'bank_transfer'],
-            ['day' => '-2', 'type' => 'Marketing', 'description' => 'Facebook & Instagram ads', 'amount' => 15000, 'category' => 'Marketing', 'method' => 'card'],
-            ['day' => '-8', 'type' => 'Marketing', 'description' => 'Food photography shoot', 'amount' => 18000, 'category' => 'Marketing', 'method' => 'cash'],
-            ['day' => '-6', 'type' => 'Salaries', 'description' => 'Kitchen porter — weekly wages', 'amount' => 9500, 'category' => 'Staff Salaries', 'method' => 'cash'],
-            ['day' => '-13', 'type' => 'Salaries', 'description' => 'Service crew — weekly wages', 'amount' => 22000, 'category' => 'Staff Salaries', 'method' => 'cash'],
-            ['day' => '-7', 'type' => 'Maintenance', 'description' => 'Refrigerator repair', 'amount' => 6500, 'category' => 'Maintenance', 'method' => 'cash'],
-            ['day' => '-10', 'type' => 'Maintenance', 'description' => 'Dishwasher servicing', 'amount' => 3200, 'category' => 'Maintenance', 'method' => 'cash'],
-            ['day' => '-11', 'type' => 'Supplies', 'description' => 'Takeaway boxes and cutlery', 'amount' => 12400, 'category' => 'Supplies', 'method' => 'cash'],
-            ['day' => '-14', 'type' => 'Supplies', 'description' => 'Cleaning supplies', 'amount' => 4800, 'category' => 'Supplies', 'method' => 'cash'],
-            ['day' => '-16', 'type' => 'Licences', 'description' => 'Trade licence renewal', 'amount' => 15000, 'category' => 'Licences & Permits', 'method' => 'bank_transfer'],
-            ['day' => '-9', 'type' => 'Utilities', 'description' => 'Internet & phone', 'amount' => 3500, 'category' => 'Utilities', 'method' => 'card'],
-            ['day' => '-18', 'type' => 'Marketing', 'description' => 'Print menu cards', 'amount' => 6000, 'category' => 'Marketing', 'method' => 'cash'],
-            ['day' => '-12', 'type' => 'Maintenance', 'description' => 'Pest control service', 'amount' => 5500, 'category' => 'Maintenance', 'method' => 'cash'],
-            ['day' => '-15', 'type' => 'Supplies', 'description' => 'Kitchen uniforms', 'amount' => 8600, 'category' => 'Supplies', 'method' => 'cash'],
-            ['day' => '-19', 'type' => 'Utilities', 'description' => 'Generator fuel', 'amount' => 7200, 'category' => 'Utilities', 'method' => 'cash'],
+            ['day' => '-2', 'type' => 'Utilities', 'description' => 'Electricity bill (DPDC)', 'amount' => 24500, 'category' => 'Utilities', 'method' => 'bank_transfer'],
+            ['day' => '-2', 'type' => 'Utilities', 'description' => 'Water bill (WASA)', 'amount' => 4200, 'category' => 'Utilities', 'method' => 'cash'],
+            ['day' => '-3', 'type' => 'Utilities', 'description' => 'Gas bill (Titas)', 'amount' => 9800, 'category' => 'Utilities', 'method' => 'bank_transfer'],
+            ['day' => '-3', 'type' => 'Marketing', 'description' => 'Facebook & Instagram ads', 'amount' => 15000, 'category' => 'Marketing', 'method' => 'card'],
+            ['day' => '-2', 'type' => 'Salaries', 'description' => 'Kitchen porter — weekly wages', 'amount' => 9500, 'category' => 'Staff Salaries', 'method' => 'cash'],
+            ['day' => '-1', 'type' => 'Maintenance', 'description' => 'Refrigerator repair', 'amount' => 6500, 'category' => 'Maintenance', 'method' => 'cash'],
+            ['day' => '-3', 'type' => 'Supplies', 'description' => 'Takeaway boxes and cutlery', 'amount' => 6000, 'category' => 'Supplies', 'method' => 'cash'],
         ];
     }
 
