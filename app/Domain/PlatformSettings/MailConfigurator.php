@@ -23,6 +23,13 @@ class MailConfigurator
 
         if (! empty($value('mailer'))) {
             config(['mail.default' => $value('mailer')]);
+        } elseif (! empty($value('host')) && ! empty($value('username'))) {
+            // SMTP credentials with no explicit mailer: an administrator who filled
+            // in a server, login and password means to send through it. Without this
+            // the transport would stay on the env default — and a production .env
+            // ships MAIL_MAILER=log, so every message would be written to the log
+            // file instead of being delivered.
+            config(['mail.default' => 'smtp']);
         }
 
         $port = $value('port');

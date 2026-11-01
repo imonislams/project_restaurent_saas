@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Domain\Demo\DemoDataService;
+use App\Domain\Demo\Purge\DemoPurgePlan;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -96,6 +98,8 @@ class DemoController extends Controller
             'demo' => $this->demo->state($tenant),
             'history' => $this->demo->history($tenant),
             'currency' => $tenant->getSetting('region.currency') ?? 'USD',
+            // Per-bundle record counts for the removal dialog.
+            'removal' => $this->demo->removalSummary($tenant),
         ]);
     }
 
@@ -136,13 +140,18 @@ class DemoController extends Controller
     }
 
     /**
-     * Remove every record the tenant's demo runs created. Guarded by a typed
-     * confirmation of the workspace slug — this deletes a large amount of data.
+     * Remove demo records, optionally keeping whole bundles (menu, floor plan,
+     * team, guests, the demo's settings). Guarded by a typed confirmation of the
+     * workspace slug — this deletes a large amount of data.
      */
     public function purge(Request $request): RedirectResponse
     {
         $tenant = $this->tenant($request);
-        $data = $request->validate(['confirm' => ['required', 'string']]);
+        $data = $request->validate([
+            'confirm' => ['required', 'string'],
+            'keep' => ['nullable', 'array'],
+            'keep.*' => ['string', Rule::in(DemoPurgePlan::KEEPABLE)],
+        ]);
 
         if ($data['confirm'] !== $tenant->slug) {
             throw ValidationException::withMessages([
@@ -151,7 +160,7 @@ class DemoController extends Controller
         }
 
         try {
-            $result = $this->demo->purge($tenant, $request->user());
+            $result = $this->demo->purge($tenant, $request->user(), array_values($data['keep'] ?? []));
         } catch (\Throwable $e) {
             report($e);
 

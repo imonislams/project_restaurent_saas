@@ -16,9 +16,20 @@ interface Settings {
     from_address: string;
     from_name: string;
     has_password: boolean;
+    credential_readable: boolean;
 }
 
-export default function EmailSettings({ settings, mailers }: { settings: Settings; mailers: string[] }) {
+export default function EmailSettings({
+    settings,
+    mailers,
+    transport,
+    warning,
+}: {
+    settings: Settings;
+    mailers: string[];
+    transport: string;
+    warning: string | null;
+}) {
     const t = useT();
     const form = useForm({
         mailer: settings.mailer,
@@ -45,6 +56,13 @@ export default function EmailSettings({ settings, mailers }: { settings: Setting
 
     return (
         <PlatformLayout title="Email Provider">
+            {warning && (
+                <div className="mb-5 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+                    <p className="text-sm font-medium text-destructive">Email is not being delivered</p>
+                    <p className="mt-1 text-xs text-destructive/90">{warning}</p>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <Card className="lg:col-span-2">
                     <CardHeader title="Provider Configuration" description="Saved to the platform settings store; password is encrypted at rest." />
@@ -117,6 +135,11 @@ export default function EmailSettings({ settings, mailers }: { settings: Setting
                                     value={form.data.password} 
                                     onChange={(e) => form.setData('password', e.target.value)} 
                                 />
+                                {!settings.credential_readable && (
+                                    <p className="text-xs text-destructive">
+                                        The stored password can no longer be read (encrypted with a different APP_KEY). Enter it again to restore delivery.
+                                    </p>
+                                )}
                             </div>
 
                             <div className="space-y-1.5">

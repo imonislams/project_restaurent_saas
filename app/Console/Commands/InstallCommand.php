@@ -122,6 +122,18 @@ class InstallCommand extends Command
         $this->info('Installed v'.$result['version'].'. Administrator: '.$result['admin_email']);
         $this->line('Sign in at '.rtrim((string) $application['url'], '/').'/login');
 
+        // A fresh install ships MAIL_MAILER=log: registration, verification and
+        // invoice mail would be written to the log file and never delivered.
+        $transport = (string) config('mail.default');
+
+        if (in_array($transport, ['log', 'array'], true)) {
+            $this->newLine();
+            $this->warn('Email is not configured yet — the transport is "'.$transport.'", so nothing is delivered.');
+            $this->line('  Either set MAIL_MAILER=smtp plus MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD and');
+            $this->line('  MAIL_FROM_ADDRESS in .env, or fill in Control Center → Email → Email Provider after signing in.');
+            $this->line('  See deploy/INSTALL.md ("Configuring email").');
+        }
+
         return self::SUCCESS;
     }
 

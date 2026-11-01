@@ -101,9 +101,14 @@ class EmailController extends Controller
 
     public function settings(): Response
     {
+        $settings = $this->settings->group('mail');
+        $transport = (string) config('mail.default');
+
         return Inertia::render('Platform/Email/Settings', [
             'settings' => $this->maskedSettings(),
             'mailers' => ['smtp', 'log', 'array', 'sendmail'],
+            'transport' => $transport,
+            'warning' => $this->deliveryWarning($transport, $this->effectiveFromAddress($settings)),
         ]);
     }
 
@@ -174,13 +179,52 @@ class EmailController extends Controller
     protected function providerSummary(): array
     {
         $settings = $this->settings->group('mail');
+        $transport = (string) config('mail.default');
+        $from = $this->effectiveFromAddress($settings);
 
         return [
-            'mailer' => $settings['mail.mailer'] ?? config('mail.default'),
-            'from_address' => $this->effectiveFromAddress($settings) ?? '',
+            'mailer' => $settings['mail.mailer'] ?? $transport,
+            'transport' => $transport,
+            'from_address' => $from ?? '',
             'configured' => ($settings['mail.mailer'] ?? null) !== null,
             'host' => $settings['mail.host'] ?? null,
+            'warning' => $this->deliveryWarning($transport, $from),
         ];
+    }
+
+    /**
+     * Why mail would silently not arrive, in words an administrator can act on.
+     * This is the difference between "the app sent it" and "it was delivered" —
+     * a log transport reports success while nothing ever leaves the server.
+     */
+    protected function deliveryWarning(string $transport, ?string $from): ?string
+    {
+        if (in_array($transport, ['log', 'array'], true)) {
+            return 'Nothing is being delivered: the active transport is "'.$transport.'", so every message is written '
+                .'to the application log instead of being sent. Fill in your SMTP host, port, username and password '
+                .'below and choose the "smtp" mailer — or set MAIL_MAILER=smtp and the MAIL_* values in .env.';
+        }
+
+        // A stored credential that cannot be decrypted is invisible otherwise: mail
+        // looks configured, the password silently reads as empty, and every send
+        // fails authentication.
+        if (in_array('mail.password', $this->settings->unreadableKeys(), true)) {
+            return 'The saved SMTP password cannot be read: it was encrypted with a different APP_KEY (the key was '
+                .'changed, or this database came from another install). Delivery fails authentication until you '
+                .'re-enter the password below and save.';
+        }
+
+        if ($from === null) {
+            return 'The From address cannot deliver mail: it is missing, not an email address, or on a reserved domain '
+                .'(example.com). Use an address on your mail provider\'s domain — your SMTP username is a safe choice.';
+        }
+
+        if (config('queue.default') !== 'sync') {
+            return 'Queued mail (invoices, campaigns) is only sent while a queue worker is running. Confirm the worker '
+                .'or cron entry is alive, otherwise those messages stay in the jobs table.';
+        }
+
+        return null;
     }
 
     /** @return array<string, mixed> */
@@ -197,6 +241,7 @@ class EmailController extends Controller
             'from_address' => $this->effectiveFromAddress($settings) ?? '',
             'from_name' => $settings['mail.from_name'] ?? config('mail.from.name'),
             'has_password' => ! empty($settings['mail.password']),
+            'credential_readable' => ! in_array('mail.password', $this->settings->unreadableKeys(), true),
         ];
     }
 

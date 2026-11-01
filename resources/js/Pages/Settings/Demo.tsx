@@ -1,3 +1,5 @@
+import RemoveDemoDialog from '@/Components/Demo/RemoveDemoDialog';
+import type { DemoRemovalSummary } from '@/Components/Demo/RemoveDemoDialog';
 import { SETTINGS_TABS, settingsTabHref } from '@/Components/Settings/tabs';
 import ConfirmDialog from '@/Components/ui/ConfirmDialog';
 import {
@@ -7,7 +9,6 @@ import {
     CardBody,
     CardHeader,
     EmptyState,
-    Input,
     PageHeader,
     Progress,
     Table,
@@ -46,7 +47,17 @@ interface DemoRun {
  * Demo data tab: what the sample workspace contains, where it came from, and the
  * two actions that matter — rebuild it, or remove every trace of it.
  */
-export default function SettingsDemo({ demo, history, currency }: { demo: DemoState; history: DemoRun[]; currency: string }) {
+export default function SettingsDemo({
+    demo,
+    history,
+    currency,
+    removal,
+}: {
+    demo: DemoState;
+    history: DemoRun[];
+    currency: string;
+    removal: DemoRemovalSummary;
+}) {
     const t = useT();
     const page = usePage().props as Record<string, any>;
     const tenant = page.tenant as { slug: string; name: string } | null;
@@ -55,7 +66,6 @@ export default function SettingsDemo({ demo, history, currency }: { demo: DemoSt
 
     const [confirmRebuild, setConfirmRebuild] = useState(false);
     const [confirmRemove, setConfirmRemove] = useState(false);
-    const [typed, setTyped] = useState('');
     const [processing, setProcessing] = useState(false);
 
     const counts = (demo.counts ?? {}) as Record<string, any>;
@@ -77,7 +87,7 @@ export default function SettingsDemo({ demo, history, currency }: { demo: DemoSt
 
     const post = (
         url: string,
-        data: Record<string, string | number | boolean | null> = {},
+        data: Record<string, string | number | boolean | null | string[]> = {},
         onSuccess?: () => void,
     ) => {
         setProcessing(true);
@@ -182,6 +192,12 @@ export default function SettingsDemo({ demo, history, currency }: { demo: DemoSt
                                         )}
                                     </div>
                                 </div>
+                            )}
+
+                            {(demo.kept?.length ?? 0) > 0 && (
+                                <p className="text-xs leading-relaxed text-muted-foreground">
+                                    {t('demo.kept', { groups: (demo.kept ?? []).map((key) => t(`demo.bundle.${key}`)).join(', ') })}
+                                </p>
                             )}
 
                             {! hasRun && (
@@ -313,39 +329,17 @@ export default function SettingsDemo({ demo, history, currency }: { demo: DemoSt
                 onClose={() => setConfirmRebuild(false)}
             />
 
-            <ConfirmDialog
+            <RemoveDemoDialog
                 show={confirmRemove}
-                title={t('demo.remove_title')}
-                description={t('demo.remove_body')}
-                confirmLabel={t('demo.remove_confirm')}
-                cancelLabel={t('demo.cancel')}
-                tone="danger"
+                summary={removal}
+                slug={tenant?.slug ?? ''}
                 processing={processing}
-                requireText={tenant?.slug ?? ''}
-                onConfirm={() =>
-                    post(route('demo.purge'), { confirm: typed }, () => {
-                        setConfirmRemove(false);
-                        setTyped('');
-                    })
+                error={errors.confirm}
+                onConfirm={({ keep, confirm }) =>
+                    post(route('demo.purge'), { confirm, keep }, () => setConfirmRemove(false))
                 }
-                onClose={() => {
-                    setConfirmRemove(false);
-                    setTyped('');
-                }}
-            >
-                <div className="space-y-1.5 pt-2">
-                    <label htmlFor="demo-settings-confirm" className="text-xs font-medium text-muted-foreground">
-                        {t('demo.remove_typed', { slug: tenant?.slug ?? '' })}
-                    </label>
-                    <Input
-                        id="demo-settings-confirm"
-                        value={typed}
-                        onChange={(event) => setTyped(event.target.value)}
-                        placeholder={tenant?.slug ?? ''}
-                    />
-                    {errors.confirm && <p className="text-xs font-medium text-destructive">{errors.confirm}</p>}
-                </div>
-            </ConfirmDialog>
+                onClose={() => setConfirmRemove(false)}
+            />
         </AuthenticatedLayout>
     );
 }

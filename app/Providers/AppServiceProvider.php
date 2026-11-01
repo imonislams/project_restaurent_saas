@@ -41,6 +41,7 @@ use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -143,8 +144,13 @@ class AppServiceProvider extends ServiceProvider
 
         try {
             $this->app->make(MailConfigurator::class)->apply();
-        } catch (\Throwable) {
-            // Mail settings unavailable (e.g. before migration) — keep env config.
+        } catch (\Throwable $e) {
+            // Mail settings unavailable (e.g. before migration) — keep env config,
+            // but never silently: without this line a settings problem looks exactly
+            // like "mail is configured in the UI yet nothing is sent".
+            Log::warning('Stored mail settings could not be applied; using env configuration.', [
+                'error' => $e->getMessage(),
+            ]);
         }
 
         try {

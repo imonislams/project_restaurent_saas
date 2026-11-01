@@ -16,6 +16,9 @@ export default function ConfirmDialog({
     tone = 'danger',
     processing = false,
     requireText,
+    typedPrompt,
+    typedText,
+    onTypedTextChange,
     onConfirm,
     onClose,
     children,
@@ -28,15 +31,22 @@ export default function ConfirmDialog({
     tone?: 'danger' | 'primary';
     processing?: boolean;
     requireText?: string;
+    /** Optional translated label for the typed confirmation input. */
+    typedPrompt?: string;
+    /** Optional controlled value for the typed confirmation. */
+    typedText?: string;
+    onTypedTextChange?: (value: string) => void;
     onConfirm: () => void;
     onClose: () => void;
     children?: ReactNode;
 }) {
-    const [typed, setTyped] = useState('');
+    const [internalTyped, setInternalTyped] = useState('');
+    const typed = typedText ?? internalTyped;
+    const setTyped = onTypedTextChange ?? setInternalTyped;
 
     useEffect(() => {
-        if (show) setTyped('');
-    }, [show]);
+        if (show && typedText === undefined) setInternalTyped('');
+    }, [show, typedText]);
 
     const blocked = requireText ? typed !== requireText : false;
 
@@ -49,7 +59,11 @@ export default function ConfirmDialog({
                 {requireText && (
                     <div className="mt-4 space-y-1.5">
                         <label className="text-xs text-muted-foreground">
-                            Type <span className="font-mono font-semibold text-foreground">{requireText}</span> to confirm:
+                            {typedPrompt ?? (
+                                <>
+                                    Type <span className="font-mono font-semibold text-foreground">{requireText}</span> to confirm:
+                                </>
+                            )}
                         </label>
                         <Input
                             value={typed}

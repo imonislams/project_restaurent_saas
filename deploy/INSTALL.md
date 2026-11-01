@@ -86,6 +86,46 @@ Find the PHP path in **MultiPHP Manager** (`/opt/cpanel/ea-php84/root/usr/bin/ph
 php artisan app:install        # interactive; every option above also works here
 ```
 
+## Configuring email
+
+Registration, verification, invitations and invoices are all email, and a fresh install ships
+`MAIL_MAILER=log`: every message is written to `storage/logs/laravel.log` and **nothing is
+delivered**. The transport accepts whatever it is given, so the app reports the mail as sent —
+this is the usual reason mail works on a developer machine and not in production. Configure one of:
+
+**Option A — `.env`** (server level; used when no mail settings are stored in the platform):
+
+```
+MAIL_MAILER=smtp
+MAIL_HOST=mail.your-host.com
+MAIL_PORT=587
+MAIL_USERNAME=you@your-host.com
+MAIL_PASSWORD=your-mailbox-password
+MAIL_FROM_ADDRESS=you@your-host.com
+```
+
+**Option B — Control Center → Email → Email Provider** (stored in the database, overrides `.env`,
+no redeploy needed; needs the `platform.email.manage` permission).
+
+Then use **Send test email** on that screen and confirm it arrives. Before it will:
+
+- The From address must be on a domain your mail provider signs for. `example.com`, `localhost` and
+  other reserved domains are rejected or quarantined by receivers, and the SMTP server still reports
+  success — use the mailbox you authenticate with when in doubt.
+- **Queued mail** (invoice emails, campaigns) is only sent while a queue worker runs; the shipped
+  `.env` sets `QUEUE_CONNECTION=database`. Until a worker is running those messages sit in the
+  `jobs` table. See `docs/DEPLOY-CPANEL.md` §2 for the supervised and cron options.
+- Some shared hosts block outbound SMTP on 465/587. If the test email reports a connection timeout,
+  ask the host to open the port or to send through their own mail server.
+
+Verify from a command runner (see **Cron Jobs is a command runner** above):
+
+```bash
+php artisan platform:check     # "Email transport" shows what is actually used
+```
+
+It reports `log — NOT DELIVERING, configure SMTP` until the settings above are in place.
+
 ## After installation
 
 Add the scheduler (**Cron Jobs**):

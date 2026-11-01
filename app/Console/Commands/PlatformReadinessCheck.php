@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Domain\BackupAndRecovery\Models\Backup;
 use App\Domain\Billing\Models\PaymentGateway;
+use App\Domain\PlatformSettings\MailConfigurator;
 use App\Domain\PlatformSettings\PlatformSettings;
 use App\Support\HealthChecker;
 use Illuminate\Console\Command;
@@ -33,7 +34,7 @@ class PlatformReadinessCheck extends Command
             'Last backup' => $lastBackup ? ($lastBackup->created_at?->diffForHumans() ?? 'unknown') : 'none',
             'Backup verification' => ($lastBackup?->verification_result === 'ok') ? 'ok' : 'not verified',
             'Enabled gateways' => (string) PaymentGateway::query()->where('is_enabled', true)->count(),
-            'Email transport' => $settings->get('mail.mailer') ? (string) $settings->get('mail.mailer') : 'env defaults',
+            'Email transport' => $this->emailTransport($settings),
             'Maintenance mode' => $settings->get('maintenance.enabled', false) ? 'ENABLED' : 'off',
         ];
 
@@ -47,5 +48,33 @@ class PlatformReadinessCheck extends Command
         $healthy = ($checks['database']['ok'] ?? false) && ($checks['cache']['ok'] ?? false) && $failedJobs === 0;
 
         return $healthy ? self::SUCCESS : self::FAILURE;
+    }
+
+    /**
+     * The transport mail actually goes through — not the stored setting. "log" or
+     * "array" in production means nothing is delivered, which is the difference
+     * between "the app sent it" and "the customer received it".
+     */
+    protected function emailTransport(PlatformSettings $settings): string
+    {
+        $transport = (string) config('mail.default');
+        $from = MailConfigurator::deliverableFromAddress(
+            $settings->get('mail.from_address') ?? config('mail.from.address'),
+            $settings->get('mail.username'),
+        );
+
+        if (in_array($transport, ['log', 'array'], true)) {
+            return $transport.' — NOT DELIVERING, configure SMTP';
+        }
+
+        if (in_array('mail.password', $settings->unreadableKeys(), true)) {
+            return $transport.' — SMTP password unreadable, re-enter it';
+        }
+
+        if ($from === null) {
+            return $transport.' — From address cannot deliver';
+        }
+
+        return $transport.' (from '.$from.')';
     }
 }

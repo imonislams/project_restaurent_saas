@@ -144,4 +144,42 @@ class DemoSettingsTest extends DemoTestCase
         $response->assertOk()->assertJsonPath('demo.status', DemoDataBatch::STATUS_FAILED);
         $this->assertNotSame('', (string) $response->json('error'));
     }
+
+    public function test_the_settings_page_reports_removal_groups(): void
+    {
+        [$tenant, $owner] = $this->tenantReadyForDemo();
+        $this->seedDemoRun($tenant);
+
+        $this->actingAs($owner)
+            ->get('/settings/demo')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Settings/Demo')
+                ->where('removal.groups.menu', 1)
+                ->where('removal.remove', 0));
+    }
+
+    public function test_removal_can_keep_selected_bundles(): void
+    {
+        [$tenant, $owner] = $this->tenantReadyForDemo();
+        [, $category] = $this->seedDemoRun($tenant);
+
+        $this->actingAs($owner)
+            ->post('/demo/purge', ['confirm' => $tenant->slug, 'keep' => ['menu']])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('categories', ['id' => $category->getKey()]);
+        $this->assertSame('removed', DemoDataBatch::query()->where('tenant_id', $tenant->getKey())->value('status'));
+    }
+
+    public function test_removal_rejects_an_unknown_bundle(): void
+    {
+        [$tenant, $owner] = $this->tenantReadyForDemo();
+        $this->seedDemoRun($tenant);
+
+        $this->actingAs($owner)
+            ->post('/demo/purge', ['confirm' => $tenant->slug, 'keep' => ['everything']])
+            ->assertSessionHasErrors('keep.0');
+    }
 }

@@ -107,6 +107,8 @@
 - Wants UI text treated as variable-length input: short, long and oversized names (including unbroken words) must wrap/clamp gracefully while the full value stays reachable (tooltip/aria-label/full text elsewhere), critical information such as the price must never be truncated or overlapped, spacing/line-height/contrast stay consistent, and there must be no horizontal overflow on desktop, tablet or mobile. Confidence: 0.65
 - On the POS menu card, does not want a separate `+` (add) button or other unnecessary icons — the whole card stays the single tap target for adding an item, matching the existing workflow. Confidence: 0.5
 - Prefers demo/sample data to be deliberately **minimal** — just enough volume for the audience to understand and try each module (a short window of a few days, small staff/guest table counts), never a large, realistic wall of data; explicitly "the data need no more just for demo … need minimal for their understanding and testing". Confidence: 0.6
+- Wants data-destructive / cleanup actions to be **selective rather than all-or-nothing**: the person doing it should be able to choose what is kept (e.g. keep the product menu, some settings, the floor plan) when demo data is removed, instead of a single irreversible wipe — explicitly "could we make how they want to remove and how to want to keep option". Confidence: 0.55
+- Wants sample/demo content to read as real rather than as placeholder scaffolding: use realistic, region-appropriate human names for people and records instead of generic placeholders like "User XYZ". Confidence: 0.5
 
 ## Design system
 For all UI work follow `docs/DESIGN-SYSTEM.md` (brand colours, logo, fonts, motion, page patterns).

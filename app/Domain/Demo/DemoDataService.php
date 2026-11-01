@@ -300,27 +300,39 @@ class DemoDataService
             'started_at' => $batch->started_at?->toIso8601String(),
             'completed_at' => $batch->completed_at?->toIso8601String(),
             'removed_at' => $batch->removed_at?->toIso8601String(),
+            'kept' => array_values((array) $batch->ref('kept', [])),
         ];
     }
 
     /**
-     * Remove every row the tenant's demo batches created.
+     * Remove demo rows, optionally keeping whole bundles.
      *
-     * Rows are deleted children-first in chunks, and each class's ledger rows
-     * are removed in the same transaction — so an interrupted purge can simply
-     * be run again without deleting anything twice.
+     * Rows are deleted children-first in chunks, and each class's ledger rows are
+     * removed in the same transaction — so an interrupted purge can simply be run
+     * again without deleting anything twice. A kept bundle keeps its rows and
+     * loses its ledger entries: from then on it is the tenant's own data.
      *
-     * @return array{batches: int, records: int}
+     * @param  list<string>  $keep
+     * @return array{batches: int, records: int, kept: list<string>, kept_records: int}
      */
-    public function purge(Tenant $tenant, ?User $actor = null): array
+    public function purge(Tenant $tenant, ?User $actor = null, array $keep = []): array
     {
+        $keep = array_values(array_unique($keep));
+        $unknown = array_diff($keep, DemoPurgePlan::KEEPABLE);
+
+        if ($unknown !== []) {
+            throw ValidationException::withMessages([
+                'keep' => 'Unknown demo data group: '.implode(', ', $unknown).'.',
+            ]);
+        }
+
         $batches = DemoDataBatch::query()
             ->where('tenant_id', $tenant->getKey())
             ->where('status', '!=', DemoDataBatch::STATUS_REMOVED)
             ->get();
 
         if ($batches->isEmpty()) {
-            return ['batches' => 0, 'records' => 0];
+            return ['batches' => 0, 'records' => 0, 'kept' => $keep, 'kept_records' => 0];
         }
 
         $running = $batches->first(fn (DemoDataBatch $batch) => $batch->status === DemoDataBatch::STATUS_RUNNING
@@ -346,36 +358,56 @@ class DemoDataService
             ->pluck('model_id')
             ->all();
 
-        foreach (DemoPurgePlan::models() as $model) {
-            $type = (new $model)->getMorphClass();
+        $keptRecords = 0;
 
-            $ids = DemoDataRecord::query()
-                ->whereIn('batch_id', $batchIds)
-                ->where('model_type', $type)
-                ->pluck('model_id')
-                ->map(fn ($id) => (int) $id)
-                ->all();
+        foreach (DemoPurgePlan::plan() as $entry) {
+            $group = $entry['group'];
 
-            if ($ids === []) {
+            if (in_array($group, $keep, true)) {
+                // Kept: keep the rows and drop their ledger entries, so they are
+                // no longer demo data and a later removal never touches them.
+                $keptRecords += DemoDataRecord::query()
+                    ->whereIn('batch_id', $batchIds)
+                    ->whereIn('model_type', array_map(
+                        fn (string $model) => (new $model)->getMorphClass(),
+                        $entry['models'],
+                    ))
+                    ->delete();
+
                 continue;
             }
 
-            foreach (array_chunk($ids, 500) as $chunk) {
-                DB::transaction(function () use ($model, $type, $chunk, $batchIds) {
-                    $query = $model::query()->withoutGlobalScopes()->whereIn('id', $chunk);
+            foreach ($entry['models'] as $model) {
+                $type = (new $model)->getMorphClass();
 
-                    DemoPurgePlan::usesSoftDeletes($model)
-                        ? $query->forceDelete()
-                        : $query->delete();
+                $ids = DemoDataRecord::query()
+                    ->whereIn('batch_id', $batchIds)
+                    ->where('model_type', $type)
+                    ->pluck('model_id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
 
-                    DemoDataRecord::query()
-                        ->whereIn('batch_id', $batchIds)
-                        ->where('model_type', $type)
-                        ->whereIn('model_id', $chunk)
-                        ->delete();
-                });
+                if ($ids === []) {
+                    continue;
+                }
 
-                $deleted += count($chunk);
+                foreach (array_chunk($ids, 500) as $chunk) {
+                    DB::transaction(function () use ($model, $type, $chunk, $batchIds) {
+                        $query = $model::query()->withoutGlobalScopes()->whereIn('id', $chunk);
+
+                        DemoPurgePlan::usesSoftDeletes($model)
+                            ? $query->forceDelete()
+                            : $query->delete();
+
+                        DemoDataRecord::query()
+                            ->whereIn('batch_id', $batchIds)
+                            ->where('model_type', $type)
+                            ->whereIn('model_id', $chunk)
+                            ->delete();
+                    });
+
+                    $deleted += count($chunk);
+                }
             }
         }
 
@@ -383,7 +415,7 @@ class DemoDataService
         // so a re-generated demo starts from a clean slate.
         (clone $ledger)->delete();
 
-        if ($demoUserIds !== []) {
+        if ($demoUserIds !== [] && ! in_array('team', $keep, true)) {
             DB::table('notifications')
                 ->where('notifiable_type', (new User)->getMorphClass())
                 ->whereIn('notifiable_id', $demoUserIds)
@@ -411,6 +443,8 @@ class DemoDataService
         }
 
         foreach ($batches as $batch) {
+            $batch->mergeRefs(['kept' => $keep]);
+            $batch->setCounts(['kept_records' => $keptRecords]);
             $batch->forceFill([
                 'status' => DemoDataBatch::STATUS_REMOVED,
                 'removed_at' => now(),
@@ -418,14 +452,52 @@ class DemoDataService
             ])->save();
         }
 
-        $this->restoreDemoSettings($tenant, $batches);
+        if (! in_array('settings', $keep, true)) {
+            $this->restoreDemoSettings($tenant, $batches);
+        }
 
         $this->audit->log('demo.data_purged', $tenant, [
             'batches' => $batches->count(),
             'records' => $deleted,
+            'kept' => $keep,
+            'kept_records' => $keptRecords,
         ], $actor, $tenant->getKey());
 
-        return ['batches' => $batches->count(), 'records' => $deleted];
+        return ['batches' => $batches->count(), 'records' => $deleted, 'kept' => $keep, 'kept_records' => $keptRecords];
+    }
+
+    /**
+     * Ledger counts per keep-bundle, for the removal dialog.
+     *
+     * @return array{groups: array<string, int>, remove: int}
+     */
+    public function removalSummary(Tenant $tenant): array
+    {
+        $groups = array_fill_keys(DemoPurgePlan::MODEL_BUNDLES, 0);
+        $groups['settings'] = 0;
+        $remove = 0;
+
+        $counts = DemoDataRecord::query()
+            ->where('tenant_id', $tenant->getKey())
+            ->selectRaw('model_type, count(*) as aggregate')
+            ->groupBy('model_type')
+            ->pluck('aggregate', 'model_type');
+
+        $groupFor = DemoPurgePlan::modelGroups();
+
+        foreach ($counts as $type => $count) {
+            $group = $groupFor[$type] ?? null;
+
+            if ($group !== null && array_key_exists($group, $groups)) {
+                $groups[$group] += (int) $count;
+
+                continue;
+            }
+
+            $remove += (int) $count;
+        }
+
+        return ['groups' => $groups, 'remove' => $remove];
     }
 
     /**
@@ -488,6 +560,7 @@ class DemoDataService
                 'started_at' => $batch->started_at?->toIso8601String(),
                 'completed_at' => $batch->completed_at?->toIso8601String(),
                 'removed_at' => $batch->removed_at?->toIso8601String(),
+                'kept' => array_values((array) $batch->ref('kept', [])),
             ])
             ->all();
     }

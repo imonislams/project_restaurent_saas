@@ -62,104 +62,153 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * The order in which demo rows are removed: children before parents.
+ * The order in which demo rows are removed: children before parents, tagged by
+ * bundle so an owner can keep whole groups (menu, floor plan, team, guests,
+ * settings) and drop the rest.
  *
- * Most foreign keys cascade, but not all — for example `invoices` is not
- * deleted by removing its orders, and `users` cascade into orders and shifts —
- * so the order matters and every ledgered model with real children is listed.
+ * The order is safe for any combination of kept bundles — a kept row is never
+ * the child of a deleted one through a cascading key. Two constraints shaped it:
+ * `recipe_items.ingredient_id` cascades (so ingredients share the menu bundle)
+ * and `tables.branch_id` cascades (so the demo branch shares the floor bundle).
  */
 class DemoPurgePlan
 {
+    /** Bundles the owner may keep when removing demo data. */
+    public const KEEPABLE = ['menu', 'floor', 'team', 'guests', 'settings'];
+
+    /** Bundles that own rows (everything keepable except the settings flag). */
+    public const MODEL_BUNDLES = ['menu', 'floor', 'team', 'guests'];
+
     /**
-     * @return list<class-string<Model>>
+     * Ordered removal plan, grouped by bundle.
+     *
+     * @return list<array{group: string, models: list<class-string<Model>>}>
      */
-    public static function models(): array
+    public static function plan(): array
     {
         return [
-            // Kitchen
-            KitchenTicketItem::class,
-            KitchenTicket::class,
+            ['group' => 'kitchen', 'models' => [
+                KitchenTicketItem::class,
+                KitchenTicket::class,
+            ]],
 
-            // Orders and everything that hangs off them
-            OrderItemModifier::class,
-            OrderStatusHistory::class,
-            OrderItem::class,
-            PaymentAttempt::class,
-            Payment::class,
-            Invoice::class,
-            Order::class,
-            // OrderSequence is deliberately NOT removed: it is a counter, not a
-            // business record. Deleting it would restart order numbering at 0001
-            // and collide with real orders that kept their own numbers.
+            // Orders and everything that hangs off them. OrderSequence is
+            // deliberately NOT removed: it is a counter, not a business record,
+            // and resetting it would collide with real order numbers.
+            ['group' => 'sales', 'models' => [
+                OrderItemModifier::class,
+                OrderStatusHistory::class,
+                OrderItem::class,
+                PaymentAttempt::class,
+                Payment::class,
+                Invoice::class,
+                Order::class,
+            ]],
 
             // Dining / QR sessions
-            DiningEvent::class,
-            BillRequest::class,
-            DiningFeedback::class,
-            DiningParticipant::class,
-            DiningSession::class,
-            TableQrToken::class,
+            ['group' => 'dining', 'models' => [
+                DiningEvent::class,
+                BillRequest::class,
+                DiningFeedback::class,
+                DiningParticipant::class,
+                DiningSession::class,
+            ]],
 
-            // Cash
-            CashMovement::class,
-            Shift::class,
-            Register::class,
+            // The QR identity belongs to the floor, and goes before its table.
+            ['group' => 'floor', 'models' => [
+                TableQrToken::class,
+            ]],
 
-            // Accounting
-            Expense::class,
-            FinancialTransaction::class,
-            AccountTransfer::class,
-            SupplierPayment::class,
-            ExpenseCategory::class,
+            ['group' => 'cash', 'models' => [
+                CashMovement::class,
+                Shift::class,
+            ]],
 
-            // Purchasing
-            GoodsReceiptItem::class,
-            GoodsReceipt::class,
-            PurchaseOrderItem::class,
-            PurchaseOrder::class,
-            Supplier::class,
+            ['group' => 'accounting', 'models' => [
+                Expense::class,
+                FinancialTransaction::class,
+                AccountTransfer::class,
+                SupplierPayment::class,
+                ExpenseCategory::class,
+            ]],
+
             // DocumentSequence (purchase order / goods receipt / transfer /
             // invoice numbers) is a counter too, and is left in place.
+            ['group' => 'purchasing', 'models' => [
+                GoodsReceiptItem::class,
+                GoodsReceipt::class,
+                PurchaseOrderItem::class,
+                PurchaseOrder::class,
+                Supplier::class,
+            ]],
 
-            // Inventory and transfers
-            StockTransferItem::class,
-            StockTransfer::class,
-            WasteRecord::class,
-            StockMovement::class,
-            StockBalance::class,
-            RecipeItem::class,
-            Recipe::class,
-            Ingredient::class,
-            StockLocation::class,
+            ['group' => 'stock', 'models' => [
+                StockTransferItem::class,
+                StockTransfer::class,
+                WasteRecord::class,
+                StockMovement::class,
+                StockBalance::class,
+            ]],
 
-            // Menu
-            ProductVariant::class,
-            ProductAvailability::class,
-            ModifierOption::class,
-            ModifierGroupProduct::class,
-            ModifierGroup::class,
-            Product::class,
-            Category::class,
+            ['group' => 'menu', 'models' => [
+                RecipeItem::class,
+                Recipe::class,
+                Ingredient::class,
+                ProductVariant::class,
+                ProductAvailability::class,
+                ModifierOption::class,
+                ModifierGroupProduct::class,
+                ModifierGroup::class,
+                Product::class,
+                Category::class,
+            ]],
 
-            // Customers and loyalty
-            LoyaltyTransaction::class,
-            LoyaltyAccount::class,
-            Customer::class,
+            ['group' => 'guests', 'models' => [
+                LoyaltyTransaction::class,
+                LoyaltyAccount::class,
+                Customer::class,
+            ]],
 
-            // Tables / floor
-            Table::class,
-            DiningArea::class,
-            KitchenStation::class,
-            DeliveryZone::class,
+            ['group' => 'delivery', 'models' => [
+                DeliveryZone::class,
+            ]],
 
-            // Accounts, staff and branches last — deleting a user or branch
-            // cascades into everything above, so they must go last.
-            FinancialAccount::class,
-            User::class,
-            Role::class,
-            BusinessHour::class,
-            Branch::class,
+            // The rest of the floor, then branches, accounts and staff last —
+            // deleting a branch or user cascades into everything above.
+            ['group' => 'floor', 'models' => [
+                Table::class,
+                DiningArea::class,
+                KitchenStation::class,
+                Register::class,
+                StockLocation::class,
+                FinancialAccount::class,
+                BusinessHour::class,
+                Branch::class,
+            ]],
+
+            ['group' => 'team', 'models' => [
+                User::class,
+                Role::class,
+            ]],
         ];
+    }
+
+    /**
+     * Map a stored morph class to its bundle.
+     *
+     * @return array<string, string>
+     */
+    public static function modelGroups(): array
+    {
+        $map = [];
+
+        foreach (self::plan() as $entry) {
+            foreach ($entry['models'] as $model) {
+                $map[(new $model)->getMorphClass()] = $entry['group'];
+            }
+        }
+
+        return $map;
     }
 
     /** @param  class-string<Model>  $model */
