@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Menu;
 
 use App\Domain\Menu\Enums\InventoryMode;
 use App\Domain\Menu\Models\Category;
+use App\Domain\Inventory\Models\Ingredient;
 use App\Domain\Menu\Models\Product;
+use App\Domain\Menu\Models\Recipe;
 use App\Domain\Menu\ProductImportService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Menu\CategoryRequest;
@@ -43,7 +45,7 @@ class MenuController extends Controller
             ]);
 
         $products = Product::query()
-            ->with(['category:id,name', 'variants'])
+            ->with(['category:id,name', 'variants', 'recipe' => fn ($q) => $q->where('is_active', true)->with('items')])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -57,6 +59,7 @@ class MenuController extends Controller
             ->paginate(25)
             ->withQueryString()
             ->through(fn (Product $product) => [
+                'recipe' => $this->recipePayload($product),
                 'id' => $product->getKey(),
                 'name' => $product->name,
                 'sku' => $product->sku,
@@ -86,6 +89,13 @@ class MenuController extends Controller
             'categories' => $categories,
             'products' => $products,
             'filters' => ['search' => $search, 'category_id' => $categoryId],
+            'ingredients' => Ingredient::query()->with('unit:id,code')->where('is_active', true)->orderBy('name')->get()
+                ->map(fn (Ingredient $ingredient) => [
+                    'id' => $ingredient->getKey(),
+                    'name' => $ingredient->name,
+                    'unit_code' => $ingredient->unit?->code,
+                    'cost_per_unit' => (float) $ingredient->cost_per_unit,
+                ])->values(),
             'inventoryModes' => collect(InventoryMode::cases())
                 ->map(fn (InventoryMode $mode) => ['value' => $mode->value, 'label' => $mode->label()])
                 ->values(),
@@ -122,11 +132,12 @@ class MenuController extends Controller
     public function storeProduct(ProductRequest $request): RedirectResponse
     {
         $data = $this->productAttributes($request->validated());
-        unset($data['image'], $data['remove_image']);
+        unset($data['image'], $data['remove_image'], $data['recipe']);
 
         $product = Product::create($data);
 
         $this->syncVariants($product, $request->validated('variants') ?? []);
+        $this->syncRecipe($product, $request->validated('recipe'));
         $this->storeProductImage($product, $request->file('image'));
 
         return back()->with('success', 'Product created.');
@@ -135,11 +146,12 @@ class MenuController extends Controller
     public function updateProduct(ProductRequest $request, Product $product): RedirectResponse
     {
         $data = $this->productAttributes($request->validated(), $product);
-        unset($data['image'], $data['remove_image']);
+        unset($data['image'], $data['remove_image'], $data['recipe']);
 
         $product->update($data);
 
         $this->syncVariants($product, $request->validated('variants') ?? []);
+        $this->syncRecipe($product, $request->validated('recipe'));
 
         // An explicit removal wins over an upload; otherwise a file replaces the image and
         // sending neither leaves the existing image untouched.
@@ -313,6 +325,64 @@ class MenuController extends Controller
         $data['sort_order'] = $data['sort_order'] ?? 0;
 
         return $data;
+    }
+
+    /**
+     * @return array{yield_quantity: float, items: list<array{ingredient_id: int, quantity: float}>}|null
+     */
+    protected function recipePayload(Product $product): ?array
+    {
+        $recipe = $product->recipe->first();
+
+        if (! $recipe) {
+            return null;
+        }
+
+        return [
+            'yield_quantity' => (float) $recipe->yield_quantity,
+            'items' => $recipe->items->map(fn ($item) => [
+                'ingredient_id' => $item->ingredient_id,
+                'quantity' => (float) $item->quantity,
+            ])->values()->all(),
+        ];
+    }
+
+    /**
+     * Save the ingredient list a product consumes per sale. Only applied in recipe mode;
+     * switching to another mode keeps the saved recipe so it is not lost by accident.
+     *
+     * @param  array<string, mixed>|null  $payload
+     */
+    protected function syncRecipe(Product $product, ?array $payload): void
+    {
+        if ($product->inventory_mode !== InventoryMode::Recipe || $payload === null) {
+            return;
+        }
+
+        $ingredients = Ingredient::query()
+            ->whereIn('id', collect($payload['items'] ?? [])->pluck('ingredient_id'))
+            ->get()
+            ->keyBy('id');
+
+        DB::transaction(function () use ($product, $payload, $ingredients) {
+            $recipe = Recipe::query()->where('product_id', $product->getKey())->where('is_active', true)->first()
+                ?? new Recipe(['product_id' => $product->getKey(), 'tenant_id' => $product->tenant_id, 'is_active' => true]);
+
+            $recipe->yield_quantity = $payload['yield_quantity'] ?? 1;
+            $recipe->name ??= $product->name;
+            $recipe->save();
+
+            $recipe->items()->delete();
+
+            foreach ($payload['items'] ?? [] as $row) {
+                $recipe->items()->create([
+                    'tenant_id' => $product->tenant_id,
+                    'ingredient_id' => $row['ingredient_id'],
+                    'unit_id' => $ingredients[$row['ingredient_id']]?->unit_id,
+                    'quantity' => $row['quantity'],
+                ]);
+            }
+        });
     }
 
     /**

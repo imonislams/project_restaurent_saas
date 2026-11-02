@@ -64,12 +64,20 @@ interface Product {
     price_delivery: number;
     cost_price: number;
     inventory_mode: string;
+    recipe?: { yield_quantity: number; items: { ingredient_id: number; quantity: number }[] } | null;
     is_active: boolean;
     is_available: boolean;
     labels: string[];
     sort_order: number;
     image_url?: string | null;
     variants: Variant[];
+}
+
+interface IngredientOption {
+    id: number;
+    name: string;
+    unit_code: string | null;
+    cost_per_unit: number;
 }
 
 interface Paginated<T> {
@@ -85,11 +93,13 @@ export default function MenuIndex({
     products,
     filters,
     inventoryModes,
+    ingredients,
 }: {
     categories: Category[];
     products: Paginated<Product>;
     filters: { search: string; category_id: number | null };
     inventoryModes: { value: string; label: string }[];
+    ingredients: IngredientOption[];
 }) {
     const { auth, flash, currency } = usePage().props as Record<string, any>;
     const canManage = auth?.permissions?.includes('menu.manage') ?? false;
@@ -462,10 +472,12 @@ export default function MenuIndex({
                                                 <TableCell>
                                                     <span className="text-xs text-muted-foreground capitalize">
                                                         {product.inventory_mode === 'none'
-                                                            ? 'Untracked'
+                                                            ? 'Not tracked'
                                                             : product.inventory_mode === 'recipe'
-                                                              ? 'Recipe (BOM)'
-                                                              : 'Tracked Stock'}
+                                                              ? product.recipe?.items?.length
+                                                                  ? `Recipe · ${product.recipe.items.length} ingredient${product.recipe.items.length === 1 ? '' : 's'}`
+                                                                  : 'Recipe · missing ingredients'
+                                                              : 'Counts own stock'}
                                                     </span>
                                                 </TableCell>
 
@@ -550,6 +562,7 @@ export default function MenuIndex({
                     product={editing === 'new' ? null : editing}
                     categories={categories}
                     inventoryModes={inventoryModes}
+                    ingredients={ingredients}
                     onClose={() => setEditing(null)}
                 />
             )}
@@ -591,11 +604,13 @@ function ProductEditorModal({
     product,
     categories,
     inventoryModes,
+    ingredients,
     onClose,
 }: {
     product: Product | null;
     categories: Category[];
     inventoryModes: { value: string; label: string }[];
+    ingredients: IngredientOption[];
     onClose: () => void;
 }) {
     const { currency } = usePage().props as Record<string, any>;
@@ -610,6 +625,10 @@ function ProductEditorModal({
         price_delivery: product?.price_delivery ?? 12,
         cost_price: product?.cost_price ?? 3,
         inventory_mode: product?.inventory_mode ?? 'none',
+        recipe: {
+            yield_quantity: (product?.recipe?.yield_quantity ?? 1) as number | string,
+            items: (product?.recipe?.items ?? []) as { ingredient_id: number | ''; quantity: number | string }[],
+        },
         is_active: product?.is_active ?? true,
         is_available: product?.is_available ?? true,
         sort_order: product?.sort_order ?? 0,
@@ -743,12 +762,22 @@ function ProductEditorModal({
                             onChange={(v) => form.setData('category_id', v ? Number(v) : '')}
                         />
 
-                        <SelectField
-                            label="Stock tracking mode"
-                            value={form.data.inventory_mode}
-                            options={inventoryModes}
-                            onChange={(v) => form.setData('inventory_mode', v)}
-                        />
+                        <div>
+                            <SelectField
+                                label="Stock tracking mode"
+                                value={form.data.inventory_mode}
+                                options={inventoryModes}
+                                onChange={(v) => form.setData('inventory_mode', v)}
+                                error={form.errors.inventory_mode}
+                            />
+                            <p className="mt-1 text-[13px] text-muted-foreground">
+                                {form.data.inventory_mode === 'recipe'
+                                    ? 'Each sale deducts the ingredients you list in the recipe below.'
+                                    : form.data.inventory_mode === 'product'
+                                      ? 'Each sale deducts 1 from this item\'s own stock count. Set opening stock in Inventory.'
+                                      : 'Sales do not change any stock numbers.'}
+                            </p>
+                        </div>
 
                         <TextField
                             label="SKU / item code"
@@ -765,6 +794,17 @@ function ProductEditorModal({
                             placeholder="e.g. 501234567890"
                         />
                     </div>
+
+                    {form.data.inventory_mode === 'recipe' && (
+                        <RecipeBuilder
+                            ingredients={ingredients}
+                            value={form.data.recipe}
+                            onChange={(recipe) => form.setData('recipe', recipe)}
+                            errors={form.errors as Record<string, string>}
+                            currency={currency}
+                            onUseCost={(cost) => form.setData('cost_price', cost)}
+                        />
+                    )}
 
                     {/* Multi-Channel Pricing Box */}
                     <div className="rounded-lg border border-border bg-muted/40 p-3.5 space-y-3">
@@ -874,6 +914,133 @@ function ProductEditorModal({
                 </form>
             </div>
         </Modal>
+    );
+}
+
+/**
+ * Recipe builder: the ingredients (and amounts) one sale of this product uses up.
+ */
+function RecipeBuilder({
+    ingredients,
+    value,
+    onChange,
+    errors,
+    currency,
+    onUseCost,
+}: {
+    ingredients: IngredientOption[];
+    value: { yield_quantity: number | string; items: { ingredient_id: number | ''; quantity: number | string }[] };
+    onChange: (v: { yield_quantity: number | string; items: { ingredient_id: number | ''; quantity: number | string }[] }) => void;
+    errors: Record<string, string>;
+    currency: unknown;
+    onUseCost: (cost: number) => void;
+}) {
+    const byId = new Map(ingredients.map((i) => [i.id, i]));
+    const yieldQty = Number(value.yield_quantity) || 1;
+    const total = value.items.reduce(
+        (sum, row) => sum + (Number(row.quantity) || 0) * (byId.get(Number(row.ingredient_id))?.cost_per_unit ?? 0),
+        0,
+    );
+    const costPerPortion = Math.round((total / yieldQty) * 100) / 100;
+    const setItem = (index: number, patch: Record<string, unknown>) =>
+        onChange({ ...value, items: value.items.map((r, i) => (i === index ? { ...r, ...patch } : r)) });
+    const itemsError = errors['recipe.items'] ?? errors['recipe.yield_quantity'];
+    const rowError = Object.entries(errors).find(([k]) => k.startsWith('recipe.items.'))?.[1];
+
+    return (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3.5 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <span className="text-sm font-semibold text-foreground">Recipe (ingredients per sale)</span>
+                    <p className="text-[13px] text-muted-foreground">
+                        List what goes into one portion. When this item is sold, these amounts are deducted from ingredient stock.
+                    </p>
+                </div>
+                <Button type="button" variant="outline" size="xs" onClick={() => onChange({ ...value, items: [...value.items, { ingredient_id: '', quantity: '' }] })}>
+                    + Add ingredient
+                </Button>
+            </div>
+
+            {ingredients.length === 0 && (
+                <p className="rounded-md border border-border bg-background p-3 text-[13px] text-foreground">
+                    You have no ingredients yet. <Link href={route('inventory.index')} className="font-semibold text-primary underline">Create ingredients in Inventory</Link> first, then come back to build this recipe.
+                </p>
+            )}
+
+            {value.items.length === 0 && ingredients.length > 0 && (
+                <p className="text-[13px] text-muted-foreground">No ingredients yet. Click “Add ingredient”.</p>
+            )}
+
+            <div className="space-y-2">
+                {value.items.map((row, index) => {
+                    const ing = byId.get(Number(row.ingredient_id));
+                    return (
+                        <div key={index} className="flex items-center gap-2">
+                            <select
+                                className="h-9 flex-1 rounded-md border border-input bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                                value={row.ingredient_id}
+                                onChange={(e) => setItem(index, { ingredient_id: e.target.value ? Number(e.target.value) : '' })}
+                            >
+                                <option value="">Select ingredient…</option>
+                                {ingredients.map((i) => (
+                                    <option
+                                        key={i.id}
+                                        value={i.id}
+                                        disabled={value.items.some((r, ri) => ri !== index && Number(r.ingredient_id) === i.id)}
+                                    >
+                                        {i.name}{i.unit_code ? ` (${i.unit_code})` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.001"
+                                placeholder="Qty"
+                                className="h-9 w-24 rounded-md border border-input bg-background px-2.5 text-right text-sm tabular-nums text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                                value={row.quantity}
+                                onChange={(e) => setItem(index, { quantity: e.target.value })}
+                            />
+                            <span className="w-10 text-[13px] text-muted-foreground">{ing?.unit_code ?? ''}</span>
+                            <button
+                                type="button"
+                                aria-label="Remove ingredient"
+                                onClick={() => onChange({ ...value, items: value.items.filter((_, i) => i !== index) })}
+                                className="p-1 text-muted-foreground hover:text-destructive cursor-pointer"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    );
+                })}
+            </div>
+
+            <div className="flex flex-wrap items-end justify-between gap-3 border-t border-border/60 pt-3">
+                <label className="text-[13px] text-muted-foreground">
+                    Portions this recipe makes
+                    <input
+                        type="number"
+                        min="0.001"
+                        step="0.001"
+                        className="ml-2 h-9 w-20 rounded-md border border-input bg-background px-2.5 text-right text-sm tabular-nums text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                        value={value.yield_quantity}
+                        onChange={(e) => onChange({ ...value, yield_quantity: e.target.value })}
+                    />
+                </label>
+                <div className="flex items-center gap-3 text-[13px]">
+                    <span className="text-muted-foreground">
+                        Ingredient cost per portion: <strong className="text-foreground">{formatMoney(costPerPortion, currency as any)}</strong>
+                    </span>
+                    {costPerPortion > 0 && (
+                        <Button type="button" variant="ghost" size="xs" onClick={() => onUseCost(costPerPortion)}>
+                            Use as cost price
+                        </Button>
+                    )}
+                </div>
+            </div>
+
+            {(itemsError || rowError) && <p className="text-[13px] font-medium text-destructive">{itemsError ?? rowError}</p>}
+        </div>
     );
 }
 

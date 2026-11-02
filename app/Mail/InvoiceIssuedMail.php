@@ -53,7 +53,7 @@ class InvoiceIssuedMail extends Mailable implements ShouldQueue, RetryableMail
         $rendered = app(EmailTemplateService::class)->render('invoice_issued', $this->templateData());
 
         if ($rendered) {
-            return new Content(html: $rendered['body']);
+            return new Content(htmlString: $rendered['body']);
         }
 
         return new Content(view: 'emails.invoice-issued', with: [

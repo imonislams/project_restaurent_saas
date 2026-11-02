@@ -813,7 +813,7 @@ export default function InventoryIndex({
                                 {filteredIngredients.length === 0 ? (
                                     <EmptyState
                                         title="No Ingredients Found"
-                                        description="Add raw ingredients to calculate recipe costs and track stock depletion."
+                                        description="Add raw ingredients (flour, beef, milk…), then build each dish's recipe in Menu → edit product → Stock tracking mode: Use ingredients."
                                         action={
                                             canManage && (
                                                 <Button
