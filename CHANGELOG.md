@@ -7,7 +7,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-10-29
+## [1.0.1] - 2026-11-02
 
 First production release. Establishes the deployment pipeline (versioned packages, atomic
 release-directory deploys), a self-locking headless installer, and the fixes needed to run

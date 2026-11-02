@@ -9,7 +9,6 @@
  * The manifest identifies the exact source revision the package was built from
  * so an installation can be verified against a Git commit and version tag.
  */
-
 $version = $argv[1] ?? '';
 $dir = $argv[2] ?? '';
 
@@ -70,10 +69,10 @@ file_put_contents(
 // (GET /build-info.txt). It is a static file, served without booting the app.
 file_put_contents(
     $dir.'/public/build-info.txt',
-    "application v".$version."\n"
-    ."commit: ".($manifest['commit'] ?? 'unknown')."\n"
-    ."built_at: ".$manifest['built_at']."\n"
-    ."platform_check: ".$manifest['platform_check']."\n",
+    'application v'.$version."\n"
+    .'commit: '.($manifest['commit'] ?? 'unknown')."\n"
+    .'built_at: '.$manifest['built_at']."\n"
+    .'platform_check: '.$manifest['platform_check']."\n",
 );
 
 echo json_encode($manifest, JSON_UNESCAPED_SLASHES)."\n";

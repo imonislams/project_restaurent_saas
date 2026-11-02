@@ -6,6 +6,9 @@ use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Operations\CommandRunner;
 use App\Domain\Tenancy\Actions\RegisterTenant;
 use App\Models\User;
+use Database\Seeders\EmailTemplateSeeder;
+use Database\Seeders\PlanSeeder;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -163,9 +166,9 @@ class InstallerService
     protected function seedPlatformData(): void
     {
         foreach ([
-            \Database\Seeders\RolePermissionSeeder::class,
-            \Database\Seeders\PlanSeeder::class,
-            \Database\Seeders\EmailTemplateSeeder::class,
+            RolePermissionSeeder::class,
+            PlanSeeder::class,
+            EmailTemplateSeeder::class,
         ] as $seeder) {
             Artisan::call('db:seed', ['--class' => $seeder, '--force' => true]);
         }
