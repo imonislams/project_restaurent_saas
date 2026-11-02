@@ -1,10 +1,46 @@
+@php
+    // Metadata resolved server-side by ApplySeoMetadata. Emitting it here means a
+    // crawler that runs no JavaScript still sees a real title, description,
+    // canonical and Open Graph block. The `inertia` attribute lets Inertia adopt
+    // these elements, so client-side navigation updates them instead of adding
+    // duplicates.
+    $seo = isset($page['props']['seo']) && is_array($page['props']['seo']) ? $page['props']['seo'] : null;
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ $seo['full_title'] ?? config('app.name', 'Laravel') }}</title>
+
+        @if ($seo)
+            <meta inertia name="description" content="{{ $seo['description'] }}">
+            <link inertia rel="canonical" href="{{ $seo['canonical'] }}">
+            <meta inertia name="robots" content="{{ $seo['robots'] }}">
+
+            <meta inertia property="og:title" content="{{ $seo['og']['title'] }}">
+            <meta inertia property="og:description" content="{{ $seo['og']['description'] }}">
+            <meta inertia property="og:type" content="{{ $seo['og']['type'] }}">
+            <meta inertia property="og:url" content="{{ $seo['og']['url'] }}">
+            <meta inertia property="og:image" content="{{ $seo['og']['image'] }}">
+            <meta inertia property="og:site_name" content="{{ $seo['og']['site_name'] }}">
+
+            <meta inertia name="twitter:card" content="{{ $seo['twitter']['card'] }}">
+            <meta inertia name="twitter:title" content="{{ $seo['twitter']['title'] }}">
+            <meta inertia name="twitter:description" content="{{ $seo['twitter']['description'] }}">
+            <meta inertia name="twitter:image" content="{{ $seo['twitter']['image'] }}">
+
+            @if (! empty($seo['verification']['google']))
+                <meta inertia name="google-site-verification" content="{{ $seo['verification']['google'] }}">
+            @endif
+
+            @if (! empty($seo['schema']))
+                {{-- JSON_HEX_TAG keeps a stray "</script>" in stored metadata from
+                     breaking out of the block. --}}
+                <script inertia type="application/ld+json">{!! json_encode($seo['schema'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+            @endif
+        @endif
 
         <!-- Favicon -->
         <link rel="icon" type="image/svg+xml" href="/favicon.svg">

@@ -296,11 +296,11 @@ export default function Welcome({
                             </p>
                             <div className="mt-8 flex flex-col gap-3.5 sm:flex-row">
                                 <Link
-                                    href="/contact?topic=demo"
-                                    onClick={() => trackConversion('hero_cta_clicked', { location: 'hero_book_demo' })}
+                                    href="/register"
+                                    onClick={() => trackConversion('hero_cta_clicked', { location: 'hero_start_trial' })}
                                     className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#EC3013] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#D02710] active:bg-[#A81E0C] sm:w-auto"
                                 >
-                                    <span>Book a Demo</span>
+                                    <span>Start Free Trial</span>
                                     <ArrowRight className="h-4 w-4" />
                                 </Link>
                                 <a

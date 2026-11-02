@@ -6,13 +6,40 @@ import { cn } from './cn';
 import Input from './Input';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
-export type PeriodPreset = 'today' | 'week' | 'month' | 'custom';
+export type PeriodPreset = 'today' | 'yesterday' | '7d' | '30d' | '90d' | '12m' | 'week' | 'month' | 'custom';
 
 export interface PeriodValue {
     preset: PeriodPreset;
     from: string;
     to: string;
 }
+
+/** Presets shown by default, unchanged for existing callers. */
+export const DEFAULT_PRESETS: Array<Exclude<PeriodPreset, 'custom'>> = ['today', 'week', 'month'];
+
+/**
+ * Every preset the server understands, in the order the Marketing & Growth
+ * workspace offers them.
+ */
+export const EXTENDED_PRESETS: Array<Exclude<PeriodPreset, 'custom'>> = [
+    'today',
+    'yesterday',
+    '7d',
+    '30d',
+    '90d',
+    '12m',
+];
+
+const PRESET_LABEL_KEYS: Record<Exclude<PeriodPreset, 'custom'>, string> = {
+    today: 'dash.today',
+    week: 'dash.week',
+    month: 'dash.month',
+    yesterday: 'dash.period.yesterday',
+    '7d': 'dash.period.7d',
+    '30d': 'dash.period.30d',
+    '90d': 'dash.period.90d',
+    '12m': 'dash.period.12m',
+};
 
 const iso = (date: Date) => {
     const year = date.getFullYear();
@@ -29,6 +56,25 @@ export function presetRange(preset: Exclude<PeriodPreset, 'custom'>): { from: st
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
+    const daysBack = (days: number) => {
+        const date = new Date(start);
+        date.setDate(start.getDate() - days);
+        return iso(date);
+    };
+
+    if (preset === 'yesterday') {
+        return { from: daysBack(1), to: daysBack(1) };
+    }
+
+    if (preset === '7d') return { from: daysBack(6), to: iso(start) };
+    if (preset === '30d') return { from: daysBack(29), to: iso(start) };
+    if (preset === '90d') return { from: daysBack(89), to: iso(start) };
+
+    if (preset === '12m') {
+        const from = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+        return { from: iso(from), to: iso(start) };
+    }
+
     if (preset === 'week') {
         const offset = (start.getDay() + 6) % 7; // Monday = 0
         const monday = new Date(start);
@@ -43,9 +89,16 @@ export function presetRange(preset: Exclude<PeriodPreset, 'custom'>): { from: st
     return { from: iso(start), to: iso(start) };
 }
 
-const PRESET_KEYS: Array<Exclude<PeriodPreset, 'custom'>> = ['today', 'week', 'month'];
-
-export default function PeriodFilter({ value, onChange }: { value: PeriodValue; onChange: (value: PeriodValue) => void }) {
+export default function PeriodFilter({
+    value,
+    onChange,
+    presets = DEFAULT_PRESETS,
+}: {
+    value: PeriodValue;
+    onChange: (value: PeriodValue) => void;
+    /** Override the offered presets. Defaults to the original today/week/month set. */
+    presets?: Array<Exclude<PeriodPreset, 'custom'>>;
+}) {
     const t = useT();
     const [open, setOpen] = useState(false);
     const [draft, setDraft] = useState({ from: value.from, to: value.to });
@@ -70,10 +123,10 @@ export default function PeriodFilter({ value, onChange }: { value: PeriodValue; 
         );
 
     return (
-        <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-card p-0.5 shadow-xs">
-            {PRESET_KEYS.map((key) => (
+        <div className="inline-flex flex-wrap items-center gap-0.5 rounded-lg border border-border bg-card p-0.5 shadow-xs">
+            {presets.map((key) => (
                 <button key={key} type="button" onClick={() => selectPreset(key)} className={itemClass(value.preset === key)}>
-                    {t(`dash.${key}`)}
+                    {t(PRESET_LABEL_KEYS[key])}
                 </button>
             ))}
 

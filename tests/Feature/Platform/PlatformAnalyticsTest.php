@@ -110,19 +110,22 @@ class PlatformAnalyticsTest extends TestCase
             }));
     }
 
-    public function test_gateway_metrics_are_reported_as_unavailable_not_fabricated(): void
+    public function test_failed_payments_and_refunds_report_real_values_now_that_the_sources_exist(): void
     {
-        $admin = $this->admin();
+        // These two KPIs used to carry `available: false` with a stale "Phase 5"
+        // reason. Both sources exist, so the values are real — a genuine zero when
+        // nothing happened, not a placeholder.
+        $kpis = collect(app(\App\Domain\PlatformAnalytics\PlatformAnalyticsService::class)->kpis(
+            \App\Domain\PlatformAnalytics\PlatformPeriod::make(null, null, '30d')
+        ))->keyBy('key');
 
-        $this->actingAs($admin)->get('/platform')->assertOk()
-            ->assertInertia(fn ($page) => $page->where('kpis', function ($kpis) {
-                $failed = collect($kpis)->firstWhere('key', 'failed_payments');
-                $refunds = collect($kpis)->firstWhere('key', 'refunds');
-
-                return $failed['available'] === false
-                    && $failed['value'] === null
-                    && $refunds['available'] === false;
-            }));
+        foreach (['failed_payments', 'refunds'] as $key) {
+            // The service omits `available` for a normal KPI and sets it to false only
+            // when it cannot compute one.
+            $this->assertTrue($kpis[$key]['available'] ?? true, $key.' should no longer be marked unavailable.');
+            $this->assertNotNull($kpis[$key]['value']);
+            $this->assertSame('money', $kpis[$key]['format']);
+        }
     }
 
     public function test_revenue_analytics_page_renders_with_a_period_filter(): void

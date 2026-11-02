@@ -111,8 +111,8 @@ class PlatformAnalyticsService
             ['key' => 'paid_invoices', 'label' => 'Invoices paid', 'value' => $paidInvoices, 'format' => 'number', 'hint' => 'This month'],
             ['key' => 'churn', 'label' => 'Churn', 'value' => $activeAtStart > 0 ? round($churned / $activeAtStart * 100, 1) : 0.0, 'format' => 'percent', 'hint' => 'Cancelled ÷ active at period start'],
             ['key' => 'trial_conversion', 'label' => 'Trial conversion', 'value' => $trialConversion, 'format' => 'percent', 'hint' => 'Approximate — converts ÷ ever-trialed'],
-            ['key' => 'failed_payments', 'label' => 'Failed payments', 'value' => null, 'format' => 'money', 'currency' => $currency, 'available' => false, 'reason' => 'Enabled with SSLCommerz payments (Phase 5)'],
-            ['key' => 'refunds', 'label' => 'Refunds', 'value' => null, 'format' => 'money', 'currency' => $currency, 'available' => false, 'reason' => 'Enabled with the payments module (Phase 5)'],
+            ['key' => 'failed_payments', 'label' => 'Failed payments', 'value' => round((float) \App\Domain\Billing\Models\PlatformPayment::withoutGlobalScopes()->where('status', 'failed')->whereBetween('created_at', [$period->fromUtc, $period->toUtc])->sum('amount'), 2), 'format' => 'money', 'currency' => $currency, 'tone' => 'danger', 'hint' => 'Payments that failed in the period'],
+            ['key' => 'refunds', 'label' => 'Refunds', 'value' => round((float) \App\Domain\Billing\Models\PlatformRefund::withoutGlobalScopes()->where('status', 'succeeded')->whereBetween('processed_at', [$period->fromUtc, $period->toUtc])->sum('amount'), 2), 'format' => 'money', 'currency' => $currency, 'hint' => 'Succeeded refunds in the period'],
         ];
     }
 

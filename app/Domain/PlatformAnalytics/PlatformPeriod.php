@@ -44,8 +44,11 @@ class PlatformPeriod
 
         return match ($preset) {
             'today' => [$today, $now->copy()->endOfDay(), 'Today'],
+            'yesterday' => [$today->copy()->subDay(), $today->copy()->subSecond(), 'Yesterday'],
             '7d' => [$today->copy()->subDays(6), $now->copy()->endOfDay(), 'Last 7 days'],
             '30d' => [$today->copy()->subDays(29), $now->copy()->endOfDay(), 'Last 30 days'],
+            '90d' => [$today->copy()->subDays(89), $now->copy()->endOfDay(), 'Last 90 days'],
+            '12m' => [$now->copy()->subMonthsNoOverflow(11)->startOfMonth(), $now->copy()->endOfDay(), 'Last 12 months'],
             'month' => [$now->copy()->startOfMonth(), $now->copy()->endOfDay(), 'This month'],
             'prev_month' => [$now->copy()->subMonthNoOverflow()->startOfMonth(), $now->copy()->startOfMonth()->subSecond(), 'Previous month'],
             'quarter' => [$now->copy()->startOfQuarter(), $now->copy()->endOfDay(), 'This quarter'],

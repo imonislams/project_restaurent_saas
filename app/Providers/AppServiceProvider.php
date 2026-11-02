@@ -21,6 +21,7 @@ use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\Policies\TenantPolicy;
 use App\Domain\Tenancy\TenantContext;
+use App\Listeners\LinkMarketingLeadOnRegistration;
 use App\Listeners\LogOutboundEmail;
 use App\Listeners\NotifyPlatformOnFailedJob;
 use App\Listeners\RecordAuthSecurityEvents;
@@ -29,6 +30,7 @@ use App\Models\User;
 use App\Support\AppVersion;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Events\ScheduledTaskFailed;
@@ -136,6 +138,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Queue monitoring: a failed job is an operator alert, not just a row.
         Event::listen(JobFailed::class, [NotifyPlatformOnFailedJob::class, 'handle']);
+
+        // Marketing CRM: a new restaurant is linked to the lead that produced it.
+        Event::listen(Registered::class, [LinkMarketingLeadOnRegistration::class, 'handle']);
 
         // Security center: record authentication events.
         Event::listen(Login::class, [RecordAuthSecurityEvents::class, 'login']);

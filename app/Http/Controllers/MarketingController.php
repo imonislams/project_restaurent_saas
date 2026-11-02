@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Billing\PricingRegionContext;
+use App\Domain\Marketing\Enums\LeadSource;
+use App\Domain\Marketing\LeadService;
 use App\Domain\Subscriptions\Enums\BillingCycle;
 use App\Domain\Subscriptions\Models\Plan;
 use App\Domain\Subscriptions\PricingService;
@@ -14,6 +16,69 @@ use Inertia\Response;
 
 class MarketingController extends Controller
 {
+    /**
+     * Published resource guides.
+     *
+     * Kept in step with `ARTICLES` in resources/js/Pages/Marketing/Resources/Index.tsx
+     * and with the sitemap: an unknown slug must 404 rather than silently render a
+     * different article's content.
+     *
+     * @var list<string>
+     */
+    /** @var list<string> */
+    public const PRODUCT_SLUGS = [
+        'qr-ordering', 'digital-menu', 'table-management', 'order-management', 'kitchen-display',
+        'billing-payments', 'reports', 'branch-management', 'staff-roles', 'inventory',
+    ];
+
+    /** Features that keep their own page; the rest redirect to a product page. */
+    /** @var list<string> */
+    public const FEATURE_SLUGS = [
+        'restaurant-pos',
+        'cash-management',
+        'expense-management',
+        'purchasing-suppliers',
+        'customer-management',
+    ];
+
+    /** @var array<string, string> */
+    public const MOVED_FEATURES = [
+        'kitchen-display' => 'kitchen-display',
+        'table-management' => 'table-management',
+        'menu-management' => 'digital-menu',
+        'order-management' => 'order-management',
+        'reports-analytics' => 'reports',
+        'staff-management' => 'staff-roles',
+        'multi-branch-management' => 'branch-management',
+        'inventory-management' => 'inventory',
+    ];
+
+    /** @var list<string> */
+    public const SOLUTION_WORKFLOW_SLUGS = [
+        'dine-in-qr-ordering', 'table-order-management', 'kitchen-workflow',
+        'faster-restaurant-service', 'restaurant-billing-checkout', 'restaurant-reporting',
+    ];
+
+    /** @var list<string> */
+    public const SOLUTION_VENUE_SLUGS = [
+        'restaurants',
+        'cafes',
+        'cloud-kitchens',
+        'quick-service-restaurants',
+        'takeaway-delivery',
+        'multi-location-restaurants',
+    ];
+
+    /** @var list<string> */
+    public const RESOURCE_SLUGS = [
+        'calculating-true-food-cost-percentage',
+        'preventing-cash-shift-variances',
+        'reducing-food-waste-in-prep-kitchens',
+        'pos-hardware-buying-guide',
+        'optimizing-peak-rush-ticket-times',
+        'multi-branch-central-catalog-playbook',
+    ];
+
     /**
      * Get platform default billing currency configured in Platform Settings.
      */
@@ -151,12 +216,7 @@ class MarketingController extends Controller
      */
     public function productPage(string $product): Response
     {
-        $valid = [
-            'qr-ordering', 'digital-menu', 'table-management', 'order-management', 'kitchen-display',
-            'billing-payments', 'reports', 'branch-management', 'staff-roles', 'inventory',
-        ];
-
-        abort_unless(in_array($product, $valid, true), 404);
+        abort_unless(in_array($product, self::PRODUCT_SLUGS, true), 404);
 
         return Inertia::render('Marketing/Products/Show', [
             'slug' => $product,
@@ -179,38 +239,11 @@ class MarketingController extends Controller
     public function feature(string $feature): Response|RedirectResponse
     {
         // Modules that now have a dedicated product page.
-        $moved = [
-            'kitchen-display' => 'kitchen-display',
-            'table-management' => 'table-management',
-            'menu-management' => 'digital-menu',
-            'order-management' => 'order-management',
-            'reports-analytics' => 'reports',
-            'staff-management' => 'staff-roles',
-            'multi-branch-management' => 'branch-management',
-            'inventory-management' => 'inventory',
-        ];
-
-        if (isset($moved[$feature])) {
-            return redirect()->route('products.show', $moved[$feature], 301);
+        if (isset(self::MOVED_FEATURES[$feature])) {
+            return redirect()->route('products.show', self::MOVED_FEATURES[$feature], 301);
         }
 
-        $validFeatures = [
-            'restaurant-pos',
-            'kitchen-display',
-            'table-management',
-            'menu-management',
-            'inventory-management',
-            'order-management',
-            'cash-management',
-            'expense-management',
-            'reports-analytics',
-            'staff-management',
-            'multi-branch-management',
-            'purchasing-suppliers',
-            'customer-management',
-        ];
-
-        if (! in_array($feature, $validFeatures, true)) {
+        if (! in_array($feature, self::FEATURE_SLUGS, true)) {
             abort(404);
         }
 
@@ -236,12 +269,7 @@ class MarketingController extends Controller
     public function solution(string $solution): Response
     {
         // Workflow solutions; slugs mirror SOLUTION_WORKFLOWS in the frontend catalog.
-        $workflows = [
-            'dine-in-qr-ordering', 'table-order-management', 'kitchen-workflow',
-            'faster-restaurant-service', 'restaurant-billing-checkout', 'restaurant-reporting',
-        ];
-
-        if (in_array($solution, $workflows, true)) {
+        if (in_array($solution, self::SOLUTION_WORKFLOW_SLUGS, true)) {
             return Inertia::render('Marketing/Solutions/Workflow', [
                 'slug' => $solution,
                 'canonical' => route('solutions.show', $solution),
@@ -249,16 +277,7 @@ class MarketingController extends Controller
             ]);
         }
 
-        $validSolutions = [
-            'restaurants',
-            'cafes',
-            'cloud-kitchens',
-            'quick-service-restaurants',
-            'takeaway-delivery',
-            'multi-location-restaurants',
-        ];
-
-        if (! in_array($solution, $validSolutions, true)) {
+        if (! in_array($solution, self::SOLUTION_VENUE_SLUGS, true)) {
             abort(404);
         }
 
@@ -299,19 +318,39 @@ class MarketingController extends Controller
     /**
      * Handle contact form submission.
      */
-    public function contactSubmit(Request $request): RedirectResponse
+    public function contactSubmit(Request $request, LeadService $leads): RedirectResponse
     {
-        $request->validate([
+        $thanks = 'Thank you! Your message has been received. A Touch Dine restaurant specialist will contact you within 2 business hours.';
+
+        // Honeypot: a field no person can see. A bot fills it in, so the submission is
+        // silently accepted and discarded rather than creating a lead or an error.
+        if (trim((string) $request->input('website', '')) !== '') {
+            return back()->with('success', $thanks);
+        }
+
+        $data = $request->validate([
             'name' => 'required|string|max:100',
             'email' => 'required|email|max:150',
+            'phone' => 'nullable|string|max:40',
             'restaurant_name' => 'required|string|max:150',
             'venue_type' => 'required|string|in:restaurant,cafe,cloud_kitchen,qsr,takeaway,group,other',
             'branches_count' => 'required|string|in:1,2-5,6-15,15+',
-            'inquiry_category' => 'required|string|in:sales,demo,migration,custom_hardware,partnership',
+            'inquiry_category' => 'required|string|in:sales,migration,custom_hardware,partnership',
             'message' => 'required|string|min:10|max:2000',
+            'marketing_consent' => 'nullable|boolean',
         ]);
 
-        return back()->with('success', 'Thank you! Your message has been received. A Touch Dine restaurant specialist will contact you within 2 business hours.');
+        // Attribution comes from the first-party visitor record, so the form itself
+        // needs no hidden tracking fields and cannot be gamed into a false campaign.
+        // The public site proposes the free trial directly, so this channel is a
+        // sales enquiry rather than a demo booking.
+        $leads->capture(
+            $data + ['consent_marketing' => (bool) ($data['marketing_consent'] ?? false)],
+            $request,
+            LeadSource::ContactForm,
+        );
+
+        return back()->with('success', $thanks);
     }
 
     /**
@@ -324,9 +363,16 @@ class MarketingController extends Controller
 
     /**
      * Individual resource guide.
+     *
+     * Only published guides resolve. Every unknown slug used to return 200 with the
+     * first article's content, which is a soft 404: it invited search engines to
+     * index an unlimited number of duplicate URLs and made the sitemap's URLs
+     * disagree with what the site actually publishes.
      */
     public function resourceArticle(string $slug): Response
     {
+        abort_unless(in_array($slug, self::RESOURCE_SLUGS, true), 404);
+
         return Inertia::render('Marketing/Resources/Show', [
             'slug' => $slug,
         ]);

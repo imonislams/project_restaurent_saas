@@ -34,12 +34,14 @@ import {
     SidebarProvider,
     SidebarRail,
     SidebarTrigger,
+    useSidebar,
 } from '@/Components/ui/sidebar';
 import { ToastProvider } from '@/Components/ui/Toast';
 import { useT } from '@/i18n';
 import { BranchSummary } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
+    ChevronRight,
     ChevronsUpDown,
     HelpCircle,
     LogOut,
@@ -71,6 +73,101 @@ export interface NavGroup {
     key?: string;
     label?: string;
     items: NavItem[];
+    /**
+     * Render the group as a collapsible section. Used by long sections (the
+     * Marketing & Growth groups) so the sidebar stays scannable. Omitted groups —
+     * every pre-existing section — render exactly as before.
+     */
+    collapsible?: boolean;
+}
+
+/**
+ * One sidebar entry. Shared by the flat and the collapsible group renderers so both
+ * stay identical.
+ */
+function NavItemLink({ item }: { item: NavItem }) {
+    return (
+        <SidebarMenuItem>
+            <SidebarMenuButton
+                asChild
+                isActive={item.active}
+                tooltip={item.label}
+                className={cn(
+                    'relative h-9 px-2.5 text-[13.5px] font-medium rounded-md transition-all duration-200',
+                    item.active
+                        ? 'bg-primary/[0.07] font-semibold text-sidebar-accent-foreground before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-primary'
+                        : 'text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground'
+                )}
+            >
+                <Link href={item.href} className="flex items-center gap-2.5">
+                    <Icon
+                        name={item.icon}
+                        className={cn(
+                            'h-4 w-4 shrink-0 transition-colors',
+                            item.active
+                                ? 'text-primary'
+                                : 'text-muted-foreground/80 group-hover/menu-button:text-sidebar-foreground'
+                        )}
+                    />
+                    <span className="truncate flex-1 group-data-[collapsible=icon]:hidden">{item.label}</span>
+                    {item.badge !== undefined && item.badge > 0 && (
+                        <SidebarMenuBadge className="ml-auto bg-primary text-primary-foreground font-bold group-data-[collapsible=icon]:hidden">
+                            {item.badge}
+                        </SidebarMenuBadge>
+                    )}
+                </Link>
+            </SidebarMenuButton>
+        </SidebarMenuItem>
+    );
+}
+
+/**
+ * A collapsible navigation section. Opens automatically when it contains the active
+ * route, and expands its items again whenever the sidebar is collapsed to icons —
+ * a collapsed rail would otherwise hide the whole section.
+ */
+function CollapsibleNavGroup({ group }: { group: NavGroup }) {
+    const { state } = useSidebar();
+    const railCollapsed = state === 'collapsed';
+    const hasActive = group.items.some((item) => item.active);
+    const [open, setOpen] = useState(hasActive);
+
+    useEffect(() => {
+        if (hasActive) setOpen(true);
+    }, [hasActive]);
+
+    const contentId = `nav-group-${group.key ?? group.label ?? 'section'}`;
+
+    return (
+        <SidebarGroup className="py-1">
+            <button
+                type="button"
+                onClick={() => setOpen((previous) => !previous)}
+                aria-expanded={open}
+                aria-controls={contentId}
+                className={cn(
+                    'flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
+                    'group-data-[collapsible=icon]:hidden'
+                )}
+            >
+                <span className="truncate">{group.label}</span>
+                <ChevronRight
+                    className={cn('h-3.5 w-3.5 shrink-0 transition-transform duration-200', open && 'rotate-90')}
+                    aria-hidden="true"
+                />
+            </button>
+
+            {(open || railCollapsed) && (
+                <SidebarGroupContent id={contentId}>
+                    <SidebarMenu>
+                        {group.items.map((item) => (
+                            <NavItemLink key={item.href + item.label} item={item} />
+                        ))}
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            )}
+        </SidebarGroup>
+    );
 }
 
 let navScrollMemory = 0;
@@ -233,6 +330,10 @@ export default function AppShell({
                         {visibleGroups.map((group, gi) => {
                             const key = groupKey(group, gi);
 
+                            if (group.collapsible) {
+                                return <CollapsibleNavGroup key={key} group={group} />;
+                            }
+
                             return (
                                 <SidebarGroup key={key} className="py-1">
                                     {group.label && (
@@ -244,37 +345,7 @@ export default function AppShell({
                                     <SidebarGroupContent>
                                         <SidebarMenu>
                                             {group.items.map((item) => (
-                                                <SidebarMenuItem key={item.href + item.label}>
-                                                    <SidebarMenuButton
-                                                        asChild
-                                                        isActive={item.active}
-                                                        tooltip={item.label}
-                                                        className={cn(
-                                                            'relative h-9 px-2.5 text-[13.5px] font-medium rounded-md transition-all duration-200',
-                                                            item.active
-                                                                ? 'bg-primary/[0.07] font-semibold text-sidebar-accent-foreground before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-primary'
-                                                                : 'text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground'
-                                                        )}
-                                                    >
-                                                        <Link href={item.href} className="flex items-center gap-2.5">
-                                                            <Icon
-                                                                name={item.icon}
-                                                                className={cn(
-                                                                    'h-4 w-4 shrink-0 transition-colors',
-                                                                    item.active
-                                                                        ? 'text-primary'
-                                                                        : 'text-muted-foreground/80 group-hover/menu-button:text-sidebar-foreground'
-                                                                )}
-                                                            />
-                                                            <span className="truncate flex-1 group-data-[collapsible=icon]:hidden">{item.label}</span>
-                                                            {item.badge !== undefined && item.badge > 0 && (
-                                                                <SidebarMenuBadge className="ml-auto bg-primary text-primary-foreground font-bold group-data-[collapsible=icon]:hidden">
-                                                                    {item.badge}
-                                                                </SidebarMenuBadge>
-                                                            )}
-                                                        </Link>
-                                                    </SidebarMenuButton>
-                                                </SidebarMenuItem>
+                                                <NavItemLink key={item.href + item.label} item={item} />
                                             ))}
                                         </SidebarMenu>
                                     </SidebarGroupContent>

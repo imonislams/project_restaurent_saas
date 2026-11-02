@@ -9,7 +9,7 @@ import { Faq, PRODUCTS, Product } from './catalog';
 const SceneHostLazy = lazy(() => import('../Scenes/blocks').then((m) => ({ default: m.SceneHost })));
 const productScenes = () => import('../Scenes/productScenes');
 
-export const DEMO_HREF = '/contact?topic=demo';
+export const TRIAL_HREF = '/register';
 
 /** Mounts children once the placeholder nears the viewport, keeping the layout height stable. */
 export function LazyMount({ minHeight, children, margin = '400px 0px' }: { minHeight: number; children: ReactNode; margin?: string }) {
@@ -50,10 +50,10 @@ export function SceneBox({ scene, variant, money, title, label }: { scene: Scene
     );
 }
 
-export function DemoButton({ where, children = 'Book a Demo', className = '' }: { where: string; children?: ReactNode; className?: string }) {
+export function TrialButton({ where, children = 'Start Free Trial', className = '' }: { where: string; children?: ReactNode; className?: string }) {
     return (
         <Link
-            href={DEMO_HREF}
+            href={TRIAL_HREF}
             onClick={() => trackConversion('hero_cta_clicked', { location: where })}
             className={`inline-flex items-center justify-center gap-2 rounded-lg bg-[#EC3013] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#D02710] active:bg-[#A81E0C] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#EC3013] focus-visible:ring-offset-2 ${className}`}
         >
@@ -83,7 +83,7 @@ export function Hero({ eyebrow, title, lede, secondary, scene }: { eyebrow: stri
                     <h1 className="mt-3 text-4xl font-extrabold leading-[1.08] tracking-tight text-stone-900 sm:text-5xl">{title}</h1>
                     <p className="mt-5 max-w-xl text-lg leading-relaxed text-stone-600">{lede}</p>
                     <div className="mt-8 flex flex-col gap-3.5 sm:flex-row">
-                        <DemoButton where="hero_book_demo" className="w-full sm:w-auto" />
+                        <TrialButton where="hero_book_demo" className="w-full sm:w-auto" />
                         <GhostLink href={secondary.href} where="hero_secondary">{secondary.label}</GhostLink>
                     </div>
                 </div>
@@ -205,7 +205,7 @@ export function CtaBand({ title = 'See Touch Dine in your restaurant', body = 'B
             <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 md:flex-row md:items-center">
                 <div className="max-w-xl"><h2 className="text-3xl font-extrabold tracking-tight">{title}</h2><p className="mt-2 text-stone-300">{body}</p></div>
                 <div className="flex flex-col gap-3 sm:flex-row">
-                    <DemoButton where="cta_band_book_demo" />
+                    <TrialButton where="cta_band_book_demo" />
                     <GhostLink href="/contact" where="cta_band_talk" dark>Talk to Our Team</GhostLink>
                 </div>
             </div>

@@ -19,6 +19,7 @@ application built on Laravel + Inertia + React + TypeScript.
 | [PRODUCTION.md](./PRODUCTION.md) | Production readiness runbook — deploy, processes, monitoring, backups, rollback, go-live checklist |
 | [PWA-OFFLINE.md](./PWA-OFFLINE.md) | Progressive Web App and offline POS — caching policy, offline data model, outbox/sync, conflict rules, offline auth |
 | [RELEASE.md](./RELEASE.md) | Versioning (SemVer), branch model, commit convention, changelog, tagging and release/rollback process |
+| [marketing/README.md](./marketing/README.md) | **Marketing & Growth Center** (platform admin) — PRD, architecture, data model, metric definitions, integrations, security and roadmap |
 
 ## Reading order
 
@@ -30,6 +31,7 @@ application built on Laravel + Inertia + React + TypeScript.
 6. **ROADMAP.md** — the order in which we build it.
 7. **PWA-OFFLINE.md** — how the app installs and keeps running without a network.
 8. **RELEASE.md** — how a version is numbered, tagged and shipped.
+9. **marketing/** — the Marketing & Growth Center, a separate platform-admin workspace.
 
 ## Three workspaces over one core platform
 

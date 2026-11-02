@@ -1,4 +1,24 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
+
+export interface SeoProps {
+    route?: string;
+    title?: string;
+    full_title?: string;
+    description?: string;
+    canonical?: string;
+    robots?: string;
+    brand?: string;
+    og?: {
+        title?: string;
+        description?: string;
+        type?: string;
+        url?: string;
+        image?: string;
+        site_name?: string;
+    };
+    twitter?: { card?: string; title?: string; description?: string; image?: string };
+    schema?: Array<Record<string, unknown>>;
+}
 
 export interface MarketingHeadProps {
     title: string;
@@ -10,51 +30,68 @@ export interface MarketingHeadProps {
     noindex?: boolean;
 }
 
+/**
+ * Page metadata for the public site.
+ *
+ * The server already rendered these tags into the document head (see
+ * ApplySeoMetadata and app.blade.php), so a crawler sees them without running
+ * JavaScript. This component keeps them correct during client-side navigation,
+ * using the same values — a page may still override any field it knows better.
+ *
+ * The title is emitted without the brand suffix on purpose: the Inertia title
+ * callback appends it once. Appending it here as well is what produced titles like
+ * "Pricing | Touch Dine - Touch Dine".
+ */
 export default function MarketingHead({
     title,
     description,
     canonical,
-    ogType = 'website',
-    ogImage = '/favicon.svg',
+    ogType,
+    ogImage,
     schema,
     noindex = false,
 }: MarketingHeadProps) {
-    const fullTitle = `${title} | Touch Dine — Restaurant OS`;
-    const canonicalUrl = canonical || (typeof window !== 'undefined' ? window.location.href : 'https://touchdine.cafe');
+    const seo = (usePage().props as { seo?: SeoProps }).seo;
+
+    const finalTitle = title || seo?.title || '';
+    const finalDescription = description || seo?.description || '';
+    const canonicalUrl = canonical || seo?.canonical || (typeof window !== 'undefined' ? window.location.href : '');
+    const image = ogImage || seo?.og?.image || '/icon-512.png';
+    const brand = seo?.brand ?? '';
+
+    const schemas = [seo?.schema, schema]
+        .flat()
+        .filter((entry): entry is Record<string, unknown> => Boolean(entry));
 
     return (
         <Head>
-            <title>{fullTitle}</title>
-            <meta name="description" content={description} />
+            <title>{finalTitle}</title>
+            <meta name="description" content={finalDescription} />
             <link rel="canonical" href={canonicalUrl} />
 
-            {/* Robots */}
             {noindex ? (
                 <meta name="robots" content="noindex, nofollow" />
             ) : (
-                <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+                <meta name="robots" content={seo?.robots ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'} />
             )}
 
-            {/* Open Graph */}
-            <meta property="og:title" content={fullTitle} />
-            <meta property="og:description" content={description} />
-            <meta property="og:type" content={ogType} />
+            <meta property="og:title" content={`${finalTitle}${brand ? ` - ${brand}` : ''}`} />
+            <meta property="og:description" content={finalDescription} />
+            <meta property="og:type" content={ogType ?? seo?.og?.type ?? 'website'} />
             <meta property="og:url" content={canonicalUrl} />
-            <meta property="og:site_name" content="Touch Dine — Restaurant OS" />
-            <meta property="og:image" content={ogImage} />
+            <meta property="og:image" content={image} />
+            <meta property="og:site_name" content={seo?.og?.site_name ?? brand} />
 
-            {/* Twitter Card */}
-            <meta name="twitter:card" content="summary_large_image" />
-            <meta name="twitter:title" content={fullTitle} />
-            <meta name="twitter:description" content={description} />
-            <meta name="twitter:image" content={ogImage} />
+            <meta name="twitter:card" content={seo?.twitter?.card ?? 'summary_large_image'} />
+            <meta name="twitter:title" content={`${finalTitle}${brand ? ` - ${brand}` : ''}`} />
+            <meta name="twitter:description" content={finalDescription} />
+            <meta name="twitter:image" content={image} />
 
-            {/* Structured JSON-LD Data for SEO & Answer Engines */}
-            {schema && (
-                <script type="application/ld+json">
-                    {JSON.stringify(schema)}
+            {schemas.map((entry, index) => (
+                <script key={index} type="application/ld+json">
+                    {JSON.stringify(entry)}
                 </script>
-            )}
+            ))}
         </Head>
     );
 }

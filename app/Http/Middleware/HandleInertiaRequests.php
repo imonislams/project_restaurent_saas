@@ -122,6 +122,10 @@ class HandleInertiaRequests extends Middleware
                 ? app(AnnouncementService::class)->forTenant($tenant)
                 : [],
             'locale' => app()->getLocale(),
+            // Public-site marketing: which tags to load, the visitor's consent state
+            // and where to send events. Public identifiers only, and nothing is
+            // loaded for a provider that is not switched on and verified.
+            'marketing' => fn () => app(\App\Domain\Marketing\MarketingPublicConfig::class)->forRequest($request),
             // Detected pricing region (Bangladesh / International) for the public site.
             'pricing_region' => fn () => app(PricingRegionContext::class)->region(),
             'pricing_region_source' => fn () => app(PricingRegionContext::class)->source(),
