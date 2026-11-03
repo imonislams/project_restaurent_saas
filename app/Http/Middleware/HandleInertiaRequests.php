@@ -122,6 +122,11 @@ class HandleInertiaRequests extends Middleware
                 ? app(AnnouncementService::class)->forTenant($tenant)
                 : [],
             'locale' => app()->getLocale(),
+            // Public social profiles from Platform Settings → Social Media (empty ones omitted).
+            'social_links' => fn () => collect(['facebook', 'instagram', 'x', 'linkedin', 'youtube', 'tiktok', 'whatsapp'])
+                ->mapWithKeys(fn (string $key) => [$key => (string) app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('social.'.$key, '')])
+                ->filter()
+                ->all(),
             // Public-site marketing: which tags to load, the visitor's consent state
             // and where to send events. Public identifiers only, and nothing is
             // loaded for a provider that is not switched on and verified.

@@ -37,10 +37,23 @@ class SettingsSchema
                 'label' => 'Branding',
                 'description' => 'Visual identity used across the control center and documents.',
                 'fields' => [
-                    self::f('brand_color', 'branding.brand_color', 'Brand colour', 'text', '#4f46e5'),
+                    self::f('brand_color', 'branding.brand_color', 'Brand colour', 'color', '#4f46e5'),
                     self::f('tagline', 'branding.tagline', 'Tagline', 'text'),
-                    self::f('logo_url', 'branding.logo_url', 'Logo URL', 'text'),
+                    self::f('logo_url', 'branding.logo_url', 'Logo', 'image', null, 'PNG, JPG or WebP, up to 2 MB.'),
                     self::f('support_url', 'branding.support_url', 'Support URL', 'text'),
+                ],
+            ],
+            'social' => [
+                'label' => 'Social Media',
+                'description' => 'Social profiles shown in the public website footer. Leave a field empty to hide it.',
+                'fields' => [
+                    self::f('facebook', 'social.facebook', 'Facebook', 'url', null, 'https://facebook.com/yourpage'),
+                    self::f('instagram', 'social.instagram', 'Instagram', 'url', null, 'https://instagram.com/yourhandle'),
+                    self::f('x', 'social.x', 'X (Twitter)', 'url', null, 'https://x.com/yourhandle'),
+                    self::f('linkedin', 'social.linkedin', 'LinkedIn', 'url', null, 'https://linkedin.com/company/yourcompany'),
+                    self::f('youtube', 'social.youtube', 'YouTube', 'url', null, 'https://youtube.com/@yourchannel'),
+                    self::f('tiktok', 'social.tiktok', 'TikTok', 'url', null, 'https://tiktok.com/@yourhandle'),
+                    self::f('whatsapp', 'social.whatsapp', 'WhatsApp', 'url', null, 'https://wa.me/8801XXXXXXXXX'),
                 ],
             ],
             'localization' => [
@@ -163,6 +176,8 @@ class SettingsSchema
             'boolean' => ['required', 'boolean'],
             'number' => ['nullable', 'numeric', 'min:0'],
             'email' => ['nullable', 'email', 'max:255'],
+            'url' => ['nullable', 'url:http,https', 'max:255'],
+            'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'select' => ['nullable', 'string', Rule::in(array_column($field['options'] ?? [], 'value'))],
             default => ['nullable', 'string', 'max:1000'],
         };

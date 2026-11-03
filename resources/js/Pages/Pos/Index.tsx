@@ -227,7 +227,10 @@ export default function PosIndex({
 
     // Modals & Panels
     const [showPayment, setShowPayment] = useState(false);
-    const [showShift, setShowShift] = useState(false);
+    // With no open shift nothing can be sold, so the open-shift dialog is the first thing shown.
+    const [showTablePrompt, setShowTablePrompt] = useState(false);
+    const afterTablePick = useRef<(() => void) | null>(null);
+    const [showShift, setShowShift] = useState(!shift);
     const [showHeldOrders, setShowHeldOrders] = useState(false);
     const [showShortcuts, setShowShortcuts] = useState(false);
     const [editingNoteKey, setEditingNoteKey] = useState<string | null>(null);
@@ -246,6 +249,7 @@ export default function PosIndex({
     const [soundEnabled, setSoundEnabled] = useState(true);
 
     const searchRef = useRef<HTMLInputElement>(null);
+    const tableRef = useRef<HTMLSelectElement>(null);
 
     const playSound = (kind: 'tap' | 'add' | 'success' | 'alert') => {
         if (soundEnabled) playTone(kind);
@@ -255,10 +259,11 @@ export default function PosIndex({
     const tableMissing = requireTableForDineIn && orderType === 'dine_in' && !tableId;
 
     /** Blocks checkout / parking until a table is chosen. Returns false when it blocks. */
-    const guardTable = (): boolean => {
+    const guardTable = (afterPick?: () => void): boolean => {
         if (!tableMissing) return true;
         playSound('alert');
-        setError(t('pos.table_required'));
+        afterTablePick.current = afterPick ?? null;
+        setShowTablePrompt(true);
         return false;
     };
 
@@ -364,7 +369,15 @@ export default function PosIndex({
     };
 
     // Products with modifier groups open a configuration modal; others add directly.
-    const addOrConfigure = (product: Product, variant: Variant | null) => {
+    const addOrConfigure = (product: Product, variant: Variant | null, tableChecked = false) => {
+        // Both prerequisites are checked before anything reaches the cart.
+        if (!shift) {
+            playSound('alert');
+            setError('Open a shift first — no order can be started without one.');
+            setShowShift(true);
+            return;
+        }
+        if (!tableChecked && !guardTable(() => addOrConfigure(product, variant, true))) return;
         if ((product.modifier_groups ?? []).length > 0) {
             setSelectedModifiers({});
             setConfiguring({ product, variant });
@@ -495,7 +508,7 @@ export default function PosIndex({
             } else if (e.key === 'F4') {
                 e.preventDefault();
                 if (cart.length > 0 && shift) {
-                    if (guardTable()) setShowPayment(true);
+                    if (guardTable(() => setShowPayment(true))) setShowPayment(true);
                 } else if (!shift) {
                     setShowShift(true);
                 }
@@ -509,6 +522,7 @@ export default function PosIndex({
                 setShowShift(false);
                 setShowHeldOrders(false);
                 setShowShortcuts(false);
+                setShowTablePrompt(false);
                 setEditingNoteKey(null);
             } else if (e.key === '?' && !['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) {
                 e.preventDefault();
@@ -555,7 +569,7 @@ export default function PosIndex({
                 },
                 onError: (errors) => {
                     playSound('alert');
-                    setError(Object.values(errors)[0] ?? 'Could not park the order.');
+                    setError(Object.values(errors).join(' ') || 'Could not park the order.');
                 },
             },
         );
@@ -965,6 +979,7 @@ export default function PosIndex({
                                 <div className="grid grid-cols-3 gap-2">
                                     <div className="col-span-2">
                                         <select
+                                            ref={tableRef}
                                             aria-label="Table selection"
                                             aria-invalid={tableMissing}
                                             className={`w-full rounded-xl border bg-background py-1.5 px-2.5 text-xs font-medium text-foreground shadow-xs focus:ring-1 focus:ring-ring ${
@@ -1294,13 +1309,19 @@ export default function PosIndex({
                                 disabled={cart.length === 0 || !shift}
                                 onClick={() => {
                                     playSound('tap');
-                                    if (guardTable()) setShowPayment(true);
+                                    if (guardTable(() => setShowPayment(true))) setShowPayment(true);
                                 }}
                                 className="mt-3 flex w-full items-center justify-between rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 active:scale-[0.99] transition disabled:opacity-50 disabled:pointer-events-none"
                             >
                                 <span>{t('pos.pay')} (F4)</span>
                                 <span className="font-mono tracking-tight">{money(totals.total, currency)}</span>
                             </button>
+                        )}
+
+                        {(cart.length === 0 || !shift) && (
+                            <p className="mt-1.5 text-center text-xs font-medium text-amber-700" role="status">
+                                {!shift ? 'Open a shift before placing an order.' : 'Add at least one item to place an order.'}
+                            </p>
                         )}
 
                         {/* Dine-In Park / Open Order Button */}
@@ -1472,6 +1493,50 @@ export default function PosIndex({
                                 Add to order
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- TABLE REQUIRED PROMPT --- */}
+            {showTablePrompt && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+                    <div role="alertdialog" aria-labelledby="table-prompt-title" className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-elevated">
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                            <h3 id="table-prompt-title" className="text-base font-bold text-gray-900">
+                                {t('pos.table_required')}
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    afterTablePick.current = null;
+                                    setShowTablePrompt(false);
+                                }}
+                                className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <select
+                            autoFocus
+                            aria-label="Table selection"
+                            value=""
+                            onChange={(e) => {
+                                if (!e.target.value) return;
+                                setTableId(Number(e.target.value));
+                                setShowTablePrompt(false);
+                                const next = afterTablePick.current;
+                                afterTablePick.current = null;
+                                next?.();
+                            }}
+                            className="mt-4 w-full rounded-xl border border-red-400 bg-background py-2 px-3 text-sm font-medium text-foreground shadow-xs focus:ring-1 focus:ring-ring"
+                        >
+                            <option value="">{t('pos.no_table')}</option>
+                            {tables.map((tbl) => (
+                                <option key={tbl.id} value={tbl.id}>
+                                    {tbl.name} ({tbl.seats} seats · {tbl.status})
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
             )}
@@ -1702,7 +1767,7 @@ function PaymentModal({
     managerPin,
     setManagerPin,
     onClose,
-    onError,
+    onError: reportError,
     onQueuedOffline,
     playSound,
     buildPayload,
@@ -1720,6 +1785,12 @@ function PaymentModal({
     playSound: (kind: 'tap' | 'add' | 'success' | 'alert') => void;
     buildPayload: () => Record<string, unknown>;
 }) {
+    const [modalError, setModalError] = useState<string | null>(null);
+    // Errors must show inside the modal: the page banner sits behind its backdrop.
+    const onError = (message: string | null) => {
+        setModalError(message);
+        reportError(message);
+    };
     const [isSplit, setIsSplit] = useState(false);
     const [singleMethodId, setSingleMethodId] = useState<number>(paymentMethods[0]?.id ?? 1);
     const [singleTendered, setSingleTendered] = useState<number>(total);
@@ -1898,7 +1969,7 @@ function PaymentModal({
             },
             onError: (errors: Record<string, string>) => {
                 playSound('alert');
-                onError(Object.values(errors)[0] ?? 'Could not complete the sale.');
+                onError(Object.values(errors).join(' ') || 'Could not complete the sale.');
             },
         });
     };
@@ -1916,6 +1987,12 @@ function PaymentModal({
                         ✕
                     </button>
                 </div>
+
+                {modalError && (
+                    <div role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+                        {modalError}
+                    </div>
+                )}
 
                 {/* Big Amount Due Hero */}
                 <div className="mt-4 rounded-2xl bg-gray-50 border border-gray-200 p-4 text-center">

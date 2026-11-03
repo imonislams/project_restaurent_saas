@@ -113,4 +113,38 @@ class PlatformSettingsTest extends TestCase
         $billing->assignRole(RoleName::BillingAdmin);
         $this->actingAs($billing)->get('/platform/settings/general')->assertForbidden();
     }
+
+    public function test_branding_logo_is_uploaded_and_colour_validated(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $admin = $this->admin();
+        $values = ['brand_color' => '#EC3013', 'tagline' => '', 'logo_url' => 'pending', 'support_url' => ''];
+
+        $this->actingAs($admin)->post('/platform/settings/branding', [
+            'values' => $values,
+            'files' => ['logo_url' => \Illuminate\Http\UploadedFile::fake()->image('logo.png', 100, 100)],
+        ])->assertSessionHasNoErrors();
+
+        $logo = app(PlatformSettings::class)->get('branding.logo_url');
+        $this->assertStringContainsString('/storage/branding/', (string) $logo);
+
+        $this->actingAs($admin)->post('/platform/settings/branding', [
+            'values' => [...$values, 'brand_color' => 'red', 'logo_url' => $logo],
+        ])->assertSessionHasErrors('values.brand_color');
+    }
+
+    public function test_social_links_are_saved_and_shared_with_the_website(): void
+    {
+        $this->actingAs($this->admin())->post('/platform/settings/social', [
+            'values' => ['facebook' => 'https://facebook.com/touchdine', 'instagram' => '', 'x' => '', 'linkedin' => '', 'youtube' => '', 'tiktok' => '', 'whatsapp' => ''],
+        ])->assertSessionHasNoErrors();
+
+        $this->post('/platform/settings/social', [
+            'values' => ['facebook' => 'javascript:alert(1)'],
+        ])->assertSessionHasErrors('values.facebook');
+
+        auth()->logout();
+
+        $this->get('/')->assertInertia(fn ($page) => $page->where('social_links', ['facebook' => 'https://facebook.com/touchdine']));
+    }
 }

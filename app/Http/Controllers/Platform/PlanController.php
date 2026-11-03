@@ -89,16 +89,44 @@ class PlanController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $this->plans->create($this->validated($request), $request->user());
+        $plan = $this->plans->create($this->validated($request), $request->user());
+        $this->syncFeaturesToCounterpart($plan, $request);
 
-        return back()->with('success', 'Plan created.');
+        return redirect()->route('platform.plans.index')->with('success', 'Plan created.');
     }
 
     public function update(Request $request, Plan $plan): RedirectResponse
     {
-        $this->plans->update($plan, $this->validated($request, $plan), $request->user());
+        $plan = $this->plans->update($plan, $this->validated($request, $plan), $request->user());
+        $this->syncFeaturesToCounterpart($plan, $request);
 
-        return back()->with('success', 'Plan updated. Existing subscriptions keep their captured terms.');
+        return redirect()->route('platform.plans.index')
+            ->with('success', 'Plan updated. Existing subscriptions keep their captured terms.');
+    }
+
+    /**
+     * A tier exists once per region (`growth` / `growth-bd`) and the two must
+     * grant the same features, so a feature change is applied to both.
+     */
+    protected function syncFeaturesToCounterpart(Plan $plan, Request $request): void
+    {
+        $slug = (string) $plan->slug;
+        $counterpartSlug = str_ends_with($slug, '-bd') ? substr($slug, 0, -3) : $slug.'-bd';
+
+        $counterpart = Plan::query()->where('slug', $counterpartSlug)->first();
+
+        if ($counterpart === null) {
+            return;
+        }
+
+        $features = array_values($plan->features ?? []);
+        $current = array_values($counterpart->features ?? []);
+        sort($features);
+        sort($current);
+
+        if ($features !== $current) {
+            $this->plans->update($counterpart, ['features' => $plan->features ?? []], $request->user());
+        }
     }
 
     public function archive(Request $request, Plan $plan): RedirectResponse

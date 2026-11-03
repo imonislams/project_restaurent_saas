@@ -1,11 +1,23 @@
 import MiseLogo from '@/Components/Brand/MiseLogo';
 import { Button } from '@/Components/ui/Button';
 import { Input } from '@/Components/ui/Input';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { CheckCircle2, ShieldCheck } from 'lucide-react';
 import React, { useState } from 'react';
 
+const SOCIAL_LABELS: Record<string, string> = {
+    facebook: 'Facebook',
+    instagram: 'Instagram',
+    x: 'X',
+    linkedin: 'LinkedIn',
+    youtube: 'YouTube',
+    tiktok: 'TikTok',
+    whatsapp: 'WhatsApp',
+};
+
 export default function MarketingFooter() {
+    const socialLinks = (usePage().props as { social_links?: Record<string, string> }).social_links ?? {};
+    const socials = Object.entries(socialLinks).filter(([key, url]) => SOCIAL_LABELS[key] && url);
     const [email, setEmail] = useState('');
     const [subscribed, setSubscribed] = useState(false);
 
@@ -237,6 +249,23 @@ export default function MarketingFooter() {
                             Cookies
                         </Link>
                     </div>
+
+                    {socials.length > 0 && (
+                        <ul className="flex flex-wrap items-center gap-2" aria-label="Social media">
+                            {socials.map(([key, url]) => (
+                                <li key={key}>
+                                    <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[13px] font-medium text-stone-700 transition-colors hover:border-stone-300 hover:text-stone-900"
+                                    >
+                                        {SOCIAL_LABELS[key]}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
 
                     <div className="flex items-center gap-2 bg-stone-100 border border-stone-200 px-3 py-1.5 rounded-full">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

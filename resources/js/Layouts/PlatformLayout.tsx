@@ -238,6 +238,7 @@ const NAV: NavSection[] = [
             { label: 'Real-time Notifications', icon: 'bell', permission: 'platform.settings.view', routeName: 'platform.realtime.index', pattern: 'platform.realtime.*' },
             { label: 'Operations', icon: 'server', permission: 'platform.settings.view', routeName: 'platform.settings.operations', pattern: 'platform.settings.operations' },
             { label: 'Security Policy', icon: 'shield', permission: 'platform.settings.view', routeName: 'platform.settings.security', pattern: 'platform.settings.security' },
+            { label: 'Social Media', icon: 'megaphone', permission: 'platform.settings.view', routeName: 'platform.settings.social', pattern: 'platform.settings.social' },
             { label: 'Receipt Branding', icon: 'receipt', permission: 'platform.settings.view', routeName: 'platform.settings.receipts', pattern: 'platform.settings.receipts' },
             { label: 'Feature Flags', icon: 'flag', permission: 'platform.settings.view', routeName: 'platform.settings.features', pattern: 'platform.settings.features' },
         ],
