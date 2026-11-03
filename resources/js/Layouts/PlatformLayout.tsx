@@ -5,7 +5,8 @@ import { useT } from '@/i18n';
 import AppShell, { NavGroup, NavItem } from '@/Layouts/AppShell';
 import { Link, router, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode } from 'react';
-import { Bell, Store } from 'lucide-react';
+import NotificationBell from '@/Components/NotificationBell';
+import { Store } from 'lucide-react';
 
 interface NavSpec {
     label: string;
@@ -278,19 +279,7 @@ export default function PlatformLayout({
 
     const topbarRight = (
         <div className="flex items-center gap-2">
-            <Link
-                href={route('platform.notifications.index')}
-                className="relative flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background text-foreground shadow-2xs transition-colors hover:bg-accent cursor-pointer"
-                title="Notifications"
-                aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
-            >
-                <Bell className="h-4 w-4" />
-                {unread > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-xs">
-                        {unread > 9 ? '9+' : unread}
-                    </span>
-                )}
-            </Link>
+            <NotificationBell unread={unread} indexUrl={route('platform.notifications.index')} recentUrl={route('platform.notifications.recent')} readAllUrl={route('platform.notifications.read-all')} destroyUrl={route('platform.notifications.destroy', ':id')} />
             <Link
                 href={route('dashboard')}
                 className="flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-accent transition-colors shadow-2xs cursor-pointer"

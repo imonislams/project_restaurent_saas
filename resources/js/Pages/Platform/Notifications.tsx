@@ -2,6 +2,7 @@ import { Badge, Button, Card, CardBody, EmptyState, Pagination, formatDateTime }
 import type { PageLink } from '@/Components/ui';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { Link, router } from '@inertiajs/react';
+import { Trash2 } from 'lucide-react';
 
 interface NotificationRow {
     id: string;
@@ -21,7 +22,16 @@ export default function PlatformNotifications({ notifications, unread }: { notif
         <PlatformLayout
             title="Notifications"
             description="In-app notifications for your administrator account."
-            actions={unread > 0 ? <Button size="sm" variant="secondary" onClick={() => router.post(route('platform.notifications.read-all'), {}, { preserveScroll: true })}>Mark all read</Button> : undefined}
+            actions={
+                <div className="flex gap-2">
+                    {unread > 0 && <Button size="sm" variant="secondary" onClick={() => router.post(route('platform.notifications.read-all'), {}, { preserveScroll: true })}>Mark all read</Button>}
+                    {notifications.data.length > 0 && (
+                        <Button size="sm" variant="secondary" onClick={() => confirm('Delete all notifications?') && router.delete(route('platform.notifications.clear'), { preserveScroll: true })}>
+                            Delete all
+                        </Button>
+                    )}
+                </div>
+            }
         >
             <Card>
                 <CardBody className="space-y-3">
@@ -46,6 +56,15 @@ export default function PlatformNotifications({ notifications, unread }: { notif
                                 )}
                                 <p className="mt-0.5 text-xs text-gray-400">{formatDateTime(notification.created_at)}</p>
                             </div>
+                            <button
+                                type="button"
+                                aria-label="Delete notification"
+                                title="Delete"
+                                onClick={() => router.delete(route('platform.notifications.destroy', notification.id), { preserveScroll: true })}
+                                className="shrink-0 rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-destructive"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </button>
                         </div>
                     ))}
                     {notifications.data.length === 0 && <EmptyState title="You're all caught up" description="No notifications for your account." />}

@@ -147,4 +147,38 @@ class PlatformSettingsTest extends TestCase
 
         $this->get('/')->assertInertia(fn ($page) => $page->where('social_links', ['facebook' => 'https://facebook.com/touchdine']));
     }
+
+    public function test_notification_bell_endpoint_returns_recent_items(): void
+    {
+        $admin = $this->admin();
+        $admin->notifications()->create([
+            'id' => (string) \Illuminate\Support\Str::uuid(),
+            'type' => 'App\\Notifications\\Example',
+            'data' => ['title' => 'Backup failed', 'body' => 'Nightly backup did not finish.', 'level' => 'danger'],
+        ]);
+
+        $this->actingAs($admin)->getJson('/platform/notifications/recent')
+            ->assertOk()
+            ->assertJsonPath('unread', 1)
+            ->assertJsonPath('items.0.title', 'Backup failed')
+            ->assertJsonPath('items.0.read', false);
+    }
+
+    public function test_admin_can_delete_one_or_all_notifications(): void
+    {
+        $admin = $this->admin();
+        $make = fn () => $admin->notifications()->create([
+            'id' => (string) \Illuminate\Support\Str::uuid(),
+            'type' => 'App\\Notifications\\Example',
+            'data' => ['title' => 'Hello'],
+        ]);
+        $first = $make();
+        $make();
+
+        $this->actingAs($admin)->delete('/platform/notifications/'.$first->id)->assertRedirect();
+        $this->assertSame(1, $admin->notifications()->count());
+
+        $this->actingAs($admin)->delete('/platform/notifications')->assertRedirect();
+        $this->assertSame(0, $admin->notifications()->count());
+    }
 }

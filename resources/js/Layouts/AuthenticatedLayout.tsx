@@ -3,7 +3,7 @@ import { useT } from '@/i18n';
 import AppShell, { NavGroup, NavItem } from '@/Layouts/AppShell';
 import { Link, router, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode } from 'react';
-import { Bell } from 'lucide-react';
+import NotificationBell from '@/Components/NotificationBell';
 import { cn } from '@/Components/ui/cn';
 
 export default function Authenticated({
@@ -92,18 +92,7 @@ export default function Authenticated({
                     ))}
                 </select>
             )}
-            <Link
-                href={route('notifications.index')}
-                className="relative flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background text-muted-foreground hover:bg-accent hover:text-foreground shadow-xs transition-colors cursor-pointer"
-                aria-label="Notifications"
-            >
-                <Bell className="h-4 w-4" />
-                {unread > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-xs">
-                        {unread > 9 ? '9+' : unread}
-                    </span>
-                )}
-            </Link>
+            <NotificationBell unread={unread} indexUrl={route('notifications.index')} recentUrl={route('notifications.recent')} readAllUrl={route('notifications.read-all')} destroyUrl={route('notifications.destroy', ':id')} />
         </div>
     );
 

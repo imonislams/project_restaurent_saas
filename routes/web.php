@@ -512,8 +512,11 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->g
         ->middleware('permission:reports.view')->name('reports.index');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/recent', [NotificationController::class, 'recent'])->name('notifications.recent');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::delete('/notifications', [NotificationController::class, 'clear'])->name('notifications.clear');
 
     Route::prefix('customers')->name('customers.')->group(function () {
         Route::get('/', [CustomerController::class, 'index'])
@@ -709,7 +712,11 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
     Route::middleware('platform.permission:platform.gateways.configure')->group(function () {
         Route::get('/gateways', [PlatformGatewayController::class, 'index'])->name('gateways.index');
         Route::get('/gateways/sslcommerz', [PlatformGatewayController::class, 'sslcommerz'])->name('gateways.sslcommerz');
-        Route::get('/gateways/health', [PlatformGatewayController::class, 'index'])->name('gateways.health');
+        Route::delete('/notifications/{id}', [PlatformNotificationController::class, 'destroy'])
+        ->middleware('platform.permission:platform.email.view')->name('notifications.destroy');
+    Route::delete('/notifications', [PlatformNotificationController::class, 'clear'])
+        ->middleware('platform.permission:platform.email.view')->name('notifications.clear');
+    Route::get('/gateways/health', [PlatformGatewayController::class, 'index'])->name('gateways.health');
         Route::post('/gateways', [PlatformGatewayController::class, 'store'])->name('gateways.store');
         Route::patch('/gateways/{gateway}', [PlatformGatewayController::class, 'update'])->name('gateways.update');
         Route::post('/gateways/{gateway}/toggle', [PlatformGatewayController::class, 'toggle'])->name('gateways.toggle');
@@ -983,6 +990,8 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
     });
     Route::get('/notifications', [PlatformNotificationController::class, 'index'])
         ->middleware('platform.permission:platform.email.view')->name('notifications.index');
+    Route::get('/notifications/recent', [PlatformNotificationController::class, 'recent'])
+        ->middleware('platform.permission:platform.email.view')->name('notifications.recent');
     Route::post('/notifications/read-all', [PlatformNotificationController::class, 'markAllRead'])
         ->middleware('platform.permission:platform.email.view')->name('notifications.read-all');
     Route::get('/gateways/health', [PlatformGatewayController::class, 'index'])
