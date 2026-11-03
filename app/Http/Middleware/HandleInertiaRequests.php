@@ -122,8 +122,24 @@ class HandleInertiaRequests extends Middleware
                 ? app(AnnouncementService::class)->forTenant($tenant)
                 : [],
             'locale' => app()->getLocale(),
+            // WhatsApp support chat link (wa.me) for the website; null when no number is set.
+            'whatsapp_support' => function () {
+                $settings = app(\App\Domain\PlatformSettings\PlatformSettings::class);
+                $digits = preg_replace('/\D+/', '', (string) $settings->get('social.whatsapp', ''));
+
+                if ($digits === '' || $digits === null) {
+                    return null;
+                }
+
+                $message = trim((string) $settings->get('social.whatsapp_message', ''));
+
+                return [
+                    'url' => 'https://wa.me/'.$digits.($message !== '' ? '?text='.rawurlencode($message) : ''),
+                    'widget' => (bool) $settings->get('social.whatsapp_widget', true),
+                ];
+            },
             // Public social profiles from Platform Settings → Social Media (empty ones omitted).
-            'social_links' => fn () => collect(['facebook', 'instagram', 'x', 'linkedin', 'youtube', 'tiktok', 'whatsapp'])
+            'social_links' => fn () => collect(['facebook', 'instagram', 'x', 'linkedin', 'youtube', 'tiktok'])
                 ->mapWithKeys(fn (string $key) => [$key => (string) app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('social.'.$key, '')])
                 ->filter()
                 ->all(),

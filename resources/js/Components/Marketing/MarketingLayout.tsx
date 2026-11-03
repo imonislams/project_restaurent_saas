@@ -1,5 +1,6 @@
 import MarketingConsentProvider from '@/Components/Marketing/MarketingConsent';
 import MarketingFooter from '@/Components/Marketing/MarketingFooter';
+import WhatsAppButton from '@/Components/Marketing/WhatsAppButton';
 import MarketingNavbar from '@/Components/Marketing/MarketingNavbar';
 import { usePricingRegion } from '@/hooks/use-pricing-region';
 import { PropsWithChildren, ReactNode, useEffect, useRef } from 'react';
@@ -95,6 +96,7 @@ export default function MarketingLayout({ children, announcement, className = ''
                 </main>
 
                 <MarketingFooter />
+                <WhatsAppButton />
             </div>
         </MarketingConsentProvider>
     );

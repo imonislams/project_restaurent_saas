@@ -17,7 +17,8 @@ const SOCIAL_LABELS: Record<string, string> = {
 
 export default function MarketingFooter() {
     const socialLinks = (usePage().props as { social_links?: Record<string, string> }).social_links ?? {};
-    const socials = Object.entries(socialLinks).filter(([key, url]) => SOCIAL_LABELS[key] && url);
+    const whatsapp = (usePage().props as { whatsapp_support?: { url: string } | null }).whatsapp_support;
+    const socials = Object.entries({ ...socialLinks, ...(whatsapp ? { whatsapp: whatsapp.url } : {}) }).filter(([key, url]) => SOCIAL_LABELS[key] && url);
     const [email, setEmail] = useState('');
     const [subscribed, setSubscribed] = useState(false);
 

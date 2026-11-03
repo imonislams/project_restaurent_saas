@@ -53,7 +53,9 @@ class SettingsSchema
                     self::f('linkedin', 'social.linkedin', 'LinkedIn', 'url', null, 'https://linkedin.com/company/yourcompany'),
                     self::f('youtube', 'social.youtube', 'YouTube', 'url', null, 'https://youtube.com/@yourchannel'),
                     self::f('tiktok', 'social.tiktok', 'TikTok', 'url', null, 'https://tiktok.com/@yourhandle'),
-                    self::f('whatsapp', 'social.whatsapp', 'WhatsApp', 'url', null, 'https://wa.me/8801XXXXXXXXX'),
+                    self::f('whatsapp', 'social.whatsapp', 'WhatsApp support number', 'phone', null, 'With country code, e.g. +8801XXXXXXXXX. Customers chat with you from the website.'),
+                    self::f('whatsapp_message', 'social.whatsapp_message', 'WhatsApp greeting message', 'text', 'Hello, I need help with Touch Dine.', 'Pre-filled in the customer’s chat.'),
+                    self::f('whatsapp_widget', 'social.whatsapp_widget', 'Show floating WhatsApp button on the website', 'boolean', true),
                 ],
             ],
             'localization' => [
@@ -178,6 +180,7 @@ class SettingsSchema
             'email' => ['nullable', 'email', 'max:255'],
             'url' => ['nullable', 'url:http,https', 'max:255'],
             'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'phone' => ['nullable', 'regex:/^\+?[0-9][0-9 \-()]{6,19}$/'],
             'select' => ['nullable', 'string', Rule::in(array_column($field['options'] ?? [], 'value'))],
             default => ['nullable', 'string', 'max:1000'],
         };

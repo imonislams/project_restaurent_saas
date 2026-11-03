@@ -11,7 +11,7 @@ interface Field {
     name: string;
     setting: string;
     label: string;
-    type: 'text' | 'email' | 'url' | 'color' | 'image' | 'number' | 'boolean' | 'select' | 'textarea';
+    type: 'text' | 'email' | 'url' | 'phone' | 'color' | 'image' | 'number' | 'boolean' | 'select' | 'textarea';
     default?: unknown;
     hint?: string;
     options?: { value: string; label: string }[];
@@ -152,7 +152,7 @@ export default function SettingsShow({ group, schema, values }: { group: string;
                                         ) : (
                                             <Input 
                                                 id={`field-${field.name}`}
-                                                type={field.type === 'number' ? 'number' : field.type} 
+                                                type={field.type === 'number' ? 'number' : field.type === 'phone' ? 'tel' : field.type} 
                                                 value={String(form.data.values[field.name] ?? '')} 
                                                 onChange={(e) => set(field.name, e.target.value)} 
                                             />

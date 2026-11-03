@@ -136,7 +136,7 @@ class PlatformSettingsTest extends TestCase
     public function test_social_links_are_saved_and_shared_with_the_website(): void
     {
         $this->actingAs($this->admin())->post('/platform/settings/social', [
-            'values' => ['facebook' => 'https://facebook.com/touchdine', 'instagram' => '', 'x' => '', 'linkedin' => '', 'youtube' => '', 'tiktok' => '', 'whatsapp' => ''],
+            'values' => ['facebook' => 'https://facebook.com/touchdine', 'instagram' => '', 'x' => '', 'linkedin' => '', 'youtube' => '', 'tiktok' => '', 'whatsapp' => '', 'whatsapp_message' => '', 'whatsapp_widget' => true],
         ])->assertSessionHasNoErrors();
 
         $this->post('/platform/settings/social', [
@@ -180,5 +180,22 @@ class PlatformSettingsTest extends TestCase
 
         $this->actingAs($admin)->delete('/platform/notifications')->assertRedirect();
         $this->assertSame(0, $admin->notifications()->count());
+    }
+
+    public function test_whatsapp_support_number_drives_website_link(): void
+    {
+        $base = ['facebook' => '', 'instagram' => '', 'x' => '', 'linkedin' => '', 'youtube' => '', 'tiktok' => '', 'whatsapp_message' => 'Hi there', 'whatsapp_widget' => true];
+
+        $this->actingAs($this->admin())->post('/platform/settings/social', ['values' => [...$base, 'whatsapp' => 'abc']])
+            ->assertSessionHasErrors('values.whatsapp');
+
+        $this->post('/platform/settings/social', ['values' => [...$base, 'whatsapp' => '+880 1711-000000']])
+            ->assertSessionHasNoErrors();
+
+        auth()->logout();
+
+        $this->get('/')->assertInertia(fn ($page) => $page
+            ->where('whatsapp_support.url', 'https://wa.me/8801711000000?text=Hi%20there')
+            ->where('whatsapp_support.widget', true));
     }
 }
