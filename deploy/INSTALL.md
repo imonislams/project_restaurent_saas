@@ -112,9 +112,9 @@ Then use **Send test email** on that screen and confirm it arrives. Before it wi
 - The From address must be on a domain your mail provider signs for. `example.com`, `localhost` and
   other reserved domains are rejected or quarantined by receivers, and the SMTP server still reports
   success — use the mailbox you authenticate with when in doubt.
-- **Queued mail** (invoice emails, campaigns) is only sent while a queue worker runs; the shipped
-  `.env` sets `QUEUE_CONNECTION=database`. Until a worker is running those messages sit in the
-  `jobs` table. See `docs/DEPLOY-CPANEL.md` §2 for the supervised and cron options.
+- All mail (verification, invoices, campaigns) is sent immediately during the request — it does
+  not depend on a queue worker. A worker is only needed for non-email background jobs (see
+  `docs/DEPLOY-CPANEL.md` §2 for the supervised and cron options).
 - Some shared hosts block outbound SMTP on 465/587. If the test email reports a connection timeout,
   ask the host to open the port or to send through their own mail server.
 

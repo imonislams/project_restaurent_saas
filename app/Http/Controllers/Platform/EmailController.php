@@ -92,11 +92,11 @@ class EmailController extends Controller
         $class = $log->retry_class;
         $mailable = $class::fromRetryPayload($log->retry_payload ?? []);
 
-        Mail::to($log->to_email)->queue($mailable);
+        Mail::to($log->to_email)->send($mailable);
 
         $this->audit->log('platform.email_retried', $log, ['to' => $log->to_email], request()->user(), $log->tenant_id);
 
-        return back()->with('success', 'Retry queued.');
+        return back()->with('success', 'Retry sent.');
     }
 
     public function settings(): Response
@@ -217,11 +217,6 @@ class EmailController extends Controller
         if ($from === null) {
             return 'The From address cannot deliver mail: it is missing, not an email address, or on a reserved domain '
                 .'(example.com). Use an address on your mail provider\'s domain — your SMTP username is a safe choice.';
-        }
-
-        if (config('queue.default') !== 'sync') {
-            return 'Queued mail (invoices, campaigns) is only sent while a queue worker is running. Confirm the worker '
-                .'or cron entry is alive, otherwise those messages stay in the jobs table.';
         }
 
         return null;

@@ -125,7 +125,9 @@ class EmailMarketingService
                 continue;
             }
 
-            SendMarketingEmailJob::dispatch($send->getKey());
+            // Mail must go out whether or not a queue worker is running, so each
+            // recipient is delivered on the synchronous connection.
+            SendMarketingEmailJob::dispatchSync($send->getKey());
             $queued++;
         }
 

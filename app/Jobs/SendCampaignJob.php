@@ -5,12 +5,11 @@ namespace App\Jobs;
 use App\Domain\Communications\CampaignService;
 use App\Domain\Communications\Models\Campaign;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class SendCampaignJob implements ShouldQueue
+class SendCampaignJob
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 

@@ -199,7 +199,7 @@ policy as part of this work — closing an existing gap.
 | Job | Trigger | Behaviour |
 |---|---|---|
 | `DispatchMarketingEventJob` | Event recorded | Delivers one event to one provider; dedupe row; retries; records terminal errors |
-| `SendMarketingEmailJob` | Campaign send / automation step | One recipient per job; checks suppression + consent + subscriber status at send time; rate limited; writes `marketing_email_sends` |
+| `SendMarketingEmailJob` | Campaign send / automation step | One recipient per job, delivered inline (no queue worker required); checks suppression + consent + subscriber status at send time; writes `marketing_email_sends` |
 | `RunAutomationStepJob` | `marketing:run-automations` | Executes one step for one enrolment; idempotency key (enrolment, step, attempt) |
 | `SyncMarketingIntegrationJob` | `marketing:sync-integrations`, or "Sync now" | Pulls GA4/GSC/Ads data; writes `marketing_sync_logs`; updates health |
 | `EvaluateMarketingInsightsJob` | `marketing:evaluate-alerts` | Evaluates rules, writes `marketing_insights`, raises a platform alert |

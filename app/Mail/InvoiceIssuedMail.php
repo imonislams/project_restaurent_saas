@@ -7,22 +7,17 @@ use App\Domain\Communications\EmailTemplateService;
 use App\Domain\Subscriptions\Models\SubscriptionInvoice;
 use App\Mail\Concerns\RetryableMail;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
 /**
- * Invoice delivery. Queued with the invoice PDF attached so a mail failure never
- * blocks the billing operation that issued the invoice.
+ * Invoice delivery. Sent immediately with the invoice PDF attached so delivery
+ * never depends on a running queue worker.
  */
-class InvoiceIssuedMail extends Mailable implements ShouldQueue, RetryableMail
+class InvoiceIssuedMail extends Mailable implements RetryableMail
 {
-    use Queueable, SerializesModels;
-
     public function __construct(public SubscriptionInvoice $invoice) {}
 
     /** @return array<string, mixed> */

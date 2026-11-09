@@ -88,10 +88,10 @@ class CampaignController extends Controller
         $result = $this->emails->queueCampaign($campaign, $request->user());
 
         if ($result['queued'] === 0) {
-            return back()->with('error', 'Nothing was queued. Check the subscriber list, the suppression list and the campaign segment.');
+            return back()->with('error', 'Nothing was sent. Check the subscriber list, the suppression list and the campaign segment.');
         }
 
-        return back()->with('success', $result['queued'].' message(s) queued'.($result['skipped'] > 0 ? ', '.$result['skipped'].' skipped' : '').'. Delivery is per recipient, so the report fills in as they go.');
+        return back()->with('success', $result['queued'].' message(s) sent'.($result['skipped'] > 0 ? ', '.$result['skipped'].' skipped' : '').'.');
     }
 
     public function test(Request $request, Campaign $campaign): RedirectResponse

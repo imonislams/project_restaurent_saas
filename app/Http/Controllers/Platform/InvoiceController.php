@@ -288,9 +288,11 @@ class InvoiceController extends Controller
 
     public function send(Request $request, SubscriptionInvoice $invoice): RedirectResponse
     {
-        $this->invoices->send($invoice, $request->user());
+        $invoice = $this->invoices->send($invoice, $request->user());
 
-        return back()->with('success', 'Invoice queued for email delivery.');
+        return $invoice->delivery_status === 'sent'
+            ? back()->with('success', 'Invoice sent.')
+            : back()->with('error', 'The invoice email could not be sent. Check the mail settings and the email log.');
     }
 
     public function creditNote(Request $request, SubscriptionInvoice $invoice): RedirectResponse

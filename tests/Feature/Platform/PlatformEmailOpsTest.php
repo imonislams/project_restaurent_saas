@@ -151,7 +151,7 @@ class PlatformEmailOpsTest extends TestCase
 
         $this->actingAs($this->admin())->post("/platform/email/logs/{$log->id}/retry")->assertRedirect();
 
-        Mail::assertQueued(InvoiceIssuedMail::class);
+        Mail::assertSent(InvoiceIssuedMail::class);
         $this->assertDatabaseHas('audit_logs', ['action' => 'platform.email_retried']);
     }
 

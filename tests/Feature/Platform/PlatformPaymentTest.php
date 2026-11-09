@@ -286,7 +286,7 @@ class PlatformPaymentTest extends TestCase
         $this->assertSame('29.00', $payment->fresh()->refunded_amount);
     }
 
-    public function test_invoice_email_is_queued_and_marked_sent(): void
+    public function test_invoice_email_is_sent_and_marked_sent(): void
     {
         Mail::fake();
         $admin = $this->admin();
@@ -294,7 +294,7 @@ class PlatformPaymentTest extends TestCase
 
         $this->actingAs($admin)->post("/platform/invoices/{$invoice->id}/send")->assertRedirect();
 
-        Mail::assertQueued(InvoiceIssuedMail::class);
+        Mail::assertSent(InvoiceIssuedMail::class);
         $this->assertNotNull($invoice->fresh()->sent_at);
     }
 

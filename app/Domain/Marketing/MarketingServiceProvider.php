@@ -71,8 +71,5 @@ class MarketingServiceProvider extends ServiceProvider
         ));
 
         RateLimiter::for('marketing-consent', fn (Request $request) => Limit::perMinute(20)->by($request->ip()));
-
-        // Promotional mail: a steady pace rather than a burst that trips the provider.
-        RateLimiter::for('marketing-email', fn () => Limit::perMinute(60));
     }
 }

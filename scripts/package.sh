@@ -100,6 +100,13 @@ for required in vendor/autoload.php vendor/tightenco/ziggy/dist/route.umd.js; do
   [ -f "$STAGING/$required" ] || { echo "PACKAGE INCOMPLETE: missing $required" >&2; exit 1; }
 done
 
+# The compiled assets must be newer than the frontend sources, otherwise the
+# package ships an old UI no matter what the PHP side contains.
+if [ -f public/build/manifest.json ]; then
+  newer="$(find resources/js resources/css -type f -newer public/build/manifest.json 2>/dev/null | head -1)"
+  [ -z "$newer" ] || { echo "PACKAGE INCOMPLETE: public/build is older than $newer — run npm run build" >&2; exit 1; }
+fi
+
 # --- archive + checksum ----------------------------------------------------
 PKG="application-v$VERSION.zip"
 ZIP="$DIST/$PKG"

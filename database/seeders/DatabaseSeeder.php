@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Tenancy\Actions\RegisterTenant;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -27,25 +26,7 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
-        // Re-seeding must not fail or duplicate: the account is found by email.
-        $platformAdmin = User::query()->firstOrCreate(
-            ['email' => 'platform@example.com'],
-            [
-                'tenant_id' => null,
-                'is_platform_admin' => true,
-                'status' => 'active',
-                'name' => 'Platform Admin',
-                'password' => 'password',
-            ],
-        );
-
-        if ($platformAdmin->email_verified_at === null) {
-            $platformAdmin->forceFill(['email_verified_at' => now()])->save();
-        }
-
-        if (! $platformAdmin->hasRole([RoleName::SaasSuperAdmin])) {
-            $platformAdmin->assignRole(RoleName::SaasSuperAdmin);
-        }
+        $this->call(PlatformAdminSeeder::class);
 
         // The demo tenant is created once only.
         if (app()->environment('local') && ! User::query()->where('email', 'owner@example.com')->exists()) {
