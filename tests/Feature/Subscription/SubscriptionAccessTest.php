@@ -124,6 +124,7 @@ class SubscriptionAccessTest extends TestCase
     public function test_a_trial_unlocks_every_feature_but_keeps_the_plan_limits(): void
     {
         $starter = Plan::where('slug', 'starter')->firstOrFail();
+        $starter->update(['features' => ['pos', 'kitchen', 'reports']]); // plans seed with every feature; restrict to test gating
         $this->assertFalse($starter->hasFeature('transfers'));
 
         app(SubscriptionService::class)->startTrial($this->tenant, $starter);

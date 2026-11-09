@@ -82,6 +82,7 @@ class ReadinessTest extends TestCase
 
         $tenant = Tenant::factory()->create();
         $starter = Plan::where('slug', 'starter')->firstOrFail();
+        $starter->update(['features' => ['pos', 'kitchen', 'reports']]); // plans seed with every feature; restrict to test gating
         $growth = Plan::where('slug', 'growth')->firstOrFail();
 
         app(TenantContext::class)->set($tenant);

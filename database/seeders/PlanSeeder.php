@@ -20,26 +20,27 @@ class PlanSeeder extends Seeder
 {
     public function run(): void
     {
-        // Shared tier attributes (features + limits) used by both ladders.
+        // Shared tier attributes used by both ladders. Every plan includes every feature;
+        // plans differ only by their limits (and price).
         $tiers = [
             'starter' => [
                 'name' => 'Starter',
                 'description' => 'Single restaurant, core POS and reporting.',
-                'features' => ['pos', 'kitchen', 'reports'],
+                'features' => Plan::ALL_FEATURES,
                 'limits' => ['branches' => 1, 'users' => 5, 'orders_this_month' => 1000],
                 'sort_order' => 1,
             ],
             'growth' => [
                 'name' => 'Growth',
                 'description' => 'Multi-branch operations with inventory and purchasing.',
-                'features' => ['pos', 'kitchen', 'tables', 'menu', 'qr_dining', 'inventory', 'purchasing', 'waste', 'accounts', 'reports'],
+                'features' => Plan::ALL_FEATURES,
                 'limits' => ['branches' => 3, 'users' => 25, 'orders_this_month' => 10000],
                 'sort_order' => 2,
             ],
             'business' => [
                 'name' => 'Business',
                 'description' => 'Unlimited branches and users, all modules.',
-                'features' => ['pos', 'kitchen', 'tables', 'menu', 'qr_dining', 'inventory', 'purchasing', 'waste', 'transfers', 'accounts', 'reports'],
+                'features' => Plan::ALL_FEATURES,
                 'limits' => ['branches' => null, 'users' => null, 'orders_this_month' => null],
                 'sort_order' => 3,
             ],
