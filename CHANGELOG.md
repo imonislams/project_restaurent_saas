@@ -7,6 +7,24 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-11-09
+
+Mail delivery and platform-admin provisioning fixes.
+
+### Added
+
+- **`PlatformAdminSeeder`.** Creates or repairs the platform administrator (super-admin role,
+  verified email, active) and is safe to re-run: `php artisan db:seed --class=PlatformAdminSeeder`.
+  Credentials come from `PLATFORM_ADMIN_EMAIL`, `PLATFORM_ADMIN_PASSWORD` and `PLATFORM_ADMIN_NAME`;
+  local and test installs fall back to `platform@example.com`, any other environment refuses to
+  run without an explicit password. `DatabaseSeeder` now calls it.
+
+### Changed
+
+- **Mail no longer depends on a queue worker.** Marketing and campaign email jobs are no longer
+  queued (`ShouldQueue` removed) and run synchronously, so email is delivered in the request that
+  triggers it. Invoice, notification and test emails were already sent directly.
+
 ## [1.0.3] - 2026-11-03
 
 First production release. Establishes the deployment pipeline (versioned packages, atomic
