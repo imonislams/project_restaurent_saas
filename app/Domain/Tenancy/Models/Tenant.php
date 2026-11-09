@@ -113,9 +113,19 @@ class Tenant extends Model
         Cache::forget("tenant:{$tenantId}:plan");
     }
 
-    /** Feature entitlements resolved server-side from the plan. No plan = no features. */
+    /**
+     * Feature entitlements resolved server-side from the plan. No plan = no features.
+     *
+     * While the subscription is in its trial (the demo), every feature is unlocked
+     * regardless of the chosen plan so the owner can try the whole product. The plan's
+     * limits (branches, users, orders per month) still apply — see planLimit().
+     */
     public function hasFeature(string $feature): bool
     {
+        if ($this->currentPlan() !== null && $this->subscription()->first()?->onTrial()) {
+            return in_array($feature, Plan::ALL_FEATURES, true);
+        }
+
         return $this->currentPlan()?->hasFeature($feature) ?? false;
     }
 

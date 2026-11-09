@@ -20,8 +20,8 @@ class PlatformAdminSeeder extends Seeder
 {
     public function run(): void
     {
-        $email = env('PLATFORM_ADMIN_EMAIL', 'platform@example.com');
-        $password = env('PLATFORM_ADMIN_PASSWORD');
+        $email = config('platform.admin.email');
+        $password = config('platform.admin.password');
 
         if ($password === null || $password === '') {
             if (! app()->environment('local', 'testing')) {
@@ -42,7 +42,7 @@ class PlatformAdminSeeder extends Seeder
                 'tenant_id' => null,
                 'is_platform_admin' => true,
                 'status' => 'active',
-                'name' => env('PLATFORM_ADMIN_NAME', 'Platform Admin'),
+                'name' => config('platform.admin.name'),
                 'password' => $password,
             ],
         );

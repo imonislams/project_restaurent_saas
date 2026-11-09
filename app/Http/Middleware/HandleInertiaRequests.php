@@ -160,10 +160,7 @@ class HandleInertiaRequests extends Middleware
             'locales' => collect(config('app.locales', ['en' => 'English']))
                 ->map(fn ($label, $code) => ['value' => $code, 'label' => $label])->values(),
             // Enabled plan features (null = unrestricted, e.g. no subscription).
-            'features' => $tenant === null ? null : collect([
-                'pos', 'kitchen', 'tables', 'menu', 'qr_dining', 'inventory',
-                'purchasing', 'waste', 'transfers', 'accounts', 'reports',
-            ])->filter(fn (string $feature) => $tenant->hasFeature($feature))->values(),
+            'features' => $tenant === null ? null : collect(\App\Domain\Subscriptions\Models\Plan::ALL_FEATURES)->filter(fn (string $feature) => $tenant->hasFeature($feature))->values(),
         ];
     }
 }

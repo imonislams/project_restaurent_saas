@@ -110,7 +110,8 @@ fi
 # --- archive + checksum ----------------------------------------------------
 PKG="application-v$VERSION.zip"
 ZIP="$DIST/$PKG"
-rm -f "$ZIP" "$ZIP.sha256"
+# Only the newest package is kept: remove every earlier application-v*.zip (+ checksum).
+find "$DIST" -maxdepth 1 -type f \( -name 'application-v*.zip' -o -name 'application-v*.zip.sha256' \) -delete
 ( cd "$STAGING" && zip -X -q -r "$ZIP" . )
 
 if command -v sha256sum >/dev/null 2>&1; then

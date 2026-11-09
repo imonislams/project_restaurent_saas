@@ -7,6 +7,21 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-11-09
+
+### Changed
+
+- **A trial unlocks every feature.** While a subscription is in its trial (the demo) all plan-gated
+  features are available regardless of the chosen plan, so the owner can try the whole product.
+  The plan's limits (branches, users, orders per month) still apply, and once the trial ends only
+  the plan's own features remain.
+- Release packaging keeps only the newest `application-v*.zip` in `dist/`.
+
+### Fixed
+
+- `PlatformAdminSeeder` reads its credentials through `config('platform.admin.*')`, so it works
+  when the configuration is cached in production (`env()` returns null there).
+
 ## [1.0.4] - 2026-11-09
 
 Mail delivery and platform-admin provisioning fixes.

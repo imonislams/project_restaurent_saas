@@ -4,6 +4,7 @@ namespace Tests\Feature\Readiness;
 
 use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Subscriptions\Enums\BillingCycle;
+use App\Domain\Subscriptions\Enums\SubscriptionStatus;
 use App\Domain\Subscriptions\Models\Plan;
 use App\Domain\Subscriptions\SubscriptionService;
 use App\Domain\Tenancy\Models\Tenant;
@@ -85,6 +86,7 @@ class ReadinessTest extends TestCase
 
         app(TenantContext::class)->set($tenant);
         $subscription = app(SubscriptionService::class)->startTrial($tenant, $starter);
+        $subscription->forceFill(['status' => SubscriptionStatus::Active])->save(); // a trial unlocks every feature
 
         $owner = User::factory()->forTenant($tenant)->create();
         $owner->assignRole(RoleName::TenantOwner);

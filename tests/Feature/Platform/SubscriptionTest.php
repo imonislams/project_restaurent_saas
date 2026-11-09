@@ -123,6 +123,7 @@ class SubscriptionTest extends TestCase
         [$tenant] = $this->tenantWithOwner();
         $starter = Plan::where('slug', 'starter')->firstOrFail();
         app(SubscriptionService::class)->startTrial($tenant, $starter);
+        $tenant->subscription()->first()->forceFill(['status' => SubscriptionStatus::Active])->save(); // a trial unlocks every feature
 
         $tenant->refresh();
         $this->assertTrue($tenant->hasFeature('pos'));
@@ -136,6 +137,7 @@ class SubscriptionTest extends TestCase
         [$tenant, $owner] = $this->tenantWithOwner();
         $starter = Plan::where('slug', 'starter')->firstOrFail(); // no 'purchasing' feature
         app(SubscriptionService::class)->startTrial($tenant, $starter);
+        $tenant->subscription()->first()->forceFill(['status' => SubscriptionStatus::Active])->save(); // a trial unlocks every feature
 
         $this->actingAs($owner)->get('/kitchen')->assertOk();       // kitchen is enabled
         $this->actingAs($owner)->get('/purchasing/orders')->assertForbidden();

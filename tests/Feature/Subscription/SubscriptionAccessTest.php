@@ -121,6 +121,26 @@ class SubscriptionAccessTest extends TestCase
         $this->assertTrue($this->tenant->fresh()->subscriptionAccess());
     }
 
+    public function test_a_trial_unlocks_every_feature_but_keeps_the_plan_limits(): void
+    {
+        $starter = Plan::where('slug', 'starter')->firstOrFail();
+        $this->assertFalse($starter->hasFeature('transfers'));
+
+        app(SubscriptionService::class)->startTrial($this->tenant, $starter);
+        Tenant::forgetEntitlementCache($this->tenant->getKey());
+        $tenant = $this->tenant->fresh();
+
+        foreach (Plan::ALL_FEATURES as $feature) {
+            $this->assertTrue($tenant->hasFeature($feature), $feature);
+        }
+        $this->assertSame(1, $tenant->planLimit('branches'));
+
+        // Once the trial is over, only the plan's own features remain.
+        $tenant->subscription()->first()->forceFill(['status' => SubscriptionStatus::Active])->save();
+        $this->assertFalse($tenant->fresh()->hasFeature('transfers'));
+        $this->assertTrue($tenant->fresh()->hasFeature('pos'));
+    }
+
     public function test_the_qr_menu_is_closed_while_the_plan_is_not_active(): void
     {
         $branch = Branch::factory()->create(['tenant_id' => $this->tenant->getKey(), 'code' => 'MAIN']);

@@ -62,6 +62,12 @@ class Plan extends Model
         return $query->whereIn('region', PlanRegion::visibleTo($region));
     }
 
+    /** Every plan-gated feature. A trial unlocks all of them. */
+    public const ALL_FEATURES = [
+        'pos', 'kitchen', 'tables', 'menu', 'qr_dining', 'inventory',
+        'purchasing', 'waste', 'transfers', 'accounts', 'reports',
+    ];
+
     public function hasFeature(string $feature): bool
     {
         return in_array($feature, $this->features ?? [], true);
