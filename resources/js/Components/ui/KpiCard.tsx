@@ -32,6 +32,7 @@ export default function KpiCard({
         <div
             className={cn(
                 'rounded-lg border border-border bg-card p-4 sm:p-5 shadow-xs transition-shadow hover:shadow-sm',
+                'print:rounded-none print:border-0 print:bg-transparent print:p-2 print:shadow-none',
                 className
             )}
         >
@@ -40,7 +41,7 @@ export default function KpiCard({
                     {displayLabel}
                 </span>
                 {icon && (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground print:hidden">
                         {icon}
                     </div>
                 )}

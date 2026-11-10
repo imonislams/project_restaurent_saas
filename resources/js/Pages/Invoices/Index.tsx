@@ -10,6 +10,8 @@ import {
 } from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PrintButton from '@/Components/print/PrintButton';
+import PrintDocument from '@/Components/print/PrintDocument';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
@@ -85,19 +87,21 @@ export default function InvoicesIndex({
                 <PageHeader
                     title="Bills & Invoices"
                     description="Invoices that served orders feed into. Additional orders on a table join the open invoice until it is paid."
+                    actions={<PrintButton title="Bills & Invoices" />}
                 />
             }
         >
             <Head title="Bills & Invoices" />
 
-            <div className="py-6">
-                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <div className="py-6 print:py-0">
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8 print:max-w-none print:px-0">
                     {flash?.success && (
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                             {flash.success}
                         </div>
                     )}
 
+                    <PrintDocument title="Bills & Invoices" orientation="landscape" className="space-y-6">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <KpiCard label="Open / Unpaid" value={kpis.open} tone={kpis.open > 0 ? 'warning' : 'neutral'} />
                         <KpiCard label="Outstanding (this page)" value={kpis.outstanding.toFixed(2)} tone={kpis.outstanding > 0 ? 'warning' : 'success'} />
@@ -109,7 +113,7 @@ export default function InvoicesIndex({
                             title="Invoices"
                             description={`${invoices.total} total`}
                             action={
-                                <div className="flex flex-wrap items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2 print:hidden">
                                     <input
                                         type="text"
                                         placeholder="Search invoice #"
@@ -150,7 +154,7 @@ export default function InvoicesIndex({
                                     description="Invoices appear automatically when an order is marked served. Combined orders on a table stay on one open invoice."
                                 />
                             ) : (
-                                <div className="overflow-x-auto">
+                                <div className="overflow-x-auto print:overflow-visible">
                                     <table className="w-full text-left text-sm">
                                         <thead className="border-b border-gray-200 bg-gray-50/80 text-xs font-semibold uppercase tracking-wider text-gray-500">
                                             <tr>
@@ -161,7 +165,7 @@ export default function InvoicesIndex({
                                                 <th className="px-6 py-3.5 text-right">Total</th>
                                                 <th className="px-6 py-3.5 text-right">Outstanding</th>
                                                 <th className="px-6 py-3.5 text-center">Status</th>
-                                                <th className="px-6 py-3.5 text-right"></th>
+                                                <th className="px-6 py-3.5 text-right print:hidden"></th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100 bg-white">
@@ -180,7 +184,7 @@ export default function InvoicesIndex({
                                                     <td className="px-6 py-4 text-center">
                                                         <Badge tone={STATUS_TONES[invoice.status] ?? 'neutral'}>{invoice.status_label}</Badge>
                                                     </td>
-                                                    <td className="px-6 py-4 text-right">
+                                                    <td className="px-6 py-4 text-right print:hidden">
                                                         <Link href={route('invoices.show', invoice.id)}>
                                                             <Button size="xs" variant="secondary">Open</Button>
                                                         </Link>
@@ -193,6 +197,7 @@ export default function InvoicesIndex({
                             )}
                         </CardBody>
                     </Card>
+                    </PrintDocument>
                 </div>
             </div>
         </AuthenticatedLayout>

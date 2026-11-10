@@ -9,6 +9,8 @@ import {
     PageHeader,
 } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PrintButton from '@/Components/print/PrintButton';
+import PrintDocument from '@/Components/print/PrintDocument';
 import { BranchSummary } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
@@ -206,13 +208,7 @@ export default function ReportsIndex({
                     description={`Reporting Suite · Currency: ${currency} · Timezone: ${timezone}`}
                     actions={
                         <div className="flex items-center gap-2">
-                            <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => window.print()}
-                            >
-                                🖨️ Print
-                            </Button>
+                            <PrintButton label="Print" title={`${title} Report`} />
                             {report.rows.length > 0 && (
                                 <Button
                                     size="sm"
@@ -229,10 +225,11 @@ export default function ReportsIndex({
         >
             <Head title={`${title} - Analytics & Reports`} />
 
-            <div className="py-6">
-                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <div className="py-6 print:py-0">
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8 print:max-w-none print:px-0">
+                    <PrintDocument title={title} dateRange={`${from} → ${to}`} orientation="landscape" className="space-y-6">
                     {/* REPORT SELECTOR GROUP PILLS */}
-                    <div className="space-y-3">
+                    <div className="space-y-3 print:hidden">
                         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
                             {REPORT_GROUPS.map((group) => {
                                 const isGroupActive = group.types.includes(type);
@@ -279,7 +276,7 @@ export default function ReportsIndex({
                     </div>
 
                     {/* FILTER & DATE CONTROLS BAR */}
-                    <Card>
+                    <Card className="print:hidden">
                         <CardBody className="p-4">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 {/* Date Range Presets */}
@@ -392,7 +389,7 @@ export default function ReportsIndex({
 
                     {/* VISUAL CHART BREAKDOWN */}
                     {report.chart && report.chart.length > 0 && (
-                        <Card>
+                        <Card className="print:hidden">
                             <CardHeader
                                 title={`${title} Breakdown`}
                                 description={`Relative distribution across categories/channels · Total: ${money(totalChartSum)}`}
@@ -434,7 +431,7 @@ export default function ReportsIndex({
                                 title={title}
                                 description={`${filteredRows.length} of ${report.rows.length} total rows`}
                                 action={
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 print:hidden">
                                         <input
                                             type="text"
                                             placeholder="Search table rows…"
@@ -446,7 +443,7 @@ export default function ReportsIndex({
                                 }
                             />
                             <CardBody className="p-0">
-                                <div className="overflow-x-auto">
+                                <div className="overflow-x-auto print:overflow-visible">
                                     <table className="w-full text-left text-sm">
                                         <thead className="border-b border-gray-200 bg-gray-50/80 text-xs font-semibold uppercase tracking-wider text-gray-500">
                                             <tr>
@@ -493,6 +490,7 @@ export default function ReportsIndex({
                             </CardBody>
                         </Card>
                     )}
+                    </PrintDocument>
                 </div>
             </div>
         </AuthenticatedLayout>

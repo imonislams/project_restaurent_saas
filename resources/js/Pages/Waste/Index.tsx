@@ -13,6 +13,8 @@ import {
 } from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PrintButton from '@/Components/print/PrintButton';
+import PrintDocument from '@/Components/print/PrintDocument';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useMemo, useState } from 'react';
 
@@ -190,6 +192,7 @@ export default function WasteIndex({
                     description="Monitor kitchen losses, track root cause reasons, and review manager approvals above threshold."
                     actions={
                         <div className="flex flex-wrap items-center gap-2.5">
+                            <PrintButton title="Waste & Spoilage" />
                             {approvalThreshold !== null && (
                                 <Badge tone="info">
                                     Approval Threshold: {formatMoney(Number(approvalThreshold), currency)}
@@ -211,8 +214,8 @@ export default function WasteIndex({
         >
             <Head title="Waste & Loss Tracking" />
 
-            <div className="py-6">
-                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <div className="py-6 print:py-0">
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8 print:max-w-none print:px-0">
                     {/* Flash messages */}
                     {flash?.success && (
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -225,6 +228,7 @@ export default function WasteIndex({
                         </div>
                     )}
 
+                    <PrintDocument title="Waste & Spoilage" className="space-y-6">
                     {/* KPI Cards */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <KpiCard
@@ -261,7 +265,7 @@ export default function WasteIndex({
                             title="Waste Incident Records"
                             description={`${filteredRecords.length} of ${records.length} total entries`}
                             action={
-                                <div className="flex flex-wrap items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2 print:hidden">
                                     <input
                                         type="text"
                                         placeholder="Search item, notes, recorder…"
@@ -286,7 +290,7 @@ export default function WasteIndex({
                         />
 
                         {/* Status Filter Chips */}
-                        <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50/50 px-6 py-2.5 text-xs">
+                        <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50/50 px-6 py-2.5 text-xs print:hidden">
                             <span className="font-semibold text-gray-500">Filter Status:</span>
                             <button
                                 type="button"
@@ -355,7 +359,7 @@ export default function WasteIndex({
                                     }
                                 />
                             ) : (
-                                <div className="overflow-x-auto">
+                                <div className="overflow-x-auto print:overflow-visible">
                                     <table className="w-full text-left text-sm">
                                         <thead className="border-b border-gray-200 bg-gray-50/80 text-xs font-semibold uppercase tracking-wider text-gray-500">
                                             <tr>
@@ -368,7 +372,7 @@ export default function WasteIndex({
                                                 <th className="px-6 py-3.5 text-center">Status</th>
                                                 <th className="px-6 py-3.5">Logged By</th>
                                                 {canApprove && (
-                                                    <th className="px-6 py-3.5 text-right">Approval Actions</th>
+                                                    <th className="px-6 py-3.5 text-right print:hidden">Approval Actions</th>
                                                 )}
                                             </tr>
                                         </thead>
@@ -415,7 +419,7 @@ export default function WasteIndex({
                                                         {r.recorded_by ?? 'System'}
                                                     </td>
                                                     {canApprove && (
-                                                        <td className="px-6 py-4 text-right">
+                                                        <td className="px-6 py-4 text-right print:hidden">
                                                             {r.status === 'pending' ? (
                                                                 <div className="flex items-center justify-end gap-2">
                                                                     <Button
@@ -448,6 +452,7 @@ export default function WasteIndex({
                             )}
                         </CardBody>
                     </Card>
+                    </PrintDocument>
                 </div>
             </div>
 

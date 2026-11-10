@@ -236,3 +236,128 @@
     .td-scan, .td-ring, .td-pop { animation: none; }
     .td-check path { animation: none; stroke-dashoffset: 0; }
 }
+
+/* ---------------------------------------------------------------------------
+ * Print: only report/document content.
+ * Paper size is emitted per document by <PrintDocument> (A4 portrait/landscape)
+ * so the thermal 80mm receipt and kitchen ticket keep their own @page rules.
+ * ------------------------------------------------------------------------- */
+
+/* Base A4 paper for report/document printing. Overridden by the per-document
+   and print-time @page rules (including the 80mm receipt). */
+@page {
+    size: A4 portrait;
+    margin: 12mm;
+}
+
+@media print {
+    html,
+    body {
+        background: #ffffff !important;
+    }
+
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Hide app chrome and interactive controls (filters, buttons, pagination). */
+    .no-print,
+    .print-hidden {
+        display: none !important;
+    }
+
+    button,
+    input,
+    select,
+    textarea,
+    [role='checkbox'] {
+        display: none !important;
+    }
+
+    /* Scroll containers would clip tables; let them flow. */
+    .overflow-auto,
+    .overflow-x-auto,
+    .overflow-hidden {
+        overflow: visible !important;
+    }
+
+    /* The printable region fills the page; margins come from @page. */
+    .print-area {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .print-area table {
+        width: 100% !important;
+        table-layout: auto;
+    }
+
+    .print-area th,
+    .print-area td {
+        overflow-wrap: anywhere;
+    }
+
+    /* Repeat table headers on every page and never split a row. */
+    thead {
+        display: table-header-group;
+    }
+
+    tfoot {
+        display: table-footer-group;
+    }
+
+    tr,
+    img,
+    .print-avoid-break {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .print-flat {
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .print-hide-chart {
+        display: none !important;
+    }
+
+    /* Report content flows inline: drop card boxes, tinted panels and shadows.
+       Table cells/headers keep their own borders so rows stay readable. */
+    .print-area .rounded-lg.border,
+    .print-area .rounded-xl.border,
+    .print-area .rounded-2xl.border,
+    .print-area .rounded-md.border {
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .print-area .shadow-sm,
+    .print-area .shadow-xs,
+    .print-area .shadow-2xs,
+    .print-area .shadow-card,
+    .print-area .shadow-subtle {
+        box-shadow: none !important;
+    }
+
+    .print-area .bg-card,
+    .print-area .bg-card\/60,
+    .print-area .bg-muted,
+    .print-area .bg-muted\/30,
+    .print-area .bg-muted\/50,
+    .print-area .bg-muted\/60,
+    .print-area .bg-muted\/40 {
+        background: transparent !important;
+    }
+
+    a {
+        color: inherit !important;
+        text-decoration: none !important;
+    }
+}

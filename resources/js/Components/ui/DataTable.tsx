@@ -59,12 +59,12 @@ export default function DataTable<T extends Record<string, any>>({
         align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
 
     return (
-        <div className="rounded-md border border-border bg-card overflow-hidden">
+        <div className="rounded-md border border-border bg-card overflow-hidden print:overflow-visible print:rounded-none print:border-0">
             <Table>
                 <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableRow className="bg-muted/40 hover:bg-muted/40 print:bg-transparent">
                         {selectable && (
-                            <TableHead className="w-10 px-3 py-2.5">
+                            <TableHead className="w-10 px-3 py-2.5 print:hidden">
                                 <input
                                     type="checkbox"
                                     checked={allSelected}
@@ -113,7 +113,7 @@ export default function DataTable<T extends Record<string, any>>({
                         return (
                             <TableRow key={id} className="transition-colors hover:bg-muted/50">
                                 {selectable && (
-                                    <TableCell className="px-3 py-2.5">
+                                    <TableCell className="px-3 py-2.5 print:hidden">
                                         <input
                                             type="checkbox"
                                             checked={selected.includes(id)}
@@ -135,7 +135,7 @@ export default function DataTable<T extends Record<string, any>>({
                                             <TableCell key={col.key} className={cellClass}>
                                                 <a
                                                     href={href}
-                                                    className="font-medium text-primary hover:underline underline-offset-4"
+                                                    className="font-medium text-primary hover:underline underline-offset-4 print:text-foreground print:no-underline"
                                                 >
                                                     {content}
                                                 </a>

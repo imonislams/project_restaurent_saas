@@ -285,7 +285,7 @@ export default function AppShell({
             <OfflineSyncBoot />
             <SidebarProvider defaultOpen className="tenant-shell">
                 {/* Desktop and Mobile Genuine shadcn Sidebar */}
-                <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar select-none">
+                <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar select-none print:hidden">
                     {/* Header: Logo, Brand wordmark & Restaurant Selector */}
                     <SidebarHeader className="p-3 border-b border-sidebar-border/80 space-y-2.5">
                         <div className="flex items-center gap-2.5 px-1 min-w-0">
@@ -442,9 +442,9 @@ export default function AppShell({
                 </Sidebar>
 
                 {/* Main Inset Application Shell */}
-                <SidebarInset className="min-w-0 bg-background">
+                <SidebarInset className="min-w-0 bg-background print:ml-0 print:w-full">
                     {/* Top Navigation Bar */}
-                    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-card/95 px-4 backdrop-blur shadow-xs sm:px-6">
+                    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-card/95 px-4 backdrop-blur shadow-xs sm:px-6 print:hidden">
                         <div className="flex items-center gap-2.5 min-w-0">
                             {/* Accessible shadcn Sidebar Trigger */}
                             <SidebarTrigger />
@@ -503,12 +503,12 @@ export default function AppShell({
                     </header>
 
                     {/* Impersonation / Announcement Banners */}
-                    {banner}
+                    <div className="print:hidden">{banner}</div>
 
                     {/* Page Content Body */}
                     <main className="flex-1">
                         {header && (
-                            <div className="border-b border-border/60 bg-card">
+                            <div className="border-b border-border/60 bg-card print:hidden">
                                 <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">{header}</div>
                             </div>
                         )}
@@ -535,7 +535,7 @@ export default function AppShell({
             />
 
             {/* PWA: install suggestion + service-worker update prompt */}
-            <div className="pointer-events-none fixed bottom-4 left-4 z-[70] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2.5">
+            <div className="pointer-events-none fixed bottom-4 left-4 z-[70] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2.5 print:hidden">
                 <PwaUpdatePrompt />
                 <PwaInstallPrompt />
             </div>

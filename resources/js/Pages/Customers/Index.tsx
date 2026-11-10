@@ -26,6 +26,8 @@ import {
 } from '@/Components/ui';
 import type { BadgeTone, PageLink } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PrintButton from '@/Components/print/PrintButton';
+import PrintDocument from '@/Components/print/PrintDocument';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Download, Plus, Users } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
@@ -214,6 +216,7 @@ export default function CustomersIndex({
                     description="Guest directory, segmentation, lifetime spend and loyalty."
                     actions={
                         <div className="flex flex-wrap items-center gap-2">
+                            <PrintButton title="Customers" />
                             <Badge tone={loyaltyEnabled ? 'success' : 'neutral'}>{loyaltyEnabled ? 'Loyalty active' : 'Loyalty off'}</Badge>
                             <Button size="sm" variant="secondary" external href={route('customers.export', { segment: filters.segment || undefined })} icon={<Download className="h-3.5 w-3.5" />}>
                                 Export
@@ -230,11 +233,12 @@ export default function CustomersIndex({
         >
             <Head title="Customers & CRM" />
 
-            <div className="py-6">
-                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <div className="py-6 print:py-0">
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8 print:max-w-none print:px-0">
                     {flash?.success && <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-800">{flash.success}</div>}
                     {flash?.error && <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-medium text-rose-800">{flash.error}</div>}
 
+                    <PrintDocument title="Customers" className="space-y-6">
                     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                         <KpiCard label="Total customers" value={metrics.total} hint={`${metrics.active} active`} icon={<Users className="h-4 w-4" />} />
                         <KpiCard label="Lifetime spend" value={<Money amount={metrics.spend} />} hint={`${metrics.orders} orders`} />
@@ -242,7 +246,7 @@ export default function CustomersIndex({
                         <KpiCard label="Repeat guests" value={summary.segments.reduce((acc, s) => acc + (['champions', 'loyal'].includes(s.key) ? s.count : 0), 0)} hint="Champions + loyal" tone="success" />
                     </div>
 
-                    <Card>
+                    <Card className="print:hidden">
                         <CardBody className="flex flex-wrap items-center gap-2 p-3">
                             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Segments</span>
                             <Button size="xs" variant={filters.segment === '' ? 'primary' : 'secondary'} onClick={() => applyFilters({ segment: '' })}>
@@ -259,7 +263,7 @@ export default function CustomersIndex({
                         </CardBody>
                     </Card>
 
-                    <Card>
+                    <Card className="print:hidden">
                         <CardBody className="p-4">
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                                 <TextField
@@ -310,7 +314,7 @@ export default function CustomersIndex({
                                 />
                             ) : (
                                 <>
-                                    <div className="overflow-x-auto">
+                                    <div className="overflow-x-auto print:overflow-visible">
                                         <Table>
                                             <TableHeader>
                                                 <TableRow className="hover:bg-transparent">
@@ -320,7 +324,7 @@ export default function CustomersIndex({
                                                     <TableHead className="px-5 py-3 text-center">Segment</TableHead>
                                                     <TableHead className="px-5 py-3 text-right">Points</TableHead>
                                                     <TableHead className="px-5 py-3 text-center">Status</TableHead>
-                                                    {canManage && <TableHead className="px-5 py-3 text-right">Actions</TableHead>}
+                                                    {canManage && <TableHead className="px-5 py-3 text-right print:hidden">Actions</TableHead>}
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -383,7 +387,7 @@ export default function CustomersIndex({
                                                                 <Badge tone={customer.is_active ? 'success' : 'neutral'}>{customer.is_active ? 'Active' : 'Inactive'}</Badge>
                                                             </TableCell>
                                                             {canManage && (
-                                                                <TableCell className="px-5 py-3.5 text-right">
+                                                                <TableCell className="px-5 py-3.5 text-right print:hidden">
                                                                     <div className="flex items-center justify-end gap-1.5">
                                                                         <Button size="xs" variant="secondary" href={route('customers.show', customer.id)}>View</Button>
                                                                         {loyaltyEnabled && (
@@ -402,7 +406,7 @@ export default function CustomersIndex({
                                             </TableBody>
                                         </Table>
                                     </div>
-                                    <div className="flex items-center justify-between gap-3 border-t border-border/60 px-5 py-2">
+                                    <div className="flex items-center justify-between gap-3 border-t border-border/60 px-5 py-2 print:hidden">
                                         <span className="text-xs text-muted-foreground">
                                             {customers.from ?? 0}–{customers.to ?? 0} of {customers.total}
                                         </span>
@@ -412,6 +416,7 @@ export default function CustomersIndex({
                             )}
                         </CardBody>
                     </Card>
+                    </PrintDocument>
                 </div>
             </div>
 

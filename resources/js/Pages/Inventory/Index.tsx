@@ -16,6 +16,8 @@ import {
 } from '@/Components/ui';
 import type { BadgeTone, TabItem } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PrintButton from '@/Components/print/PrintButton';
+import PrintDocument from '@/Components/print/PrintDocument';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useMemo, useState } from 'react';
 
@@ -421,6 +423,7 @@ export default function InventoryIndex({
                     description="Live branch balances, automated variance counts, ingredients catalog, and immutable movement ledger."
                     actions={
                         <div className="flex flex-wrap items-center gap-2.5">
+                            <PrintButton title="Inventory & Stock Control" />
                             {allowNegative ? (
                                 <Badge tone="warning">Negative Stock Permitted</Badge>
                             ) : (
@@ -452,8 +455,8 @@ export default function InventoryIndex({
         >
             <Head title="Inventory & Stock Control" />
 
-            <div className="py-6">
-                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <div className="py-6 print:py-0">
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8 print:max-w-none print:px-0">
                     {/* Flash messages */}
                     {flash?.success && (
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -466,6 +469,7 @@ export default function InventoryIndex({
                         </div>
                     )}
 
+                    <PrintDocument title="Inventory & Stock Control" className="space-y-6">
                     {/* KPI Metrics */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <KpiCard
@@ -493,11 +497,13 @@ export default function InventoryIndex({
                     </div>
 
                     {/* Navigation Tabs */}
+                    <div className="print:hidden">
                     <Tabs
                         tabs={tabs}
                         value={activeTab}
                         onChange={(tabKey) => setActiveTab(tabKey as any)}
                     />
+                    </div>
 
                     {/* TAB 1: STOCK ON HAND */}
                     {activeTab === 'balances' && (
@@ -573,7 +579,7 @@ export default function InventoryIndex({
                                         }
                                     />
                                 ) : (
-                                    <div className="overflow-x-auto">
+                                    <div className="overflow-x-auto print:overflow-visible">
                                         <table className="w-full text-left text-sm">
                                             <thead className="border-b border-gray-200 bg-gray-50/80 text-xs font-semibold uppercase tracking-wider text-gray-500">
                                                 <tr>
@@ -584,7 +590,7 @@ export default function InventoryIndex({
                                                     <th className="px-6 py-3.5 text-right">Available Qty</th>
                                                     <th className="px-6 py-3.5 text-center">Stock Status</th>
                                                     {canAdjust && (
-                                                        <th className="px-6 py-3.5 text-right">Actions</th>
+                                                        <th className="px-6 py-3.5 text-right print:hidden">Actions</th>
                                                     )}
                                                 </tr>
                                             </thead>
@@ -635,7 +641,7 @@ export default function InventoryIndex({
                                                                 )}
                                                             </td>
                                                             {canAdjust && (
-                                                                <td className="px-6 py-4 text-right">
+                                                                <td className="px-6 py-4 text-right print:hidden">
                                                                     <Button
                                                                         size="xs"
                                                                         variant="secondary"
@@ -704,7 +710,7 @@ export default function InventoryIndex({
                                         description="Transactions will appear here as stock is received, adjusted, or sold."
                                     />
                                 ) : (
-                                    <div className="overflow-x-auto">
+                                    <div className="overflow-x-auto print:overflow-visible">
                                         <table className="w-full text-left text-sm">
                                             <thead className="border-b border-gray-200 bg-gray-50/80 text-xs font-semibold uppercase tracking-wider text-gray-500">
                                                 <tr>
@@ -830,7 +836,7 @@ export default function InventoryIndex({
                                         }
                                     />
                                 ) : (
-                                    <div className="overflow-x-auto">
+                                    <div className="overflow-x-auto print:overflow-visible">
                                         <table className="w-full text-left text-sm">
                                             <thead className="border-b border-gray-200 bg-gray-50/80 text-xs font-semibold uppercase tracking-wider text-gray-500">
                                                 <tr>
@@ -840,7 +846,7 @@ export default function InventoryIndex({
                                                     <th className="px-6 py-3.5 text-center">Track Stock</th>
                                                     <th className="px-6 py-3.5 text-center">Status</th>
                                                     {canManage && (
-                                                        <th className="px-6 py-3.5 text-right">Actions</th>
+                                                        <th className="px-6 py-3.5 text-right print:hidden">Actions</th>
                                                     )}
                                                 </tr>
                                             </thead>
@@ -879,7 +885,7 @@ export default function InventoryIndex({
                                                             )}
                                                         </td>
                                                         {canManage && (
-                                                            <td className="px-6 py-4 text-right">
+                                                            <td className="px-6 py-4 text-right print:hidden">
                                                                 <div className="flex items-center justify-end gap-2">
                                                                     <Button
                                                                         size="xs"
@@ -946,14 +952,14 @@ export default function InventoryIndex({
                                         description="Add standard units like kg, grams, liters, or pieces."
                                     />
                                 ) : (
-                                    <div className="overflow-x-auto">
+                                    <div className="overflow-x-auto print:overflow-visible">
                                         <table className="w-full text-left text-sm">
                                             <thead className="border-b border-gray-200 bg-gray-50/80 text-xs font-semibold uppercase tracking-wider text-gray-500">
                                                 <tr>
                                                     <th className="px-6 py-3.5">Unit Name</th>
                                                     <th className="px-6 py-3.5">Short Code</th>
                                                     {canManage && (
-                                                        <th className="px-6 py-3.5 text-right">Actions</th>
+                                                        <th className="px-6 py-3.5 text-right print:hidden">Actions</th>
                                                     )}
                                                 </tr>
                                             </thead>
@@ -969,7 +975,7 @@ export default function InventoryIndex({
                                                             </span>
                                                         </td>
                                                         {canManage && (
-                                                            <td className="px-6 py-4 text-right">
+                                                            <td className="px-6 py-4 text-right print:hidden">
                                                                 <div className="flex items-center justify-end gap-2">
                                                                     <Button
                                                                         size="xs"
@@ -1004,6 +1010,7 @@ export default function InventoryIndex({
                             </CardBody>
                         </Card>
                     )}
+                    </PrintDocument>
                 </div>
             </div>
 

@@ -19,6 +19,8 @@ import {
 } from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PrintButton from '@/Components/print/PrintButton';
+import PrintDocument from '@/Components/print/PrintDocument';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Plus, Search, X } from 'lucide-react';
 import { FormEventHandler, useMemo, useState } from 'react';
@@ -207,33 +209,36 @@ export default function ExpensesIndex({
                     title="Operating Expenses"
                     description="Record kitchen, operational, and utility expenditures with automated approval thresholds."
                     actions={
-                        canManage && (
-                            <div className="flex flex-wrap items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setCategoryModalOpen(true)}
-                                >
-                                    <Plus className="mr-1.5 h-3.5 w-3.5" />
-                                    Add Category
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    onClick={() => setExpenseModalOpen(true)}
-                                >
-                                    <Plus className="mr-1.5 h-3.5 w-3.5" />
-                                    Record Expense
-                                </Button>
-                            </div>
-                        )
+                        <div className="flex flex-wrap items-center gap-2">
+                            <PrintButton title="Operating Expenses" />
+                            {canManage && (
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCategoryModalOpen(true)}
+                                    >
+                                        <Plus className="mr-1.5 h-3.5 w-3.5" />
+                                        Add Category
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        onClick={() => setExpenseModalOpen(true)}
+                                    >
+                                        <Plus className="mr-1.5 h-3.5 w-3.5" />
+                                        Record Expense
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
                     }
                 />
             }
         >
             <Head title="Operating Expenses" />
 
-            <div className="py-6">
-                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <div className="py-6 print:py-0">
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8 print:max-w-none print:px-0">
                     {/* Flash messages */}
                     {flash?.success && (
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -246,6 +251,7 @@ export default function ExpensesIndex({
                         </div>
                     )}
 
+                    <PrintDocument title="Operating Expenses" className="space-y-6">
                     {/* KPI Summary Cards */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <KpiCard
@@ -278,7 +284,7 @@ export default function ExpensesIndex({
                             title="Expense Transactions"
                             description={`${filteredExpenses.length} of ${expenses.length} records`}
                             action={
-                                <div className="flex flex-wrap items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2 print:hidden">
                                     <div className="relative">
                                         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                                         <input
@@ -326,7 +332,7 @@ export default function ExpensesIndex({
                         />
 
                         {/* Status Filter Chips */}
-                        <div className="flex flex-wrap items-center gap-1.5 border-b border-border bg-muted/20 px-6 py-2.5 text-xs">
+                        <div className="flex flex-wrap items-center gap-1.5 border-b border-border bg-muted/20 px-6 py-2.5 text-xs print:hidden">
                             <span className="font-medium text-muted-foreground mr-1">Status:</span>
                             <button
                                 type="button"
@@ -407,7 +413,7 @@ export default function ExpensesIndex({
                                             <TableHead className="text-center">Status</TableHead>
                                             <TableHead>Recorded By</TableHead>
                                             {canApprove && (
-                                                <TableHead className="text-right">Actions</TableHead>
+                                                <TableHead className="text-right print:hidden">Actions</TableHead>
                                             )}
                                         </TableRow>
                                     </TableHeader>
@@ -448,7 +454,7 @@ export default function ExpensesIndex({
                                                     {e.created_by ?? 'System'}
                                                 </TableCell>
                                                 {canApprove && (
-                                                    <TableCell className="text-right">
+                                                    <TableCell className="text-right print:hidden">
                                                         {e.status === 'submitted' ? (
                                                             <div className="flex items-center justify-end gap-1.5">
                                                                 <Button
@@ -482,6 +488,7 @@ export default function ExpensesIndex({
                             )}
                         </CardBody>
                     </Card>
+                    </PrintDocument>
                 </div>
             </div>
 
