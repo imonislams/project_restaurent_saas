@@ -67,6 +67,8 @@ export interface NavItem {
     active: boolean;
     badge?: number;
     keywords?: string;
+    /** Render as a real anchor that opens in a new browser tab. */
+    newTab?: boolean;
 }
 
 export interface NavGroup {
@@ -86,6 +88,26 @@ export interface NavGroup {
  * stay identical.
  */
 function NavItemLink({ item }: { item: NavItem }) {
+    const content = (
+        <>
+            <Icon
+                name={item.icon}
+                className={cn(
+                    'h-4 w-4 shrink-0 transition-colors',
+                    item.active
+                        ? 'text-primary'
+                        : 'text-muted-foreground/80 group-hover/menu-button:text-sidebar-foreground'
+                )}
+            />
+            <span className="truncate flex-1 group-data-[collapsible=icon]:hidden">{item.label}</span>
+            {item.badge !== undefined && item.badge > 0 && (
+                <SidebarMenuBadge className="ml-auto bg-primary text-primary-foreground font-bold group-data-[collapsible=icon]:hidden">
+                    {item.badge}
+                </SidebarMenuBadge>
+            )}
+        </>
+    );
+
     return (
         <SidebarMenuItem>
             <SidebarMenuButton
@@ -99,23 +121,19 @@ function NavItemLink({ item }: { item: NavItem }) {
                         : 'text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground'
                 )}
             >
-                <Link href={item.href} className="flex items-center gap-2.5">
-                    <Icon
-                        name={item.icon}
-                        className={cn(
-                            'h-4 w-4 shrink-0 transition-colors',
-                            item.active
-                                ? 'text-primary'
-                                : 'text-muted-foreground/80 group-hover/menu-button:text-sidebar-foreground'
-                        )}
-                    />
-                    <span className="truncate flex-1 group-data-[collapsible=icon]:hidden">{item.label}</span>
-                    {item.badge !== undefined && item.badge > 0 && (
-                        <SidebarMenuBadge className="ml-auto bg-primary text-primary-foreground font-bold group-data-[collapsible=icon]:hidden">
-                            {item.badge}
-                        </SidebarMenuBadge>
-                    )}
-                </Link>
+                {item.newTab ? (
+                    <a
+                        href={item.href}
+                        target="touchdine-kds"
+                        className="flex items-center gap-2.5"
+                    >
+                        {content}
+                    </a>
+                ) : (
+                    <Link href={item.href} className="flex items-center gap-2.5">
+                        {content}
+                    </Link>
+                )}
             </SidebarMenuButton>
         </SidebarMenuItem>
     );
@@ -264,6 +282,7 @@ export default function AppShell({
                 href: item.href,
                 icon: item.icon,
                 keywords: item.keywords,
+                newTab: item.newTab,
             }))
         );
     }, [visibleGroups]);

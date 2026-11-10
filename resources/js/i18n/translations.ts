@@ -61,6 +61,8 @@ export const translations: Record<string, Record<string, string>> = {
         'common.change': 'Change',
         'common.service': 'Service',
         'common.none': 'None',
+        'common.pagination.showing': 'Showing :from–:to of :count records',
+        'common.pagination.perPage': 'Rows per page',
 
         'pos.search': 'Search products',
         'pos.customer': 'Customer name (optional)',
@@ -533,6 +535,8 @@ export const translations: Record<string, Record<string, string>> = {
         'common.change': 'ফেরত',
         'common.service': 'সার্ভিস',
         'common.none': 'কোনোটিই না',
+        'common.pagination.showing': ':count রেকর্ডের মধ্যে :from–:to দেখানো হচ্ছে',
+        'common.pagination.perPage': 'প্রতি পেজে সারি',
 
         'pos.search': 'পণ্য খুঁজুন',
         'pos.customer': 'গ্রাহকের নাম (ঐচ্ছিক)',

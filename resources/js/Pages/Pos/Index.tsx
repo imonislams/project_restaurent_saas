@@ -680,14 +680,15 @@ export default function PosIndex({
                     </button>
 
                     {/* Live KDS Link */}
-                    <Link
+                    <a
                         href={route('kitchen.index')}
+                        target="touchdine-kds"
                         className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 shadow-subtle hover:bg-gray-50 hover:text-amber-600 transition"
                         title="Open Kitchen Display System"
                     >
                         <Icon name="fire" className="h-3.5 w-3.5 text-amber-500" />
                         <span className="hidden md:inline">Kitchen</span>
-                    </Link>
+                    </a>
 
                     {/* Orders History Link */}
                     <Link

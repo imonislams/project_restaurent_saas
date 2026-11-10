@@ -348,6 +348,10 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->g
     Route::prefix('inventory')->name('inventory.')->group(function () {
         Route::get('/', [InventoryController::class, 'index'])
             ->middleware('permission:inventory.view')->name('index');
+        Route::get('/balance', [InventoryController::class, 'balance'])
+            ->middleware('permission:inventory.view')->name('balance');
+        Route::get('/print', [InventoryController::class, 'printStock'])
+            ->middleware('permission:inventory.view')->name('print');
 
         Route::middleware('permission:inventory.manage')->group(function () {
             Route::post('/units', [InventoryController::class, 'storeUnit'])->name('units.store');

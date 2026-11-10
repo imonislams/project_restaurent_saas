@@ -43,7 +43,11 @@ export default function Authenticated({
             can('pos.use') && entitled('pos') && item(t('nav.pos'), route('pos.index'), 'cart', 'pos.*'),
             can('orders.view') && { ...item(t('nav.orders'), route('orders.index'), 'receipt', 'orders.*'), badge: Number(page.pending_approvals ?? 0) },
             can('tables.view') && entitled('tables') && item(t('nav.tables'), route('tables.index'), 'table', 'tables.*'),
-            can('kitchen.view') && entitled('kitchen') && item(t('nav.kitchen'), route('kitchen.index'), 'fire', 'kitchen.*'),
+            can('kitchen.view') &&
+                entitled('kitchen') && {
+                    ...item(t('nav.kitchen'), route('kitchen.index'), 'fire', 'kitchen.*'),
+                    newTab: true,
+                },
             can('qr.view') && entitled('qr_dining') && item(t('nav.qr_tables'), route('qr-dining.tables.index'), 'qr', 'qr-dining.tables.*'),
             can('qr.view') && entitled('qr_dining') && item(t('nav.qr_designer'), route('qr-dining.designs.index'), 'tag', 'qr-dining.designs.*'),
             can('qr.analytics') && entitled('qr_dining') && item(t('nav.qr_analytics'), route('qr-dining.analytics'), 'chart', 'qr-dining.analytics'),
