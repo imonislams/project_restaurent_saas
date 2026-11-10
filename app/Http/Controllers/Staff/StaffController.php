@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Staff;
 
-use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Identity\InvitationService;
 use App\Domain\Identity\InvitationSettings;
 use App\Domain\Identity\Models\Invitation;
@@ -162,21 +161,15 @@ class StaffController extends Controller
     }
 
     /**
-     * Assignable roles: global tenant roles plus the tenant's own custom roles.
+     * Assignable roles: global tenant roles (unless customised by this tenant)
+     * plus the tenant's own custom roles and customised copies.
      *
      * @return Collection<int, array{value: string, label: string}>
      */
     protected function roleOptions(?int $tenantId): Collection
     {
         return Role::query()
-            ->where(function ($query) use ($tenantId) {
-                $query->whereNull('tenant_id');
-
-                if ($tenantId !== null) {
-                    $query->orWhere('tenant_id', $tenantId);
-                }
-            })
-            ->whereNotIn('slug', RoleName::platformValues())
+            ->assignableTo($tenantId)
             ->orderByDesc('is_system')
             ->orderBy('name')
             ->get()

@@ -3,7 +3,6 @@
 namespace App\Domain\Identity;
 
 use App\Domain\Auditing\AuditLogger;
-use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Identity\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -72,23 +71,15 @@ class StaffService
 
     /**
      * Resolves assignable role ids: global tenant roles plus the tenant's own
-     * custom roles. Platform roles (and other tenants' roles) are never matched.
+     * custom roles. When a system role has been customised, the tenant copy is
+     * preferred so assignments keep the restaurant's own permission set.
+     * Platform roles (and other tenants' roles) are never matched.
      *
      * @param  list<string>  $slugs
      * @return list<int>
      */
     protected function resolvableRoleIds(array $slugs, ?int $tenantId = null): array
     {
-        return Role::whereIn('slug', $slugs)
-            ->where(function ($query) use ($tenantId) {
-                $query->whereNull('tenant_id');
-
-                if ($tenantId !== null) {
-                    $query->orWhere('tenant_id', $tenantId);
-                }
-            })
-            ->whereNotIn('slug', RoleName::platformValues())
-            ->pluck('id')
-            ->all();
+        return Role::idsForTenant($slugs, $tenantId);
     }
 }

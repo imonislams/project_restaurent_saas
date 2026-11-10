@@ -30,6 +30,9 @@ interface RoleRow {
     description: string | null;
     is_system: boolean;
     is_custom: boolean;
+    is_customized: boolean;
+    locked: boolean;
+    editable: boolean;
     permissions: string[];
     users: RoleUser[];
 }
@@ -144,6 +147,7 @@ export default function RolesIndex({ roles, permission_groups, grantable, can_ma
     const [selectedId, setSelectedId] = useState<number | null>(roles[0]?.id ?? null);
     const [showCreate, setShowCreate] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState<RoleRow | null>(null);
+    const [confirmReset, setConfirmReset] = useState<RoleRow | null>(null);
 
     const isGrantable = (permission: string) => grantable.includes(permission);
 
@@ -177,6 +181,11 @@ export default function RolesIndex({ roles, permission_groups, grantable, can_ma
         editForm.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selected?.id]);
+
+    useEffect(() => {
+        const updated = flash?.role_id;
+        if (typeof updated === 'number') setSelectedId(updated);
+    }, [flash?.role_id]);
 
     const togglePermission = (form: typeof editForm, permission: string) => {
         const current = form.data.permissions;
@@ -227,7 +236,19 @@ export default function RolesIndex({ roles, permission_groups, grantable, can_ma
         });
     };
 
-    const canEditSelected = Boolean(selected && !selected.is_system && selected.is_custom && can_manage);
+    const runReset = () => {
+        if (!confirmReset) return;
+        router.post(
+            route('roles.reset', confirmReset.id),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setConfirmReset(null),
+            },
+        );
+    };
+
+    const canEditSelected = Boolean(selected && selected.editable && can_manage);
 
     return (
         <AuthenticatedLayout
@@ -324,8 +345,11 @@ export default function RolesIndex({ roles, permission_groups, grantable, can_ma
                                                             {role.permissions.length} permissions · {role.users.length} users
                                                         </span>
                                                     </span>
-                                                    <Badge tone={role.is_system ? 'neutral' : 'brand'} dot={false}>
-                                                        {role.is_system ? 'System' : 'Custom'}
+                                                    <Badge
+                                                        tone={role.is_system ? 'neutral' : role.is_customized ? 'warning' : 'brand'}
+                                                        dot={false}
+                                                    >
+                                                        {role.is_system ? 'System' : role.is_customized ? 'Customized' : 'Custom'}
                                                     </Badge>
                                                 </button>
                                             );
@@ -340,13 +364,24 @@ export default function RolesIndex({ roles, permission_groups, grantable, can_ma
                                 title={selected ? selected.name : 'Select a role'}
                                 description={
                                     selected?.is_system
-                                        ? 'System role — definition and permissions are fixed.'
-                                        : selected?.description || 'Custom role — adjust the name and granted permissions.'
+                                        ? 'Built-in role — save to customise it for this restaurant.'
+                                        : selected?.is_customized
+                                          ? selected.description || 'Customised from a built-in role. Changes apply to this restaurant only.'
+                                          : selected?.description || 'Custom role — adjust the name and granted permissions.'
                                 }
                                 action={
                                     selected && canEditSelected ? (
                                         <div className="flex items-center gap-2">
-                                            {selected.users.length === 0 ? (
+                                            {selected.is_customized ? (
+                                                <Button
+                                                    size="sm"
+                                                    variant="secondary"
+                                                    className="text-destructive hover:bg-destructive/10"
+                                                    onClick={() => setConfirmReset(selected)}
+                                                >
+                                                    Reset to default
+                                                </Button>
+                                            ) : selected.users.length === 0 ? (
                                                 <Button
                                                     size="sm"
                                                     variant="secondary"
@@ -380,8 +415,22 @@ export default function RolesIndex({ roles, permission_groups, grantable, can_ma
                                 ) : (
                                     <>
                                         {selected.is_system && (
-                                            <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
-                                                This is a system-defined role. Its permissions are managed by the platform and cannot be edited or deleted here.
+                                            selected.locked ? (
+                                                <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+                                                    This role is locked by the platform and cannot be customised.
+                                                </div>
+                                            ) : (
+                                                <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+                                                    This is a built-in role. Saving creates a customised copy for this restaurant only —
+                                                    other restaurants keep the default permissions.
+                                                </div>
+                                            )
+                                        )}
+
+                                        {selected.is_customized && (
+                                            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                                                This role is customised from a built-in role. "Reset to default" restores the platform
+                                                permissions and moves assigned users back.
                                             </div>
                                         )}
 
@@ -452,7 +501,7 @@ export default function RolesIndex({ roles, permission_groups, grantable, can_ma
                                                     ))}
                                                 </ul>
                                             )}
-                                            {canEditSelected && selected.users.length > 0 && (
+                                            {canEditSelected && !selected.is_customized && selected.users.length > 0 && (
                                                 <p className="mt-3 text-xs text-muted-foreground">
                                                     This role is assigned to {selected.users.length} user(s). Reassign them on the Staff page before
                                                     deleting it.
@@ -552,6 +601,16 @@ export default function RolesIndex({ roles, permission_groups, grantable, can_ma
                 tone="danger"
                 onConfirm={runDelete}
                 onClose={() => setConfirmDelete(null)}
+            />
+
+            <ConfirmDialog
+                show={confirmReset !== null}
+                title={`Reset "${confirmReset?.name ?? ''}" to the system default?`}
+                description="Users assigned to this role will move back to the built-in role, and your customised permissions will be discarded. This cannot be undone."
+                confirmLabel="Reset Role"
+                tone="danger"
+                onConfirm={runReset}
+                onClose={() => setConfirmReset(null)}
             />
         </AuthenticatedLayout>
     );

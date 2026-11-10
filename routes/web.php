@@ -271,6 +271,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->g
         Route::middleware('permission:roles.manage')->group(function () {
             Route::post('/', [TenantRoleController::class, 'store'])->name('store');
             Route::patch('/{role}', [TenantRoleController::class, 'update'])->name('update');
+            Route::post('/{role}/reset', [TenantRoleController::class, 'reset'])->name('reset');
             Route::delete('/{role}', [TenantRoleController::class, 'destroy'])->name('destroy');
         });
     });

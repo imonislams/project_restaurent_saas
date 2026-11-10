@@ -235,16 +235,7 @@ class InvitationService
      */
     protected function roleIds(array $slugs, ?int $tenantId): array
     {
-        return Role::whereIn('slug', $slugs)
-            ->where(function ($query) use ($tenantId) {
-                $query->whereNull('tenant_id');
-
-                if ($tenantId !== null) {
-                    $query->orWhere('tenant_id', $tenantId);
-                }
-            })
-            ->pluck('id')
-            ->all();
+        return Role::idsForTenant($slugs, $tenantId);
     }
 
     /**

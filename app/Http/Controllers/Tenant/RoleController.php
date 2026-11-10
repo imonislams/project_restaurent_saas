@@ -36,18 +36,33 @@ class RoleController extends Controller
 
     public function store(StoreRoleRequest $request): RedirectResponse
     {
-        $this->roles->create($request->user()->tenant, $request->validated(), $request->user());
+        $role = $this->roles->create($request->user()->tenant, $request->validated(), $request->user());
 
-        return back()->with('success', 'Role created.');
+        return back()
+            ->with('success', 'Role created.')
+            ->with('role_id', $role->getKey());
     }
 
     public function update(UpdateRoleRequest $request, Role $role): RedirectResponse
     {
         $this->authorize('update', $role);
 
-        $this->roles->update($request->user()->tenant, $role, $request->validated(), $request->user());
+        $updated = $this->roles->update($request->user()->tenant, $role, $request->validated(), $request->user());
 
-        return back()->with('success', 'Role updated.');
+        return back()
+            ->with('success', 'Role updated.')
+            ->with('role_id', $updated->getKey());
+    }
+
+    public function reset(Request $request, Role $role): RedirectResponse
+    {
+        $this->authorize('reset', $role);
+
+        $source = $this->roles->resetToDefault($request->user()->tenant, $role, $request->user());
+
+        return back()
+            ->with('success', 'Role reset to the system default.')
+            ->with('role_id', $source?->getKey());
     }
 
     public function destroy(Request $request, Role $role): RedirectResponse
