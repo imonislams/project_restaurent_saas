@@ -153,8 +153,7 @@ class OrderController extends Controller
             app(\App\Domain\Dining\DiningSessionService::class)->maybeCloseAfterSettlement($session);
         }
 
-        // Land on the same receipt/invoice screen a POS sale opens.
-        return redirect()->route('orders.receipt', $settled)
+        return redirect()->route('orders.show', $order)
             ->with('success', 'Order settled.');
     }
 
