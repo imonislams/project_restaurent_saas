@@ -94,7 +94,7 @@ class NotificationTest extends TestCase
         $this->assertSame('Daily sales summary', $this->owner->notifications()->first()->data['title']);
     }
 
-    public function test_a_sale_dispatches_the_kitchen_ticket_job(): void
+    public function test_a_sale_opens_the_kitchen_ticket_without_a_queue_worker(): void
     {
         Queue::fake();
 
@@ -109,7 +109,8 @@ class NotificationTest extends TestCase
             'payments' => [['payment_method_id' => $cash->id, 'amount' => 100, 'tendered' => 100]],
         ])->assertRedirect();
 
-        Queue::assertPushed(OpenKitchenTicket::class);
+        Queue::assertNotPushed(OpenKitchenTicket::class);
+        $this->assertSame(1, \App\Domain\Kitchen\Models\KitchenTicket::withoutGlobalScopes()->count());
     }
 
     public function test_the_inbox_lists_notifications_and_can_mark_them_read(): void

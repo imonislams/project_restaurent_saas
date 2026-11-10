@@ -35,6 +35,7 @@ use App\Domain\Tables\TableService;
 use App\Domain\Tables\TableStaffService;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
+use App\Domain\Kitchen\KitchenService;
 use App\Jobs\OpenKitchenTicket;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -429,15 +430,22 @@ class SaleService
 
     protected function postCommit(Order $order): Order
     {
-        // Secondary work runs after the core transaction, on the queue. The job
-        // is idempotent per order, so a retry never duplicates the sale. Only a
-        // confirmed order is dispatched, and only when the tenant sends
+        // The kitchen ticket is created synchronously so the display updates
+        // without a queue worker. If that fails, fall back to the queued job,
+        // which is idempotent per order, so a retry never duplicates the sale.
+        // Only a confirmed order is sent, and only when the tenant sends
         // confirmed orders to the kitchen.
         if ($order->acceptance_status->isConfirmed() && $this->confirmation->sendConfirmedToKitchen()) {
             try {
-                OpenKitchenTicket::dispatch($order->getKey());
+                app(KitchenService::class)->openTicketFor($order);
             } catch (\Throwable $e) {
                 report($e);
+
+                try {
+                    OpenKitchenTicket::dispatch($order->getKey());
+                } catch (\Throwable $dispatchError) {
+                    report($dispatchError);
+                }
             }
         }
 
