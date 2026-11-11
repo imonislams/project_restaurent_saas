@@ -66,6 +66,10 @@ class QrDiningOrderService
             $existing = app(ActiveOrderResolver::class)->forQrSession($session, $participant);
 
             if ($existing) {
+                // The order was already in the approval queue: another round
+                // must not raise a second "new QR order" notification.
+                $wasPending = $existing->acceptance_status === AcceptanceStatus::Pending;
+
                 $round = app(OrderRoundService::class)->append($existing, $data['items'] ?? [], [
                     'source' => OrderSource::Qr,
                     'participant' => $participant,
@@ -82,7 +86,7 @@ class QrDiningOrderService
                     'round_no' => $round->round_no,
                 ], $participant->getKey());
 
-                if (! $autoAccept && $round->acceptance_status === AcceptanceStatus::Pending) {
+                if (! $autoAccept && ! $wasPending && $round->acceptance_status === AcceptanceStatus::Pending) {
                     $this->notifyAwaitingApproval($order);
                 }
 

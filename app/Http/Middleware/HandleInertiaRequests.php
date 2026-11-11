@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Domain\Billing\PricingRegionContext;
 use App\Domain\Communications\AnnouncementService;
 use App\Domain\Demo\DemoDataService;
+use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Realtime\RealtimeManager;
 use App\Domain\Tenancy\Models\Tenant;
@@ -104,6 +105,7 @@ class HandleInertiaRequests extends Middleware
             // scopes apply, so this is limited to the user's branches.
             'pending_approvals' => fn () => ($user && $tenant && $user->hasPermission('orders.approve'))
                 ? (int) Order::query()
+                    ->where('status', OrderStatus::Held->value)
                     ->where('acceptance_status', 'pending')
                     ->count()
                 : 0,

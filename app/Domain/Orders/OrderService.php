@@ -97,6 +97,12 @@ class OrderService
         $this->kitchen->cancelForOrder($order);
         $this->tables->refreshForOrder($order);
 
+        try {
+            app(\App\Domain\Notifications\NotificationService::class)->markOrderHandled($order, $user);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         app(RealtimeBroadcaster::class)->send(new OrderActivity($order, 'voided'));
         app(QrRealtime::class)->notifyOrder($order, 'voided');
 
@@ -193,6 +199,12 @@ class OrderService
 
         if ($this->confirmation->sendConfirmedToKitchen()) {
             $this->sendConfirmedRoundsToKitchen($accepted, $user);
+        }
+
+        try {
+            app(\App\Domain\Notifications\NotificationService::class)->markOrderHandled($accepted, $user);
+        } catch (\Throwable $e) {
+            report($e);
         }
 
         app(RealtimeBroadcaster::class)->send(new OrderActivity($accepted, 'accepted'));
@@ -303,6 +315,12 @@ class OrderService
         });
 
         $this->tables->refreshForOrder($order);
+
+        try {
+            app(\App\Domain\Notifications\NotificationService::class)->markOrderHandled($order, $user);
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         app(RealtimeBroadcaster::class)->send(new OrderActivity($order, 'rejected'));
         app(QrRealtime::class)->notifyOrder($order, 'rejected');

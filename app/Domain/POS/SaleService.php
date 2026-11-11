@@ -239,12 +239,19 @@ class SaleService
         DB::transaction(function () use ($order, $resolved, $tenant, $shift, $paidTotal, $change, $user) {
             $this->applyPayments($order, $resolved, $tenant, $shift);
 
+            $wasPending = $order->acceptance_status === AcceptanceStatus::Pending;
+
             $order->forceFill([
                 'shift_id' => $order->shift_id ?? $shift->getKey(),
                 'paid_total' => $paidTotal,
                 'change_due' => $change,
                 'status' => OrderStatus::Completed,
                 'completed_at' => now(),
+                // Paying the bill confirms the order: a completed order must
+                // never keep counting towards the approval badge.
+                'acceptance_status' => $wasPending ? AcceptanceStatus::Accepted->value : $order->acceptance_status->value,
+                'accepted_at' => $wasPending ? ($order->accepted_at ?? now()) : $order->accepted_at,
+                'confirmed_by_user_id' => $wasPending ? ($order->confirmed_by_user_id ?? $user->getKey()) : $order->confirmed_by_user_id,
             ])->save();
 
             $this->recordStatus($order, OrderStatus::Completed, $user, 'Table order settled');
@@ -257,10 +264,16 @@ class SaleService
 
         $this->tables->refreshForOrder($order);
 
+        // Paying for pending additional items confirms them; send only their
+        // own lines to the kitchen.
+        $this->acceptPendingRounds($order->fresh(), $user);
+
         // A settled order must appear on the Bill/Invoice workflow even when it
         // was paid before the kitchen marked it served.
+        $invoice = null;
+
         try {
-            app(\App\Domain\Invoicing\OrderInvoiceService::class)->ensureForOrder($order->fresh());
+            $invoice = app(\App\Domain\Invoicing\OrderInvoiceService::class)->ensureForOrder($order->fresh());
         } catch (\Throwable $e) {
             report($e);
         }
@@ -271,7 +284,47 @@ class SaleService
             report($e);
         }
 
+        try {
+            $notifier = app(\App\Domain\Notifications\NotificationService::class);
+            $notifier->markOrderHandled($order->fresh(), $user);
+
+            if ($invoice) {
+                $notifier->markInvoiceHandled($invoice, $user);
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         return $order->fresh(['items', 'payments']);
+    }
+
+    /**
+     * Accept any pending rounds on a settled order and dispatch only their items.
+     */
+    protected function acceptPendingRounds(Order $order, User $user): void
+    {
+        $rounds = $order->rounds()
+            ->where('acceptance_status', AcceptanceStatus::Pending->value)
+            ->orderBy('round_no')
+            ->get();
+
+        foreach ($rounds as $round) {
+            $round->forceFill([
+                'acceptance_status' => AcceptanceStatus::Accepted,
+                'accepted_at' => $round->accepted_at ?? now(),
+                'accepted_by_user_id' => $round->accepted_by_user_id ?? $user->getKey(),
+            ])->save();
+
+            if (! $this->confirmation->sendConfirmedToKitchen()) {
+                continue;
+            }
+
+            try {
+                app(KitchenService::class)->openTicketForRound($round);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
     }
 
     /**

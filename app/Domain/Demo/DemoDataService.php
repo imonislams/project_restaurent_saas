@@ -16,12 +16,15 @@ use App\Domain\Demo\Steps\MenuStep;
 use App\Domain\Demo\Steps\SalesDayStep;
 use App\Domain\Demo\Steps\StockStep;
 use App\Domain\Demo\Steps\TeamStep;
+use App\Domain\Documents\Models\DocumentSequence;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
 use App\Domain\Orders\Models\OrderSequence;
 use App\Domain\Payments\Actions\ProvisionPaymentDefaults;
 use App\Domain\Subscriptions\Models\UsageRecord;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -40,6 +43,17 @@ class DemoDataService
     public const DEFAULT_DAYS = 3;
 
     public const MAX_DAYS = 30;
+
+    /**
+     * Ledger models that are monotonic counters, never business rows. They are
+     * deliberately kept when the demo is removed.
+     *
+     * @var list<class-string<Model>>
+     */
+    protected const PURGE_EXEMPT = [
+        OrderSequence::class,
+        DocumentSequence::class,
+    ];
 
     public function __construct(
         protected DemoRecorder $recorder,
@@ -358,6 +372,15 @@ class DemoDataService
             ->pluck('model_id')
             ->all();
 
+        // Demo staff sessions and their audit trail are demo artefacts too.
+        if ($demoUserIds !== []) {
+            DB::table('sessions')->whereIn('user_id', $demoUserIds)->delete();
+            DB::table('audit_logs')
+                ->where('tenant_id', $tenant->getKey())
+                ->whereIn('user_id', $demoUserIds)
+                ->delete();
+        }
+
         $keptRecords = 0;
 
         foreach (DemoPurgePlan::plan() as $entry) {
@@ -412,7 +435,49 @@ class DemoDataService
         }
 
         // Anything left in the ledger is not covered by the plan: drop the rows
-        // so a re-generated demo starts from a clean slate.
+        // so a re-generated demo starts from a clean slate — including models
+        // added after this plan was written, which are resolved from the ledger.
+        $plannedTypes = [];
+
+        foreach (DemoPurgePlan::plan() as $entry) {
+            foreach ($entry['models'] as $model) {
+                $plannedTypes[] = (new $model)->getMorphClass();
+            }
+        }
+
+        $leftoverTypes = DemoDataRecord::query()
+            ->whereIn('batch_id', $batchIds)
+            ->whereNotIn('model_type', $plannedTypes)
+            ->distinct()
+            ->pluck('model_type');
+
+        foreach ($leftoverTypes as $type) {
+            $class = Relation::getMorphedModel($type) ?? $type;
+
+            if (! class_exists($class) || ! is_subclass_of($class, Model::class)) {
+                continue;
+            }
+
+            if (in_array($class, self::PURGE_EXEMPT, true)) {
+                continue;
+            }
+
+            $ids = DemoDataRecord::query()
+                ->whereIn('batch_id', $batchIds)
+                ->where('model_type', $type)
+                ->pluck('model_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            foreach (array_chunk($ids, 500) as $chunk) {
+                $query = $class::query()->withoutGlobalScopes()->whereIn('id', $chunk);
+
+                DemoPurgePlan::usesSoftDeletes($class)
+                    ? $query->forceDelete()
+                    : $query->delete();
+            }
+        }
+
         (clone $ledger)->delete();
 
         if ($demoUserIds !== [] && ! in_array('team', $keep, true)) {
@@ -455,6 +520,13 @@ class DemoDataService
         if (! in_array('settings', $keep, true)) {
             $this->restoreDemoSettings($tenant, $batches);
         }
+
+        // The demo marker in tenant settings is metadata, not a preference:
+        // remove it so no screen can still believe a demo workspace is present.
+        $settings = $tenant->settings ?? [];
+        data_forget($settings, 'demo');
+        $tenant->settings = $settings;
+        $tenant->save();
 
         $this->audit->log('demo.data_purged', $tenant, [
             'batches' => $batches->count(),

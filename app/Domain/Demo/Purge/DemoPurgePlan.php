@@ -44,6 +44,7 @@ use App\Domain\Menu\Models\RecipeItem;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Orders\Models\OrderItem;
 use App\Domain\Orders\Models\OrderItemModifier;
+use App\Domain\Orders\Models\OrderRound;
 use App\Domain\Orders\Models\OrderStatusHistory;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentAttempt;
@@ -102,6 +103,7 @@ class DemoPurgePlan
                 PaymentAttempt::class,
                 Payment::class,
                 Invoice::class,
+                OrderRound::class,
                 Order::class,
             ]],
 
