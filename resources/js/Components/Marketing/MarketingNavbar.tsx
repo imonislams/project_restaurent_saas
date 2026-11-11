@@ -19,12 +19,14 @@ import { Link, usePage } from '@inertiajs/react';
 import { MobileGroups, ProductsMenu, SolutionsMenu } from './MegaMenus';
 import {
     ArrowRight,
+    ArrowUpRight,
     BarChart3,
     BookOpen,
     Boxes,
     Building2,
     ChefHat,
     Coffee,
+    FileText,
     HelpCircle,
     LayoutGrid,
     Mail,
@@ -109,6 +111,24 @@ export default function MarketingNavbar() {
                                     </NavigationMenuTrigger>
                                     <NavigationMenuContent>
                                         <div className="w-[320px] p-3 bg-white rounded-xl shadow-lg border border-stone-200 flex flex-col gap-1">
+                                            <a
+                                                href={route('docs.index')}
+                                                target="_blank"
+                                                rel="noopener"
+                                                className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-stone-50 transition-colors"
+                                            >
+                                                <FileText className="w-4 h-4 text-stone-500 group-hover:text-[#EC3013]" />
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="text-sm font-semibold text-stone-900 group-hover:text-[#EC3013]">
+                                                        Documentation
+                                                    </div>
+                                                    <div className="text-xs text-stone-500">
+                                                        Screenshots, guides & walkthroughs
+                                                    </div>
+                                                </div>
+                                                <ArrowUpRight className="w-3.5 h-3.5 shrink-0 text-stone-400 group-hover:text-[#EC3013]" />
+                                            </a>
+
                                             <Link
                                                 href="/resources"
                                                 className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-stone-50 transition-colors"
@@ -262,6 +282,16 @@ export default function MarketingNavbar() {
                                         <span>Resources & Guides</span>
                                         <ArrowRight className="w-4 h-4 text-stone-400" />
                                     </Link>
+                                    <a
+                                        href={route('docs.index')}
+                                        target="_blank"
+                                        rel="noopener"
+                                        onClick={() => setMobileOpen(false)}
+                                        className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-stone-700 hover:bg-stone-50 transition-colors"
+                                    >
+                                        <span>Documentation</span>
+                                        <ArrowUpRight className="w-4 h-4 text-stone-400" />
+                                    </a>
                                     <Link
                                         href="/help"
                                         onClick={() => setMobileOpen(false)}

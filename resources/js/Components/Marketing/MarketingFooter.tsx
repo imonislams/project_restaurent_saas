@@ -179,6 +179,16 @@ export default function MarketingFooter() {
                                     </Link>
                                 </li>
                                 <li>
+                                    <a
+                                        href={route('docs.index')}
+                                        target="_blank"
+                                        rel="noopener"
+                                        className="hover:text-stone-900 transition-colors"
+                                    >
+                                        Documentation
+                                    </a>
+                                </li>
+                                <li>
                                     <Link href="/pricing" className="hover:text-stone-900 transition-colors">
                                         Pricing &amp; Plans
                                     </Link>

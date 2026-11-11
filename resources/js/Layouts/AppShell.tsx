@@ -43,6 +43,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     ChevronRight,
     ChevronsUpDown,
+    FileText,
     HelpCircle,
     LogOut,
     Search,
@@ -124,7 +125,8 @@ function NavItemLink({ item }: { item: NavItem }) {
                 {item.newTab ? (
                     <a
                         href={item.href}
-                        target="touchdine-kds"
+                        target="_blank"
+                        rel="noopener"
                         className="flex items-center gap-2.5"
                     >
                         {content}
@@ -502,6 +504,18 @@ export default function AppShell({
                                     ⌘K
                                 </kbd>
                             </button>
+
+                            {/* Documentation, opened in a real browser tab */}
+                            <a
+                                href={route('docs.index')}
+                                target="_blank"
+                                rel="noopener"
+                                title="Documentation (opens in a new tab)"
+                                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-2 text-[13px] font-medium text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-foreground"
+                            >
+                                <FileText className="h-3.5 w-3.5 shrink-0" />
+                                <span className="hidden sm:inline">Docs</span>
+                            </a>
 
                             {/* Keyboard Shortcuts Trigger */}
                             <button

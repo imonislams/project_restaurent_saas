@@ -6,6 +6,7 @@ use App\Http\Controllers\CashManagement\ShiftController;
 use App\Http\Controllers\Customers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Delivery\DeliveryZoneController;
+use App\Http\Controllers\DocumentationController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\Inventory\InventoryController;
 use App\Http\Controllers\Inventory\TransferController;
@@ -135,6 +136,17 @@ Route::post('/marketing/consent', MarketingConsentController::class)
     ->name('marketing.consent');
 Route::get('/resources', [MarketingController::class, 'resources'])->name('resources.index');
 Route::get('/resources/{slug}', [MarketingController::class, 'resourceArticle'])->name('resources.show');
+
+/*
+|--------------------------------------------------------------------------
+| Public documentation centre
+|--------------------------------------------------------------------------
+| Read-only learning content with no tenant data, so it is reachable without
+| an account. Signed-in users still get the in-app shell (see the pages).
+*/
+Route::get('/docs', [DocumentationController::class, 'index'])->name('docs.index');
+Route::get('/docs/{page}', [DocumentationController::class, 'show'])->name('docs.show');
+
 Route::get('/help', [MarketingController::class, 'help'])->name('help');
 Route::get('/privacy-policy', [MarketingController::class, 'privacyPolicy'])->name('privacy');
 Route::get('/terms-of-service', [MarketingController::class, 'termsOfService'])->name('terms');

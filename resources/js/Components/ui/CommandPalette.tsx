@@ -109,7 +109,8 @@ export default function CommandPalette({
                                     <a
                                         key={item.id}
                                         href={item.href}
-                                        target={item.newTab ? 'touchdine-kds' : undefined}
+                                        target={item.newTab ? '_blank' : undefined}
+                                        rel={item.newTab ? 'noopener' : undefined}
                                         ref={(el) => {
                                             rowRefs.current[idx] = el;
                                         }}
