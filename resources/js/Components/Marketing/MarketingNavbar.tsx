@@ -1,4 +1,5 @@
 import MiseLogo from '@/Components/Brand/MiseLogo';
+import { cn } from '@/Components/ui/cn';
 import {
     NavigationMenu,
     NavigationMenuContent,
@@ -88,9 +89,11 @@ export default function MarketingNavbar() {
                                 <NavigationMenuItem>
                                     <Link
                                         href="/features"
-                                        className={`${navigationMenuTriggerStyle()} text-sm font-medium text-stone-700 hover:text-stone-900 bg-transparent hover:bg-stone-50 ${
-                                            isActive('/features') ? 'text-[#EC3013] font-semibold' : ''
-                                        }`}
+                                        className={cn(
+                                            navigationMenuTriggerStyle(),
+                                            'text-sm font-medium text-stone-900 bg-transparent hover:text-[#EC3013] hover:bg-transparent',
+                                            isActive('/features') && 'text-[#EC3013] font-semibold'
+                                        )}
                                     >
                                         Features
                                     </Link>
@@ -102,9 +105,11 @@ export default function MarketingNavbar() {
                                 <NavigationMenuItem>
                                     <Link
                                         href="/pricing"
-                                        className={`${navigationMenuTriggerStyle()} text-sm font-medium text-stone-700 hover:text-stone-900 bg-transparent hover:bg-stone-50 ${
-                                            isActive('/pricing') ? 'text-[#EC3013] font-semibold' : ''
-                                        }`}
+                                        className={cn(
+                                            navigationMenuTriggerStyle(),
+                                            'text-sm font-medium text-stone-900 bg-transparent hover:text-[#EC3013] hover:bg-transparent',
+                                            isActive('/pricing') && 'text-[#EC3013] font-semibold'
+                                        )}
                                     >
                                         Pricing
                                     </Link>
@@ -112,7 +117,7 @@ export default function MarketingNavbar() {
 
                                 {/* Resources Dropdown */}
                                 <NavigationMenuItem value="resources" className="relative">
-                                    <NavigationMenuTrigger className="text-sm font-medium text-stone-700 hover:text-stone-900 bg-transparent hover:bg-stone-50 data-[state=open]:bg-stone-50">
+                                    <NavigationMenuTrigger className="text-sm font-medium text-stone-900 bg-transparent hover:text-[#EC3013] hover:bg-transparent data-[state=open]:bg-transparent">
                                         Resources
                                     </NavigationMenuTrigger>
                                     <NavigationMenuContent>
