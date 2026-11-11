@@ -116,6 +116,15 @@ interface OpenOrderSummary {
     placed_at: string;
 }
 
+interface AppendOrderInfo {
+    id: number;
+    order_number: string;
+    table_name: string | null;
+    order_type: string;
+    total: number;
+    next_round: number;
+}
+
 type OrderType = 'dine_in' | 'takeaway' | 'delivery' | 'counter';
 
 const ORDER_TYPES: { value: OrderType; key: string; icon: 'table' | 'cart' | 'truck' | 'wallet' }[] = [
@@ -186,6 +195,8 @@ export default function PosIndex({
     serviceChargeRate,
     requireTableForDineIn = true,
     openOrders = [],
+    canAppend = false,
+    appendOrder = null,
 }: {
     branches: BranchSummary[];
     branch: { id: number; name: string; currency: string } | null;
@@ -201,6 +212,8 @@ export default function PosIndex({
     serviceChargeRate: number;
     requireTableForDineIn?: boolean;
     openOrders?: OpenOrderSummary[];
+    canAppend?: boolean;
+    appendOrder?: AppendOrderInfo | null;
 }) {
     const { auth, flash } = usePage().props as {
         auth?: { permissions?: string[] };
@@ -570,6 +583,37 @@ export default function PosIndex({
                 onError: (errors) => {
                     playSound('alert');
                     setError(Object.values(errors).join(' ') || 'Could not park the order.');
+                },
+            },
+        );
+    };
+
+    // Append items to an existing order (continuous ordering)
+    const handleAppendItems = () => {
+        if (!appendOrder || cart.length === 0) return;
+        setError(null);
+        router.post(
+            route('orders.items.store', appendOrder.id),
+            {
+                idempotency_key: `append-${appendOrder.id}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+                items: cart.map((l) => ({
+                    product_id: l.product_id,
+                    variant_id: l.variant_id,
+                    quantity: l.quantity,
+                    discount_amount: l.discount_amount,
+                    notes: l.notes,
+                    modifiers: l.modifiers.map((m) => ({ option_id: m.option_id, quantity: m.quantity })),
+                })),
+            },
+            {
+                onSuccess: () => {
+                    playSound('success');
+                    setCart([]);
+                    setOrderNotes('');
+                },
+                onError: (errors) => {
+                    playSound('alert');
+                    setError(Object.values(errors).join(' ') || 'Could not add the items.');
                 },
             },
         );
@@ -1303,8 +1347,34 @@ export default function PosIndex({
                             </div>
                         </dl>
 
+                        {/* Append to an existing order */}
+                        {appendOrder && (
+                            <div className="mt-3 space-y-2">
+                                <div className="rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-800">
+                                    Adding to order {appendOrder.order_number}
+                                    {appendOrder.table_name ? ` · ${appendOrder.table_name}` : ''} · Round{' '}
+                                    {appendOrder.next_round}
+                                </div>
+                                <button
+                                    type="button"
+                                    disabled={cart.length === 0}
+                                    onClick={handleAppendItems}
+                                    className="flex w-full items-center justify-between rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 active:scale-[0.99] transition disabled:opacity-50 disabled:pointer-events-none"
+                                >
+                                    <span>Add items to order</span>
+                                    <span className="font-mono tracking-tight">{money(totals.total, currency)}</span>
+                                </button>
+                                <Link
+                                    href={route('orders.show', appendOrder.id)}
+                                    className="block w-full py-1 text-center text-[11px] font-semibold text-gray-400 hover:text-gray-700 transition"
+                                >
+                                    Cancel and return to order
+                                </Link>
+                            </div>
+                        )}
+
                         {/* Primary Pay Button — cashiers/managers only */}
-                        {canTakePayment && (
+                        {!appendOrder && canTakePayment && (
                             <button
                                 type="button"
                                 disabled={cart.length === 0 || !shift}
@@ -1326,7 +1396,7 @@ export default function PosIndex({
                         )}
 
                         {/* Dine-In Park / Open Order Button */}
-                        {orderType === 'dine_in' && (
+                        {!appendOrder && orderType === 'dine_in' && (
                             <button
                                 type="button"
                                 disabled={cart.length === 0 || !shift}
@@ -1558,6 +1628,7 @@ export default function PosIndex({
                 <HeldOrdersDrawer
                     openOrders={openOrders}
                     currency={currency}
+                    canAppend={canAppend && !appendOrder}
                     onClose={() => setShowHeldOrders(false)}
                 />
             )}
@@ -2503,10 +2574,12 @@ function ShiftModal({
 function HeldOrdersDrawer({
     openOrders,
     currency,
+    canAppend = false,
     onClose,
 }: {
     openOrders: OpenOrderSummary[];
     currency: string;
+    canAppend?: boolean;
     onClose: () => void;
 }) {
     return (
@@ -2570,12 +2643,22 @@ function HeldOrdersDrawer({
                                     )}
                                 </div>
 
-                                <Link
-                                    href={route('orders.show', order.id)}
-                                    className="rounded-xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition shadow-subtle"
-                                >
-                                    View / Settle →
-                                </Link>
+                                <div className="flex items-center gap-2">
+                                    {canAppend && order.acceptance_status !== 'rejected' && (
+                                        <Link
+                                            href={route('pos.index', { append: order.id })}
+                                            className="rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition shadow-subtle"
+                                        >
+                                            + Items
+                                        </Link>
+                                    )}
+                                    <Link
+                                        href={route('orders.show', order.id)}
+                                        className="rounded-xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition shadow-subtle"
+                                    >
+                                        View / Settle →
+                                    </Link>
+                                </div>
                             </div>
                         ))
                     )}

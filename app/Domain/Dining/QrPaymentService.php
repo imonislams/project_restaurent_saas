@@ -205,7 +205,7 @@ class QrPaymentService
 
         // Reflect the verified payment on the invoice, and tell billing staff.
         try {
-            app(\App\Domain\Invoicing\OrderInvoiceService::class)->refreshForOrder($order->fresh());
+            app(\App\Domain\Invoicing\OrderInvoiceService::class)->ensureForOrder($order->fresh());
         } catch (\Throwable $e) {
             report($e);
         }

@@ -26,9 +26,15 @@ class QrOrderController extends Controller
         }
 
         $participant = $this->participantFor($request, $session);
-        $order = app(QrDiningOrderService::class)->place($session, $participant, $request->validated());
+        $result = app(QrDiningOrderService::class)->place($session, $participant, $request->validated());
+        $order = $result['order'];
 
         return response()->json([
+            'merged' => $result['merged'],
+            'round' => $result['round'] ? [
+                'number' => $result['round']->round_no,
+                'total' => (float) $result['round']->total,
+            ] : null,
             'order' => [
                 'id' => $order->getKey(),
                 'number' => $order->order_number,

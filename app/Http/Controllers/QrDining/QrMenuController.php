@@ -7,7 +7,9 @@ use App\Domain\Dining\DiningAuthorization;
 use App\Domain\Dining\QrBrandingSettings;
 use App\Domain\Dining\QrDiningSettings;
 use App\Domain\Menu\QrMenuService;
+use App\Domain\Orders\ActiveOrderResolver;
 use App\Domain\Orders\Enums\OrderStatus;
+use App\Domain\Orders\OrderConfirmationSettings;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,6 +41,9 @@ class QrMenuController extends Controller
 
         $menu = app(QrMenuService::class)->forBranch($tenant, $branch);
 
+        $allowAdditionalItems = $settings->allowAdditionalOrders()
+            && app(OrderConfirmationSettings::class)->allowAdditionalItems();
+
         return Inertia::render('Qr/Menu', [
             'token' => $qr->token,
             'table' => ['id' => $table->getKey(), 'name' => $table->name],
@@ -50,11 +55,40 @@ class QrMenuController extends Controller
             ],
             'policy' => [
                 'allow_additional_orders' => $settings->allowAdditionalOrders(),
+                'allow_additional_items' => $allowAdditionalItems,
                 'allow_notes' => $settings->allowNotes(),
             ],
+            'active_order' => $allowAdditionalItems ? $this->activeOrder($request, $session) : null,
             'tracking' => $this->tracking($request, $session),
             ...$menu,
         ]);
+    }
+
+    /**
+     * The order this device would append to, if any.
+     *
+     * @return array{id: int, number: string}|null
+     */
+    protected function activeOrder(Request $request, $session): ?array
+    {
+        $token = $request->header('X-Dining-Participant');
+
+        $participant = $token
+            ? $session->participants()->where('participant_token', $token)->first()
+            : null;
+
+        $participant ??= $session->participants()->latest('id')->first();
+
+        if (! $participant) {
+            return null;
+        }
+
+        $order = app(ActiveOrderResolver::class)->forQrSession($session, $participant);
+
+        return $order ? [
+            'id' => $order->getKey(),
+            'number' => $order->order_number,
+        ] : null;
     }
 
     /**

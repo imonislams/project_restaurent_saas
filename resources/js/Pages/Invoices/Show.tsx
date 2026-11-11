@@ -15,7 +15,7 @@ interface InvoiceOrder {
     paid_total: number;
     amount: number;
     placed_at: string | null;
-    items: { name: string; quantity: number; line_total: number }[];
+    items: { name: string; quantity: number; line_total: number; round_no?: number }[];
 }
 
 interface InvoiceDetail {
@@ -96,6 +96,11 @@ export default function InvoiceShow({ invoice }: { invoice: InvoiceDetail }) {
                                         {order.items.map((item, index) => (
                                             <li key={index} className="flex items-center justify-between py-2 text-sm">
                                                 <span className="text-gray-700">
+                                                    {(item.round_no ?? 1) > 1 && (
+                                                        <span className="mr-1 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-gray-500">
+                                                            R{item.round_no}
+                                                        </span>
+                                                    )}
                                                     <span className="font-mono text-gray-500">{item.quantity}×</span> {item.name}
                                                 </span>
                                                 <span className="font-mono tabular-nums text-gray-900">{money(item.line_total)}</span>

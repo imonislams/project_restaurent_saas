@@ -75,7 +75,7 @@ class InvoiceController extends Controller
             'customer:id,name',
             'diningSession:id,status',
             'orders.table:id,name',
-            'orders.items',
+            'orders.items.round',
         ]);
 
         return Inertia::render('Invoices/Show', [
@@ -102,6 +102,7 @@ class InvoiceController extends Controller
                         'name' => $item->name,
                         'quantity' => (float) $item->quantity,
                         'line_total' => (float) $item->line_total,
+                        'round_no' => $item->round?->round_no ?? 1,
                     ]),
                 ]),
             ],

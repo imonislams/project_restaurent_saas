@@ -59,7 +59,10 @@ class Order extends Model
         'discount_value',
         'discount_total',
         'tax_total',
+        'tax_inclusive',
         'service_charge',
+        'service_charge_applied',
+        'service_charge_rate',
         'delivery_fee',
         'total',
         'paid_total',
@@ -89,7 +92,10 @@ class Order extends Model
             'discount_value' => 'decimal:2',
             'discount_total' => 'decimal:2',
             'tax_total' => 'decimal:2',
+            'tax_inclusive' => 'boolean',
             'service_charge' => 'decimal:2',
+            'service_charge_applied' => 'boolean',
+            'service_charge_rate' => 'decimal:3',
             'delivery_fee' => 'decimal:2',
             'total' => 'decimal:2',
             'paid_total' => 'decimal:2',
@@ -142,9 +148,33 @@ class Order extends Model
         return $this->belongsTo(DeliveryZone::class);
     }
 
+    /**
+     * Kitchen tickets are per round; readers that only track "the current
+     * kitchen state" keep using the latest one.
+     */
     public function kitchenTicket(): HasOne
     {
-        return $this->hasOne(KitchenTicket::class);
+        return $this->hasOne(KitchenTicket::class)->latestOfMany();
+    }
+
+    public function kitchenTickets(): HasMany
+    {
+        return $this->hasMany(KitchenTicket::class);
+    }
+
+    public function rounds(): HasMany
+    {
+        return $this->hasMany(OrderRound::class)->orderBy('round_no');
+    }
+
+    public function activeRounds(): HasMany
+    {
+        return $this->rounds()->where('status', OrderRound::STATUS_ACTIVE);
+    }
+
+    public function latestRound(): HasOne
+    {
+        return $this->hasOne(OrderRound::class)->latestOfMany();
     }
 
     public function cashier(): BelongsTo

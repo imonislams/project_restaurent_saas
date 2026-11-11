@@ -27,6 +27,8 @@ interface Ticket {
     order_number: string | null;
     order_type: string | null;
     order_source: string | null;
+    round_no?: number;
+    round_label?: string;
     table_name: string | null;
     customer_name: string | null;
     items: TicketItem[];
@@ -668,6 +670,11 @@ function KdsTicketCard({
                         {ticket.order_source === 'qr' && (
                             <span className="rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300 border border-emerald-500/30">
                                 QR
+                            </span>
+                        )}
+                        {(ticket.round_no ?? 1) > 1 && (
+                            <span className="rounded-md bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-300 border border-sky-500/30">
+                                {ticket.round_label ?? `Round ${ticket.round_no}`}
                             </span>
                         )}
                     </div>

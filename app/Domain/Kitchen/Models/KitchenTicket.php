@@ -18,6 +18,8 @@ class KitchenTicket extends Model
         'tenant_id',
         'branch_id',
         'order_id',
+        'order_round_id',
+        'round_no',
         'status',
         'priority',
         'notes',
@@ -33,6 +35,7 @@ class KitchenTicket extends Model
     {
         return [
             'status' => KitchenTicketStatus::class,
+            'round_no' => 'integer',
             'accepted_at' => 'datetime',
             'ready_at' => 'datetime',
             'handed_over_at' => 'datetime',
@@ -45,6 +48,11 @@ class KitchenTicket extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function round(): BelongsTo
+    {
+        return $this->belongsTo(\App\Domain\Orders\Models\OrderRound::class, 'order_round_id');
     }
 
     public function items(): HasMany

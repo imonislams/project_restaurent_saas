@@ -10,6 +10,8 @@ import { useMemo, useState } from 'react';
 // --- Interfaces ---
 
 interface OrderItem {
+    id?: number;
+    round_no?: number;
     name: string;
     quantity: number;
     unit_price: number;
@@ -17,6 +19,17 @@ interface OrderItem {
     tax_amount?: number;
     line_total: number;
     notes: string | null;
+}
+
+interface OrderRound {
+    id: number;
+    round_no: number;
+    status: string;
+    acceptance_status: string;
+    acceptance_label: string;
+    total: number;
+    sent_to_kitchen_at: string | null;
+    created_at: string | null;
 }
 
 interface OrderPayment {
@@ -66,6 +79,8 @@ interface OrderDetail {
     change_due: number;
     placed_at: string | null;
     can_void: boolean;
+    can_append: boolean;
+    rounds: OrderRound[];
     items: OrderItem[];
     payments: OrderPayment[];
     history: OrderHistoryEntry[];
@@ -106,6 +121,12 @@ export default function OrderShow({
     const canFulfill = permissions.includes('orders.update');
     const canSettle = permissions.includes('orders.update') && order.is_open;
     const canApprove = permissions.includes('orders.approve') && order.acceptance_status === 'pending';
+    const canAppend = permissions.includes('orders.update') && order.can_append;
+    const canApproveRound = permissions.includes('orders.approve');
+    const canCancelRound = permissions.includes('orders.update');
+    const pendingRounds = (order.rounds ?? []).filter(
+        (round) => round.status === 'active' && round.acceptance_status === 'pending',
+    );
 
     const [showVoid, setShowVoid] = useState(false);
     const [showSettle, setShowSettle] = useState(false);
@@ -212,6 +233,14 @@ export default function OrderShow({
                                 🖨 Receipt
                             </Button>
                         </Link>
+
+                        {canAppend && (
+                            <Link href={route('pos.index', { append: order.id })}>
+                                <Button variant="outline" size="sm">
+                                    + Add items
+                                </Button>
+                            </Link>
+                        )}
 
                         {canApprove && (
                             <>
@@ -324,6 +353,57 @@ export default function OrderShow({
                         </CardContent>
                     </Card>
 
+                    {/* Pending additional rounds awaiting confirmation */}
+                    {pendingRounds.length > 0 && (
+                        <Card>
+                            <CardContent className="p-4 space-y-3">
+                                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Additional items awaiting confirmation
+                                </h3>
+                                {pendingRounds.map((round) => (
+                                    <div key={round.id} className="flex flex-wrap items-center justify-between gap-3">
+                                        <div className="text-xs sm:text-sm font-medium">
+                                            Round {round.round_no} · {money(round.total, order.currency)}{' '}
+                                            <span className="text-muted-foreground">({round.acceptance_label})</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {canApproveRound && (
+                                                <Button
+                                                    size="xs"
+                                                    onClick={() =>
+                                                        router.post(
+                                                            route('orders.rounds.accept', [order.id, round.id]),
+                                                            {},
+                                                            { preserveScroll: true },
+                                                        )
+                                                    }
+                                                >
+                                                    Confirm &amp; Send
+                                                </Button>
+                                            )}
+                                            {canCancelRound && (
+                                                <Button
+                                                    size="xs"
+                                                    variant="outline"
+                                                    className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                                                    onClick={() =>
+                                                        router.post(
+                                                            route('orders.rounds.cancel', [order.id, round.id]),
+                                                            {},
+                                                            { preserveScroll: true },
+                                                        )
+                                                    }
+                                                >
+                                                    Cancel items
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {/* Main Content Grid: 2 Columns */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                         {/* LEFT COLUMN: Items Breakdown & Audit History */}
@@ -341,6 +421,7 @@ export default function OrderShow({
                                         <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                                             <tr>
                                                 <th className="px-5 py-3">Item Description</th>
+                                                <th className="px-5 py-3 text-center">Round</th>
                                                 <th className="px-5 py-3 text-right">Qty</th>
                                                 <th className="px-5 py-3 text-right">Unit Price</th>
                                                 <th className="px-5 py-3 text-right">Line Total</th>
@@ -359,6 +440,9 @@ export default function OrderShow({
                                                                 <span className="italic">{item.notes}</span>
                                                             </div>
                                                         )}
+                                                    </td>
+                                                    <td className="px-5 py-3.5 text-center">
+                                                        <Badge tone="neutral">R{item.round_no ?? 1}</Badge>
                                                     </td>
                                                     <td className="px-5 py-3.5 text-right font-mono text-xs font-semibold text-foreground">
                                                         {item.quantity}

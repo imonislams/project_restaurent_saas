@@ -75,13 +75,14 @@ interface MenuProps {
     table: { id: number; name: string };
     branding?: Partial<QrBranding> | null;
     session: { id: number; status: string; billing_mode: string };
-    policy: { allow_additional_orders: boolean; allow_notes: boolean };
+    policy: { allow_additional_orders: boolean; allow_additional_items?: boolean; allow_notes: boolean };
+    active_order?: { id: number; number: string } | null;
     tracking: { available: boolean; orders: TrackedOrder[] };
     categories: Category[];
     products: MenuProduct[];
 }
 
-export default function QrMenu({ token, restaurant, table, branding, policy, tracking: initialTracking, categories, products }: MenuProps) {
+export default function QrMenu({ token, restaurant, table, branding, policy, active_order, tracking: initialTracking, categories, products }: MenuProps) {
     const currency = restaurant.currency;
     const cartKey = `qr_cart_${token}`;
     const money = (n: number) => `${currency} ${Number(n || 0).toFixed(2)}`;
@@ -98,7 +99,7 @@ export default function QrMenu({ token, restaurant, table, branding, policy, tra
     const [orderNotes, setOrderNotes] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [placed, setPlaced] = useState<{ number: string; total: number } | null>(null);
+    const [placed, setPlaced] = useState<{ number: string; total: number; merged?: boolean; round?: number | null } | null>(null);
     // Seeded from the server so the "Track order" affordance survives every
     // navigation (Menu ↔ Tracking ↔ Categories) and any reload.
     const [tracking, setTracking] = useState<{ available: boolean; orders: TrackedOrder[] }>(initialTracking);
@@ -232,7 +233,12 @@ export default function QrMenu({ token, restaurant, table, branding, policy, tra
                 { headers: { 'X-Dining-Participant': localStorage.getItem('qr_participant_token') ?? '' } },
             );
 
-            setPlaced({ number: data.order.number, total: data.order.total });
+            setPlaced({
+                number: data.order.number,
+                total: data.order.total,
+                merged: Boolean(data.merged),
+                round: data.round?.number ?? null,
+            });
             setTracking((prev) => ({
                 available: true,
                 orders: prev.orders.some((o) => o.number === data.order.number)
@@ -285,14 +291,27 @@ export default function QrMenu({ token, restaurant, table, branding, policy, tra
 
             {(placed || tracking.available) && (
                 <div className="mb-4 rounded-2xl bg-emerald-50 p-4 text-emerald-800">
-                    {placed && <p className="text-sm font-bold">Order {placed.number} received 🎉</p>}
+                    {placed && (
+                        <p className="text-sm font-bold">
+                            {placed.merged
+                                ? `Added to order ${placed.number}${placed.round ? ` · round ${placed.round}` : ''} 🎉`
+                                : `Order ${placed.number} received 🎉`}
+                        </p>
+                    )}
+                    {active_order && policy.allow_additional_items && !placed && (
+                        <p className="mt-1 text-xs font-semibold">
+                            Anything you order now is added to order {active_order.number}.
+                        </p>
+                    )}
                     {tracking.available && (
                         <>
                             <p className="mt-1 text-xs">
                                 {tracking.orders.length === 1
                                     ? `Order ${tracking.orders[0].number} · ${tracking.orders[0].status_label}.`
                                     : `${tracking.orders.length} active orders at this table.`}
-                                {placed && policy.allow_additional_orders ? ' You can keep ordering from the menu.' : ''}
+                                {placed && (policy.allow_additional_items || policy.allow_additional_orders)
+                                    ? ' You can keep ordering from the menu.'
+                                    : ''}
                             </p>
                             <a
                                 href={route('qr.tracking', { token })}
@@ -588,7 +607,11 @@ export default function QrMenu({ token, restaurant, table, branding, policy, tra
                                 className="h-12 w-full rounded-xl text-sm font-bold shadow-card disabled:opacity-50"
                                 style={{ background: 'var(--qr-primary)', color: 'var(--qr-primary-text)' }}
                             >
-                                {submitting ? 'Placing order…' : 'Place order'}
+                                {submitting
+                                    ? 'Placing order…'
+                                    : policy.allow_additional_items && active_order
+                                      ? 'Add to order'
+                                      : 'Place order'}
                             </button>
                         </div>
                     </div>

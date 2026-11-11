@@ -529,6 +529,7 @@ class OnboardingService
             'orders.staff_confirmation_mode' => in_array($mode, ['central', 'direct'], true) ? $mode : 'direct',
             'orders.branch_direct_order_taking' => (bool) ($data['branch_direct_order_taking'] ?? true),
             'orders.send_confirmed_to_kitchen' => (bool) ($data['send_confirmed_to_kitchen'] ?? true),
+            'orders.allow_additional_items' => (bool) ($data['allow_additional_items'] ?? false),
         ]);
 
         $tenant->save();
@@ -601,6 +602,7 @@ class OnboardingService
                 'staff_confirmation_mode' => (string) $tenant->getSetting('orders.staff_confirmation_mode', 'direct'),
                 'branch_direct_order_taking' => (bool) $tenant->getSetting('orders.branch_direct_order_taking', true),
                 'send_confirmed_to_kitchen' => (bool) $tenant->getSetting('orders.send_confirmed_to_kitchen', true),
+                'allow_additional_items' => (bool) $tenant->getSetting('orders.allow_additional_items', false),
             ],
             'notifications' => [
                 'low_stock_threshold' => (float) $tenant->getSetting('inventory.low_stock_threshold', 0),

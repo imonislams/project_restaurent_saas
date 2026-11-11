@@ -37,6 +37,18 @@ export default function OrdersFields({ data, setData, errors }: FieldProps) {
                     onChange={(v) => setData('send_confirmed_to_kitchen', v)}
                 />
             </FormSection>
+
+            <FormSection
+                title="Additional items"
+                description="Let staff and QR guests add more food to an active order instead of opening a separate order."
+            >
+                <CheckboxField
+                    label="Allow additional items to an existing order"
+                    hint="When on, additional items join the active order, only the new items go to the kitchen, and one combined invoice is produced. When off, every submission creates an independent order as before."
+                    checked={Boolean(data.allow_additional_items)}
+                    onChange={(v) => setData('allow_additional_items', v)}
+                />
+            </FormSection>
         </>
     );
 }

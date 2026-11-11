@@ -3,14 +3,19 @@
 namespace App\Http\Controllers\Orders;
 
 use App\Domain\Branches\Models\Branch;
+use App\Domain\Invoicing\OrderInvoiceService;
 use App\Domain\Orders\Enums\FulfillmentStatus;
+use App\Domain\Orders\Enums\OrderSource;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Enums\OrderType;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Orders\Models\OrderRound;
+use App\Domain\Orders\OrderRoundService;
 use App\Domain\Orders\OrderService;
 use App\Domain\POS\SaleService;
 use App\Http\Controllers\Concerns\ResolvesActiveBranch;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Orders\AppendOrderItemsRequest;
 use App\Http\Requests\Orders\FulfillmentRequest;
 use App\Http\Requests\Orders\SettleOrderRequest;
 use App\Http\Requests\Orders\VoidOrderRequest;
@@ -119,7 +124,7 @@ class OrderController extends Controller
 
     public function show(Order $order): Response
     {
-        $order->load(['items', 'payments.method', 'cashier:id,name', 'branch:id,name', 'table:id,name', 'staff:id,name', 'confirmedBy:id,name', 'rejectedBy:id,name', 'kitchenTicket', 'statusHistory.user:id,name']);
+        $order->load(['items.round', 'rounds', 'payments.method', 'cashier:id,name', 'branch:id,name', 'table:id,name', 'staff:id,name', 'confirmedBy:id,name', 'rejectedBy:id,name', 'kitchenTicket', 'statusHistory.user:id,name']);
 
         return Inertia::render('Orders/Show', [
             'order' => $this->payload($order),
@@ -130,6 +135,39 @@ class OrderController extends Controller
             'paymentMethods' => $order->tenant->paymentMethods()->where('is_active', true)->orderBy('sort_order')->get()
                 ->map(fn ($m) => ['id' => $m->getKey(), 'name' => $m->name, 'type' => $m->type->value]),
         ]);
+    }
+
+    public function appendItems(AppendOrderItemsRequest $request, Order $order): RedirectResponse
+    {
+        $round = app(OrderRoundService::class)->append($order, $request->validated('items'), [
+            'source' => OrderSource::Pos,
+            'user' => $request->user(),
+            'idempotency_key' => $request->validated('idempotency_key'),
+            'accept' => true,
+        ]);
+
+        return redirect()->route('orders.show', $order)
+            ->with('success', 'Items added to order '.$order->order_number.' (round '.$round->round_no.').');
+    }
+
+    public function acceptRound(Request $request, Order $order, OrderRound $round): RedirectResponse
+    {
+        abort_unless((int) $round->order_id === (int) $order->getKey(), 404);
+
+        app(OrderRoundService::class)->accept($round, $request->user());
+
+        return back()->with('success', 'Additional items confirmed and sent to the kitchen.');
+    }
+
+    public function cancelRound(Request $request, Order $order, OrderRound $round): RedirectResponse
+    {
+        abort_unless((int) $round->order_id === (int) $order->getKey(), 404);
+
+        $reason = $request->validate(['reason' => ['nullable', 'string', 'max:255']])['reason'] ?? null;
+
+        app(OrderRoundService::class)->cancel($round, $request->user(), $reason);
+
+        return back()->with('success', 'Additional items cancelled.');
     }
 
     public function void(VoidOrderRequest $request, Order $order): RedirectResponse
@@ -153,8 +191,14 @@ class OrderController extends Controller
             app(\App\Domain\Dining\DiningSessionService::class)->maybeCloseAfterSettlement($session);
         }
 
-        return redirect()->route('orders.show', $order)
-            ->with('success', 'Order settled.');
+        // Settling opens the customer receipt, exactly like a POS payment. The
+        // invoice is still created/updated by SaleService::settle().
+        $invoice = app(OrderInvoiceService::class)->invoiceForOrder($settled);
+
+        return redirect()->route('orders.receipt', $settled)
+            ->with('success', $invoice
+                ? 'Order settled. Invoice '.$invoice->number.' is ready.'
+                : 'Order settled.');
     }
 
     public function updateFulfillment(FulfillmentRequest $request, Order $order): RedirectResponse
@@ -182,6 +226,17 @@ class OrderController extends Controller
         $this->orders->reject($order, $request->user(), $reason);
 
         return back()->with('success', 'Order '.$order->order_number.' rejected.');
+    }
+
+    protected function canAppend(Order $order): bool
+    {
+        try {
+            app(OrderRoundService::class)->assertCanAppend($order);
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /**
@@ -227,7 +282,20 @@ class OrderController extends Controller
             'change_due' => (float) $order->change_due,
             'placed_at' => $order->placed_at?->toIso8601String(),
             'can_void' => $order->canBeVoided(),
+            'can_append' => $this->canAppend($order),
+            'rounds' => $order->rounds->map(fn ($round) => [
+                'id' => $round->getKey(),
+                'round_no' => $round->round_no,
+                'status' => $round->status,
+                'acceptance_status' => $round->acceptance_status->value,
+                'acceptance_label' => $round->acceptance_status->label(),
+                'total' => (float) $round->total,
+                'sent_to_kitchen_at' => $round->sent_to_kitchen_at?->toIso8601String(),
+                'created_at' => $round->created_at?->toIso8601String(),
+            ])->values(),
             'items' => $order->items->map(fn ($item) => [
+                'id' => $item->getKey(),
+                'round_no' => $item->round?->round_no ?? 1,
                 'name' => $item->name,
                 'quantity' => (float) $item->quantity,
                 'unit_price' => (float) $item->unit_price,

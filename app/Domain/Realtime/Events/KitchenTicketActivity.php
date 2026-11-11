@@ -46,6 +46,7 @@ class KitchenTicketActivity implements ShouldBroadcastNow
             'status' => $this->status,
             'branch_id' => $this->ticket->branch_id,
             'order_number' => $this->ticket->order?->order_number,
+            'round_no' => $this->ticket->round_no,
             'items' => $this->ticket->items()->count(),
         ];
     }

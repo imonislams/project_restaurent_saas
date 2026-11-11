@@ -68,6 +68,18 @@ class PlaceOrderRequest extends FormRequest
             'manager_pin' => ['nullable', 'string', 'max:12'],
             'idempotency_key' => ['nullable', 'string', 'max:100'],
 
+            ...self::itemRules($tenantId),
+        ];
+    }
+
+    /**
+     * Line rules, shared with the append-items and offline replay endpoints.
+     *
+     * @return array<string, mixed>
+     */
+    public static function itemRules(int $tenantId): array
+    {
+        return [
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('tenant_id', $tenantId)],
             'items.*.variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->where('tenant_id', $tenantId)],

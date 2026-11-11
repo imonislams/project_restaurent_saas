@@ -40,6 +40,20 @@ class OrderInvoiceService
     }
 
     /**
+     * Refuse to change an order whose bill has already been finalized.
+     */
+    public function assertEditableForOrder(Order $order): void
+    {
+        $invoice = $this->invoiceForOrder($order);
+
+        if ($invoice && ! $invoice->isEditable()) {
+            throw ValidationException::withMessages([
+                'invoice' => 'This bill is finalized and can no longer be changed.',
+            ]);
+        }
+    }
+
+    /**
      * Ensure a served order is on an open invoice, creating one if needed.
      */
     public function forServedOrder(Order $order): ?Invoice
@@ -92,6 +106,32 @@ class OrderInvoiceService
         if ($invoice = $this->invoiceForOrder($payment->order)) {
             $payment->forceFill(['invoice_id' => $invoice->getKey()])->save();
         }
+    }
+
+    /**
+     * Ensure a completed/settled order has an invoice and that its totals are
+     * current. Unlike the served-order flow this also creates the invoice for
+     * orders that were paid before the kitchen marked them served.
+     */
+    public function ensureForOrder(Order $order): Invoice
+    {
+        if ($existing = $this->invoiceForOrder($order)) {
+            return $this->recalculate($existing);
+        }
+
+        return DB::transaction(function () use ($order): Invoice {
+            // Serialize concurrent settlement of the same order so two
+            // invoices can never be created for it.
+            $locked = Order::query()->whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            if ($existing = $this->invoiceForOrder($locked)) {
+                return $this->recalculate($existing);
+            }
+
+            $invoice = $this->create($locked);
+
+            return $this->addOrder($invoice, $locked);
+        });
     }
 
     /**
@@ -164,6 +204,14 @@ class OrderInvoiceService
             'status' => $status,
             'paid_at' => $status === InvoiceStatus::Paid ? ($invoice->paid_at ?? now()) : null,
         ])->save();
+
+        // Keep the per-order snapshot used by the invoice detail in step with
+        // the order's current total (it grows when a round is appended).
+        foreach ($orders as $order) {
+            $invoice->orders()->updateExistingPivot($order->getKey(), [
+                'amount' => (float) $order->total,
+            ]);
+        }
 
         return $invoice;
     }

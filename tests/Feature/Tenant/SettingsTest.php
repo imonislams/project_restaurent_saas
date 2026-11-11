@@ -57,6 +57,37 @@ class SettingsTest extends TestCase
         $this->actingAs($cashier)->post('/settings/company', ['legal_name' => 'X', 'country' => 'BD', 'currency' => 'BDT', 'timezone' => 'Asia/Dhaka'])->assertForbidden();
     }
 
+    public function test_additional_items_are_off_by_default(): void
+    {
+        [$tenant, $owner] = $this->tenantWithOwner();
+
+        $this->assertFalse((bool) $tenant->getSetting('orders.allow_additional_items', false));
+
+        $this->actingAs($owner)->get('/settings/orders')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('form.allow_additional_items', false));
+    }
+
+    public function test_the_order_module_can_enable_additional_items(): void
+    {
+        [$tenant, $owner] = $this->tenantWithOwner();
+
+        $this->actingAs($owner)->post('/settings/orders', [
+            'staff_confirmation_mode' => 'direct',
+            'branch_direct_order_taking' => true,
+            'send_confirmed_to_kitchen' => true,
+            'allow_additional_items' => true,
+        ])->assertRedirect();
+
+        $tenant->refresh();
+
+        $this->assertTrue((bool) $tenant->getSetting('orders.allow_additional_items'));
+        $this->assertDatabaseHas('audit_logs', ['action' => 'settings.orders_updated']);
+
+        $this->actingAs($owner)->get('/settings/orders')
+            ->assertInertia(fn ($page) => $page->where('form.allow_additional_items', true));
+    }
+
     public function test_company_settings_update_persists_and_is_audited(): void
     {
         [$tenant, $owner] = $this->tenantWithOwner();

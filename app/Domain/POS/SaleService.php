@@ -27,6 +27,7 @@ use App\Domain\Orders\Enums\OrderSource;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Enums\OrderType;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Orders\Models\OrderRound;
 use App\Domain\Orders\OrderConfirmationSettings;
 use App\Domain\Payments\Enums\PaymentStatus;
 use App\Domain\Payments\Models\PaymentMethod;
@@ -105,7 +106,17 @@ class SaleService
             return $order;
         });
 
-        return $this->postCommit($order);
+        $order = $this->postCommit($order);
+
+        // An immediate sale is fully paid, so it belongs on the Bill/Invoice
+        // workflow as well — not only served table orders.
+        try {
+            app(\App\Domain\Invoicing\OrderInvoiceService::class)->ensureForOrder($order->fresh());
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return $order;
     }
 
     /**
@@ -246,9 +257,10 @@ class SaleService
 
         $this->tables->refreshForOrder($order);
 
-        // Reflect the settlement on the order's invoice (if it is billed).
+        // A settled order must appear on the Bill/Invoice workflow even when it
+        // was paid before the kitchen marked it served.
         try {
-            app(\App\Domain\Invoicing\OrderInvoiceService::class)->refreshForOrder($order->fresh());
+            app(\App\Domain\Invoicing\OrderInvoiceService::class)->ensureForOrder($order->fresh());
         } catch (\Throwable $e) {
             report($e);
         }
@@ -315,6 +327,7 @@ class SaleService
             'user_id' => $cashier?->getKey(),
             'order_number' => $this->numbers->next($branch),
             'order_type' => $prepared['type'],
+            'source' => OrderSource::Pos->value,
             'status' => $status,
             'fulfillment_status' => FulfillmentStatus::New,
             // Carry the DB default onto the in-memory model so postCommit can
@@ -331,7 +344,10 @@ class SaleService
             'discount_value' => (float) ($data['discount_value'] ?? 0),
             'discount_total' => $totals['discount_total'],
             'tax_total' => $totals['tax_total'],
+            'tax_inclusive' => (bool) ($tenant->getSetting('tax.inclusive', false) ?? false),
             'service_charge' => $totals['service_charge'],
+            'service_charge_applied' => (bool) ($data['service_charge'] ?? false),
+            'service_charge_rate' => (float) ($tenant->getSetting('service_charge.rate', 0) ?? 0),
             'delivery_fee' => $prepared['deliveryFee'],
             'total' => $prepared['grandTotal'],
             'currency' => $branch->effectiveCurrency(),
@@ -339,9 +355,30 @@ class SaleService
             'placed_at' => now(),
         ], $extra));
 
+        // Round 1 is the original submission; additional submissions append
+        // further rounds to this same order.
+        $round = $order->rounds()->create([
+            'tenant_id' => $tenant->getKey(),
+            'branch_id' => $branch->getKey(),
+            'round_no' => 1,
+            'source' => $order->source->value,
+            'dining_participant_id' => $order->dining_participant_id,
+            'requested_by_user_id' => $cashier?->getKey(),
+            'idempotency_key' => null,
+            'status' => OrderRound::STATUS_ACTIVE,
+            'acceptance_status' => $order->acceptance_status->value,
+            'accepted_at' => $order->accepted_at,
+            'subtotal' => $totals['subtotal'],
+            'discount_total' => $totals['discount_total'],
+            'tax_total' => $totals['tax_total'],
+            'service_charge' => $totals['service_charge'],
+            'total' => $prepared['grandTotal'],
+        ]);
+
         foreach ($totals['items'] as $item) {
             $orderItem = $order->items()->create([
                 'tenant_id' => $tenant->getKey(),
+                'order_round_id' => $round->getKey(),
                 'product_id' => $item['product']->getKey(),
                 'product_variant_id' => $item['variant']?->getKey(),
                 'name' => $item['name'],
@@ -530,7 +567,7 @@ class SaleService
      * @param  list<array<string, mixed>>  $items
      * @return list<array<string, mixed>>
      */
-    protected function resolveLines(array $items, Branch $branch): array
+    public function resolveLines(array $items, Branch $branch): array
     {
         if ($items === []) {
             throw ValidationException::withMessages(['items' => 'An order must contain at least one item.']);
@@ -649,10 +686,21 @@ class SaleService
 
     protected function deductStock(Order $order, Branch $branch): void
     {
+        $this->deductStockFor($order, $branch, $order->items()->get());
+    }
+
+    /**
+     * Deduct stock for a specific set of lines. Used both for a fresh order and
+     * for an additional round, which must never re-deduct earlier items.
+     *
+     * @param  iterable<int, \App\Domain\Orders\Models\OrderItem>  $items
+     */
+    public function deductStockFor(Order $order, Branch $branch, iterable $items): void
+    {
         $location = app(ProvisionInventoryDefaults::class)->defaultLocationFor($branch);
         $blockOnShortage = (bool) ($this->context->tenant()?->getSetting('inventory.block_sale_when_insufficient', false));
 
-        foreach ($order->items()->get() as $item) {
+        foreach ($items as $item) {
             $product = $item->product;
 
             if (! $product) {

@@ -5,6 +5,8 @@ interface TicketView {
     order_number: string | null;
     order_type: string | null;
     table_name: string | null;
+    round_no?: number;
+    round_label?: string;
     priority: string;
     notes: string | null;
     created_at: string | null;
@@ -21,6 +23,11 @@ export default function KitchenTicket({ ticket }: { ticket: TicketView }) {
                 <div className="text-center border-b-2 border-dashed border-gray-300 pb-3">
                     <span className="text-xs uppercase tracking-widest text-gray-500 font-bold">Kitchen Order Ticket</span>
                     <h1 className="mt-1 text-2xl font-black tracking-tight">{ticket.order_number}</h1>
+                    {(ticket.round_no ?? 1) > 1 && (
+                        <div className="mt-1 text-xs font-black uppercase tracking-widest">
+                            *** {ticket.round_label ?? `ROUND ${ticket.round_no}`} — ADDITIONAL ITEMS ***
+                        </div>
+                    )}
                     <div className="mt-1 flex items-center justify-center gap-2 font-bold">
                         {ticket.table_name ? (
                             <span className="rounded bg-black text-white px-2 py-0.5 text-xs uppercase">

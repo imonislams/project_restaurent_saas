@@ -417,6 +417,13 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->g
     Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])
         ->middleware('permission:orders.approve')->name('orders.reject');
 
+    Route::post('/orders/{order}/items', [OrderController::class, 'appendItems'])
+        ->middleware(['permission:pos.use', 'permission:orders.update'])->name('orders.items.store');
+    Route::post('/orders/{order}/rounds/{round}/accept', [OrderController::class, 'acceptRound'])
+        ->middleware('permission:orders.approve')->name('orders.rounds.accept');
+    Route::post('/orders/{order}/rounds/{round}/cancel', [OrderController::class, 'cancelRound'])
+        ->middleware('permission:orders.update')->name('orders.rounds.cancel');
+
     Route::prefix('invoices')->name('invoices.')->group(function () {
         Route::get('/', [TenantInvoiceController::class, 'index'])
             ->middleware('permission:invoices.view')->name('index');

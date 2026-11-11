@@ -112,6 +112,7 @@ export default function TablesIndex({
 }) {
     const { auth, flash, currency } = usePage().props as Record<string, any>;
     const canManage = auth.permissions.includes('tables.manage');
+    const canAppendItems = auth.permissions.includes('orders.update');
 
     // UI View states
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -1013,13 +1014,26 @@ export default function TablesIndex({
                                                 <p className="font-bold tabular-nums text-gray-900">
                                                     <Money amount={o.total} />
                                                 </p>
-                                                <Button
-                                                    size="xs"
-                                                    variant="ghost"
-                                                    onClick={() => router.get(route('orders.show', o.id))}
-                                                >
-                                                    View & Settle →
-                                                </Button>
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {canAppendItems && (
+                                                        <Button
+                                                            size="xs"
+                                                            variant="ghost"
+                                                            onClick={() =>
+                                                                router.get(route('pos.index', { append: o.id }))
+                                                            }
+                                                        >
+                                                            + Items
+                                                        </Button>
+                                                    )}
+                                                    <Button
+                                                        size="xs"
+                                                        variant="ghost"
+                                                        onClick={() => router.get(route('orders.show', o.id))}
+                                                    >
+                                                        View &amp; Settle →
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}

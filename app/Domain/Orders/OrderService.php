@@ -108,9 +108,20 @@ class OrderService
      */
     protected function reverseStock(Order $order, Branch $branch, string $label): void
     {
+        $this->reverseStockFor($order, $branch, $order->items()->get(), $label);
+    }
+
+    /**
+     * Reverse stock for a specific set of lines. Used when a single additional
+     * round is cancelled without touching the rest of the order.
+     *
+     * @param  iterable<int, \App\Domain\Orders\Models\OrderItem>  $items
+     */
+    public function reverseStockFor(Order $order, Branch $branch, iterable $items, string $label): void
+    {
         $location = app(ProvisionInventoryDefaults::class)->defaultLocationFor($branch);
 
-        foreach ($order->items()->get() as $item) {
+        foreach ($items as $item) {
             $product = $item->product;
 
             if (! $product) {
@@ -181,7 +192,7 @@ class OrderService
         });
 
         if ($this->confirmation->sendConfirmedToKitchen()) {
-            $this->openKitchenTicket($accepted);
+            $this->sendConfirmedRoundsToKitchen($accepted, $user);
         }
 
         app(RealtimeBroadcaster::class)->send(new OrderActivity($accepted, 'accepted'));
@@ -208,6 +219,39 @@ class OrderService
                 OpenKitchenTicket::dispatch($order->getKey());
             } catch (\Throwable $dispatchError) {
                 report($dispatchError);
+            }
+        }
+    }
+
+    /**
+     * Accept every pending round of an order and dispatch only its own items.
+     * Round 1 is covered too, so a QR order still produces a single ticket for
+     * everything that was awaiting confirmation.
+     */
+    protected function sendConfirmedRoundsToKitchen(Order $order, User $user): void
+    {
+        $rounds = $order->rounds()
+            ->where('acceptance_status', AcceptanceStatus::Pending->value)
+            ->orderBy('round_no')
+            ->get();
+
+        if ($rounds->isEmpty()) {
+            $this->openKitchenTicket($order);
+
+            return;
+        }
+
+        foreach ($rounds as $round) {
+            $round->forceFill([
+                'acceptance_status' => AcceptanceStatus::Accepted,
+                'accepted_at' => $round->accepted_at ?? now(),
+                'accepted_by_user_id' => $user->getKey(),
+            ])->save();
+
+            try {
+                $this->kitchen->openTicketForRound($round);
+            } catch (\Throwable $e) {
+                report($e);
             }
         }
     }
@@ -242,6 +286,14 @@ class OrderService
                 'status' => OrderStatus::Voided,
                 'user_id' => $user->getKey(),
                 'note' => 'Order rejected'.($reason ? ': '.$reason : ''),
+            ]);
+
+            $order->rounds()->update([
+                'status' => \App\Domain\Orders\Models\OrderRound::STATUS_CANCELLED,
+                'acceptance_status' => AcceptanceStatus::Rejected->value,
+                'rejected_at' => now(),
+                'rejected_by_user_id' => $user->getKey(),
+                'rejected_reason' => $reason,
             ]);
 
             $this->audit->log('order.rejected', $order, [
