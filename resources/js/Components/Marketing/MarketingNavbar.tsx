@@ -111,7 +111,7 @@ export default function MarketingNavbar() {
                                 </NavigationMenuItem>
 
                                 {/* Resources Dropdown */}
-                                <NavigationMenuItem value="resources">
+                                <NavigationMenuItem value="resources" className="relative">
                                     <NavigationMenuTrigger className="text-sm font-medium text-stone-700 hover:text-stone-900 bg-transparent hover:bg-stone-50 data-[state=open]:bg-stone-50">
                                         Resources
                                     </NavigationMenuTrigger>

@@ -12,7 +12,7 @@ const track = (kind: 'product' | 'solution', slug: string) => trackConversion('n
 
 export function ProductsMenu({ isActive }: { isActive: boolean }) {
     return (
-        <NavigationMenuItem value="products">
+        <NavigationMenuItem value="products" className="relative">
             <NavigationMenuTrigger className={`${TRIGGER} ${isActive ? 'text-[#EC3013]' : ''}`} onPointerEnter={() => undefined}>Products</NavigationMenuTrigger>
             <NavigationMenuContent>
                 <div className="w-[820px] max-w-[calc(100vw-2rem)] rounded-xl border border-stone-200 bg-white p-4 shadow-lg">
@@ -53,7 +53,7 @@ const TYPES: [string, string, string][] = [
 
 export function SolutionsMenu({ isActive }: { isActive: boolean }) {
     return (
-        <NavigationMenuItem value="solutions">
+        <NavigationMenuItem value="solutions" className="relative">
             <NavigationMenuTrigger className={`${TRIGGER} ${isActive ? 'text-[#EC3013]' : ''}`}>Solutions</NavigationMenuTrigger>
             <NavigationMenuContent>
                 <div className="w-[760px] max-w-[calc(100vw-2rem)] rounded-xl border border-stone-200 bg-white p-4 shadow-lg">
