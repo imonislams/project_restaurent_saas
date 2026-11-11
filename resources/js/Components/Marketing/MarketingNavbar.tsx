@@ -45,6 +45,12 @@ export default function MarketingNavbar() {
 
     const [mobileOpen, setMobileOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [menuValue, setMenuValue] = useState('');
+
+    // Close an open dropdown after Inertia navigates to a new page.
+    useEffect(() => {
+        setMenuValue('');
+    }, [url]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -74,7 +80,7 @@ export default function MarketingNavbar() {
                     <MiseLogo href="/" size="md" />
 
                     <div className="hidden lg:flex items-center">
-                        <NavigationMenu>
+                        <NavigationMenu value={menuValue} onValueChange={setMenuValue}>
                             <NavigationMenuList className="gap-1">
                                 <ProductsMenu isActive={isActive('/products')} />
 
@@ -105,7 +111,7 @@ export default function MarketingNavbar() {
                                 </NavigationMenuItem>
 
                                 {/* Resources Dropdown */}
-                                <NavigationMenuItem>
+                                <NavigationMenuItem value="resources">
                                     <NavigationMenuTrigger className="text-sm font-medium text-stone-700 hover:text-stone-900 bg-transparent hover:bg-stone-50 data-[state=open]:bg-stone-50">
                                         Resources
                                     </NavigationMenuTrigger>
@@ -115,6 +121,7 @@ export default function MarketingNavbar() {
                                                 href={route('docs.index')}
                                                 target="_blank"
                                                 rel="noopener"
+                                                onClick={() => setMenuValue('')}
                                                 className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-stone-50 transition-colors"
                                             >
                                                 <FileText className="w-4 h-4 text-stone-500 group-hover:text-[#EC3013]" />
