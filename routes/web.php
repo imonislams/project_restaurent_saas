@@ -1011,6 +1011,8 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
         Route::get('/commands', [PlatformCommandController::class, 'index'])->name('commands.index');
         Route::post('/commands/run', [PlatformCommandController::class, 'runCurated'])->name('commands.run');
         Route::post('/commands/advanced', [PlatformCommandController::class, 'runAdvanced'])->name('commands.advanced');
+        Route::post('/commands/migrations', [PlatformCommandController::class, 'runMigrations'])
+            ->middleware('throttle:6,1')->name('commands.migrations.run');
     });
     Route::get('/notifications', [PlatformNotificationController::class, 'index'])
         ->middleware('platform.permission:platform.email.view')->name('notifications.index');

@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Domain\Auditing\AuditLogger;
+use App\Domain\BackupAndRecovery\Enums\BackupScope;
+use App\Domain\BackupAndRecovery\Models\Backup;
 use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Operations\CommandRunner;
+use App\Domain\Operations\MigrationManager;
 use App\Domain\Operations\Models\CommandRun;
 use App\Domain\PlatformSettings\PlatformSettings;
 use App\Http\Controllers\Controller;
@@ -18,12 +21,15 @@ class CommandController extends Controller
 {
     public function __construct(
         protected CommandRunner $runner,
+        protected MigrationManager $migrations,
         protected AuditLogger $audit,
     ) {}
 
     public function index(): Response
     {
         $advancedEnabled = (bool) app(PlatformSettings::class)->get('features.command_terminal', false);
+        $lastBackup = Backup::query()->where('scope', BackupScope::Platform->value)->latest('id')->first();
+        $lastMigrationRun = CommandRun::query()->with('user:id,name')->where('type', 'migration')->latest('id')->first();
 
         return Inertia::render('Platform/Ops/Commands', [
             'curated' => collect($this->runner->curated())->map(fn ($action, $key) => [
@@ -37,17 +43,16 @@ class CommandController extends Controller
                 'is_super_admin' => (bool) request()->user()?->hasRole(RoleName::SaasSuperAdmin),
                 'allowed_prefixes' => $this->runner->allowedPrefixes(),
             ],
-            'runs' => CommandRun::query()->with('user:id,name')->latest('id')->limit(25)->get()->map(fn (CommandRun $run) => [
-                'id' => $run->getKey(),
-                'command' => $run->command,
-                'type' => $run->type,
-                'status' => $run->status,
-                'exit_code' => $run->exit_code,
-                'duration_ms' => $run->duration_ms,
-                'output' => $run->output,
-                'user' => $run->user?->name,
-                'created_at' => $run->created_at?->toIso8601String(),
-            ]),
+            'runs' => CommandRun::query()->with('user:id,name')->latest('id')->limit(25)->get()
+                ->map(fn (CommandRun $run) => $this->runRow($run)),
+            'migrations' => [
+                ...$this->migrations->state(),
+                'last_backup' => $lastBackup ? [
+                    'taken_at' => $lastBackup->created_at?->toIso8601String(),
+                    'verified' => $lastBackup->verification_result === 'ok',
+                ] : null,
+                'last_run' => $lastMigrationRun ? $this->runRow($lastMigrationRun) : null,
+            ],
         ]);
     }
 
@@ -86,5 +91,49 @@ class CommandController extends Controller
         $this->audit->log('platform.command_ran', $run, ['command' => $command, 'exit_code' => $run->exit_code, 'advanced' => true], $user);
 
         return back()->with($run->exit_code === 0 ? 'success' : 'error', 'Command finished with exit code '.$run->exit_code.'.');
+    }
+
+    /**
+     * Execute only the selected pending migrations. The selection is re-validated
+     * against the live pending set inside MigrationManager.
+     */
+    public function runMigrations(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'migrations' => ['required', 'array', 'min:1'],
+            'migrations.*' => ['string', 'max:255'],
+            'backup' => ['boolean'],
+        ]);
+
+        $result = $this->migrations->run($data['migrations'], $request->user(), (bool) ($data['backup'] ?? true));
+
+        $count = count($result['migrations']);
+        $applied = $count.' migration'.($count === 1 ? '' : 's');
+
+        if ($result['exit_code'] === 0) {
+            return back()->with('success', $applied.' applied successfully.');
+        }
+
+        if ($result['backup'] === 'failed') {
+            return back()->with('error', 'The pre-run database backup failed, so no migration was run. See the output below.');
+        }
+
+        return back()->with('error', 'Migration run failed with exit code '.$result['exit_code'].'. See the output below.');
+    }
+
+    /** @return array<string, mixed> */
+    protected function runRow(CommandRun $run): array
+    {
+        return [
+            'id' => $run->getKey(),
+            'command' => $run->command,
+            'type' => $run->type,
+            'status' => $run->status,
+            'exit_code' => $run->exit_code,
+            'duration_ms' => $run->duration_ms,
+            'output' => $run->output,
+            'user' => $run->user?->name,
+            'created_at' => $run->created_at?->toIso8601String(),
+        ];
     }
 }
