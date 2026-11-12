@@ -26,8 +26,10 @@ export function formatKpiValue(item: KpiItem): string {
     switch (item.format) {
         case 'money':
             // Currency is always supplied by the server; a money figure without a
-            // currency would be meaningless.
-            return formatMoney(Number(item.value), item.currency ?? 'USD');
+            // currency would be meaningless. Intl inserts a non-breaking space
+            // between the currency and the amount, which prevents wrapping inside
+            // a narrow KPI card — use a normal space so the value wraps cleanly.
+            return formatMoney(Number(item.value), item.currency ?? 'USD').replace(/[\u00a0\u202f]/g, ' ');
         case 'number':
             return formatNumber(Number(item.value));
         case 'percent':
@@ -65,12 +67,12 @@ export default function KpiBlock({ block }: { block: KpiBlockData }) {
                     ) : (
                         <div
                             key={item.key}
-                            className="rounded-lg border border-dashed border-border bg-card/60 p-4"
+                            className="flex h-full min-w-0 flex-col rounded-lg border border-dashed border-border bg-card/60 p-4"
                         >
-                            <div className="truncate text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                            <div className="min-w-0 break-words text-xs font-medium uppercase leading-snug tracking-wider text-muted-foreground">
                                 {item.label}
                             </div>
-                            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                            <p className="mt-2 break-words text-xs leading-relaxed text-muted-foreground">
                                 {item.reason ?? 'Not available.'}
                             </p>
                         </div>

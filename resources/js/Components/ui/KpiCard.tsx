@@ -31,13 +31,13 @@ export default function KpiCard({
     return (
         <div
             className={cn(
-                'rounded-lg border border-border bg-card p-4 sm:p-5 shadow-xs transition-shadow hover:shadow-sm',
+                'flex h-full min-w-0 flex-col rounded-lg border border-border bg-card p-4 sm:p-5 shadow-xs transition-shadow hover:shadow-sm',
                 'print:rounded-none print:border-0 print:bg-transparent print:p-2 print:shadow-none',
                 className
             )}
         >
-            <div className="flex items-center justify-between gap-3">
-                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">
+            <div className="flex items-start justify-between gap-3">
+                <span className="min-w-0 break-words [overflow-wrap:anywhere] text-xs font-medium uppercase leading-snug tracking-wider text-muted-foreground">
                     {displayLabel}
                 </span>
                 {icon && (
@@ -47,23 +47,23 @@ export default function KpiCard({
                 )}
             </div>
 
-            <div className={cn('mt-2 text-2xl font-bold tracking-tight tabular-nums', valueTone)}>
+            <div className={cn('mt-2 min-w-0 break-words [overflow-wrap:anywhere] text-2xl font-bold tracking-tight tabular-nums', valueTone)}>
                 {value}
             </div>
 
             {(hint || trend) && (
-                <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="mt-auto flex items-start gap-1.5 pt-1.5 text-xs text-muted-foreground">
                     {trend && (
                         <span
                             className={cn(
-                                'font-semibold',
+                                'shrink-0 font-semibold',
                                 trend.direction === 'up' ? 'text-emerald-600' : 'text-rose-600'
                             )}
                         >
                             {trend.direction === 'up' ? '↑' : '↓'} {trend.label}
                         </span>
                     )}
-                    {hint && <span className="truncate">{hint}</span>}
+                    {hint && <span className="min-w-0 break-words">{hint}</span>}
                 </div>
             )}
         </div>
