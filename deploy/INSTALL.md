@@ -9,7 +9,7 @@ This package is a complete, versioned production build. Its contents:
 | `app/ bootstrap/ config/ database/ lang/ public/ resources/ routes/` | Application source |
 | `vendor/` | Production PHP dependencies (no dev packages) |
 | `public/build/` | Compiled frontend assets + PWA manifest and service worker |
-| `storage/ bootstrap/cache/` | Empty, writable runtime directories |
+| `bootstrap/cache/` | Empty, writable runtime directory (`storage/` is not shipped; on a fresh install create it, see below) |
 
 Verify the archive before extracting:
 
@@ -23,7 +23,10 @@ sha256sum -c application-<version>.zip.sha256
 2. **Domains** → your domain → **Manage** → set the **Document Root** to `<extract-dir>/public`.
    If the host keeps the root at `public_html` and will not change it, extract the package there
    instead and keep the shipped root `.htaccess` — it routes every request through `public/`.
-3. Make `storage/` and `bootstrap/cache/` writable (**755**, recursive).
+3. The package does **not** contain `storage/` (so upgrades never overwrite live uploads). On a
+   **first install** create it: `storage/app/public`, `storage/app/private`,
+   `storage/framework/{cache/data,sessions,views}` and `storage/logs`. Then make `storage/` and
+   `bootstrap/cache/` writable (**755**, recursive). On an upgrade, leave the existing `storage/` alone.
 4. **MySQL Databases** → create a database and user, and give the user **ALL PRIVILEGES** on it.
    Migrations need `CREATE`, `ALTER` and `INDEX`, not just `SELECT`.
 5. **Create `.env`** — enable *Show Hidden Files*, right‑click `.env.example` → **Copy** → name it

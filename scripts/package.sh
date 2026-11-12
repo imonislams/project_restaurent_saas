@@ -69,23 +69,12 @@ return array();
 PHP
 fi
 
-# --- writable, shipped-empty runtime directories ---------------------------
-mkdir -p \
-  "$STAGING"/storage/app/private \
-  "$STAGING"/storage/app/public \
-  "$STAGING"/storage/framework/cache/data \
-  "$STAGING"/storage/framework/sessions \
-  "$STAGING"/storage/framework/views \
-  "$STAGING"/storage/framework/testing \
-  "$STAGING"/storage/logs \
-  "$STAGING"/bootstrap/cache
-
-for dir in \
-  storage/app/private storage/app/public storage/framework/cache \
-  storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
-do
-  printf '*\n!.gitignore\n' > "$STAGING/$dir/.gitignore"
-done
+# --- writable runtime directories ------------------------------------------
+# storage/ is deliberately NOT shipped: it holds production uploads (images, logs,
+# sessions). Extracting a package over a live site must never touch it. Only
+# bootstrap/cache is shipped empty.
+mkdir -p "$STAGING"/bootstrap/cache
+printf '*\n!.gitignore\n' > "$STAGING"/bootstrap/cache/.gitignore
 
 # --- instructions + manifest ----------------------------------------------
 cp deploy/INSTALL.md deploy/UPGRADE.md "$STAGING/"

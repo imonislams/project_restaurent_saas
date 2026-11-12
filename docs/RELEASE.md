@@ -82,7 +82,7 @@ Tagging `vX.Y.Z` runs the `build:package` job once the test suites pass, produci
 `application-vX.Y.Z.zip` and its `application-vX.Y.Z.zip.sha256`; the `release` job attaches
 both to the GitLab Release so every tag has a downloadable, checksummed build. The archive
 contains the application source, `vendor/` (without dev packages), `public/build/` (compiled
-assets + PWA manifest and service worker), the empty writable `storage/` and `bootstrap/cache/`
+assets + PWA manifest and service worker), the empty writable `bootstrap/cache/` (`storage/` is intentionally excluded so uploads on a live site are never overwritten)
 directories, install/upgrade instructions and a `RELEASE-MANIFEST.json` (version, commit, build
 time, PHP and Laravel versions). Build the same package locally with:
 

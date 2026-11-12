@@ -7,6 +7,29 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-11-12
+
+### Added
+
+- Public documentation centre with recorded walkthroughs.
+- Additional item rounds on an order, with combined invoicing.
+- Built-in roles can be edited per tenant.
+- Platform Command Center can manage pending migrations.
+
+### Changed
+
+- Marketing navigation: black items with brand-red hover; dropdowns align under their triggers
+  and close after navigation.
+- Report and document print layouts standardised; the POS receipt screen opens after settling.
+
+### Fixed
+
+- Staff invitation email delivery failures are now surfaced.
+- The marketing contact form persists the inquiry category as a lead.
+- Platform KPI cards no longer truncate labels or overflow values.
+- Stale approval badges cleared; demo purge hardened.
+- Kitchen Display opens in a normal new browser tab; table cards keep content within bounds.
+
 ## [1.0.5] - 2026-11-09
 
 ### Changed
