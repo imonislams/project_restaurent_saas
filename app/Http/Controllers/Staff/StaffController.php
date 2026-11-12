@@ -86,9 +86,11 @@ class StaffController extends Controller
             return back()->with('success', 'Team member added. Share the password with them directly.');
         }
 
-        $this->invitations->invite($tenant, $data, $request->user());
+        $problem = $this->invitations->invite($tenant, $data, $request->user());
 
-        return back()->with('success', 'Invitation sent.');
+        return $problem === null
+            ? back()->with('success', 'Invitation sent.')
+            : back()->with('error', 'Invitation created, but the email could not be sent: '.$problem.' Use Resend once the email settings are fixed.');
     }
 
     public function update(UpdateStaffRequest $request, User $staff): RedirectResponse
@@ -146,9 +148,11 @@ class StaffController extends Controller
     {
         $this->authorize('create', User::class);
 
-        $this->invitations->resend($invitation);
+        $problem = $this->invitations->resend($invitation);
 
-        return back()->with('success', 'Invitation resent.');
+        return $problem === null
+            ? back()->with('success', 'Invitation resent.')
+            : back()->with('error', 'Invitation updated, but the email could not be sent: '.$problem);
     }
 
     public function destroyInvitation(Invitation $invitation): RedirectResponse

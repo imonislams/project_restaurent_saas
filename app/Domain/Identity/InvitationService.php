@@ -8,10 +8,12 @@ use App\Domain\Identity\Models\Invitation;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Notifications\StaffAccountCreatedNotification;
 use App\Domain\Identity\Notifications\StaffInvitationNotification;
+use App\Domain\PlatformSettings\MailConfigurator;
 use App\Domain\Subscriptions\UsageService;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -36,9 +38,13 @@ class InvitationService
     /**
      * Email an invitation link. The invitee chooses their own password.
      *
+     * The invitation is always persisted; the return value only reports whether
+     * the email could be handed to a delivering transport.
+     *
      * @param  array{email: string, name?: ?string, roles: list<string>, branch_ids?: list<int>}  $data
+     * @return ?string null when the email was sent, otherwise the reason it was not
      */
-    public function invite(Tenant $tenant, array $data, ?User $inviter = null): Invitation
+    public function invite(Tenant $tenant, array $data, ?User $inviter = null): ?string
     {
         $roles = $this->tenantRoleSlugs($data['roles'], $tenant->getKey());
 
@@ -62,14 +68,12 @@ class InvitationService
             'expires_at' => now()->addDays(self::EXPIRY_DAYS),
         ]);
 
-        $this->send($invitation, $plain);
-
         $this->audit->log('staff.invited', $invitation, [
             'email' => $invitation->email,
             'roles' => $roles,
         ], $inviter, $tenant->getKey());
 
-        return $invitation;
+        return $this->send($invitation, $plain);
     }
 
     /**
@@ -132,7 +136,8 @@ class InvitationService
         return $user;
     }
 
-    public function resend(Invitation $invitation): void
+    /** @return ?string null when the email was sent, otherwise the reason it was not */
+    public function resend(Invitation $invitation): ?string
     {
         $plain = Invitation::generateToken();
 
@@ -141,11 +146,11 @@ class InvitationService
             'expires_at' => now()->addDays(self::EXPIRY_DAYS),
         ])->save();
 
-        $this->send($invitation, $plain);
-
         $this->audit->log('staff.invitation_resent', $invitation, [
             'email' => $invitation->email,
         ]);
+
+        return $this->send($invitation, $plain);
     }
 
     public function revoke(Invitation $invitation): void
@@ -281,12 +286,36 @@ class InvitationService
             ->all();
     }
 
-    protected function send(Invitation $invitation, string $plainToken): void
+    /**
+     * Deliver the invitation email synchronously.
+     *
+     * Delivery is reported, never thrown: the invitation row is already saved,
+     * so a mail failure must not abort the request or leave the owner with a
+     * false "sent" message. A non-delivering transport (log/array) is reported
+     * even though the driver accepts the message.
+     */
+    protected function send(Invitation $invitation, string $plainToken): ?string
     {
-        $url = route('invitations.accept', ['token' => $plainToken]);
+        try {
+            $problem = app(MailConfigurator::class)->deliveryProblem();
 
-        Notification::route('mail', $invitation->email)
-            ->notify(new StaffInvitationNotification($invitation, $url));
+            $url = route('invitations.accept', ['token' => $plainToken]);
+
+            Notification::route('mail', $invitation->email)
+                ->notify(new StaffInvitationNotification($invitation, $url));
+        } catch (\Throwable $e) {
+            report($e);
+
+            Log::warning('Invitation email could not be sent.', [
+                'invitation_id' => $invitation->getKey(),
+                'to' => $invitation->email,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $e->getMessage();
+        }
+
+        return $problem;
     }
 
     public function findByToken(string $token): Invitation

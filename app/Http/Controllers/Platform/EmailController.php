@@ -199,27 +199,11 @@ class EmailController extends Controller
      */
     protected function deliveryWarning(string $transport, ?string $from): ?string
     {
-        if (in_array($transport, ['log', 'array'], true)) {
-            return 'Nothing is being delivered: the active transport is "'.$transport.'", so every message is written '
-                .'to the application log instead of being sent. Fill in your SMTP host, port, username and password '
-                .'below and choose the "smtp" mailer — or set MAIL_MAILER=smtp and the MAIL_* values in .env.';
-        }
-
-        // A stored credential that cannot be decrypted is invisible otherwise: mail
-        // looks configured, the password silently reads as empty, and every send
-        // fails authentication.
-        if (in_array('mail.password', $this->settings->unreadableKeys(), true)) {
-            return 'The saved SMTP password cannot be read: it was encrypted with a different APP_KEY (the key was '
-                .'changed, or this database came from another install). Delivery fails authentication until you '
-                .'re-enter the password below and save.';
-        }
-
-        if ($from === null) {
-            return 'The From address cannot deliver mail: it is missing, not an email address, or on a reserved domain '
-                .'(example.com). Use an address on your mail provider\'s domain — your SMTP username is a safe choice.';
-        }
-
-        return null;
+        return MailConfigurator::problemFor(
+            $transport,
+            $from,
+            in_array('mail.password', $this->settings->unreadableKeys(), true),
+        );
     }
 
     /** @return array<string, mixed> */

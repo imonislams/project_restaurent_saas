@@ -35,7 +35,7 @@ class DiagnosticsController extends Controller
                 'cache' => config('cache.default'),
                 'queue' => config('queue.default'),
                 'session' => config('session.driver'),
-                'mail' => $settings->get('mail.mailer') ?? config('mail.default'),
+                'mail' => config('mail.default'),
                 'filesystem' => config('filesystems.default'),
             ],
             'integrations' => [
