@@ -2,6 +2,7 @@
 
 namespace App\Domain\Marketing\Models;
 
+use App\Domain\Marketing\Enums\InquiryCategory;
 use App\Domain\Marketing\Enums\LeadSource;
 use App\Domain\Marketing\Enums\LeadStatus;
 use App\Domain\Marketing\Enums\MarketingChannel;
@@ -23,6 +24,7 @@ class MarketingLead extends Model
         'phone',
         'business_name',
         'restaurant_category',
+        'inquiry_category',
         'country',
         'city',
         'branches_count',
@@ -99,6 +101,16 @@ class MarketingLead extends Model
     public function isConverted(): bool
     {
         return $this->converted_at !== null || $this->tenant_id !== null;
+    }
+
+    /**
+     * The enquiry topic the visitor chose on the contact form. Older leads predate
+     * the column, so they read as unspecified rather than pretending to be a topic.
+     */
+    public function inquiryCategoryLabel(): string
+    {
+        return InquiryCategory::tryFrom((string) $this->inquiry_category)?->label()
+            ?? 'Not specified';
     }
 
     public function isOpen(): bool

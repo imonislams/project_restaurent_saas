@@ -14,6 +14,8 @@ interface Lead {
     city: string | null;
     branches_count: string | null;
     restaurant_category: string | null;
+    inquiry_category: string | null;
+    inquiry_category_label: string;
     current_software: string | null;
     source_label: string;
     channel: string | null;
@@ -78,7 +80,8 @@ export default function LeadShow({
                                     ['Email', lead.email],
                                     ['Phone', lead.phone ?? '—'],
                                     ['Restaurant', lead.business_name ?? '—'],
-                                    ['Category', lead.restaurant_category ?? '—'],
+                                    ['Inquiry about', lead.inquiry_category_label],
+                                    ['Venue concept', lead.restaurant_category ?? '—'],
                                     ['Branches', lead.branches_count ?? '—'],
                                     ['Current software', lead.current_software ?? '—'],
                                     ['Channel', lead.channel ?? '—'],

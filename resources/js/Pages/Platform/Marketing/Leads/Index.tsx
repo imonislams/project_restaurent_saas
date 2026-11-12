@@ -11,6 +11,7 @@ interface LeadRow {
     email: string;
     phone: string | null;
     business_name: string | null;
+    inquiry_category_label: string;
     country: string | null;
     source_label: string;
     status: string;
@@ -62,6 +63,7 @@ export default function LeadsIndex({
             ),
         },
         { key: 'business_name', label: 'Restaurant', render: (row) => <span className="truncate text-xs">{row.business_name ?? '—'}</span> },
+        { key: 'inquiry_category_label', label: 'Enquiry', render: (row) => <span className="text-xs">{row.inquiry_category_label}</span> },
         { key: 'source_label', label: 'Source', render: (row) => <span className="text-xs">{row.source_label}</span> },
         { key: 'status_label', label: 'Status', render: (row) => <Badge tone={row.is_converted ? 'success' : 'neutral'}>{row.status_label}</Badge> },
         { key: 'score', label: 'Score', align: 'right' },

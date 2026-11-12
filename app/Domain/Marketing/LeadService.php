@@ -53,6 +53,7 @@ class LeadService
             'phone' => $phone,
             'business_name' => $data['business_name'] ?? ($data['restaurant_name'] ?? null),
             'restaurant_category' => $data['restaurant_category'] ?? ($data['venue_type'] ?? null),
+            'inquiry_category' => $data['inquiry_category'] ?? null,
             'country' => isset($data['country']) ? strtoupper((string) $data['country']) : ($visitor?->country),
             'city' => $data['city'] ?? null,
             'branches_count' => $data['branches_count'] ?? null,

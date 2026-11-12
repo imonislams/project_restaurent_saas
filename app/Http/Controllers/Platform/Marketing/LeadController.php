@@ -284,6 +284,8 @@ class LeadController extends Controller
             'city' => $lead->city,
             'branches_count' => $lead->branches_count,
             'restaurant_category' => $lead->restaurant_category,
+            'inquiry_category' => $lead->inquiry_category,
+            'inquiry_category_label' => $lead->inquiryCategoryLabel(),
             'current_software' => $lead->current_software,
             'source' => $lead->source->value,
             'source_label' => $lead->source->label(),

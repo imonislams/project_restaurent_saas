@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Billing\PricingRegionContext;
+use App\Domain\Marketing\Enums\InquiryCategory;
 use App\Domain\Marketing\Enums\LeadSource;
 use App\Domain\Marketing\LeadService;
 use App\Domain\Subscriptions\Enums\BillingCycle;
@@ -335,7 +336,7 @@ class MarketingController extends Controller
             'restaurant_name' => 'required|string|max:150',
             'venue_type' => 'required|string|in:restaurant,cafe,cloud_kitchen,qsr,takeaway,group,other',
             'branches_count' => 'required|string|in:1,2-5,6-15,15+',
-            'inquiry_category' => 'required|string|in:sales,migration,custom_hardware,partnership',
+            'inquiry_category' => 'required|string|in:'.implode(',', InquiryCategory::values()),
             'message' => 'required|string|min:10|max:2000',
             'marketing_consent' => 'nullable|boolean',
         ]);
