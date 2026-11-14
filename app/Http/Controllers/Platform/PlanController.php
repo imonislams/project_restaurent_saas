@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Platform;
 
 use App\Domain\Billing\Models\PaymentGateway;
 use App\Domain\PaymentGateways\GatewayProviderRegistry;
+use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Subscriptions\Enums\PlanFeature;
 use App\Domain\Subscriptions\Enums\PlanRegion;
 use App\Domain\Subscriptions\Enums\PlanVisibility;
@@ -23,7 +24,7 @@ class PlanController extends Controller
 
     public function index(Request $request): Response
     {
-        $settings = app(\App\Domain\PlatformSettings\PlatformSettings::class);
+        $settings = app(PlatformSettings::class);
         $defaultCurrency = $settings->get('billing.default_currency')
             ?? $settings->get('general.default_currency')
             ?? config('platform.reporting_currency', 'USD');
@@ -147,7 +148,7 @@ class PlanController extends Controller
     /** @return array<string, mixed> */
     protected function formProps(?array $plan = null): array
     {
-        $settings = app(\App\Domain\PlatformSettings\PlatformSettings::class);
+        $settings = app(PlatformSettings::class);
         $defaultCurrency = $settings->get('billing.default_currency')
             ?? $settings->get('general.default_currency')
             ?? config('platform.reporting_currency', 'USD');

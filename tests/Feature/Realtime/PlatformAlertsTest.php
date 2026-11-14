@@ -8,6 +8,7 @@ use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Notifications\PlatformNotificationService;
 use App\Domain\Realtime\Events\PlatformAlert;
 use App\Domain\Realtime\RealtimeManager;
+use App\Domain\Subscriptions\Models\SubscriptionInvoice;
 use App\Domain\Subscriptions\SubscriptionService;
 use App\Domain\Tenancy\Actions\RegisterTenant;
 use App\Domain\Tenancy\Models\Tenant;
@@ -59,7 +60,7 @@ class PlatformAlertsTest extends TestCase
         return $row ? (array) json_decode((string) $row->data, true) : [];
     }
 
-    protected function manualInvoice(): \App\Domain\Subscriptions\Models\SubscriptionInvoice
+    protected function manualInvoice(): SubscriptionInvoice
     {
         $tenant = Tenant::factory()->create();
         $subscription = app(SubscriptionService::class)->startTrial($tenant);

@@ -2,8 +2,8 @@
 
 use App\Domain\Subscriptions\Models\Plan;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Every plan now includes every feature; plans differ only by limits and price.

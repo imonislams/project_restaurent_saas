@@ -16,17 +16,21 @@ use App\Domain\Identity\ManagerPinService;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
 use App\Domain\Inventory\Enums\StockMovementReason;
 use App\Domain\Inventory\StockService;
+use App\Domain\Invoicing\OrderInvoiceService;
+use App\Domain\Kitchen\KitchenService;
 use App\Domain\Loyalty\LoyaltyService;
 use App\Domain\Menu\Enums\InventoryMode;
 use App\Domain\Menu\Models\Product;
 use App\Domain\Menu\Models\ProductVariant;
 use App\Domain\Menu\ModifierResolver;
+use App\Domain\Notifications\NotificationService;
 use App\Domain\Orders\Enums\AcceptanceStatus;
 use App\Domain\Orders\Enums\FulfillmentStatus;
 use App\Domain\Orders\Enums\OrderSource;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Enums\OrderType;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Orders\Models\OrderItem;
 use App\Domain\Orders\Models\OrderRound;
 use App\Domain\Orders\OrderConfirmationSettings;
 use App\Domain\Payments\Enums\PaymentStatus;
@@ -36,7 +40,6 @@ use App\Domain\Tables\TableService;
 use App\Domain\Tables\TableStaffService;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
-use App\Domain\Kitchen\KitchenService;
 use App\Jobs\OpenKitchenTicket;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -88,7 +91,7 @@ class SaleService
 
             $this->applyPayments($order, $prepared['payments'], $tenant, $prepared['shift'], $data['idempotency_key'] ?? null);
 
-            $this->deductStock($order, $branch);
+            $this->deductStock($order, $branch, $prepared['totals']['items']);
 
             $order->forceFill([
                 'paid_total' => $paidTotal,
@@ -111,7 +114,9 @@ class SaleService
         // An immediate sale is fully paid, so it belongs on the Bill/Invoice
         // workflow as well — not only served table orders.
         try {
-            app(\App\Domain\Invoicing\OrderInvoiceService::class)->ensureForOrder($order->fresh());
+            // postCommit() already returned a fresh model with items + payments
+            // loaded, so pass it straight through instead of reloading again.
+            app(OrderInvoiceService::class)->ensureForOrder($order);
         } catch (\Throwable $e) {
             report($e);
         }
@@ -273,7 +278,7 @@ class SaleService
         $invoice = null;
 
         try {
-            $invoice = app(\App\Domain\Invoicing\OrderInvoiceService::class)->ensureForOrder($order->fresh());
+            $invoice = app(OrderInvoiceService::class)->ensureForOrder($order->fresh());
         } catch (\Throwable $e) {
             report($e);
         }
@@ -285,7 +290,7 @@ class SaleService
         }
 
         try {
-            $notifier = app(\App\Domain\Notifications\NotificationService::class);
+            $notifier = app(NotificationService::class);
             $notifier->markOrderHandled($order->fresh(), $user);
 
             if ($invoice) {
@@ -497,7 +502,7 @@ class SaleService
 
             // Tie the payment to the order's invoice, when one exists.
             try {
-                app(\App\Domain\Invoicing\OrderInvoiceService::class)->linkPayment($payment);
+                app(OrderInvoiceService::class)->linkPayment($payment);
             } catch (\Throwable $e) {
                 report($e);
             }
@@ -626,10 +631,30 @@ class SaleService
             throw ValidationException::withMessages(['items' => 'An order must contain at least one item.']);
         }
 
+        // Load every referenced product (and its branch availability overrides) in
+        // one query instead of one per line. isAvailableIn() reads the availability
+        // relation, which would otherwise lazy-load once per product.
+        $productIds = array_values(array_unique(array_map(
+            fn (array $row) => (int) ($row['product_id'] ?? 0),
+            $items,
+        )));
+
+        $products = Product::query()
+            ->with('availability')
+            ->whereIn('id', $productIds)
+            ->get()
+            ->keyBy(fn (Product $product) => $product->getKey());
+
         $lines = [];
 
         foreach ($items as $row) {
-            $product = Product::query()->findOrFail($row['product_id']);
+            $product = $products->get((int) ($row['product_id'] ?? 0));
+
+            if (! $product) {
+                throw ValidationException::withMessages([
+                    'items' => 'A selected product could not be found.',
+                ]);
+            }
 
             $variant = ! empty($row['variant_id'])
                 ? ProductVariant::query()->where('product_id', $product->getKey())->findOrFail($row['variant_id'])
@@ -737,16 +762,45 @@ class SaleService
         }
     }
 
-    protected function deductStock(Order $order, Branch $branch): void
+    /**
+     * Deduct stock for an order. When the calculated lines are supplied (the
+     * normal sale path), their `product` relation is already loaded, so the
+     * per-item product lookup is avoided. Otherwise fall back to reloading.
+     *
+     * @param  list<array<string, mixed>>|null  $calculatedItems  from SaleCalculator
+     */
+    protected function deductStock(Order $order, Branch $branch, ?array $calculatedItems = null): void
     {
-        $this->deductStockFor($order, $branch, $order->items()->get());
+        if ($calculatedItems !== null) {
+            $items = [];
+
+            foreach ($calculatedItems as $item) {
+                $product = $item['product'] ?? null;
+
+                if (! $product) {
+                    continue;
+                }
+
+                $items[] = (object) [
+                    'product' => $product,
+                    'quantity' => (float) ($item['quantity'] ?? 1),
+                    'unit_cost' => (float) ($item['unit_cost'] ?? 0),
+                ];
+            }
+
+            $this->deductStockFor($order, $branch, $items);
+
+            return;
+        }
+
+        $this->deductStockFor($order, $branch, $order->items()->with('product')->get());
     }
 
     /**
      * Deduct stock for a specific set of lines. Used both for a fresh order and
      * for an additional round, which must never re-deduct earlier items.
      *
-     * @param  iterable<int, \App\Domain\Orders\Models\OrderItem>  $items
+     * @param  iterable<int, OrderItem>  $items
      */
     public function deductStockFor(Order $order, Branch $branch, iterable $items): void
     {

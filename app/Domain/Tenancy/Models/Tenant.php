@@ -6,8 +6,8 @@ use App\Domain\Accounting\Models\FinancialAccount;
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Identity\Models\Invitation;
 use App\Domain\Inventory\Models\Unit;
-use App\Domain\Payments\Models\PaymentMethod;
 use App\Domain\PaymentGateways\Models\TenantGateway;
+use App\Domain\Payments\Models\PaymentMethod;
 use App\Domain\Subscriptions\Models\Plan;
 use App\Domain\Subscriptions\Models\Subscription;
 use App\Domain\Tenancy\Enums\TenantStatus;
@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class Tenant extends Model
 {
@@ -225,7 +226,7 @@ class Tenant extends Model
     protected function logoUrl(): Attribute
     {
         return Attribute::get(
-            fn () => $this->logo_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->logo_path) : null,
+            fn () => $this->logo_path ? Storage::disk('public')->url($this->logo_path) : null,
         );
     }
 }

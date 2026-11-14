@@ -15,9 +15,9 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Loyalty\LoyaltyController;
 use App\Http\Controllers\Marketing\ConsentController as MarketingConsentController;
 use App\Http\Controllers\Marketing\EmailTrackingController;
+use App\Http\Controllers\Marketing\EventCollectController as MarketingEventCollectController;
 use App\Http\Controllers\Marketing\MarketingRedirectController;
 use App\Http\Controllers\Marketing\SeoFileController;
-use App\Http\Controllers\Marketing\EventCollectController as MarketingEventCollectController;
 use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\Menu\MenuController;
 use App\Http\Controllers\Menu\ModifierController;
@@ -46,19 +46,19 @@ use App\Http\Controllers\Platform\GatewayController as PlatformGatewayController
 use App\Http\Controllers\Platform\GatewayEventController as PlatformGatewayEventController;
 use App\Http\Controllers\Platform\ImpersonationController as PlatformImpersonationController;
 use App\Http\Controllers\Platform\InvoiceController as PlatformInvoiceController;
-use App\Http\Controllers\Platform\Marketing\ConsentController as PlatformMarketingConsentController;
-use App\Http\Controllers\Platform\Marketing\DashboardController as PlatformMarketingDashboardController;
 use App\Http\Controllers\Platform\Marketing\AudienceController as PlatformAudienceController;
 use App\Http\Controllers\Platform\Marketing\AutomationController as PlatformAutomationController;
 use App\Http\Controllers\Platform\Marketing\CampaignController as PlatformMarketingCampaignController;
+use App\Http\Controllers\Platform\Marketing\ConsentController as PlatformMarketingConsentController;
+use App\Http\Controllers\Platform\Marketing\DashboardController as PlatformMarketingDashboardController;
 use App\Http\Controllers\Platform\Marketing\GrowthController as PlatformGrowthController;
 use App\Http\Controllers\Platform\Marketing\IntegrationController as PlatformMarketingIntegrationController;
-use App\Http\Controllers\Platform\Marketing\ReportsController as PlatformReportsController;
 use App\Http\Controllers\Platform\Marketing\LeadController as PlatformLeadController;
-use App\Http\Controllers\Platform\Marketing\UtmController as PlatformUtmController;
+use App\Http\Controllers\Platform\Marketing\ReportsController as PlatformReportsController;
 use App\Http\Controllers\Platform\Marketing\SeoController as PlatformSeoController;
 use App\Http\Controllers\Platform\Marketing\TechnicalSeoController as PlatformTechnicalSeoController;
 use App\Http\Controllers\Platform\Marketing\TrackingController as PlatformMarketingTrackingController;
+use App\Http\Controllers\Platform\Marketing\UtmController as PlatformUtmController;
 use App\Http\Controllers\Platform\NotificationController as PlatformNotificationController;
 use App\Http\Controllers\Platform\OfflineConflictController as PlatformOfflineConflictController;
 use App\Http\Controllers\Platform\OpsController as PlatformOpsController;
@@ -241,7 +241,7 @@ Route::prefix('qr')->name('qr.')->middleware(['qr.context', 'throttle:qr-public'
     });
 });
 
-Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->group(function () {
+Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed', 'throttle:workspace'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     /*
@@ -384,7 +384,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->g
     Route::get('/pos', [PosController::class, 'index'])
         ->middleware('permission:pos.use')->name('pos.index');
     Route::post('/pos/orders', [PosController::class, 'store'])
-        ->middleware(['permission:pos.use', 'permission:orders.update'])->name('pos.orders.store');
+        ->middleware(['permission:pos.use', 'permission:orders.update', 'throttle:workspace-heavy'])->name('pos.orders.store');
     Route::post('/pos/orders/open', [PosController::class, 'open'])
         ->middleware(['permission:pos.use', 'permission:orders.create'])->name('pos.orders.open');
 
@@ -533,7 +533,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->g
     });
 
     Route::get('/reports', [ReportController::class, 'index'])
-        ->middleware('permission:reports.view')->name('reports.index');
+        ->middleware(['permission:reports.view', 'throttle:workspace-heavy'])->name('reports.index');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/recent', [NotificationController::class, 'recent'])->name('notifications.recent');
@@ -737,10 +737,10 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
         Route::get('/gateways', [PlatformGatewayController::class, 'index'])->name('gateways.index');
         Route::get('/gateways/sslcommerz', [PlatformGatewayController::class, 'sslcommerz'])->name('gateways.sslcommerz');
         Route::delete('/notifications/{id}', [PlatformNotificationController::class, 'destroy'])
-        ->middleware('platform.permission:platform.email.view')->name('notifications.destroy');
-    Route::delete('/notifications', [PlatformNotificationController::class, 'clear'])
-        ->middleware('platform.permission:platform.email.view')->name('notifications.clear');
-    Route::get('/gateways/health', [PlatformGatewayController::class, 'index'])->name('gateways.health');
+            ->middleware('platform.permission:platform.email.view')->name('notifications.destroy');
+        Route::delete('/notifications', [PlatformNotificationController::class, 'clear'])
+            ->middleware('platform.permission:platform.email.view')->name('notifications.clear');
+        Route::get('/gateways/health', [PlatformGatewayController::class, 'index'])->name('gateways.health');
         Route::post('/gateways', [PlatformGatewayController::class, 'store'])->name('gateways.store');
         Route::patch('/gateways/{gateway}', [PlatformGatewayController::class, 'update'])->name('gateways.update');
         Route::post('/gateways/{gateway}/toggle', [PlatformGatewayController::class, 'toggle'])->name('gateways.toggle');

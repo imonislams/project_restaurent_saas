@@ -11,6 +11,9 @@ use App\Models\User;
 use Database\Seeders\PlanSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class PlatformSettingsTest extends TestCase
@@ -116,13 +119,13 @@ class PlatformSettingsTest extends TestCase
 
     public function test_branding_logo_is_uploaded_and_colour_validated(): void
     {
-        \Illuminate\Support\Facades\Storage::fake('public');
+        Storage::fake('public');
         $admin = $this->admin();
         $values = ['brand_color' => '#EC3013', 'tagline' => '', 'logo_url' => 'pending', 'support_url' => ''];
 
         $this->actingAs($admin)->post('/platform/settings/branding', [
             'values' => $values,
-            'files' => ['logo_url' => \Illuminate\Http\UploadedFile::fake()->image('logo.png', 100, 100)],
+            'files' => ['logo_url' => UploadedFile::fake()->image('logo.png', 100, 100)],
         ])->assertSessionHasNoErrors();
 
         $logo = app(PlatformSettings::class)->get('branding.logo_url');
@@ -152,7 +155,7 @@ class PlatformSettingsTest extends TestCase
     {
         $admin = $this->admin();
         $admin->notifications()->create([
-            'id' => (string) \Illuminate\Support\Str::uuid(),
+            'id' => (string) Str::uuid(),
             'type' => 'App\\Notifications\\Example',
             'data' => ['title' => 'Backup failed', 'body' => 'Nightly backup did not finish.', 'level' => 'danger'],
         ]);
@@ -168,7 +171,7 @@ class PlatformSettingsTest extends TestCase
     {
         $admin = $this->admin();
         $make = fn () => $admin->notifications()->create([
-            'id' => (string) \Illuminate\Support\Str::uuid(),
+            'id' => (string) Str::uuid(),
             'type' => 'App\\Notifications\\Example',
             'data' => ['title' => 'Hello'],
         ]);

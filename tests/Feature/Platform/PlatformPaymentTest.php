@@ -5,8 +5,6 @@ namespace Tests\Feature\Platform;
 use App\Domain\Billing\Enums\PlatformPaymentStatus;
 use App\Domain\Billing\Models\PaymentGateway;
 use App\Domain\Billing\Models\PlatformPayment;
-use App\Domain\Billing\Models\PlatformRefund;
-use App\Domain\Billing\PlatformPaymentService;
 use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Subscriptions\Models\SubscriptionInvoice;
 use App\Domain\Subscriptions\SubscriptionService;
@@ -16,6 +14,7 @@ use App\Models\User;
 use Database\Seeders\PlanSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -390,7 +389,7 @@ class PlatformPaymentTest extends TestCase
         // The provider POSTs back from its own origin: with a Lax session cookie the
         // browser withholds it, so starting a session on that route would replace the
         // visitor's signed-in session (they were being logged out after paying).
-        $session = \Illuminate\Session\Middleware\StartSession::class;
+        $session = StartSession::class;
 
         // Both browser returns live outside the web group: no session, cookie or
         // CSRF middleware may run there.

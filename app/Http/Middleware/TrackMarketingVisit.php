@@ -2,10 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\Marketing\ConsentService;
+use App\Domain\Marketing\Enums\ConsentCategory;
+use App\Domain\Marketing\Enums\EventName;
 use App\Domain\Marketing\MarketingEventService;
 use App\Domain\Marketing\Seo\SeoService;
 use App\Domain\Marketing\VisitorTracker;
-use App\Domain\Marketing\Enums\EventName;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
@@ -28,7 +30,7 @@ class TrackMarketingVisit
     public function __construct(
         protected VisitorTracker $tracker,
         protected MarketingEventService $events,
-        protected \App\Domain\Marketing\ConsentService $consent,
+        protected ConsentService $consent,
     ) {}
 
     public function handle(Request $request, Closure $next): Response
@@ -44,7 +46,7 @@ class TrackMarketingVisit
                 // which is the correct trade.
                 $existing = $this->tracker->visitorId($request);
 
-                if ($existing !== null && $this->consent->allows(\App\Domain\Marketing\Enums\ConsentCategory::Analytics, $existing)) {
+                if ($existing !== null && $this->consent->allows(ConsentCategory::Analytics, $existing)) {
                     $visitorId = $existing;
 
                     $this->tracker->track($request, $visitorId, '/'.$request->path());

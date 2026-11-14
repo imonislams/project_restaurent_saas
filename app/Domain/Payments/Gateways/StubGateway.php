@@ -30,6 +30,12 @@ class StubGateway implements PaymentGateway
 
         $secret = (string) config('services.payments.stub_secret');
 
+        // Without a configured secret there is no key to verify against. An empty
+        // key would still produce a matching HMAC, so refuse the delivery instead.
+        if ($secret === '') {
+            return false;
+        }
+
         return hash_equals(hash_hmac('sha256', $payload, $secret), $signature);
     }
 }

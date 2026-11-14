@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Domain\Billing\InvoiceService;
 use App\Domain\Communications\EmailTemplateService;
+use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Subscriptions\Models\SubscriptionInvoice;
 use App\Mail\Concerns\RetryableMail;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -64,7 +65,7 @@ class InvoiceIssuedMail extends Mailable implements RetryableMail
             'tenant_name' => $this->invoice->tenant?->name,
             'amount' => number_format((float) $this->invoice->amount, 2).' '.$this->invoice->currency,
             'due_date' => $this->invoice->due_date?->toFormattedDateString(),
-            'platform_name' => app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('general.platform_name', config('app.name')),
+            'platform_name' => app(PlatformSettings::class)->get('general.platform_name', config('app.name')),
         ];
     }
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tenant;
 use App\Domain\Auditing\AuditLogger;
 use App\Domain\PaymentGateways\Models\TenantGateway;
 use App\Domain\PaymentGateways\TenantGatewayManager;
+use App\Domain\Tenancy\Models\Tenant;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -170,7 +171,7 @@ class PaymentGatewayController extends Controller
         abort_unless($gateway->tenant_id === $request->user()->tenant_id, 404);
     }
 
-    protected function tenant(Request $request): \App\Domain\Tenancy\Models\Tenant
+    protected function tenant(Request $request): Tenant
     {
         $tenant = $request->user()?->tenant;
 

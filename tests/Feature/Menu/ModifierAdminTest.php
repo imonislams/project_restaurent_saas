@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Menu;
 
-use App\Domain\Branches\Models\Branch;
 use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Menu\Models\ModifierGroup;
 use App\Domain\Menu\Models\ModifierOption;

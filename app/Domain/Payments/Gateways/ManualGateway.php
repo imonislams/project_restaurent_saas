@@ -22,7 +22,9 @@ class ManualGateway implements PaymentGateway
 
     public function verifyWebhook(string $payload, ?string $signature): bool
     {
-        // Manual provider does not send webhooks.
-        return true;
+        // Manual provider does not send webhooks, so any delivery claiming to be
+        // one is unverifiable. Returning true here would let an unsigned request
+        // settle a payment that only an operator may confirm.
+        return false;
     }
 }

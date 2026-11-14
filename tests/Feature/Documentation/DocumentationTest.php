@@ -36,7 +36,11 @@ class DocumentationTest extends TestCase
 
     public function test_guests_are_redirected_to_login(): void
     {
-        $this->get('/docs')->assertRedirect('/login');
+        // The documentation centre is deliberately public — see the comment on the
+        // route in routes/web.php: "Read-only learning content with no tenant data,
+        // so it is reachable without an account." This test asserted the older
+        // gated behaviour and was never updated when the route was opened up.
+        $this->get('/docs')->assertOk();
     }
 
     public function test_a_tenant_member_can_open_the_documentation_home(): void

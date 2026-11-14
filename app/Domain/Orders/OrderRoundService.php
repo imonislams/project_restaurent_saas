@@ -10,7 +10,6 @@ use App\Domain\Kitchen\Enums\KitchenItemStatus;
 use App\Domain\Kitchen\KitchenService;
 use App\Domain\Orders\Enums\AcceptanceStatus;
 use App\Domain\Orders\Enums\OrderSource;
-use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Orders\Models\OrderRound;
 use App\Domain\POS\SaleCalculator;

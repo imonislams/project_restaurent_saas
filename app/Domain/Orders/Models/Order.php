@@ -2,6 +2,7 @@
 
 namespace App\Domain\Orders\Models;
 
+use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Branches\Models\Branch;
 use App\Domain\CashManagement\Models\Register;
 use App\Domain\CashManagement\Models\Shift;
@@ -17,7 +18,6 @@ use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Enums\OrderType;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Tables\Models\Table;
-use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -29,7 +29,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
 {
-    use BelongsToTenant, BelongsToBranch, SoftDeletes;
+    use BelongsToBranch, BelongsToTenant, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',

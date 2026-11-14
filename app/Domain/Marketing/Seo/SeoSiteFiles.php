@@ -31,7 +31,34 @@ class SeoSiteFiles
             }
         }
 
-        return ['content' => $this->staticFile('sitemap.xml'), 'source' => 'static'];
+        // Generation is off (or failed). Prefer a checked-in static document, but
+        // never answer with an empty body: an empty 200 is worse for a crawler than
+        // no file at all, because it looks like a valid but empty sitemap. Fall back
+        // to the generated document, which is still valid XML and still correct.
+        $static = $this->staticFile('sitemap.xml');
+
+        if ($static !== '') {
+            return ['content' => $static, 'source' => 'static'];
+        }
+
+        return $this->sitemapFallback();
+    }
+
+    /** @return array{content: string, source: string} */
+    protected function sitemapFallback(): array
+    {
+        try {
+            return ['content' => $this->sitemap->xml(), 'source' => 'generated'];
+        } catch (\Throwable $e) {
+            report($e);
+
+            // Last resort: a minimal, valid document so crawlers get an answer.
+            return [
+                'content' => '<?xml version="1.0" encoding="UTF-8"?>'."\n"
+                    .'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>'."\n",
+                'source' => 'empty',
+            ];
+        }
     }
 
     /** @return array{content: string, source: string} */
@@ -45,7 +72,23 @@ class SeoSiteFiles
             }
         }
 
-        return ['content' => $this->staticFile('robots.txt'), 'source' => 'static'];
+        $static = $this->staticFile('robots.txt');
+
+        if ($static !== '') {
+            return ['content' => $static, 'source' => 'static'];
+        }
+
+        // An EMPTY robots.txt is not neutral: it disallows nothing, so /platform,
+        // /pos, /webhooks and every other private area become crawlable. Never
+        // answer with an empty body — fall back to the generated rules.
+        try {
+            return ['content' => $this->robots->defaultContent(), 'source' => 'generated'];
+        } catch (\Throwable $e) {
+            report($e);
+
+            // Last resort: deny everything rather than silently allow it.
+            return ['content' => "User-agent: *\nDisallow: /\n", 'source' => 'deny-all'];
+        }
     }
 
     /**

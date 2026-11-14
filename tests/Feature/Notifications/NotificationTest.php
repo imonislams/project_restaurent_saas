@@ -8,6 +8,7 @@ use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
 use App\Domain\Inventory\Models\Ingredient;
 use App\Domain\Inventory\StockService;
+use App\Domain\Kitchen\Models\KitchenTicket;
 use App\Domain\Menu\Models\Product;
 use App\Domain\Notifications\Notifications\SalesSummaryNotification;
 use App\Domain\Payments\Actions\ProvisionPaymentDefaults;
@@ -110,7 +111,7 @@ class NotificationTest extends TestCase
         ])->assertRedirect();
 
         Queue::assertNotPushed(OpenKitchenTicket::class);
-        $this->assertSame(1, \App\Domain\Kitchen\Models\KitchenTicket::withoutGlobalScopes()->count());
+        $this->assertSame(1, KitchenTicket::withoutGlobalScopes()->count());
     }
 
     public function test_the_inbox_lists_notifications_and_can_mark_them_read(): void

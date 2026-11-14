@@ -4,12 +4,15 @@ namespace App\Domain\Invoicing;
 
 use App\Domain\Auditing\AuditLogger;
 use App\Domain\Dining\Enums\BillingMode;
+use App\Domain\Dining\Models\DiningSession;
 use App\Domain\Documents\DocumentNumberGenerator;
 use App\Domain\Invoicing\Enums\InvoiceStatus;
 use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Invoicing\Models\InvoiceOrder;
+use App\Domain\Notifications\NotificationService;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Payments\Models\Payment;
 use App\Domain\Tenancy\TenantContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -74,7 +77,7 @@ class OrderInvoiceService
 
         // First time this order is billed — tell the branch's billing users.
         try {
-            app(\App\Domain\Notifications\NotificationService::class)->orderServedForBilling($order, $invoice);
+            app(NotificationService::class)->orderServedForBilling($order, $invoice);
         } catch (\Throwable $e) {
             report($e);
         }
@@ -85,7 +88,7 @@ class OrderInvoiceService
     /**
      * The open invoice for a dining session, if one exists.
      */
-    public function openInvoiceForSession(\App\Domain\Dining\Models\DiningSession $session): ?Invoice
+    public function openInvoiceForSession(DiningSession $session): ?Invoice
     {
         return Invoice::query()
             ->where('dining_session_id', $session->getKey())
@@ -97,7 +100,7 @@ class OrderInvoiceService
     /**
      * Link a payment to the invoice its order is billed on (idempotent).
      */
-    public function linkPayment(\App\Domain\Payments\Models\Payment $payment): void
+    public function linkPayment(Payment $payment): void
     {
         if ($payment->invoice_id || ! $payment->order) {
             return;

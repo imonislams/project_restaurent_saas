@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Orders;
 
 use App\Domain\Branches\Models\Branch;
+use App\Domain\Dining\DiningSessionService;
 use App\Domain\Invoicing\OrderInvoiceService;
 use App\Domain\Orders\Enums\FulfillmentStatus;
 use App\Domain\Orders\Enums\OrderSource;
@@ -117,7 +118,7 @@ class OrderController extends Controller
                 ->map(fn (OrderStatus $s) => ['value' => $s->value, 'label' => $s->label()])->values(),
             'types' => collect(OrderType::cases())
                 ->map(fn (OrderType $t) => ['value' => $t->value, 'label' => $t->label()])->values(),
-            'sources' => collect(\App\Domain\Orders\Enums\OrderSource::cases())
+            'sources' => collect(OrderSource::cases())
                 ->map(fn ($s) => ['value' => $s->value, 'label' => $s->label()])->values(),
         ]);
     }
@@ -188,7 +189,7 @@ class OrderController extends Controller
 
         // Close the dining session once every order at the table is settled.
         if ($settled->dining_session_id && $session = $settled->diningSession) {
-            app(\App\Domain\Dining\DiningSessionService::class)->maybeCloseAfterSettlement($session);
+            app(DiningSessionService::class)->maybeCloseAfterSettlement($session);
         }
 
         // Settling opens the customer receipt, exactly like a POS payment. The

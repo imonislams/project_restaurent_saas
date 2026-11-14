@@ -2,6 +2,7 @@
 
 namespace App\Domain\Realtime\Events;
 
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -25,7 +26,7 @@ class PlatformAlert implements ShouldBroadcastNow
         public ?string $url = null,
     ) {}
 
-    /** @return array<int, \Illuminate\Broadcasting\Channel> */
+    /** @return array<int, Channel> */
     public function broadcastOn(): array
     {
         return [new PrivateChannel('platform.'.$this->area)];

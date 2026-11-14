@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Payments;
 use App\Domain\Billing\PlatformPaymentService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 /**
  * Public SSLCommerz return/IPN endpoints. These are unauthenticated; a payment
@@ -40,7 +41,7 @@ class PlatformCallbackController extends Controller
         return response()->json($outcome);
     }
 
-    public function result(Request $request): \Illuminate\View\View
+    public function result(Request $request): View
     {
         $status = (string) $request->query('status', 'unknown');
 

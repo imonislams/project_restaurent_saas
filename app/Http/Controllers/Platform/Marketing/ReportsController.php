@@ -9,6 +9,7 @@ use App\Domain\Marketing\Models\MarketingInsight;
 use App\Domain\Marketing\Reporting\MarketingReportService;
 use App\Domain\PlatformAnalytics\PlatformPeriod;
 use App\Http\Controllers\Controller;
+use App\Support\Csv;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -89,7 +90,7 @@ class ReportsController extends Controller
             fputcsv($handle, array_map(fn (array $column) => $column['label'], $report['columns']));
 
             foreach ($report['rows'] as $row) {
-                fputcsv($handle, array_map(fn (array $column) => (string) ($row[$column['key']] ?? ''), $report['columns']));
+                fputcsv($handle, Csv::row(array_map(fn (array $column) => (string) ($row[$column['key']] ?? ''), $report['columns'])));
             }
 
             fclose($handle);

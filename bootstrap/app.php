@@ -3,6 +3,7 @@
 use App\Http\Middleware\AddCorrelationContext;
 use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\ApplySeoMetadata;
+use App\Http\Middleware\EnforceAllowedHosts;
 use App\Http\Middleware\EnsureFeature;
 use App\Http\Middleware\EnsureOnboardingComplete;
 use App\Http\Middleware\EnsurePermission;
@@ -24,6 +25,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -41,7 +43,33 @@ return Application::configure(basePath: dirname(__DIR__))
     // Registers /broadcasting/auth (session-authenticated) and the channel rules.
     ->withBroadcasting(__DIR__.'/../routes/channels.php')
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust proxies only when the deployment declares them.
+        //
+        // Generated absolute URLs (password reset, invitation and payment-return
+        // links) are built from the request host. If the app sits behind a CDN or
+        // load balancer and forwarded headers are NOT trusted, links can be built
+        // from an attacker-supplied Host. If they ARE trusted but the proxy list is
+        // wrong, every client can spoof them. Neither default is safe silently, so
+        // the trusted list must be stated explicitly in TRUSTED_PROXIES.
+        //
+        // Use the proxy IPs/CIDRs, never '*', in production.
+        $proxies = array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('TRUSTED_PROXIES', '')),
+        )));
+
+        if ($proxies !== []) {
+            $middleware->trustProxies(
+                at: $proxies,
+                headers: Request::HEADER_X_FORWARDED_FOR
+                    | Request::HEADER_X_FORWARDED_HOST
+                    | Request::HEADER_X_FORWARDED_PORT
+                    | Request::HEADER_X_FORWARDED_PROTO,
+            );
+        }
+
         $middleware->web(append: [
+            EnforceAllowedHosts::class,
             AddCorrelationContext::class,
             AddSecurityHeaders::class,
             ResolveTenant::class,

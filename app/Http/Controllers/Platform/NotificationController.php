@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Inertia\Inertia;
@@ -45,21 +46,21 @@ class NotificationController extends Controller
         ]);
     }
 
-    public function destroy(Request $request, string $id): \Illuminate\Http\RedirectResponse
+    public function destroy(Request $request, string $id): RedirectResponse
     {
         $request->user()->notifications()->findOrFail($id)->delete();
 
         return back()->with('success', 'Notification deleted.');
     }
 
-    public function clear(Request $request): \Illuminate\Http\RedirectResponse
+    public function clear(Request $request): RedirectResponse
     {
         $request->user()->notifications()->delete();
 
         return back()->with('success', 'All notifications deleted.');
     }
 
-    public function markAllRead(Request $request): \Illuminate\Http\RedirectResponse
+    public function markAllRead(Request $request): RedirectResponse
     {
         $request->user()->unreadNotifications->markAsRead();
 

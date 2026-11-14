@@ -18,6 +18,7 @@ use App\Domain\Tenancy\Models\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Platform\BulkTenantActionRequest;
 use App\Http\Requests\Platform\SuspendTenantRequest;
+use App\Support\Csv;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -104,7 +105,7 @@ class TenantController extends Controller
 
             $query->chunk(500, function ($tenants) use ($out) {
                 foreach ($tenants as $tenant) {
-                    fputcsv($out, [
+                    fputcsv($out, Csv::row([
                         $tenant->getKey(),
                         $tenant->name,
                         $tenant->slug,
@@ -116,7 +117,7 @@ class TenantController extends Controller
                         $tenant->branches_count,
                         $tenant->users_count,
                         $tenant->created_at?->toIso8601String(),
-                    ]);
+                    ]));
                 }
             });
 

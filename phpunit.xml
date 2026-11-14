@@ -30,6 +30,9 @@
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
+        <!-- Test-only signing key: the application ships no default secret, so the
+             stub-webhook tests need one to sign against. Never used outside tests. -->
+        <env name="PAYMENT_STUB_SECRET" value="testing-stub-secret"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>

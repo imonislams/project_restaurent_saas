@@ -6,10 +6,10 @@ use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Marketing\ConsentService;
 use App\Domain\Marketing\Enums\LeadSource;
 use App\Domain\Marketing\Enums\LeadStatus;
-use App\Domain\Marketing\LandingPageService;
 use App\Domain\Marketing\LeadService;
-use App\Domain\Marketing\Models\MarketingLandingPage;
+use App\Domain\Marketing\Models\MarketingEmailSuppression;
 use App\Domain\Marketing\Models\MarketingLead;
+use App\Domain\Marketing\Models\MarketingSubscriber;
 use App\Domain\Marketing\Models\MarketingVisitor;
 use App\Domain\Marketing\UtmBuilder;
 use App\Domain\Marketing\VisitorTracker;
@@ -203,8 +203,6 @@ class MarketingLeadsTest extends TestCase
         $this->assertNotNull(app(UtmBuilder::class)->validate('/pricing'));
     }
 
-
-
     public function test_a_lead_can_be_worked_through_the_pipeline(): void
     {
         $admin = $this->admin();
@@ -273,7 +271,7 @@ class MarketingLeadsTest extends TestCase
     {
         $admin = $this->admin();
 
-        \App\Domain\Marketing\Models\MarketingEmailSuppression::create([
+        MarketingEmailSuppression::create([
             'email' => 'suppressed@restaurant.test',
             'reason' => 'unsubscribe',
         ]);
@@ -285,7 +283,7 @@ class MarketingLeadsTest extends TestCase
             ->post(route('platform.marketing.automation.audience.import'), ['csv' => $csv])
             ->assertSessionHasErrors('consent_confirmed');
 
-        $this->assertSame(0, \App\Domain\Marketing\Models\MarketingSubscriber::query()->count());
+        $this->assertSame(0, MarketingSubscriber::query()->count());
 
         $this->actingAs($admin)
             ->post(route('platform.marketing.automation.audience.import'), [
@@ -294,14 +292,14 @@ class MarketingLeadsTest extends TestCase
             ])
             ->assertSessionHas('success');
 
-        $this->assertSame(1, \App\Domain\Marketing\Models\MarketingSubscriber::query()->count());
+        $this->assertSame(1, MarketingSubscriber::query()->count());
 
-        $subscriber = \App\Domain\Marketing\Models\MarketingSubscriber::query()->firstOrFail();
+        $subscriber = MarketingSubscriber::query()->firstOrFail();
         $this->assertSame('new@restaurant.test', $subscriber->email);
         $this->assertSame('import', $subscriber->source);
         $this->assertNotNull($subscriber->consent_at);
 
         // The suppressed address was not resurrected.
-        $this->assertSame(0, \App\Domain\Marketing\Models\MarketingSubscriber::query()->where('email', 'suppressed@restaurant.test')->count());
+        $this->assertSame(0, MarketingSubscriber::query()->where('email', 'suppressed@restaurant.test')->count());
     }
 }

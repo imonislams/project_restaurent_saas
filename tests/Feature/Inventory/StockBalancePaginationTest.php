@@ -164,7 +164,9 @@ class StockBalancePaginationTest extends TestCase
             ->get('/inventory')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('balanceStats.depleted', 1)
-                ->where('balanceStats.valuation', 10.0));
+                // JSON has no int/float distinction, so a whole-number float is
+                // encoded as 10 and decoded as int. Compare numerically.
+                ->where('balanceStats.valuation', fn ($value) => (float) $value === 10.0));
     }
 
     public function test_branch_limited_user_only_sees_their_own_stock(): void

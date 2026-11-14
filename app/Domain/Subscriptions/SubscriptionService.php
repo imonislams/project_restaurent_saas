@@ -4,6 +4,7 @@ namespace App\Domain\Subscriptions;
 
 use App\Domain\Auditing\AuditLogger;
 use App\Domain\Documents\DocumentNumberGenerator;
+use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Subscriptions\Enums\BillingCycle;
 use App\Domain\Subscriptions\Enums\InvoiceStatus;
 use App\Domain\Subscriptions\Enums\SubscriptionStatus;
@@ -227,7 +228,7 @@ class SubscriptionService
     /** Extend access while dunning — the tenant keeps working during grace. */
     public function enterGrace(Subscription $subscription, ?User $actor = null): Subscription
     {
-        $days = (int) (app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('billing.grace_days') ?? config('platform.billing.grace_days', 7));
+        $days = (int) (app(PlatformSettings::class)->get('billing.grace_days') ?? config('platform.billing.grace_days', 7));
 
         $subscription->forceFill([
             'status' => SubscriptionStatus::GracePeriod,
@@ -418,7 +419,7 @@ class SubscriptionService
         }
 
         return DB::transaction(function () use ($subscription, $plan, $cycle, $subtotal, $discount, $couponCode, $price) {
-            $prefix = (string) (app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('billing.invoice_prefix') ?? 'INV');
+            $prefix = (string) (app(PlatformSettings::class)->get('billing.invoice_prefix') ?? 'INV');
 
             $invoice = SubscriptionInvoice::create([
                 'tenant_id' => $subscription->tenant_id,

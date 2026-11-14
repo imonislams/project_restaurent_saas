@@ -3,6 +3,7 @@
 namespace Tests\Feature\Platform;
 
 use App\Domain\Billing\Enums\PlatformPaymentStatus;
+use App\Domain\Billing\GatewayEligibilityService;
 use App\Domain\Billing\Models\PaymentGateway;
 use App\Domain\Billing\Models\PlatformPayment;
 use App\Domain\Identity\Enums\RoleName;
@@ -164,7 +165,7 @@ class GatewayConfigurationTest extends TestCase
         $tenant = Tenant::factory()->create();
         $plan = $tenant->subscription->plan;
 
-        $eligibility = app(\App\Domain\Billing\GatewayEligibilityService::class);
+        $eligibility = app(GatewayEligibilityService::class);
 
         $this->assertTrue($eligibility->eligibleFor($tenant, $plan, 'USD')->contains('id', $config->id));
 

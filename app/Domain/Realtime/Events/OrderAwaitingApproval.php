@@ -3,6 +3,7 @@
 namespace App\Domain\Realtime\Events;
 
 use App\Domain\Orders\Models\Order;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -20,7 +21,7 @@ class OrderAwaitingApproval implements ShouldBroadcastNow
 
     public function __construct(public Order $order) {}
 
-    /** @return array<int, \Illuminate\Broadcasting\Channel> */
+    /** @return array<int, Channel> */
     public function broadcastOn(): array
     {
         return [new PrivateChannel('tenant.'.$this->order->tenant_id.'.approvals')];

@@ -14,9 +14,6 @@ use App\Domain\Orders\Models\OrderRound;
  */
 class OrderTotalsService
 {
-    /**
-     * @return Order
-     */
     public function recalculate(Order $order): Order
     {
         $items = $order->items()

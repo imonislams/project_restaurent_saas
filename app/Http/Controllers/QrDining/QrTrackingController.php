@@ -6,6 +6,7 @@ use App\Domain\Dining\DiningTrackingService;
 use App\Domain\Dining\Models\DiningParticipant;
 use App\Domain\Dining\Models\DiningSession;
 use App\Domain\Dining\QrBrandingSettings;
+use App\Domain\Dining\QrPaymentService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -54,7 +55,7 @@ class QrTrackingController extends Controller
         $participant = $this->participant($request, $session);
 
         // Finalize any orders whose verified payments now cover the total.
-        app(\App\Domain\Dining\QrPaymentService::class)->reconcileSession($session);
+        app(QrPaymentService::class)->reconcileSession($session);
 
         return response()->json(app(DiningTrackingService::class)->payload($session, $participant));
     }

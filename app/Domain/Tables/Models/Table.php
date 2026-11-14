@@ -2,11 +2,11 @@
 
 namespace App\Domain\Tables\Models;
 
+use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Dining\Models\DiningSession;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Tables\Enums\TableStatus;
 use App\Domain\Tables\Factories\TableFactory;
-use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Table extends Model
 {
-    use BelongsToTenant, BelongsToBranch, HasFactory, SoftDeletes;
+    use BelongsToBranch, BelongsToTenant, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',

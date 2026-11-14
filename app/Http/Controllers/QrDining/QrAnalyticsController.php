@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\QrDining;
 
+use App\Domain\Branches\Models\Branch;
 use App\Domain\Dining\QrAnalyticsService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ class QrAnalyticsController extends Controller
 
         return Inertia::render('QrDining/Analytics', [
             'analytics' => app(QrAnalyticsService::class)->forPeriod($tenant, $from, $to, $branchId),
-            'branches' => \App\Domain\Branches\Models\Branch::query()
+            'branches' => Branch::query()
                 ->whereIn('id', $accessible)->orderBy('name')->get()
                 ->map(fn ($b) => ['id' => $b->getKey(), 'name' => $b->name]),
         ]);

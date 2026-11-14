@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Platform;
 
+use App\Domain\Tenancy\Enums\TenantStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,7 +20,7 @@ class StoreCampaignRequest extends FormRequest
             'subject' => ['required', 'string', 'max:200'],
             'body' => ['required', 'string', 'max:20000'],
             'audience' => ['nullable', 'array'],
-            'audience.status' => ['nullable', 'string', Rule::in(array_map(fn ($c) => $c->value, \App\Domain\Tenancy\Enums\TenantStatus::cases()))],
+            'audience.status' => ['nullable', 'string', Rule::in(array_map(fn ($c) => $c->value, TenantStatus::cases()))],
             'audience.plan' => ['nullable', 'string', 'max:80'],
         ];
     }

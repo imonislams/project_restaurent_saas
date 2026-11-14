@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\IngredientRequest;
 use App\Http\Requests\Inventory\StockMovementRequest;
 use App\Http\Requests\Inventory\UnitRequest;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -253,7 +254,7 @@ class InventoryController extends Controller
 
     /**
      * @param  array{search: string, branch_id: int|null, location_id: int|null, depleted: bool, per_page: int}  $filters
-     * @return \Illuminate\Database\Eloquent\Builder<StockBalance>
+     * @return Builder<StockBalance>
      */
     protected function balanceQuery(array $filters)
     {
@@ -283,7 +284,7 @@ class InventoryController extends Controller
 
     /**
      * @param  array<string, mixed>  $filters
-     * @return \Illuminate\Database\Eloquent\Builder<StockMovement>
+     * @return Builder<StockMovement>
      */
     protected function movementQuery(array $filters)
     {
@@ -320,7 +321,7 @@ class InventoryController extends Controller
 
     /**
      * @param  array<string, mixed>  $filters
-     * @return \Illuminate\Database\Eloquent\Builder<Ingredient>
+     * @return Builder<Ingredient>
      */
     protected function ingredientQuery(array $filters)
     {

@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Domain\Branches\Models\Branch;
 use App\Domain\Invoicing\Enums\InvoiceStatus;
 use App\Domain\Invoicing\Models\Invoice;
 use App\Http\Controllers\Concerns\ResolvesActiveBranch;
 use App\Http\Controllers\Controller;
-use App\Domain\Branches\Models\Branch;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;

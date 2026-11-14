@@ -24,7 +24,7 @@ class QrSessionUpdated implements ShouldBroadcastNow
         public string $reason,
     ) {}
 
-    /** @return array<int, \Illuminate\Broadcasting\Channel> */
+    /** @return array<int, Channel> */
     public function broadcastOn(): array
     {
         return [new Channel('qr.'.$this->token)];

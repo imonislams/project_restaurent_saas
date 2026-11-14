@@ -48,6 +48,11 @@ class MarketingPublicTrackingTest extends TestCase
 
     public function test_the_brand_is_appended_exactly_once(): void
     {
+        // The brand suffix comes from the general.platform_name setting, falling
+        // back to config('app.name'). Pin it here so the assertion does not depend
+        // on whatever the developer's .env happens to contain.
+        config(['app.name' => 'Touch Dine']);
+
         $html = $this->get('/')->assertOk()->getContent();
 
         // The old bug: MarketingHead appended the brand and the Inertia title

@@ -3,8 +3,6 @@
 namespace Tests\Feature\Qr;
 
 use App\Domain\Branches\Models\Branch;
-use App\Domain\Dining\Models\DiningSession;
-use App\Domain\Dining\Models\DiningSession as SessionModel;
 use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
 use App\Domain\Inventory\StockService;

@@ -11,6 +11,7 @@ use App\Domain\Billing\Models\PlatformPayment;
 use App\Domain\Billing\Models\PlatformRefund;
 use App\Domain\Billing\PlatformPaymentService;
 use App\Domain\PaymentGateways\PlatformGatewayManager;
+use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Subscriptions\Enums\InvoiceStatus;
 use App\Domain\Subscriptions\Enums\SubscriptionStatus;
 use App\Domain\Subscriptions\Models\Subscription;
@@ -322,7 +323,7 @@ class InvoiceController extends Controller
 
     public function checkout(Request $request, SubscriptionInvoice $invoice): SymfonyResponse
     {
-        abort_unless(app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('features.gateway_checkout', true), 403, 'Gateway checkout is disabled. Settle invoices manually.');
+        abort_unless(app(PlatformSettings::class)->get('features.gateway_checkout', true), 403, 'Gateway checkout is disabled. Settle invoices manually.');
 
         $data = $request->validate(['gateway_id' => ['required', 'integer', 'exists:payment_gateways,id']]);
 

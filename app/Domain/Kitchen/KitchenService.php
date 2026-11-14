@@ -7,6 +7,7 @@ use App\Domain\Kitchen\Enums\KitchenItemStatus;
 use App\Domain\Kitchen\Enums\KitchenTicketStatus;
 use App\Domain\Kitchen\Models\KitchenTicket;
 use App\Domain\Kitchen\Models\KitchenTicketItem;
+use App\Domain\Notifications\NotificationService;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Orders\Models\OrderRound;
 use App\Domain\Realtime\Events\KitchenTicketActivity;
@@ -284,7 +285,7 @@ class KitchenService
         }
 
         try {
-            $notifier = app(\App\Domain\Notifications\NotificationService::class);
+            $notifier = app(NotificationService::class);
 
             match ($status) {
                 KitchenTicketStatus::Ready => $notifier->orderReady($order),

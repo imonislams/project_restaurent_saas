@@ -2,6 +2,7 @@
 
 namespace App\Domain\Payments\Models;
 
+use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Payments\Enums\PaymentStatus;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
@@ -45,7 +46,7 @@ class Payment extends Model
 
     public function invoice(): BelongsTo
     {
-        return $this->belongsTo(\App\Domain\Invoicing\Models\Invoice::class);
+        return $this->belongsTo(Invoice::class);
     }
 
     public function method(): BelongsTo

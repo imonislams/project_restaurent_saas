@@ -5,6 +5,7 @@ namespace App\Domain\BackupAndRecovery;
 use App\Domain\Auditing\AuditLogger;
 use App\Domain\BackupAndRecovery\Enums\BackupScope;
 use App\Domain\BackupAndRecovery\Models\Backup;
+use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Models\User;
 use App\Support\DatabaseBackup;
@@ -158,7 +159,7 @@ class BackupService
             'status' => 'completed',
             'tables_count' => count($tables),
             'rows_count' => array_sum(array_map('count', $tables)),
-            'expires_at' => now()->addDays((int) (app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('operations.backup_retention_days') ?? config('platform.backups.retention_days', 30))),
+            'expires_at' => now()->addDays((int) (app(PlatformSettings::class)->get('operations.backup_retention_days') ?? config('platform.backups.retention_days', 30))),
             'created_by' => $actor?->getKey(),
             'meta' => ['driver' => DB::getDriverName()],
         ]);

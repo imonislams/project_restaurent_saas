@@ -71,4 +71,3 @@ class OrderItem extends Model
         return $this->hasMany(OrderItemModifier::class);
     }
 }
-

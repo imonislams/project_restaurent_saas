@@ -3,6 +3,9 @@
 namespace App\Domain\PlatformAnalytics;
 
 use App\Domain\Auditing\Models\AuditLog;
+use App\Domain\Billing\Models\PlatformPayment;
+use App\Domain\Billing\Models\PlatformRefund;
+use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Subscriptions\Enums\SubscriptionStatus;
 use App\Domain\Subscriptions\Models\Subscription;
 use App\Domain\Subscriptions\Models\SubscriptionInvoice;
@@ -28,7 +31,7 @@ class PlatformAnalyticsService
 {
     public function currency(): string
     {
-        return app(\App\Domain\PlatformSettings\PlatformSettings::class)->reportingCurrency();
+        return app(PlatformSettings::class)->reportingCurrency();
     }
 
     /** @return list<string> */
@@ -111,8 +114,8 @@ class PlatformAnalyticsService
             ['key' => 'paid_invoices', 'label' => 'Invoices paid', 'value' => $paidInvoices, 'format' => 'number', 'hint' => 'This month'],
             ['key' => 'churn', 'label' => 'Churn', 'value' => $activeAtStart > 0 ? round($churned / $activeAtStart * 100, 1) : 0.0, 'format' => 'percent', 'hint' => 'Cancelled ÷ active at period start'],
             ['key' => 'trial_conversion', 'label' => 'Trial conversion', 'value' => $trialConversion, 'format' => 'percent', 'hint' => 'Approximate — converts ÷ ever-trialed'],
-            ['key' => 'failed_payments', 'label' => 'Failed payments', 'value' => round((float) \App\Domain\Billing\Models\PlatformPayment::withoutGlobalScopes()->where('status', 'failed')->whereBetween('created_at', [$period->fromUtc, $period->toUtc])->sum('amount'), 2), 'format' => 'money', 'currency' => $currency, 'tone' => 'danger', 'hint' => 'Payments that failed in the period'],
-            ['key' => 'refunds', 'label' => 'Refunds', 'value' => round((float) \App\Domain\Billing\Models\PlatformRefund::withoutGlobalScopes()->where('status', 'succeeded')->whereBetween('processed_at', [$period->fromUtc, $period->toUtc])->sum('amount'), 2), 'format' => 'money', 'currency' => $currency, 'hint' => 'Succeeded refunds in the period'],
+            ['key' => 'failed_payments', 'label' => 'Failed payments', 'value' => round((float) PlatformPayment::withoutGlobalScopes()->where('status', 'failed')->whereBetween('created_at', [$period->fromUtc, $period->toUtc])->sum('amount'), 2), 'format' => 'money', 'currency' => $currency, 'tone' => 'danger', 'hint' => 'Payments that failed in the period'],
+            ['key' => 'refunds', 'label' => 'Refunds', 'value' => round((float) PlatformRefund::withoutGlobalScopes()->where('status', 'succeeded')->whereBetween('processed_at', [$period->fromUtc, $period->toUtc])->sum('amount'), 2), 'format' => 'money', 'currency' => $currency, 'hint' => 'Succeeded refunds in the period'],
         ];
     }
 

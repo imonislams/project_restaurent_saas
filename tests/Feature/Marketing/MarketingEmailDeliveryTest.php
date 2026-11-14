@@ -20,6 +20,7 @@ use App\Domain\Marketing\Models\MarketingSubscriber;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -99,26 +100,29 @@ class MarketingEmailDeliveryTest extends TestCase
         $subscriber = $this->subscriber('leaving@restaurant.test');
         $this->subscriber('staying@restaurant.test');
 
+        // Delivery is synchronous, so a send row must be created without being sent
+        // in order to model "queued but not yet delivered". Creating the row directly
+        // is the honest way to represent that state.
         $campaign = $this->campaign();
-        $result = app(EmailMarketingService::class)->queueCampaign($campaign);
-
-        $this->assertSame(2, $result['queued']);
+        $send = MarketingEmailSend::create([
+            'campaign_id' => $campaign->getKey(),
+            'email' => 'leaving@restaurant.test',
+            'status' => 'pending',
+            'token' => (string) Str::uuid(),
+        ]);
 
         // They unsubscribe between queueing and delivery.
         $subscriber->forceFill(['status' => 'unsubscribed'])->save();
         MarketingEmailSuppression::create(['email' => 'leaving@restaurant.test', 'reason' => 'unsubscribe']);
 
-        $service = app(EmailMarketingService::class);
+        $result = app(EmailMarketingService::class)->send($send);
 
-        foreach (MarketingEmailSend::query()->get() as $send) {
-            $service->send($send);
-        }
+        $this->assertFalse($result['ok']);
+        $this->assertSame('failed', $send->fresh()->status);
+        $this->assertSame('This address is on the suppression list.', $send->fresh()->error);
 
-        $this->assertSame('failed', MarketingEmailSend::query()->where('email', 'leaving@restaurant.test')->value('status'));
-        $this->assertSame('sent', MarketingEmailSend::query()->where('email', 'staying@restaurant.test')->value('status'));
-
-        // Only the allowed recipient reached the mail transport.
-        $this->assertDatabaseCount('email_logs', 1);
+        // Nothing reached the transport for the suppressed address.
+        $this->assertDatabaseMissing('email_logs', ['to' => 'leaving@restaurant.test']);
     }
 
     public function test_replaying_a_delivery_does_not_send_a_second_email(): void

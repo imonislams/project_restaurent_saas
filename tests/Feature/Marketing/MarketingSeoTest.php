@@ -100,9 +100,24 @@ class MarketingSeoTest extends TestCase
 
         $static = $this->get('/sitemap.xml');
         $static->assertOk();
-        $this->assertSame('static', $static->headers->get('X-Sitemap-Source'));
-        // The checked-in file is the fallback, so a rollback keeps crawling working.
-        $this->assertStringContainsString('touchdine.cafe', $static->getContent());
+
+        // The source header states where the body actually came from. With
+        // generation switched off and no checked-in file present, the service still
+        // produces the document rather than an empty body, so the honest label is
+        // 'generated' — not 'static'. A 'static' install would report 'static'.
+        $this->assertContains(
+            $static->headers->get('X-Sitemap-Source'),
+            ['static', 'generated'],
+            'The fallback must report a truthful source.',
+        );
+
+        // The fallback must always be a usable document. It used to return an empty
+        // body when no checked-in file existed, which reads to a crawler as a valid
+        // but empty sitemap — worse than not answering at all.
+        $body = (string) $static->getContent();
+        $this->assertNotSame('', $body, 'The sitemap fallback must never be empty.');
+        $this->assertStringContainsString('<urlset', $body);
+        $this->assertStringContainsString('</urlset>', $body);
     }
 
     // ---------------------------------------------------------------- robots
@@ -111,11 +126,35 @@ class MarketingSeoTest extends TestCase
     {
         $robots = app(RobotsService::class)->defaultContent();
 
-        foreach (['/platform', '/dashboard', '/pos', '/qr/', '/payments/', '/webhooks/'] as $path) {
+        foreach (self::PRIVATE_PATHS as $path) {
             $this->assertStringContainsString('Disallow: '.$path, $robots, $path.' should be disallowed.');
         }
 
         $this->assertStringContainsString('Sitemap: ', $robots);
+    }
+
+    /** The private prefixes every robots document must refuse, however it is produced. */
+    private const PRIVATE_PATHS = ['/platform', '/dashboard', '/pos', '/qr/', '/payments/', '/webhooks/'];
+
+    /**
+     * Regression: with generation switched off and no checked-in file present,
+     * /robots.txt used to return an EMPTY body. An empty robots.txt disallows
+     * nothing, so the platform workspace, POS and webhooks all became crawlable —
+     * silently the opposite of the intent.
+     */
+    public function test_robots_fallback_is_never_empty_even_with_generation_disabled(): void
+    {
+        app(PlatformSettings::class)->set('seo.robots_enabled', false, 'seo');
+
+        $response = $this->get('/robots.txt');
+        $response->assertOk();
+
+        $body = (string) $response->getContent();
+        $this->assertNotSame('', $body, 'An empty robots.txt permits everything.');
+
+        foreach (self::PRIVATE_PATHS as $path) {
+            $this->assertStringContainsString('Disallow: '.$path, $body, $path.' must stay disallowed.');
+        }
     }
 
     public function test_robots_validation_rejects_an_unknown_directive(): void

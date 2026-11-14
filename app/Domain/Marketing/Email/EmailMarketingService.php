@@ -24,9 +24,11 @@ use Illuminate\Support\Str;
  *
  *  1. **One row per recipient per campaign** — the database's unique index makes a
  *     re-run impossible to send twice.
- *  2. **Suppression, subscriber status and consent are checked at send time**, inside
- *     the job, so an unsubscribe that happens after a campaign was queued still stops
- *     that recipient's copy.
+ *  2. **Suppression, subscriber status and consent are checked at send time**, so a
+ *     replayed delivery never reaches an address that has since opted out. Note that
+ *     delivery is **synchronous** (see queueCampaign): there is no queue window for an
+ *     unsubscribe to interrupt a send that is already in progress, so an opt-out only
+ *     applies to mail not yet handed to the transport.
  *  3. **Transactional mail is untouched** — invoices, verification and password resets
  *     never pass through this service, so a marketing unsubscribe cannot silence them.
  */

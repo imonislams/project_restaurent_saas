@@ -3,8 +3,8 @@
 namespace App\Listeners;
 
 use App\Domain\Communications\EmailLogger;
-use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Mail\Events\MessageSendingFailed;
+use Illuminate\Mail\Events\MessageSent;
 
 /**
  * Records every outbound email (sent or failed) for the email operations center.

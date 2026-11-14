@@ -10,6 +10,7 @@ use App\Domain\Orders\Models\Order;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customers\CustomerRequest;
+use App\Support\Csv;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -148,7 +149,7 @@ class CustomerController extends Controller
             $out = fopen('php://output', 'w');
             fputcsv($out, ['Name', 'Phone', 'Email', 'Segment', 'Visits', 'Orders', 'Lifetime spend', 'Last order']);
             foreach ($rows as $profile) {
-                fputcsv($out, [
+                fputcsv($out, Csv::row([
                     $profile['name'],
                     $profile['phone'],
                     $profile['email'],
@@ -157,7 +158,7 @@ class CustomerController extends Controller
                     $profile['orders'],
                     $profile['spend'],
                     $profile['last_order_at'],
-                ]);
+                ]));
             }
             fclose($out);
         }, $filename, ['Content-Type' => 'text/csv']);

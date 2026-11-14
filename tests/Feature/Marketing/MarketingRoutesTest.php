@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Marketing;
 
+use App\Domain\PlatformSettings\PlatformSettings;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -121,7 +122,7 @@ class MarketingRoutesTest extends TestCase
 
     public function test_pricing_syncs_with_platform_settings_currency(): void
     {
-        app(\App\Domain\PlatformSettings\PlatformSettings::class)->set('billing.default_currency', 'BDT', 'billing');
+        app(PlatformSettings::class)->set('billing.default_currency', 'BDT', 'billing');
 
         $response = $this->get('/pricing');
         $response->assertStatus(200);

@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Menu;
 
+use App\Domain\Inventory\Models\Ingredient;
 use App\Domain\Menu\Enums\InventoryMode;
 use App\Domain\Menu\Models\Category;
-use App\Domain\Inventory\Models\Ingredient;
 use App\Domain\Menu\Models\Product;
 use App\Domain\Menu\Models\Recipe;
 use App\Domain\Menu\ProductImportService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Menu\CategoryRequest;
 use App\Http\Requests\Menu\ProductRequest;
+use App\Support\Csv;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
@@ -265,7 +266,7 @@ class MenuController extends Controller
             $out = fopen('php://output', 'w');
             fputcsv($out, ProductImportService::COLUMNS);
             foreach ($products as $product) {
-                fputcsv($out, [
+                fputcsv($out, Csv::row([
                     $product->name,
                     $product->category?->name,
                     $product->sku,
@@ -277,7 +278,7 @@ class MenuController extends Controller
                     $product->description,
                     $product->is_active ? '1' : '0',
                     $product->image_url,
-                ]);
+                ]));
             }
             fclose($out);
         }, 'products-'.now()->format('Ymd').'.csv', ['Content-Type' => 'text/csv']);

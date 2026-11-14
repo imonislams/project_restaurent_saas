@@ -10,6 +10,7 @@ use App\Domain\Marketing\Models\MarketingLead;
 use App\Domain\Marketing\Models\MarketingLeadActivity;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Csv;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -229,7 +230,7 @@ class LeadController extends Controller
 
             $this->filtered($filters)->latest('id')->chunk(500, function ($leads) use ($handle) {
                 foreach ($leads as $lead) {
-                    fputcsv($handle, [
+                    fputcsv($handle, Csv::row([
                         $lead->name,
                         $lead->email,
                         $lead->phone,
@@ -243,7 +244,7 @@ class LeadController extends Controller
                         $lead->assignee?->name,
                         $lead->follow_up_at?->toDateString(),
                         $lead->converted_at?->toDateString(),
-                    ]);
+                    ]));
                 }
             });
 

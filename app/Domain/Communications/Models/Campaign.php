@@ -2,9 +2,9 @@
 
 namespace App\Domain\Communications\Models;
 
+use App\Domain\Marketing\Models\MarketingEmailSend;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use App\Domain\Marketing\Models\MarketingEmailSend;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 

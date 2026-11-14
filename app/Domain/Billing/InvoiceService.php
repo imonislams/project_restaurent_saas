@@ -6,6 +6,7 @@ use App\Domain\Auditing\AuditLogger;
 use App\Domain\Billing\Models\BillingAdjustment;
 use App\Domain\Billing\Models\CreditNote;
 use App\Domain\Documents\DocumentNumberGenerator;
+use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Subscriptions\Models\SubscriptionInvoice;
 use App\Mail\InvoiceIssuedMail;
 use App\Models\User;
@@ -34,7 +35,7 @@ class InvoiceService
 
         return [
             'platform' => [
-                'name' => app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('general.platform_name', config('app.name')),
+                'name' => app(PlatformSettings::class)->get('general.platform_name', config('app.name')),
                 'email' => config('mail.from.address'),
             ],
             'invoice' => $invoice,

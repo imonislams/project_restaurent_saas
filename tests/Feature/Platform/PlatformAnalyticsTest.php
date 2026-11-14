@@ -3,6 +3,8 @@
 namespace Tests\Feature\Platform;
 
 use App\Domain\Identity\Enums\RoleName;
+use App\Domain\PlatformAnalytics\PlatformAnalyticsService;
+use App\Domain\PlatformAnalytics\PlatformPeriod;
 use App\Domain\Subscriptions\SubscriptionService;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Models\User;
@@ -115,8 +117,8 @@ class PlatformAnalyticsTest extends TestCase
         // These two KPIs used to carry `available: false` with a stale "Phase 5"
         // reason. Both sources exist, so the values are real — a genuine zero when
         // nothing happened, not a placeholder.
-        $kpis = collect(app(\App\Domain\PlatformAnalytics\PlatformAnalyticsService::class)->kpis(
-            \App\Domain\PlatformAnalytics\PlatformPeriod::make(null, null, '30d')
+        $kpis = collect(app(PlatformAnalyticsService::class)->kpis(
+            PlatformPeriod::make(null, null, '30d')
         ))->keyBy('key');
 
         foreach (['failed_payments', 'refunds'] as $key) {

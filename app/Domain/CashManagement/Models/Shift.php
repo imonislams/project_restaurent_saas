@@ -2,8 +2,8 @@
 
 namespace App\Domain\CashManagement\Models;
 
-use App\Domain\Branches\Models\Branch;
 use App\Domain\Branches\Concerns\BelongsToBranch;
+use App\Domain\Branches\Models\Branch;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Shift extends Model
 {
-    use BelongsToTenant, BelongsToBranch;
+    use BelongsToBranch, BelongsToTenant;
 
     protected $fillable = [
         'tenant_id',

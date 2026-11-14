@@ -10,12 +10,16 @@ use App\Domain\Identity\ManagerPinService;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
 use App\Domain\Inventory\Enums\StockMovementReason;
 use App\Domain\Inventory\StockService;
+use App\Domain\Invoicing\OrderInvoiceService;
 use App\Domain\Kitchen\KitchenService;
 use App\Domain\Menu\Enums\InventoryMode;
+use App\Domain\Notifications\NotificationService;
 use App\Domain\Orders\Enums\AcceptanceStatus;
 use App\Domain\Orders\Enums\FulfillmentStatus;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Orders\Models\OrderItem;
+use App\Domain\Orders\Models\OrderRound;
 use App\Domain\Payments\Enums\PaymentStatus;
 use App\Domain\Realtime\Events\OrderActivity;
 use App\Domain\Realtime\QrRealtime;
@@ -98,7 +102,7 @@ class OrderService
         $this->tables->refreshForOrder($order);
 
         try {
-            app(\App\Domain\Notifications\NotificationService::class)->markOrderHandled($order, $user);
+            app(NotificationService::class)->markOrderHandled($order, $user);
         } catch (\Throwable $e) {
             report($e);
         }
@@ -121,7 +125,7 @@ class OrderService
      * Reverse stock for a specific set of lines. Used when a single additional
      * round is cancelled without touching the rest of the order.
      *
-     * @param  iterable<int, \App\Domain\Orders\Models\OrderItem>  $items
+     * @param  iterable<int, OrderItem>  $items
      */
     public function reverseStockFor(Order $order, Branch $branch, iterable $items, string $label): void
     {
@@ -202,7 +206,7 @@ class OrderService
         }
 
         try {
-            app(\App\Domain\Notifications\NotificationService::class)->markOrderHandled($accepted, $user);
+            app(NotificationService::class)->markOrderHandled($accepted, $user);
         } catch (\Throwable $e) {
             report($e);
         }
@@ -301,7 +305,7 @@ class OrderService
             ]);
 
             $order->rounds()->update([
-                'status' => \App\Domain\Orders\Models\OrderRound::STATUS_CANCELLED,
+                'status' => OrderRound::STATUS_CANCELLED,
                 'acceptance_status' => AcceptanceStatus::Rejected->value,
                 'rejected_at' => now(),
                 'rejected_by_user_id' => $user->getKey(),
@@ -317,7 +321,7 @@ class OrderService
         $this->tables->refreshForOrder($order);
 
         try {
-            app(\App\Domain\Notifications\NotificationService::class)->markOrderHandled($order, $user);
+            app(NotificationService::class)->markOrderHandled($order, $user);
         } catch (\Throwable $e) {
             report($e);
         }
@@ -353,7 +357,7 @@ class OrderService
         // Serving feeds the Bill/Invoice workflow (idempotent, best-effort).
         if ($status === FulfillmentStatus::Served) {
             try {
-                app(\App\Domain\Invoicing\OrderInvoiceService::class)->forServedOrder($order);
+                app(OrderInvoiceService::class)->forServedOrder($order);
             } catch (\Throwable $e) {
                 report($e);
             }

@@ -7,6 +7,7 @@ use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Realtime\BroadcastConfigurator;
 use App\Domain\Realtime\Events\RealtimeTestEvent;
 use App\Domain\Realtime\RealtimeManager;
+use App\Domain\Tenancy\Models\Tenant;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -208,7 +209,7 @@ class RealtimeSettingsTest extends TestCase
 
     public function test_a_tenant_user_cannot_reach_the_realtime_settings(): void
     {
-        $tenant = \App\Domain\Tenancy\Models\Tenant::factory()->create();
+        $tenant = Tenant::factory()->create();
         $owner = User::factory()->forTenant($tenant)->create();
         $owner->assignRole(RoleName::TenantOwner);
 

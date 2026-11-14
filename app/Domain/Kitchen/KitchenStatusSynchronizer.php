@@ -3,6 +3,7 @@
 namespace App\Domain\Kitchen;
 
 use App\Domain\Auditing\AuditLogger;
+use App\Domain\Invoicing\OrderInvoiceService;
 use App\Domain\Kitchen\Enums\KitchenTicketStatus;
 use App\Domain\Kitchen\Models\KitchenTicket;
 use App\Domain\Orders\Enums\FulfillmentStatus;
@@ -68,7 +69,7 @@ class KitchenStatusSynchronizer
         // the bill is only complete once every non-cancelled round is served.
         if ($target === FulfillmentStatus::Served && $this->allRoundsServed($order)) {
             try {
-                app(\App\Domain\Invoicing\OrderInvoiceService::class)->forServedOrder($order);
+                app(OrderInvoiceService::class)->forServedOrder($order);
             } catch (\Throwable $e) {
                 report($e);
             }

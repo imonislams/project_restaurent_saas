@@ -3,14 +3,15 @@
 namespace App\Domain\Dining;
 
 use App\Domain\Branches\Models\Branch;
+use App\Domain\Dining\Enums\DiningSessionStatus;
 use App\Domain\Dining\Models\DiningParticipant;
 use App\Domain\Dining\Models\DiningSession;
-use App\Domain\Dining\Enums\DiningSessionStatus;
 use App\Domain\Notifications\NotificationService;
 use App\Domain\Orders\ActiveOrderResolver;
 use App\Domain\Orders\Enums\AcceptanceStatus;
 use App\Domain\Orders\Enums\OrderSource;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Orders\Models\OrderRound;
 use App\Domain\Orders\OrderConfirmationSettings;
 use App\Domain\Orders\OrderRoundService;
 use App\Domain\POS\SaleService;
@@ -35,7 +36,7 @@ class QrDiningOrderService
 
     /**
      * @param  array<string, mixed>  $data
-     * @return array{order: Order, round: ?\App\Domain\Orders\Models\OrderRound, merged: bool}
+     * @return array{order: Order, round: ?OrderRound, merged: bool}
      */
     public function place(DiningSession $session, DiningParticipant $participant, array $data): array
     {

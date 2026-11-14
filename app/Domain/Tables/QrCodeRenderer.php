@@ -5,7 +5,9 @@ namespace App\Domain\Tables;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Writer\Result\ResultInterface;
 use Endroid\QrCode\Writer\SvgWriter;
+use Endroid\QrCode\Writer\WriterInterface;
 
 /**
  * Thin wrapper over endroid/qr-code so QR rendering has a single, testable
@@ -15,21 +17,21 @@ class QrCodeRenderer
 {
     public function png(string $data, int $size = 320, int $margin = 8): string
     {
-        return $this->build($data, new PngWriter(), $size, $margin)->getString();
+        return $this->build($data, new PngWriter, $size, $margin)->getString();
     }
 
     public function svg(string $data, int $size = 320, int $margin = 8): string
     {
-        return $this->build($data, new SvgWriter(), $size, $margin)->getString();
+        return $this->build($data, new SvgWriter, $size, $margin)->getString();
     }
 
     /** Base64 PNG data URI, suitable for embedding in Blade/HTML. */
     public function dataUri(string $data, int $size = 320, int $margin = 8): string
     {
-        return $this->build($data, new PngWriter(), $size, $margin)->getDataUri();
+        return $this->build($data, new PngWriter, $size, $margin)->getDataUri();
     }
 
-    protected function build(string $data, \Endroid\QrCode\Writer\WriterInterface $writer, int $size, int $margin): \Endroid\QrCode\Writer\Result\ResultInterface
+    protected function build(string $data, WriterInterface $writer, int $size, int $margin): ResultInterface
     {
         return (new Builder(
             writer: $writer,

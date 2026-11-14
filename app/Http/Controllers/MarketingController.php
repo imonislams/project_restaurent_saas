@@ -6,6 +6,7 @@ use App\Domain\Billing\PricingRegionContext;
 use App\Domain\Marketing\Enums\InquiryCategory;
 use App\Domain\Marketing\Enums\LeadSource;
 use App\Domain\Marketing\LeadService;
+use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Subscriptions\Enums\BillingCycle;
 use App\Domain\Subscriptions\Models\Plan;
 use App\Domain\Subscriptions\PricingService;
@@ -86,7 +87,7 @@ class MarketingController extends Controller
     protected function getPlatformCurrency(): string
     {
         try {
-            $settings = app(\App\Domain\PlatformSettings\PlatformSettings::class);
+            $settings = app(PlatformSettings::class);
 
             return (string) (
                 $settings->get('billing.default_currency')

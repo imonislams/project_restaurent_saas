@@ -2,9 +2,10 @@
 
 namespace App\Domain\Kitchen\Models;
 
+use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Kitchen\Enums\KitchenTicketStatus;
 use App\Domain\Orders\Models\Order;
-use App\Domain\Branches\Concerns\BelongsToBranch;
+use App\Domain\Orders\Models\OrderRound;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class KitchenTicket extends Model
 {
-    use BelongsToTenant, BelongsToBranch;
+    use BelongsToBranch, BelongsToTenant;
 
     protected $fillable = [
         'tenant_id',
@@ -52,7 +53,7 @@ class KitchenTicket extends Model
 
     public function round(): BelongsTo
     {
-        return $this->belongsTo(\App\Domain\Orders\Models\OrderRound::class, 'order_round_id');
+        return $this->belongsTo(OrderRound::class, 'order_round_id');
     }
 
     public function items(): HasMany

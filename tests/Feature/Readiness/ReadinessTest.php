@@ -23,6 +23,9 @@ class ReadinessTest extends TestCase
 
     public function test_the_health_endpoint_reports_ok(): void
     {
+        // The public payload is status-only; the per-check detail is opt-in.
+        config(['app.health_disclose_detail' => true]);
+
         $response = $this->get('/health');
 
         $response->assertOk()
@@ -31,6 +34,14 @@ class ReadinessTest extends TestCase
         $this->assertTrue($response->json('checks.database.ok'));
         $this->assertTrue($response->json('checks.cache.ok'));
         $this->assertTrue($response->json('checks.storage.ok'));
+    }
+
+    public function test_the_public_health_payload_is_status_only(): void
+    {
+        $this->get('/health')
+            ->assertOk()
+            ->assertJsonPath('status', 'ok')
+            ->assertJsonMissingPath('checks');
     }
 
     public function test_the_health_command_succeeds(): void

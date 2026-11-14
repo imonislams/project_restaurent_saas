@@ -5,7 +5,6 @@ namespace Tests\Feature\Platform;
 use App\Domain\Auditing\Models\AuditLog;
 use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Identity\Models\Role;
-use App\Domain\Security\Models\SecurityEvent;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

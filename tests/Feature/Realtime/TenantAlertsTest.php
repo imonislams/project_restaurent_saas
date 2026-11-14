@@ -8,6 +8,7 @@ use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
 use App\Domain\Inventory\Enums\StockMovementReason;
 use App\Domain\Inventory\Models\Ingredient;
+use App\Domain\Inventory\StockService;
 use App\Domain\Menu\Enums\InventoryMode;
 use App\Domain\Menu\Models\Product;
 use App\Domain\Orders\Models\Order;
@@ -96,7 +97,7 @@ class TenantAlertsTest extends TestCase
 
         $ingredient = Ingredient::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Mozzarella']);
         $location = app(ProvisionInventoryDefaults::class)->defaultLocationFor($this->branch);
-        $stock = app(\App\Domain\Inventory\StockService::class);
+        $stock = app(StockService::class);
 
         $stock->record($ingredient, $location, 10, StockMovementReason::Opening);
         $stock->record($ingredient, $location, -6, StockMovementReason::Sale);
@@ -116,7 +117,7 @@ class TenantAlertsTest extends TestCase
 
         $ingredient = Ingredient::factory()->create(['tenant_id' => $this->tenant->id]);
         $location = app(ProvisionInventoryDefaults::class)->defaultLocationFor($this->branch);
-        $stock = app(\App\Domain\Inventory\StockService::class);
+        $stock = app(StockService::class);
 
         $stock->record($ingredient, $location, 20, StockMovementReason::Opening);
         $stock->record($ingredient, $location, -6, StockMovementReason::Sale);
@@ -180,7 +181,7 @@ class TenantAlertsTest extends TestCase
 
         $ingredient = Ingredient::factory()->create(['tenant_id' => $this->tenant->id]);
         $location = app(ProvisionInventoryDefaults::class)->defaultLocationFor($this->branch);
-        $stock = app(\App\Domain\Inventory\StockService::class);
+        $stock = app(StockService::class);
 
         $stock->record($ingredient, $location, 10, StockMovementReason::Opening);
         $stock->record($ingredient, $location, -6, StockMovementReason::Sale);
