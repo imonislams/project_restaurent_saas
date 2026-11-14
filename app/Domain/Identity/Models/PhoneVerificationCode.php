@@ -2,9 +2,9 @@
 
 namespace App\Domain\Identity\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\User;
 
 /**
  * A single one-time code issued to a phone number. The plaintext code is never

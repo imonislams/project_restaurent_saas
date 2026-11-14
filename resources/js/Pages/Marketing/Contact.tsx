@@ -23,19 +23,14 @@ export default function Contact() {
         venue_type: 'restaurant',
         branches_count: '1',
         inquiry_category:
-            typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('topic') === 'demo'
-                ? 'demo'
-                : 'sales',
+            'sales',
         message: '',
     });
 
     const handleSubmit: FormEventHandler = (e) => {
         e.preventDefault();
         post(route('contact.submit'), {
-            onSuccess: () => {
-                if (data.inquiry_category === 'demo') trackConversion('demo_requested', { location: 'contact_form' });
-                reset();
-            },
+            onSuccess: () => reset(),
         });
     };
 
@@ -43,7 +38,7 @@ export default function Contact() {
         <MarketingLayout>
             <MarketingHead
                 title="Contact Touch Dine — Sales, Demos & Migration Support"
-                description="Get in touch with a Touch Dine restaurant specialist. Book a personalized demo, discuss menu data migration, or request custom enterprise rollouts."
+                description="Get in touch with a Touch Dine restaurant specialist about menu data migration, custom enterprise rollouts, or anything else about running your restaurants on Touch Dine."
             />
 
             <section className="pt-14 pb-20 sm:pt-20 sm:pb-28 bg-white">
@@ -247,7 +242,6 @@ export default function Contact() {
                                                         className="w-full rounded-md border border-stone-300 px-3 py-2 text-xs sm:text-sm focus:border-[#EC3013] focus:ring-1 focus:ring-[#EC3013] bg-white h-10"
                                                     >
                                                         <option value="sales">Sales &amp; Pricing Inquiry</option>
-                                                        <option value="demo">Book a Guided Video Demo</option>
                                                         <option value="migration">Menu &amp; Data Migration</option>
                                                         <option value="custom_hardware">Custom Hardware Compatibility</option>
                                                         <option value="partnership">Partner &amp; Reseller Inquiries</option>

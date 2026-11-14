@@ -2,8 +2,8 @@
 
 namespace App\Domain\CashManagement\Models;
 
-use App\Domain\CashManagement\Enums\CashMovementType;
 use App\Domain\Branches\Concerns\BelongsToBranch;
+use App\Domain\CashManagement\Enums\CashMovementType;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class CashMovement extends Model
 {
-    use BelongsToTenant, BelongsToBranch;
+    use BelongsToBranch, BelongsToTenant;
 
     public const UPDATED_AT = null;
 

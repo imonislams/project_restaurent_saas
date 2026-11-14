@@ -3,6 +3,7 @@
 namespace App\Domain\Dining\Models;
 
 use App\Domain\Dining\Enums\BillRequestStatus;
+use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -44,7 +45,7 @@ class BillRequest extends Model
 
     public function invoice(): BelongsTo
     {
-        return $this->belongsTo(\App\Domain\Invoicing\Models\Invoice::class);
+        return $this->belongsTo(Invoice::class);
     }
 
     public function requestedBy(): BelongsTo

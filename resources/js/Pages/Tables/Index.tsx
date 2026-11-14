@@ -112,6 +112,7 @@ export default function TablesIndex({
 }) {
     const { auth, flash, currency } = usePage().props as Record<string, any>;
     const canManage = auth.permissions.includes('tables.manage');
+    const canAppendItems = auth.permissions.includes('orders.update');
 
     // UI View states
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -509,30 +510,30 @@ export default function TablesIndex({
                                 </Card>
                             ) : (
                                 Object.entries(groupedTables).map(([areaName, areaTables]) => (
-                                    <div key={areaName} className="space-y-3">
-                                        <div className="flex items-center justify-between border-b border-gray-200 pb-2">
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900">
+                                    <div key={areaName} className="min-w-0 space-y-3">
+                                        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-gray-200 pb-2">
+                                            <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                                <h3 className="min-w-0 break-words text-sm font-bold uppercase tracking-wider text-gray-900">
                                                     {areaName}
                                                 </h3>
-                                                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                                                <span className="shrink-0 whitespace-nowrap rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
                                                     {areaTables.length} tables ·{' '}
                                                     {areaTables.reduce((acc, t) => acc + t.seats, 0)} seats
                                                 </span>
                                             </div>
-                                            <div className="flex items-center gap-3 text-xs text-gray-500">
-                                                <span className="flex items-center gap-1">
-                                                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                                            <div className="flex shrink-0 items-center gap-3 text-xs text-gray-500">
+                                                <span className="flex items-center gap-1 whitespace-nowrap">
+                                                    <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
                                                     {areaTables.filter((t) => t.status === 'available').length} free
                                                 </span>
-                                                <span className="flex items-center gap-1">
-                                                    <span className="h-2 w-2 rounded-full bg-rose-500" />
+                                                <span className="flex items-center gap-1 whitespace-nowrap">
+                                                    <span className="h-2 w-2 shrink-0 rounded-full bg-rose-500" />
                                                     {areaTables.filter((t) => t.status === 'occupied').length} busy
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                                             {areaTables.map((table) => {
                                                 const config = STATUS_CONFIG[table.status] || STATUS_CONFIG.available;
                                                 const totalBalance = table.open_orders.reduce(
@@ -543,48 +544,55 @@ export default function TablesIndex({
                                                 return (
                                                     <div
                                                         key={table.id}
-                                                        className={`group relative flex flex-col justify-between rounded-lg border p-4 shadow-xs transition hover:shadow-sm ${config.border} ${config.bg}`}
+                                                        className={`group relative flex min-w-0 flex-col justify-between overflow-hidden rounded-lg border p-4 shadow-xs transition hover:shadow-sm ${config.border} ${config.bg}`}
                                                     >
-                                                        <div>
+                                                        <div className="min-w-0">
                                                             {/* Table Card Top */}
-                                                            <div className="flex items-start justify-between gap-2">
-                                                                <div>
-                                                                    <button
-                                                                        onClick={() => setActiveTable(table)}
-                                                                        className="text-left font-semibold text-foreground hover:text-primary transition-colors"
-                                                                    >
-                                                                        <span className="text-base">{table.name}</span>
-                                                                    </button>
-                                                                    <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                                                                        <Users className="h-3 w-3" />
-                                                                        <span className="tabular-nums">{table.seats} seats</span>
+                                                            <div className="min-w-0">
+                                                                <button
+                                                                    onClick={() => setActiveTable(table)}
+                                                                    className="block w-full break-words text-left text-base font-semibold leading-snug text-foreground transition-colors hover:text-primary"
+                                                                >
+                                                                    {table.name}
+                                                                </button>
+                                                                <div className="mt-1 flex min-w-0 items-center justify-between gap-x-2 gap-y-1">
+                                                                    <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                                                                        <Users className="h-3 w-3 shrink-0" />
+                                                                        <span className="truncate tabular-nums">
+                                                                            {table.seats} seats
+                                                                        </span>
                                                                     </div>
-                                                                    {table.staff.length > 0 && (
-                                                                        <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                                                                            <UserCheck className="h-3 w-3 shrink-0" />
-                                                                            <span className="truncate">
-                                                                                {table.staff.map((s) => s.name).join(', ')}
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
+                                                                    <Badge
+                                                                        tone={config.badgeTone}
+                                                                        className="shrink-0 whitespace-nowrap"
+                                                                    >
+                                                                        {config.label}
+                                                                    </Badge>
                                                                 </div>
-                                                                <Badge tone={config.badgeTone}>{config.label}</Badge>
+                                                                {table.staff.length > 0 && (
+                                                                    <div className="mt-1 flex min-w-0 items-start gap-1.5 text-xs text-muted-foreground">
+                                                                        <UserCheck className="mt-0.5 h-3 w-3 shrink-0" />
+                                                                        <span className="min-w-0 break-words">
+                                                                            {table.staff.map((s) => s.name).join(', ')}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
                                                             </div>
 
                                                             {/* Active Open Orders Section */}
                                                             {table.open_orders.length > 0 ? (
-                                                                <div className="mt-3.5 space-y-1.5 rounded-md border border-rose-200/60 bg-background/80 p-2.5">
-                                                                    <div className="flex items-center justify-between text-xs font-semibold text-rose-900">
-                                                                        <span>Active Tab</span>
-                                                                        <span className="font-semibold tabular-nums">
+                                                                <div className="mt-3.5 min-w-0 space-y-1.5 rounded-md border border-rose-200/60 bg-background/80 p-2.5">
+                                                                    <div className="flex min-w-0 items-center justify-between gap-2 text-xs font-semibold text-rose-900">
+                                                                        <span className="shrink-0">Active Tab</span>
+                                                                        <span className="min-w-0 truncate text-right tabular-nums font-semibold">
                                                                             <Money amount={totalBalance} />
                                                                         </span>
                                                                     </div>
-                                                                    <div className="space-y-1">
+                                                                    <div className="min-w-0 space-y-1">
                                                                         {table.open_orders.map((order) => (
                                                                             <div
                                                                                 key={order.id}
-                                                                                className="flex items-center justify-between text-xs text-muted-foreground"
+                                                                                className="flex min-w-0 items-center justify-between gap-2 text-xs text-muted-foreground"
                                                                             >
                                                                                 <button
                                                                                     onClick={() =>
@@ -595,11 +603,12 @@ export default function TablesIndex({
                                                                                             ),
                                                                                         )
                                                                                     }
-                                                                                    className="font-medium text-primary hover:underline"
+                                                                                    title={order.order_number}
+                                                                                    className="min-w-0 truncate text-left font-medium text-primary hover:underline"
                                                                                 >
                                                                                     {order.order_number}
                                                                                 </button>
-                                                                                <span className="tabular-nums font-medium text-foreground">
+                                                                                <span className="shrink-0 whitespace-nowrap tabular-nums font-medium text-foreground">
                                                                                     <Money amount={order.total} />
                                                                                 </span>
                                                                             </div>
@@ -607,27 +616,27 @@ export default function TablesIndex({
                                                                     </div>
                                                                 </div>
                                                             ) : (
-                                                                <div className="mt-3.5 flex items-center gap-1.5 rounded-md border border-dashed border-border p-2 text-xs text-muted-foreground">
-                                                                    <span>No active orders</span>
+                                                                <div className="mt-3.5 flex min-w-0 items-center gap-1.5 rounded-md border border-dashed border-border p-2 text-xs text-muted-foreground">
+                                                                    <span className="min-w-0 truncate">No active orders</span>
                                                                 </div>
                                                             )}
                                                         </div>
 
                                                         {/* Table Card Bottom Actions */}
-                                                        <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-2.5">
+                                                        <div className="mt-4 flex min-w-0 items-center justify-between gap-2 border-t border-border/50 pt-2.5">
                                                             <button
                                                                 onClick={() => setActiveTable(table)}
-                                                                className="text-xs font-medium text-primary hover:underline"
+                                                                className="min-w-0 truncate text-left text-xs font-medium text-primary hover:underline"
                                                             >
-                                                                Details & Status
+                                                                Details &amp; Status
                                                             </button>
 
                                                             {canManage && (
-                                                                <div className="flex items-center gap-1">
+                                                                <div className="flex shrink-0 items-center gap-1">
                                                                     <button
                                                                         onClick={() => openEditDrawer(table)}
                                                                         title="Edit Table"
-                                                                        className="rounded p-1 text-muted-foreground hover:bg-background hover:text-foreground transition-colors"
+                                                                        className="shrink-0 rounded p-1 text-muted-foreground hover:bg-background hover:text-foreground transition-colors"
                                                                     >
                                                                         <Pencil className="h-3.5 w-3.5" />
                                                                     </button>
@@ -635,7 +644,7 @@ export default function TablesIndex({
                                                                         <button
                                                                             onClick={() => setPendingDelete(table)}
                                                                             title="Remove Table"
-                                                                            className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                                                            className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                                                                         >
                                                                             <Trash2 className="h-3.5 w-3.5" />
                                                                         </button>
@@ -1005,13 +1014,26 @@ export default function TablesIndex({
                                                 <p className="font-bold tabular-nums text-gray-900">
                                                     <Money amount={o.total} />
                                                 </p>
-                                                <Button
-                                                    size="xs"
-                                                    variant="ghost"
-                                                    onClick={() => router.get(route('orders.show', o.id))}
-                                                >
-                                                    View & Settle →
-                                                </Button>
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {canAppendItems && (
+                                                        <Button
+                                                            size="xs"
+                                                            variant="ghost"
+                                                            onClick={() =>
+                                                                router.get(route('pos.index', { append: o.id }))
+                                                            }
+                                                        >
+                                                            + Items
+                                                        </Button>
+                                                    )}
+                                                    <Button
+                                                        size="xs"
+                                                        variant="ghost"
+                                                        onClick={() => router.get(route('orders.show', o.id))}
+                                                    >
+                                                        View &amp; Settle →
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}

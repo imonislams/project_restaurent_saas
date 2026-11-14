@@ -40,6 +40,34 @@ use Illuminate\Support\Facades\Notification;
  */
 class NotificationService
 {
+    /**
+     * Clear the bell notifications about an order once staff have handled it.
+     * Settling or accepting an order makes its "approval needed" / "ready"
+     * notifications obsolete, so they must not keep the unread badge alive.
+     */
+    public function markOrderHandled(Order $order, ?User $user = null): void
+    {
+        if ($user === null) {
+            return;
+        }
+
+        $user->unreadNotifications()
+            ->where('data', 'like', '%"order_id":'.$order->getKey().'%')
+            ->update(['read_at' => now()]);
+    }
+
+    /** Clear the "bill ready" notification once the invoice is settled. */
+    public function markInvoiceHandled(Invoice $invoice, ?User $user = null): void
+    {
+        if ($user === null) {
+            return;
+        }
+
+        $user->unreadNotifications()
+            ->where('data', 'like', '%"invoice_id":'.$invoice->getKey().'%')
+            ->update(['read_at' => now()]);
+    }
+
     /** @return Collection<int, User> */
     public function recipients(Tenant $tenant): Collection
     {

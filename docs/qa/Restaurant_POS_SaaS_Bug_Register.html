@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Touch Dine — Bug / Risk Register</title>
+<style>
+  :root{--head:#0b3b2e;--ink:#0f172a;--line:#e2e8f0;--line2:#cbd5e1;--mut:#64748b;--brand:#047857}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#f1f5f9;color:var(--ink);
+    font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif}
+  header.top{position:sticky;top:0;z-index:20;background:var(--head);color:#fff;
+    padding:12px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+  header.top h1{margin:0;font-size:15px}
+  header.top p{margin:2px 0 0;font-size:11.5px;color:#a7f3d0}
+  .tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .tools input,.tools select{background:#0b3b2e;color:#fff;border:1px solid #1c5c49;border-radius:8px;
+    padding:7px 10px;font-size:12px;min-width:140px}
+  .tools input::placeholder{color:#7cc4ad}
+  .tools button{cursor:pointer;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;
+    background:#10b981;color:#052e26}
+  .tools button.ghost{background:#134e4a;color:#d1fae5}
+  .bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:10px 16px;background:#fff;
+    border-bottom:1px solid var(--line);font-size:11.5px;color:var(--mut)}
+  .bar b{color:var(--ink)}
+  .chip{display:inline-block;padding:1px 7px;border-radius:999px;background:#ecfdf5;color:var(--brand);
+    font-weight:700;font-size:10px}
+  .wrap{padding:14px 16px 60px;overflow:auto}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:1700px;background:#fff;
+    border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+  th{position:sticky;top:0;z-index:10;background:var(--head);color:#fff;font-size:11px;font-weight:700;
+    text-align:left;padding:9px 10px;border-right:1px solid #1c5c49;white-space:nowrap}
+  td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:7px 9px;
+    vertical-align:top;font-size:12px;word-break:break-word}
+  tbody tr:nth-child(even) td{background:#fafcff}
+  tbody tr:hover td{background:#f0fdf9}
+  td[contenteditable]:focus{outline:none;background:#fffbeb;box-shadow:inset 0 0 0 2px #f59e0b}
+  td.id{font-weight:700;color:var(--brand);white-space:nowrap}
+  select.cell{width:100%;border:1px solid transparent;background:transparent;font:inherit;
+    border-radius:6px;padding:3px 4px;color:inherit}
+  select.cell:focus{outline:none;border-color:#f59e0b;background:#fffbeb}
+  td.sev,td.stat{text-align:center}
+  .b-Critical{background:#fee2e2!important}
+  .b-High{background:#ffedd5!important}
+  .b-Medium{background:#fef9c3!important}
+  .b-Low{background:#dcfce7!important}
+  .hidden{display:none!important}
+  .note{margin:10px 16px 0;font-size:11.5px;color:#64748b}
+  @media print{
+    header.top,.tools,.bar{display:none!important}
+    body{background:#fff} table{min-width:0;border-radius:0}
+    th{position:static;background:#0b3b2e!important;-webkit-print-color-adjust:exact}
+    td,th{font-size:8px;padding:3px 4px}
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Touch Dine — Bug / Risk Register</h1>
+    <p>Prepared by <b>Md Immon Islam</b> · Senior QA · editable</p>
+  </div>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Search title / evidence / detail…">
+    <select id="sevF"><option value="">All severities</option></select>
+    <select id="statF"><option value="">All statuses</option></select>
+    <button id="csv" type="button">⬇ Export CSV</button>
+    <button id="prn" class="ghost" type="button">🖨 Print</button>
+  </div>
+</header>
+<div class="bar">
+  <span><b id="cTotal">0</b> findings</span>
+  <span><b id="cShown">0</b> shown</span>
+  <span><span class="chip" id="cCrit">0</span> Critical</span>
+  <span><span class="chip" id="cHigh">0</span> High</span>
+  <span><span class="chip" id="cOpen">0</span> Open</span>
+</div>
+<p class="note">
+  <b>Source.</b> Code audit of this repository (routes, controllers, domain services, models, pages). Items marked
+  <b>Code-verified 2026-11-02</b> were re-checked by me today; the rest are audit findings and are marked
+  <b>Not reproduced</b> until someone confirms them. The automated suite is green (761/761) — meaning none of these
+  is currently caught by a test, which is exactly why they are listed.
+  Cells are editable; <b>Export CSV</b> saves your work.
+</p>
+<div class="wrap">
+  <table id="sheet"><thead><tr id="head"></tr></thead><tbody id="body"></tbody></table>
+</div>
+<script>
+const HEADERS = ["ID","Title","Type","Severity","Area","Evidence / Location","Detail",
+  "Status","Verification","Reported","Owner"];
+const SEVERITIES = ["Critical","High","Medium","Low"];
+const STATUSES = ["Open","In Progress","Fixed","Verified","Won't Fix","By Design","Needs Verification"];
+const REPORTED = "2026-11-02";
+const OWNER = "Md Immon Islam";
+
+/* [ id, title, type, severity, area, evidence, detail, status, verification ] */
+const DATA = [
+["BUG-001","Privilege escalation via staff / invitation role assignment","Security Bug","Critical","Roles & Staff","app/Http/Requests/Staff/StoreInvitationRequest.php, UpdateStaffRequest.php vs app/Domain/Identity/RoleService::allowedPermissionSlugs()","The requests validate that a role exists but never apply the allowedPermissionSlugs guard, so a user whose custom role holds staff.manage could assign the system tenant_owner role (all tenant permissions).","Open","Not reproduced"],
+["BUG-002","No attempt lockout on manager PIN verify","Security Risk","High","Security / Approvals","app/Domain/Identity/ManagerPinService.php","verify() audits failures but has no attempt limit or rate limit — a brute-force surface for voids, discounts, cash variance and PO approval.","Open","Not reproduced"],
+["BUG-003","Public invitation endpoint is not throttled","Security Risk","Medium","Staff / Invitations","routes/web.php (guest group /invitations/{token}), app/Http/Controllers/Staff/AcceptInvitationController.php","64-char hashed tokens are strong, but the endpoint is unauthenticated and unthrottled, and the user must be logged out to accept.","Open","Not reproduced"],
+["BUG-004","Plan feature middleware missing on core modules","Consistency Risk","High","SaaS / Entitlements","routes/web.php vs app/Http/Controllers/Platform/EntitlementsController.php","Only qr-dining, kitchen, purchasing, waste and transfers carry feature: middleware. pos, tables, menu, inventory, accounts and reports are not route-enforced, so a plan that lists them as off still exposes the routes.","Open","Code-verified 2026-11-02"],
+["BUG-005","User model lacks a tenant global scope","Isolation Risk","High","Tenancy","app/Models/User.php","User::query() is globally unscoped; staff isolation depends on $tenant->users() and policies, so a cross-tenant binding returns 403 rather than 404.","Open","Not reproduced"],
+["BUG-006","orders.refund permission with no refund endpoint","Backend Gap","High","Orders","app/Domain/Identity/Permissions.php, routes/web.php","A refund permission is seeded and listed for manager PIN, but no tenant route refunds a completed order (only platform payment refunds exist). Only void exists.","Open","Code-verified 2026-11-02"],
+["BUG-007","Kitchen item status has no transition guard","Data Integrity Risk","Medium","Kitchen","app/Domain/Kitchen/KitchenService::setItemStatus()","Ticket status transitions are validated, but item statuses accept any valid enum value — arbitrary jumps are possible.","Open","Not reproduced"],
+["BUG-008","Negative-stock behaviour depends on a DB-only setting","Test Blocker","Medium","Inventory","app/Domain/Inventory/StockService.php + inventory.allow_negative","allow_negative and block_sale_when_insufficient have no Settings UI; the test environment must set them directly and the defaults change sale/transfer/waste outcomes.","Open","Not reproduced"],
+["BUG-009","No CSP / HSTS headers","Security Hardening","Medium","Security","app/Http/Middleware/AddSecurityHeaders.php","Only nosniff, X-Frame-Options, Referrer-Policy and X-Permitted-Cross-Domain-Policies are set; no Content-Security-Policy or HSTS.","Open","Not reproduced"],
+["BUG-010","Reports / dashboard export is client-side only","UX Risk","Low","Reports","resources/js/Pages/Reports/Index.tsx, Dashboard.tsx","No server-side PDF/CSV for operational reports; output depends on the browser print dialog.","Open","Not reproduced"],
+["BUG-011","Modifier option routes unused by the frontend","Tech Debt","Low","Menu / Modifiers","routes/web.php (modifiers.options.*)","Option store/update/delete routes exist, but the UI manages options only through group sync.","Open","Not reproduced"],
+["BUG-012","Invitation revoke audit entry missing tenant_id","Minor Bug","Low","Staff / Audit","app/Domain/Identity/InvitationService::revoke()","staff.invitation_revoked is written without a tenant_id, unlike the other invitation events.","Open","Not reproduced"],
+
+["GAP-001","Order refund flow","Missing Feature","High","Orders","—","A completed order can be voided but not refunded; no refund route, service path or UI.","Open","Code-verified 2026-11-02"],
+["GAP-002","Cash management permissions are unused","Backend Gap","Medium","POS / Shifts","routes/web.php","cash.view / cash.manage / cash.approve are seeded, but every shift route uses permission:pos.use; cash.approve only appears in the PIN list.","Open","Not reproduced"],
+["GAP-003","dashboard.view and settings.view are never enforced","Backend Gap","Medium","Dashboard / Settings","routes/web.php","The dashboard has no permission middleware (only subscribed); every settings route requires settings.manage, so a read-only role cannot use settings.view.","Open","Not reproduced"],
+["GAP-004","Bill request staff handling","Partially Implemented","Medium","QR / Billing","bill_requests table","handled_by/handled_at and the in_progress/cancelled states exist, but no controller sets them; only auto-settle closes a request.","Open","Not reproduced"],
+["GAP-005","Expense edit / delete and category CRUD","Backend Gap","Medium","Expenses","app/Http/Controllers/…/Expense(s)Controller","Expenses support create + approve/reject only; expense categories support create only (no list/update/delete).","Open","Not reproduced"],
+["GAP-006","Supplier index route and PO delete","Backend Gap","Low","Purchasing","routes/web.php","No dedicated supplier list route (suppliers only come back inside the PO index) and no PO delete — cancel only.","Open","Not reproduced"],
+["GAP-007","Account statement / ledger view","Backend Gap","Low","Accounts","resources/js/Pages/Accounts","The index shows a balance and the last 50 transfers; there is no per-account statement route and transfers cannot be reversed.","Open","Not reproduced"],
+["GAP-008","Stock locations and unit conversions","Backend Gap","Medium","Inventory","UnitConversion model, StockLocation","Stock locations are auto-provisioned (Main Store) with no create/edit route; UnitConversion rows (kg->g, L->mL) exist but no stock math applies a factor.","Open","Not reproduced"],
+["GAP-009","Loyalty redemption and history","Partially Implemented","Low","Customers","app/Domain/Loyalty/LoyaltyService.php","redeem() exists but only earn/adjust are exposed (customers.points); there is no transaction-history endpoint.","Open","Not reproduced"],
+["GAP-010","Per-branch role scoping","Not Implemented","Medium","Roles","role_user.branch_id","The column exists but is never written or read; role grants are tenant-wide only.","Open","Not reproduced"],
+["GAP-011","Branch deletion","Not Implemented","Low","Branches","routes/web.php","No delete/destroy route for branches — deactivate only — and no bulk operations.","Open","Not reproduced"],
+["GAP-012","Social login and 2FA","Not Implemented","Low","Auth","—","No Socialite integration and no two_factor/TOTP code; only phone OTP verification and a manager PIN step-up exist.","Open","Not reproduced"],
+["GAP-013","Settings UI for thresholds and limits","Frontend Missing","Medium","Settings","resources/js/Pages/Settings","waste.approval_threshold, expenses.auto_approve_limit, purchasing.approval_limit, inventory.allow_negative and block_sale_when_insufficient are DB/seed only — no tenant form.","Open","Not reproduced"],
+["GAP-014","Platform analytics KPIs unavailable","Partially Implemented","Low","Platform","PlatformAnalyticsService","failed_payments and refunds KPIs are marked available:false (Phase 5); no FX conversion for multi-currency figures.","Open","Not reproduced"]
+];
+
+const body = document.getElementById("body");
+const head = document.getElementById("head");
+const qEl = document.getElementById("q");
+const sevF = document.getElementById("sevF");
+const statF = document.getElementById("statF");
+const cTotal = document.getElementById("cTotal");
+const cShown = document.getElementById("cShown");
+
+HEADERS.forEach(function (h) { const th = document.createElement("th"); th.textContent = h; head.appendChild(th); });
+
+function textCell(v, cls) {
+  const td = document.createElement("td");
+  if (cls) td.className = cls;
+  td.textContent = v == null ? "" : v;
+  td.contentEditable = "true";
+  return td;
+}
+function selectCell(opts, val, cls) {
+  const td = document.createElement("td");
+  const s = document.createElement("select");
+  s.className = "cell";
+  opts.forEach(function (o) {
+    const op = document.createElement("option");
+    op.value = o; op.textContent = o;
+    if (o === val) op.selected = true;
+    s.appendChild(op);
+  });
+  td.className = cls;
+  td.appendChild(s);
+  return td;
+}
+
+function makeRow(d) {
+  const tr = document.createElement("tr");
+  tr.appendChild(textCell(d[0], "id"));
+  tr.appendChild(textCell(d[1]));
+  tr.appendChild(textCell(d[2]));
+  const tdSev = selectCell(SEVERITIES, d[3], "sev");
+  const sv = tdSev.querySelector("select");
+  const paint = function () { tdSev.className = "sev b-" + sv.value; };
+  sv.addEventListener("change", paint);
+  paint();
+  tr.appendChild(tdSev);
+  for (let i = 4; i <= 6; i++) tr.appendChild(textCell(d[i]));
+  const tdStat = selectCell(STATUSES, d[7], "stat");
+  tr.appendChild(tdStat);
+  tr.appendChild(textCell(d[8]));
+  tr.appendChild(textCell(REPORTED));
+  tr.appendChild(textCell(OWNER));
+  return tr;
+}
+
+DATA.forEach(function (d) { body.appendChild(makeRow(d)); });
+
+function allRows() { return Array.prototype.slice.call(body.querySelectorAll("tr")); }
+function counts() {
+  let crit = 0, high = 0, open = 0;
+  allRows().forEach(function (tr) {
+    const sev = tr.children[3].querySelector("select").value;
+    const st = tr.children[7].querySelector("select").value;
+    if (sev === "Critical") crit++;
+    if (sev === "High") high++;
+    if (st === "Open" || st === "Needs Verification") open++;
+  });
+  cTotal.textContent = allRows().length;
+  document.getElementById("cCrit").textContent = crit;
+  document.getElementById("cHigh").textContent = high;
+  document.getElementById("cOpen").textContent = open;
+}
+
+SEVERITIES.forEach(function (s) {
+  const o = document.createElement("option"); o.value = s; o.textContent = s; sevF.appendChild(o);
+});
+STATUSES.forEach(function (s) {
+  const o = document.createElement("option"); o.value = s; o.textContent = s; statF.appendChild(o);
+});
+
+function applyFilter() {
+  const q = qEl.value.trim().toLowerCase();
+  const sev = sevF.value, st = statF.value;
+  let shown = 0;
+  allRows().forEach(function (tr) {
+    const rowSev = tr.children[3].querySelector("select").value;
+    const rowSt = tr.children[7].querySelector("select").value;
+    const ok = (!sev || rowSev === sev) && (!st || rowSt === st) &&
+               (!q || tr.textContent.toLowerCase().indexOf(q) !== -1);
+    tr.classList.toggle("hidden", !ok);
+    if (ok) shown++;
+  });
+  cShown.textContent = shown;
+}
+qEl.addEventListener("input", applyFilter);
+sevF.addEventListener("change", applyFilter);
+statF.addEventListener("change", applyFilter);
+body.addEventListener("change", function (e) {
+  if (e.target && e.target.tagName === "SELECT") counts();
+});
+
+body.addEventListener("paste", function (e) {
+  const t = e.target;
+  if (t && t.isContentEditable) {
+    e.preventDefault();
+    const txt = (e.clipboardData || window.clipboardData).getData("text");
+    document.execCommand("insertText", false, txt);
+  }
+});
+
+function cellText(td) {
+  const s = td.querySelector("select");
+  return s ? s.value : td.textContent.replace(/\s+/g, " ").trim();
+}
+
+document.getElementById("csv").addEventListener("click", function () {
+  const esc = function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; };
+  const lines = [HEADERS.map(esc).join(",")];
+  allRows().forEach(function (tr) {
+    lines.push(Array.prototype.map.call(tr.children, function (td) { return esc(cellText(td)); }).join(","));
+  });
+  const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "Restaurant_POS_SaaS_Bug_Register.csv";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+});
+
+document.getElementById("prn").addEventListener("click", function () { window.print(); });
+
+counts();
+applyFilter();
+</script>
+</body>
+</html>

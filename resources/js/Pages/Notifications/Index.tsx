@@ -1,6 +1,7 @@
 import { Badge, Button, EmptyState, PageHeader } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, usePage } from '@inertiajs/react';
+import { Trash2 } from 'lucide-react';
 
 interface NotificationRow {
     id: string;
@@ -25,11 +26,18 @@ export default function NotificationsIndex({ notifications, unread }: { notifica
                     title="Notifications"
                     description={unread > 0 ? `${unread} unread` : 'You are all caught up.'}
                     actions={
-                        unread > 0 && (
-                            <Button size="sm" variant="secondary" onClick={() => router.post(route('notifications.read-all'), {}, { preserveScroll: true })}>
-                                Mark all read
-                            </Button>
-                        )
+                        <div className="flex gap-2">
+                            {unread > 0 && (
+                                <Button size="sm" variant="secondary" onClick={() => router.post(route('notifications.read-all'), {}, { preserveScroll: true })}>
+                                    Mark all read
+                                </Button>
+                            )}
+                            {notifications.length > 0 && (
+                                <Button size="sm" variant="secondary" onClick={() => confirm('Delete all notifications?') && router.delete(route('notifications.clear'), { preserveScroll: true })}>
+                                    Delete all
+                                </Button>
+                            )}
+                        </div>
                     }
                 />
             }
@@ -66,11 +74,22 @@ export default function NotificationsIndex({ notifications, unread }: { notifica
                                 </div>
                                 <div className="shrink-0 text-right">
                                     <div className="text-xs text-gray-400">{n.created_at ? new Date(n.created_at).toLocaleString() : ''}</div>
-                                    {!n.read && (
-                                        <Button size="xs" variant="ghost" className="mt-1" onClick={() => router.post(route('notifications.read', n.id), {}, { preserveScroll: true })}>
-                                            Mark read
-                                        </Button>
-                                    )}
+                                    <div className="mt-1 flex items-center justify-end gap-1">
+                                        {!n.read && (
+                                            <Button size="xs" variant="ghost" onClick={() => router.post(route('notifications.read', n.id), {}, { preserveScroll: true })}>
+                                                Mark read
+                                            </Button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            aria-label="Delete notification"
+                                            title="Delete"
+                                            onClick={() => router.delete(route('notifications.destroy', n.id), { preserveScroll: true })}
+                                            className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-destructive"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

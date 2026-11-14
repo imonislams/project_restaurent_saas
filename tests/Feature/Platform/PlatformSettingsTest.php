@@ -11,6 +11,9 @@ use App\Models\User;
 use Database\Seeders\PlanSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class PlatformSettingsTest extends TestCase
@@ -112,5 +115,90 @@ class PlatformSettingsTest extends TestCase
         $billing = User::factory()->platformAdmin()->create();
         $billing->assignRole(RoleName::BillingAdmin);
         $this->actingAs($billing)->get('/platform/settings/general')->assertForbidden();
+    }
+
+    public function test_branding_logo_is_uploaded_and_colour_validated(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+        $values = ['brand_color' => '#EC3013', 'tagline' => '', 'logo_url' => 'pending', 'support_url' => ''];
+
+        $this->actingAs($admin)->post('/platform/settings/branding', [
+            'values' => $values,
+            'files' => ['logo_url' => UploadedFile::fake()->image('logo.png', 100, 100)],
+        ])->assertSessionHasNoErrors();
+
+        $logo = app(PlatformSettings::class)->get('branding.logo_url');
+        $this->assertStringContainsString('/storage/branding/', (string) $logo);
+
+        $this->actingAs($admin)->post('/platform/settings/branding', [
+            'values' => [...$values, 'brand_color' => 'red', 'logo_url' => $logo],
+        ])->assertSessionHasErrors('values.brand_color');
+    }
+
+    public function test_social_links_are_saved_and_shared_with_the_website(): void
+    {
+        $this->actingAs($this->admin())->post('/platform/settings/social', [
+            'values' => ['facebook' => 'https://facebook.com/touchdine', 'instagram' => '', 'x' => '', 'linkedin' => '', 'youtube' => '', 'tiktok' => '', 'whatsapp' => '', 'whatsapp_message' => '', 'whatsapp_widget' => true],
+        ])->assertSessionHasNoErrors();
+
+        $this->post('/platform/settings/social', [
+            'values' => ['facebook' => 'javascript:alert(1)'],
+        ])->assertSessionHasErrors('values.facebook');
+
+        auth()->logout();
+
+        $this->get('/')->assertInertia(fn ($page) => $page->where('social_links', ['facebook' => 'https://facebook.com/touchdine']));
+    }
+
+    public function test_notification_bell_endpoint_returns_recent_items(): void
+    {
+        $admin = $this->admin();
+        $admin->notifications()->create([
+            'id' => (string) Str::uuid(),
+            'type' => 'App\\Notifications\\Example',
+            'data' => ['title' => 'Backup failed', 'body' => 'Nightly backup did not finish.', 'level' => 'danger'],
+        ]);
+
+        $this->actingAs($admin)->getJson('/platform/notifications/recent')
+            ->assertOk()
+            ->assertJsonPath('unread', 1)
+            ->assertJsonPath('items.0.title', 'Backup failed')
+            ->assertJsonPath('items.0.read', false);
+    }
+
+    public function test_admin_can_delete_one_or_all_notifications(): void
+    {
+        $admin = $this->admin();
+        $make = fn () => $admin->notifications()->create([
+            'id' => (string) Str::uuid(),
+            'type' => 'App\\Notifications\\Example',
+            'data' => ['title' => 'Hello'],
+        ]);
+        $first = $make();
+        $make();
+
+        $this->actingAs($admin)->delete('/platform/notifications/'.$first->id)->assertRedirect();
+        $this->assertSame(1, $admin->notifications()->count());
+
+        $this->actingAs($admin)->delete('/platform/notifications')->assertRedirect();
+        $this->assertSame(0, $admin->notifications()->count());
+    }
+
+    public function test_whatsapp_support_number_drives_website_link(): void
+    {
+        $base = ['facebook' => '', 'instagram' => '', 'x' => '', 'linkedin' => '', 'youtube' => '', 'tiktok' => '', 'whatsapp_message' => 'Hi there', 'whatsapp_widget' => true];
+
+        $this->actingAs($this->admin())->post('/platform/settings/social', ['values' => [...$base, 'whatsapp' => 'abc']])
+            ->assertSessionHasErrors('values.whatsapp');
+
+        $this->post('/platform/settings/social', ['values' => [...$base, 'whatsapp' => '+880 1711-000000']])
+            ->assertSessionHasNoErrors();
+
+        auth()->logout();
+
+        $this->get('/')->assertInertia(fn ($page) => $page
+            ->where('whatsapp_support.url', 'https://wa.me/8801711000000?text=Hi%20there')
+            ->where('whatsapp_support.widget', true));
     }
 }

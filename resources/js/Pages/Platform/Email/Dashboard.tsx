@@ -22,10 +22,23 @@ export default function EmailDashboard({
 }: {
     stats: { total: number; sent: number; failed: number; retryable: number; last_24h: number };
     recent: LogRow[];
-    provider: { mailer: string | null; from_address: string | null; configured: boolean; host: string | null };
+    provider: { mailer: string | null; transport: string | null; from_address: string | null; configured: boolean; host: string | null; warning: string | null };
 }) {
     return (
         <PlatformLayout title="Email Dashboard">
+            {provider.warning && (
+                <div className="mb-5 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+                    <p className="text-sm font-medium text-destructive">Email is not being delivered</p>
+                    <p className="mt-1 text-xs text-destructive/90">{provider.warning}</p>
+                    <Link
+                        href={route('platform.email.settings')}
+                        className="mt-2 inline-block text-xs font-medium text-primary hover:text-primary/80"
+                    >
+                        Open email settings
+                    </Link>
+                </div>
+            )}
+
             <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
                 <KpiCard label="Total" value={stats.total} hint="All recorded email" />
                 <KpiCard label="Sent" value={stats.sent} tone="success" hint="Accepted by the mailer" />
@@ -66,6 +79,7 @@ export default function EmailDashboard({
                     <CardBody>
                         <dl className="space-y-1.5 text-sm">
                             <div className="flex justify-between"><dt className="text-gray-500">Mailer</dt><dd className="text-gray-800">{provider.mailer ?? '—'}</dd></div>
+                            <div className="flex justify-between"><dt className="text-gray-500">Sending via</dt><dd className="text-gray-800">{provider.transport ?? '—'}</dd></div>
                             <div className="flex justify-between"><dt className="text-gray-500">Host</dt><dd className="text-gray-800">{provider.host ?? '—'}</dd></div>
                             <div className="flex justify-between"><dt className="text-gray-500">From</dt><dd className="truncate text-gray-800">{provider.from_address ?? '—'}</dd></div>
                             <div className="flex justify-between"><dt className="text-gray-500">Configured in UI</dt><dd><Badge tone={provider.configured ? 'success' : 'neutral'}>{provider.configured ? 'Yes' : 'Using env'}</Badge></dd></div>

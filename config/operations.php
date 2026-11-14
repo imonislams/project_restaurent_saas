@@ -19,4 +19,17 @@ return [
 
     'npm_binary' => env('OPERATIONS_NPM_BINARY'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Migration Runner Timeout
+    |--------------------------------------------------------------------------
+    |
+    | Seconds allowed for a Command Center migration run (including the optional
+    | pre-run database backup). Keep it below the web server / PHP-FPM request
+    | timeout: the run is synchronous and the HTTP request cannot outlive that.
+    |
+    */
+
+    'migration_timeout' => (int) env('OPERATIONS_MIGRATION_TIMEOUT', 600),
+
 ];

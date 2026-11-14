@@ -38,7 +38,7 @@ final class BranchScope
      */
     public static function apply(Builder $builder, string $column = 'branch_id', bool $allowNull = false): void
     {
-        $ids = static::accessibleBranchIds();
+        $ids = self::accessibleBranchIds();
 
         if ($ids === null) {
             return;

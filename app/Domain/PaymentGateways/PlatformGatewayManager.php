@@ -49,10 +49,10 @@ class PlatformGatewayManager
     public function driver(string $provider): PlatformGateway
     {
         return match ($provider) {
-            'sslcommerz' => new SslCommerzGateway(),
-            'bkash' => new BkashGateway(),
-            'paddle' => new PaddleGateway(),
-            default => new ManualGateway(),
+            'sslcommerz' => new SslCommerzGateway,
+            'bkash' => new BkashGateway,
+            'paddle' => new PaddleGateway,
+            default => new ManualGateway,
         };
     }
 

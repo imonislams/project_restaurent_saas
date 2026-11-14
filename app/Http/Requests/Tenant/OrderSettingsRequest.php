@@ -18,6 +18,7 @@ class OrderSettingsRequest extends FormRequest
             'staff_confirmation_mode' => ['required', Rule::in(['central', 'direct'])],
             'branch_direct_order_taking' => ['boolean'],
             'send_confirmed_to_kitchen' => ['boolean'],
+            'allow_additional_items' => ['boolean'],
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Domain\Dining\Models;
 
+use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Customers\Models\Customer;
 use App\Domain\Dining\Enums\BillingMode;
@@ -10,7 +11,6 @@ use App\Domain\Dining\Factories\DiningSessionFactory;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Tables\Models\Table;
 use App\Domain\Tables\Models\TableQrToken;
-use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class DiningSession extends Model
 {
-    use BelongsToTenant, BelongsToBranch, HasFactory;
+    use BelongsToBranch, BelongsToTenant, HasFactory;
 
     protected $fillable = [
         'tenant_id',

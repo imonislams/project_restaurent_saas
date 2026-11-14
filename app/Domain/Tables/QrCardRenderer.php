@@ -6,6 +6,7 @@ use App\Domain\Branches\Models\Branch;
 use App\Domain\Tables\Models\QrCardDesign;
 use App\Domain\Tables\Models\Table;
 use App\Domain\Tenancy\Models\Tenant;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -59,7 +60,7 @@ class QrCardRenderer
      * the whole run because a PDF only has one page size; each table still gets
      * its own QR and its own branch/area tokens.
      *
-     * @param  \Illuminate\Support\Collection<int, Table>  $tables
+     * @param  Collection<int, Table>  $tables
      * @return list<string>
      */
     public function cardsFor($tables, Tenant $tenant, QrCardDesign $design): array

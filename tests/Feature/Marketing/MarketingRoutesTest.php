@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Marketing;
 
+use App\Domain\PlatformSettings\PlatformSettings;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -121,7 +122,7 @@ class MarketingRoutesTest extends TestCase
 
     public function test_pricing_syncs_with_platform_settings_currency(): void
     {
-        app(\App\Domain\PlatformSettings\PlatformSettings::class)->set('billing.default_currency', 'BDT', 'billing');
+        app(PlatformSettings::class)->set('billing.default_currency', 'BDT', 'billing');
 
         $response = $this->get('/pricing');
         $response->assertStatus(200);
@@ -148,7 +149,7 @@ class MarketingRoutesTest extends TestCase
             'restaurant_name' => 'John Bistro',
             'venue_type' => 'restaurant',
             'branches_count' => '1',
-            'inquiry_category' => 'demo',
+            'inquiry_category' => 'sales',
             'message' => 'I would like a live walkthrough of the inventory module.',
         ]);
 
@@ -162,17 +163,21 @@ class MarketingRoutesTest extends TestCase
         $response->assertStatus(200);
 
         $articles = [
-            'restaurant-pos-buying-guide-2026',
-            'food-waste-recipe-costing-guide',
-            'multi-branch-centralized-kitchen-sop',
-            'speed-of-service-kds-optimization',
-            'opening-closing-cash-drawer-audit-checklist',
+            'calculating-true-food-cost-percentage',
+            'preventing-cash-shift-variances',
+            'reducing-food-waste-in-prep-kitchens',
+            'pos-hardware-buying-guide',
+            'optimizing-peak-rush-ticket-times',
+            'multi-branch-central-catalog-playbook',
         ];
 
         foreach ($articles as $slug) {
             $subResponse = $this->get("/resources/{$slug}");
             $subResponse->assertStatus(200);
         }
+
+        // An unpublished slug is a 404, not a duplicate of another article.
+        $this->get('/resources/restaurant-pos-buying-guide-2026')->assertNotFound();
     }
 
     public function test_help_center_is_accessible(): void
@@ -198,12 +203,20 @@ class MarketingRoutesTest extends TestCase
 
     public function test_sitemap_and_robots_are_accessible(): void
     {
+        // Both are generated from the routes the site actually serves, using the
+        // configured canonical host rather than a hardcoded domain.
         $sitemapResponse = $this->get('/sitemap.xml');
         $sitemapResponse->assertStatus(200);
-        $this->assertStringContainsString('https://touchdine.cafe/', $sitemapResponse->getContent());
+        $sitemap = $sitemapResponse->getContent();
+        $this->assertStringContainsString('<urlset', $sitemap);
+        $this->assertStringContainsString(rtrim((string) config('app.url'), '/').'/', $sitemap);
+        $this->assertStringContainsString('/pricing', $sitemap);
 
         $robotsResponse = $this->get('/robots.txt');
         $robotsResponse->assertStatus(200);
-        $this->assertStringContainsString('Disallow: /dashboard', $robotsResponse->getContent());
+        $robots = $robotsResponse->getContent();
+        $this->assertStringContainsString('Disallow: /dashboard', $robots);
+        $this->assertStringContainsString('Disallow: /qr/', $robots);
+        $this->assertStringContainsString('Disallow: /payments/', $robots);
     }
 }

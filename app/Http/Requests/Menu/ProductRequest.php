@@ -43,11 +43,33 @@ class ProductRequest extends FormRequest
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'remove_image' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'recipe' => ['nullable', 'array'],
+            'recipe.yield_quantity' => ['nullable', 'numeric', 'min:0.001'],
+            'recipe.items' => [
+                Rule::requiredIf(fn () => $this->input('inventory_mode') === InventoryMode::Recipe->value),
+                'nullable', 'array',
+                $this->input('inventory_mode') === InventoryMode::Recipe->value ? 'min:1' : 'min:0',
+            ],
+            'recipe.items.*.ingredient_id' => [
+                'required', 'integer', 'distinct',
+                Rule::exists('ingredients', 'id')->where('tenant_id', $tenantId)->whereNull('deleted_at'),
+            ],
+            'recipe.items.*.quantity' => ['required', 'numeric', 'gt:0'],
             'variants' => ['nullable', 'array'],
             'variants.*.id' => ['nullable', 'integer'],
             'variants.*.name' => ['required', 'string', 'max:100'],
             'variants.*.sku' => ['nullable', 'string', 'max:100'],
             'variants.*.price' => ['nullable', 'numeric', 'min:0'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'recipe.items.required' => 'Add at least one ingredient to the recipe, or switch the stock tracking mode.',
+            'recipe.items.min' => 'Add at least one ingredient to the recipe, or switch the stock tracking mode.',
+            'recipe.items.*.ingredient_id.distinct' => 'Each ingredient can only appear once in a recipe.',
+            'recipe.items.*.quantity.gt' => 'Ingredient quantities must be greater than zero.',
         ];
     }
 }

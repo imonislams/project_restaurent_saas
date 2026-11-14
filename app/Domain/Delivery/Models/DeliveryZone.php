@@ -2,8 +2,8 @@
 
 namespace App\Domain\Delivery\Models;
 
-use App\Domain\Branches\Models\Branch;
 use App\Domain\Branches\Concerns\BelongsToBranch;
+use App\Domain\Branches\Models\Branch;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DeliveryZone extends Model
 {
-    use BelongsToTenant, BelongsToBranch, SoftDeletes;
+    use BelongsToBranch, BelongsToTenant, SoftDeletes;
 
     protected static function branchScopeAllowsNull(): bool
     {

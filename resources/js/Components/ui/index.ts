@@ -16,6 +16,8 @@ export { default as StatusDot } from './StatusDot';
 export type { StatusTone } from './StatusDot';
 export { default as EmptyState } from './EmptyState';
 export type { EmptyStateProps } from './EmptyState';
+export { default as Alert } from './Alert';
+export type { AlertVariant } from './Alert';
 export { default as ErrorState } from './ErrorState';
 export { default as Pagination } from './Pagination';
 export type { PageLink } from './Pagination';

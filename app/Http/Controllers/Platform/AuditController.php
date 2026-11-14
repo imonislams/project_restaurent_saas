@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Platform;
 use App\Domain\Auditing\Models\AuditLog;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Csv;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -75,7 +76,7 @@ class AuditController extends Controller
 
             $query->chunk(500, function ($logs) use ($out) {
                 foreach ($logs as $log) {
-                    fputcsv($out, [
+                    fputcsv($out, Csv::row([
                         $log->created_at?->toIso8601String(),
                         $log->action,
                         $log->actor?->name,
@@ -83,7 +84,7 @@ class AuditController extends Controller
                         $log->subject_type ? class_basename($log->subject_type).'#'.$log->subject_id : null,
                         $log->ip_address,
                         $log->metadata ? json_encode($log->metadata) : null,
-                    ]);
+                    ]));
                 }
             });
 

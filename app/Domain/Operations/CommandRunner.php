@@ -25,6 +25,7 @@ class CommandRunner
             'view_cache' => ['label' => 'Cache views', 'command' => '{php} artisan view:cache', 'danger' => false],
             'queue_restart' => ['label' => 'Restart queue workers', 'command' => '{php} artisan queue:restart', 'danger' => false],
             'queue_retry' => ['label' => 'Retry all failed jobs', 'command' => '{php} artisan queue:retry all', 'danger' => false],
+            'queue_work' => ['label' => 'Drain queue now', 'command' => '{php} artisan queue:work --stop-when-empty --max-time=100 --tries=3 --timeout=60', 'danger' => false],
             'storage_link' => ['label' => 'Link storage', 'command' => '{php} artisan storage:link --force', 'danger' => false],
             'backup' => ['label' => 'Run database backup', 'command' => '{php} artisan db:backup', 'danger' => false],
             'verify_backup' => ['label' => 'Verify last backup', 'command' => '{php} artisan db:verify-backup', 'danger' => false],

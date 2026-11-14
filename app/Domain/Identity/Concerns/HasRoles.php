@@ -79,7 +79,21 @@ trait HasRoles
 
         $slug = $role instanceof RoleName ? $role->value : $role;
 
-        return Role::where('slug', $slug)->whereNull('tenant_id')->value('id')
+        $global = Role::where('slug', $slug)->whereNull('tenant_id')->first();
+
+        // A tenant that customised this system role must receive its own copy,
+        // never the shared global definition.
+        if ($global !== null && $this->tenant_id !== null) {
+            $copyId = Role::where('tenant_id', $this->tenant_id)
+                ->where('based_on_role_id', $global->getKey())
+                ->value('id');
+
+            if ($copyId !== null) {
+                return $copyId;
+            }
+        }
+
+        return $global?->getKey()
             ?? Role::where('slug', $slug)->value('id')
             ?? throw new \RuntimeException("Role [{$slug}] is not defined.");
     }

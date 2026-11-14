@@ -3,7 +3,9 @@
 namespace App\Domain\Dining;
 
 use App\Domain\Dining\Models\DiningSession;
+use App\Domain\Invoicing\OrderInvoiceService;
 use App\Domain\Loyalty\LoyaltyService;
+use App\Domain\Notifications\NotificationService;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Models\Order;
 use App\Domain\PaymentGateways\TenantGatewayManager;
@@ -150,7 +152,7 @@ class QrPaymentService
         ]);
 
         try {
-            app(\App\Domain\Invoicing\OrderInvoiceService::class)->linkPayment($payment);
+            app(OrderInvoiceService::class)->linkPayment($payment);
         } catch (\Throwable $e) {
             report($e);
         }
@@ -205,13 +207,13 @@ class QrPaymentService
 
         // Reflect the verified payment on the invoice, and tell billing staff.
         try {
-            app(\App\Domain\Invoicing\OrderInvoiceService::class)->refreshForOrder($order->fresh());
+            app(OrderInvoiceService::class)->ensureForOrder($order->fresh());
         } catch (\Throwable $e) {
             report($e);
         }
 
         try {
-            app(\App\Domain\Notifications\NotificationService::class)->onlinePaymentReceived($order->fresh(), $paid);
+            app(NotificationService::class)->onlinePaymentReceived($order->fresh(), $paid);
         } catch (\Throwable $e) {
             report($e);
         }

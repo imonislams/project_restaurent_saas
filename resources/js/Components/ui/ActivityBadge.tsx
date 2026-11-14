@@ -22,6 +22,7 @@ const EXPLICIT: Record<string, string> = {
     'platform.email_template_updated': 'Email template updated',
     'platform.email_template_reset': 'Email template reset',
     'platform.command_ran': 'Command run',
+    'platform.migrations_run': 'Migrations run',
     'user.manager_pin_set': 'Manager PIN set',
     'user.manager_pin_cleared': 'Manager PIN cleared',
     goods_received: 'Goods received',

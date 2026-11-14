@@ -4,6 +4,12 @@ Tenant-defined roles let a restaurant owner tailor access to their own business:
 role (Waiter, Cashier, Branch Manager, Kitchen Staff, …), tick the permissions it should
 hold, and assign it to staff — without touching the platform's fixed role catalog.
 
+Built-in system roles (Cashier, Kitchen Staff, Branch Manager, …) are editable too. The
+first time a tenant saves one, the platform creates a **tenant-owned copy** and moves that
+restaurant's users onto it, so each restaurant can adjust the defaults without affecting
+any other restaurant. Only `tenant_owner` / `tenant_admin` stay locked, and platform roles
+remain platform-managed.
+
 **Related docs:** [SECURITY.md](./SECURITY.md) · [ARCHITECTURE.md](./ARCHITECTURE.md) ·
 [DATABASE.md](./DATABASE.md)
 
@@ -33,11 +39,17 @@ migration was needed.**
 ## 2. Data model
 
 - **Global/system roles** — `tenant_id = NULL`, `is_system = true`. Seeded by
-  `RolePermissionSeeder`; fixed and read-only in the tenant UI.
+  `RolePermissionSeeder`; they are the platform defaults and are never renamed or deleted
+  by a tenant.
 - **Custom roles** — `tenant_id = <tenant>`, `is_system = false`. Created/edited/deleted by
   the tenant.
+- **Customised copies** — `tenant_id = <tenant>`, `is_system = false`,
+  `based_on_role_id = <global role id>`. Created on the first edit of a built-in role; the
+  tenant's users are moved onto it (keeping `role_user.branch_id`) and the global row is
+  hidden from that tenant's lists. `Reset to default` moves users back and deletes the copy.
 - **Unique** `(tenant_id, slug)`. A custom role's slug is generated from its name and kept
-  free of collisions with the global roles and the tenant's own roles.
+  free of collisions with the global roles and the tenant's own roles. A copy's slug is
+  derived (`cashier-custom`, `cashier-custom-2`, …).
 - Permissions are attached through `permission_role`; users through `role_user`
   (unique `(user_id, role_id)` — no duplicate assignments).
 
@@ -81,10 +93,15 @@ slugs.
 1. **Tenant isolation** — every query is scoped to `tenant_id ∈ {NULL, own}`. A
    non-own/non-custom role is rejected by `RolePolicy::ownsRole` (403); a foreign role id
    bound by URL fails closed.
-2. **System-critical protection** — global roles (`tenant_id = NULL`) and every platform
-   role are never listed for editing and cannot be updated or deleted
-   (`RoleService::guardManaged` → 404/403). Super Admin / Owner / Admin definitions stay
-   platform-managed.
+2. **System-critical protection** — platform roles are never listed for editing, and the
+   `tenant_owner` / `tenant_admin` system roles are locked (`Role::isLocked()`): they are
+   matched by `RoleName` in branch-access and registration logic, and unlocking them would
+   allow self-lockout. Every other system role can be customised.
+2a. **Copy-on-write** — editing a global system role never changes the shared row. The
+   service creates (or reuses) a tenant copy (`based_on_role_id`), moves the tenant's
+   `role_user` rows onto it while preserving `branch_id`, then writes the permissions. The
+   global row is hidden from that tenant's role lists and staff picker; other tenants keep
+   the default. `POST /roles/{role}/reset` restores the default.
 3. **No privilege escalation** — a manager may only grant permissions they themselves hold
    (`RoleService::allowedPermissionSlugs`); granting anything else raises a validation error.
 4. **Registry validation** — `permissions.*` must be in `Permissions::tenant()` (FormRequest
@@ -111,6 +128,7 @@ Frontend visibility (hiding Create/Save/Delete) is **not** the security boundary
 | GET | `/roles` | `roles.index` | `permission:roles.view` |
 | POST | `/roles` | `roles.store` | `permission:roles.manage` |
 | PATCH | `/roles/{role}` | `roles.update` | `permission:roles.manage` |
+| POST | `/roles/{role}/reset` | `roles.reset` | `permission:roles.manage` |
 | DELETE | `/roles/{role}` | `roles.destroy` | `permission:roles.manage` |
 
 - **Screen:** `resources/js/Pages/Roles/Index.tsx` (`Roles/Index`).
@@ -119,7 +137,8 @@ Frontend visibility (hiding Create/Save/Delete) is **not** the security boundary
   de-duplicated.
 - **Features:** searchable role list, create drawer, inline edit, grouped permission
   checkboxes with per-group and global **Select all / Clear**, assigned-users list, delete
-  confirmation, and a clear "in use" explanation when a role cannot be deleted.
+  confirmation, `Reset to default` for customised roles, and a clear "in use" explanation
+  when a role cannot be deleted.
 
 Custom roles appear automatically in the Staff page's role picker, so owners assign them
 with the existing staff workflow.
@@ -142,13 +161,14 @@ order **approval** still needs the dedicated `orders.approve` permission.
 app/Domain/Identity/RoleService.php                  custom-role CRUD + validation + audit
 app/Domain/Identity/Policies/RolePolicy.php          ownsRole / system-role guard
 app/Http/Requests/Identity/{Store,Update}RoleRequest.php
-app/Http/Controllers/Tenant/RoleController.php       roles.index/store/update/destroy
+app/Http/Controllers/Tenant/RoleController.php       roles.index/store/update/reset/destroy
 app/Domain/Identity/Permissions.php                  + roles group
-app/Domain/Identity/{StaffService,InvitationService}.php   accept tenant custom roles
-app/Http/Controllers/Staff/StaffController.php       role options include custom roles
+app/Domain/Identity/{StaffService,InvitationService}.php   resolve tenant copies
+app/Http/Controllers/Staff/StaffController.php       role options via Role::assignableTo
 app/Http/Requests/Staff/{UpdateStaff,StoreInvitation}Request.php
 app/Providers/AppServiceProvider.php                 RolePolicy registration
 routes/web.php                                       roles.* routes
+database/migrations/2026_11_10_000001_add_based_on_role_to_roles.php
 database/migrations/2026_10_24_000001_add_role_management_permissions.php
 resources/js/Pages/Roles/Index.tsx
 resources/js/Layouts/AuthenticatedLayout.tsx         nav entry
@@ -160,9 +180,10 @@ tests/Feature/Identity/CustomRoleManagementTest.php
 
 ## 8. Known limitations
 
-- `role_user.branch_id` remains unused (pre-existing); permissions are resolved tenant-wide
-  and combined with branch access. Per-branch permission grants are not implemented.
+- `role_user.branch_id` is preserved when a role is customised, but permissions are still
+  resolved tenant-wide and combined with branch access. Per-branch permission grants are
+  not implemented.
 - Role management is **not** a plan feature — it is core RBAC. (Registering it would hide it
   from every existing plan whose `features` JSON lacks the key.)
-- The feature test is written but has **not** been executed (MySQL was offline; testing is
-  deferred until explicitly authorized).
+- `tenant_owner` and `tenant_admin` cannot be customised (platform-locked) to keep
+  name-based branch access and the owner's `roles.manage` intact.

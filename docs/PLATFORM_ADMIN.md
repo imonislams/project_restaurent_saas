@@ -223,6 +223,23 @@ Run the full suite with `php artisan test`. Relevant coverage includes:
   `php`, `node`) and rejects shell operators and destructive patterns. Every run is stored
   in `command_runs` and audited; output is secret-redacted.
 
+### Pending migrations
+- The Command Runner page also lists **Pending Migrations** (pending by default; a filter shows
+  executed ones with their batch). Pending detection is read-only: `Migrator::getMigrationFiles()`
+  diffed against the `migrations` table.
+- Select one or more pending rows (or **Select all**) and **Run selected**; each row also has its
+  own **Run**. The selection is re-validated on the server, ordered by filename (Laravel's execution
+  order) and applied in **one** `migrate --force --no-ansi --path=…` invocation, so the selection
+  shares **one batch**. Already-executed files can never be re-run.
+- **Backup before running** is checked by default: `db:backup` runs first and the migration run is
+  aborted if it fails. A cache lock prevents concurrent runs; the POST is throttled.
+- Every run is stored as a `command_runs` row of type `migration` (compact command summary + output)
+  and audited as `platform.migrations_run`, including the selected files and whether earlier pending
+  migrations were skipped.
+- The run is synchronous and bounded by `OPERATIONS_MIGRATION_TIMEOUT` (default 600 s). Keep it below
+  the web-server/PHP-FPM request timeout, and remember MySQL DDL is not transactional: the pre-run
+  backup is the recovery point for a partially applied migration.
+
 ### Navigation
 - Removed the duplicate **SSLCommerz** item (Payment Gateways already configures it) and the
   redundant **Tenant Backups** item (Database Backups already has a tenant filter).

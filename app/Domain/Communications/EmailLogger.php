@@ -5,6 +5,7 @@ namespace App\Domain\Communications;
 use App\Domain\Communications\Models\EmailLog;
 use App\Mail\Concerns\RetryableMail;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 
 /**
@@ -91,7 +92,7 @@ class EmailLogger
         return [null, null];
     }
 
-    /** @param list<\Symfony\Component\Mime\Address> $addresses */
+    /** @param list<Address> $addresses */
     protected function address(array $addresses): string
     {
         return $addresses[0]->getAddress() ?? 'unknown@unknown';

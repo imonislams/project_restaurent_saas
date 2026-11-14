@@ -7,6 +7,7 @@ use App\Domain\Billing\Enums\PlatformPaymentStatus;
 use App\Domain\Billing\Models\PaymentGateway;
 use App\Domain\Billing\Models\PlatformPayment;
 use App\Domain\Billing\Models\PlatformPaymentEvent;
+use App\Domain\Notifications\NotificationService;
 use App\Domain\Notifications\PlatformNotificationService;
 use App\Domain\PaymentGateways\PlatformGatewayManager;
 use App\Domain\Subscriptions\Models\SubscriptionInvoice;
@@ -357,7 +358,7 @@ class PlatformPaymentService
         try {
             $payment->loadMissing(['tenant', 'invoice']);
 
-            app(\App\Domain\Notifications\NotificationService::class)->paymentSucceeded(
+            app(NotificationService::class)->paymentSucceeded(
                 $payment->tenant,
                 $payment->invoice,
                 (float) $payment->amount,
@@ -393,7 +394,7 @@ class PlatformPaymentService
         try {
             $payment->loadMissing(['tenant', 'invoice']);
 
-            app(\App\Domain\Notifications\NotificationService::class)->paymentFailed(
+            app(NotificationService::class)->paymentFailed(
                 $payment->tenant,
                 $payment->invoice,
                 (float) $payment->amount,

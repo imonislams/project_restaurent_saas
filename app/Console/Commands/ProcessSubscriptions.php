@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Subscriptions\Enums\SubscriptionStatus;
 use App\Domain\Subscriptions\Models\Subscription;
 use App\Domain\Subscriptions\SubscriptionService;
@@ -15,7 +16,7 @@ class ProcessSubscriptions extends Command
 
     public function handle(SubscriptionService $subscriptions): int
     {
-        $dunningDays = (int) (app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('billing.dunning_days') ?? config('platform.billing.dunning_days', 7));
+        $dunningDays = (int) (app(PlatformSettings::class)->get('billing.dunning_days') ?? config('platform.billing.dunning_days', 7));
 
         $pastDue = 0;
         Subscription::withoutGlobalScopes()

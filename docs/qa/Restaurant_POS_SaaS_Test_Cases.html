@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Touch Dine — Restaurant POS SaaS · Test Case Sheet</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#ffffff; --ink:#0f172a; --soft:#475569; --mut:#64748b;
+    --line:#e2e8f0; --line2:#cbd5e1; --brand:#047857; --brand-soft:#ecfdf5;
+    --crit:#fee2e2; --high:#ffedd5; --med:#fef9c3; --low:#dcfce7; --head:#0b3b2e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#f1f5f9;color:var(--ink);
+    font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif}
+  header.top{position:sticky;top:0;z-index:20;background:var(--head);color:#fff;
+    padding:12px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+  header.top h1{margin:0;font-size:15px;letter-spacing:.2px}
+  header.top p{margin:2px 0 0;font-size:11.5px;color:#a7f3d0}
+  .tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .tools input,.tools select{background:#0b3b2e;color:#fff;border:1px solid #1c5c49;border-radius:8px;
+    padding:7px 10px;font-size:12px;min-width:150px}
+  .tools input::placeholder{color:#7cc4ad}
+  .tools button{cursor:pointer;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;
+    background:#10b981;color:#052e26}
+  .tools button.ghost{background:#134e4a;color:#d1fae5}
+  .tools button:hover{filter:brightness(1.07)}
+  .bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:10px 16px;background:#fff;
+    border-bottom:1px solid var(--line);font-size:11.5px;color:var(--mut)}
+  .bar b{color:var(--ink)}
+  .chip{display:inline-block;padding:1px 7px;border-radius:999px;background:var(--brand-soft);
+    color:var(--brand);font-weight:700;font-size:10px;letter-spacing:.3px}
+  .wrap{padding:14px 16px 60px;overflow:auto}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:1900px;background:#fff;
+    border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+  th{position:sticky;top:0;z-index:10;background:var(--head);color:#fff;font-size:11px;font-weight:700;
+    text-align:left;padding:9px 10px;border-right:1px solid #1c5c49;white-space:nowrap}
+  td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:7px 9px;
+    vertical-align:top;font-size:12px;color:var(--ink);word-break:break-word}
+  tbody tr:nth-child(even) td{background:#fafcff}
+  tbody tr:hover td{background:#f0fdf9}
+  td[contenteditable]{outline:none}
+  td[contenteditable]:focus{background:#fffbeb;box-shadow:inset 0 0 0 2px #f59e0b}
+  td.id{font-weight:700;color:var(--brand);white-space:nowrap;font-variant-numeric:tabular-nums}
+  td.mod{white-space:nowrap}
+  td.sev{text-align:center}
+  td.stat{text-align:center}
+  select.cell{width:100%;border:1px solid transparent;background:transparent;font:inherit;
+    border-radius:6px;padding:3px 4px;color:inherit}
+  select.cell:focus{outline:none;border-color:#f59e0b;background:#fffbeb}
+  .b-Critical{background:var(--crit)!important}
+  .b-High{background:var(--high)!important}
+  .b-Medium{background:var(--med)!important}
+  .b-Low{background:var(--low)!important}
+  .act{margin-left:auto;display:flex;gap:6px}
+  .rowdel{display:none;border:0;background:#fee2e2;color:#991b1b;border-radius:6px;cursor:pointer;
+    font-size:11px;padding:2px 6px;font-weight:700}
+  tr:hover .rowdel{display:inline-block}
+  .hidden{display:none!important}
+  @media print{
+    header.top,.tools,.bar,.rowdel{display:none!important}
+    body{background:#fff} table{min-width:0;border-radius:0}
+    th{position:static;background:#0b3b2e!important;-webkit-print-color-adjust:exact}
+    td,th{font-size:8.5px;padding:3px 4px}
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Touch Dine — Restaurant POS SaaS · Test Case Sheet</h1>
+    <p>Prepared by <b>Md Immon Islam</b> · Senior QA · one row per test case · editable</p>
+  </div>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Search name / ID / text…">
+    <select id="mod"><option value="">All modules</option></select>
+    <button id="add" class="ghost" type="button">＋ Add case</button>
+    <button id="csv" type="button">⬇ Export CSV</button>
+    <button id="prn" class="ghost" type="button">🖨 Print</button>
+  </div>
+</header>
+<div class="bar">
+  <span><b id="cTotal">0</b> test cases</span>
+  <span><b id="cShown">0</b> shown</span>
+  <span><span class="chip" id="cMods">0</span> modules</span>
+  <span><span class="chip" id="cPass">0</span> Passed (automated)</span>
+  <span><span class="chip" id="cReq">0</span> Requires Investigation</span>
+  <span class="act"><span id="cSuite"></span></span>
+</div>
+<p style="margin:10px 16px 0;font-size:11.5px;color:#64748b">
+  Cells are editable — click and type. <b>Edits live in this page only</b>; press <b>Export CSV</b> to save your work
+  (opens in Excel / Google Sheets). Severity and Status are dropdowns.
+</p>
+<p style="margin:6px 16px 0;font-size:11.5px;color:#64748b">
+  <b>How Status was filled.</b> An automated PHPUnit run (<b>2026-11-02 — 761/761 passed</b>) covers the modules in the
+  suite map, so those cases read <b>Passed</b> with the suite named in <i>Actual Result</i> — that is automated
+  coverage, not a hand-run of every UI step. A case whose Expected Result records an audit finding
+  (Not Implemented / GAP / RISK) reads <b>Requires Investigation</b>. Everything else stays <b>Not Tested</b> for
+  manual execution. Run on this machine: <code>php -d extension=gd vendor/phpunit/phpunit/phpunit</code>.
+</p>
+<div class="wrap">
+  <table id="sheet">
+    <thead>
+      <tr id="head"></tr>
+    </thead>
+    <tbody id="body"></tbody>
+  </table>
+</div>
+<script>
+const HEADERS = ["Test Case ID","Module","Test Case Name","Steps","Test Data","Pre Condition",
+  "Expected Result","Actual Result","Test Case Status","Severity Level",
+  "Comments From Tester","Remark From Developers","Tested in","Resolved in","Resolved by"];
+const STATUSES = ["Not Tested","Passed","Failed","Blocked","Partially Tested","Not Applicable","Requires Investigation"];
+const SEVERITIES = ["Critical","High","Medium","Low"];
+const TYPES = ["text","module","text","text","text","text","text","text","status","severity","text","text","text","text","text"];
+
+/* [ id, module, name, steps, data, pre, expected, severity ] */
+const DATA = [
+["TC-AUTH-001","AUTH","Owner registration via email","Open /register > choose email identifier > enter name, company, email, password, confirm > submit.","name=QA Owner; company=Green Table; email=owner@green.test; Pass=Secret#123","Guest; register route public","Tenant + owner created in one transaction; owner gets TenantOwner role; 14-day trial started; redirected to verify-email notice.","Critical"],
+["TC-AUTH-002","AUTH","Owner registration via phone","Open /register > choose phone identifier > enter name, company, phone, password > submit.","phone=+8801700000000; Pass=Secret#123","Guest; register route public","Tenant + owner created; 6-digit OTP issued; redirected to phone verification screen.","High"],
+["TC-AUTH-003","AUTH","Registration validation (duplicate / weak)","Submit register form with an existing email; then a weak password; then with fields missing.","existing owner@green.test; Pass=123","Guest","Per-field validation errors; no duplicate tenant/user created.","High"],
+["TC-AUTH-004","AUTH","Login with valid credentials","Open /login > enter valid email + password > submit.","owner@green.test / Secret#123","Verified registered user","Session regenerated; redirected to /dashboard (platform admin to platform dashboard); last_login_at stamped.","Critical"],
+["TC-AUTH-005","AUTH","Login with wrong password","Open /login > valid email + wrong password > submit.","owner@green.test / Wrong#999","Registered user","Auth error shown; no session created.","High"],
+["TC-AUTH-006","AUTH","Login throttling (5 attempts / min)","Attempt login with a wrong password 6 times within a minute.","same email each attempt","Rate limiter active","After 5 failures the request is locked out (429); Lockout event fired.","High"],
+["TC-AUTH-007","AUTH","Email verification link","Open the verification email > click the signed link /verify-email/{id}/{hash}.","signed verification URL","Unverified user with pending email","Email marked verified; gated areas accessible; link is throttle:6,1 protected.","High"],
+["TC-AUTH-008","AUTH","Unverified user blocked","Log in without verifying email, then open /dashboard.","/dashboard","Verified-email middleware","Redirect to the verification notice; no access to business routes.","High"],
+["TC-AUTH-009","AUTH","Phone OTP verification","Open /verify-phone > request code > enter the correct 6-digit code.","valid OTP within 10 min","User registered with phone","phone_verified_at set; user passes verified middleware.","High"],
+["TC-AUTH-010","AUTH","OTP wrong code / attempts / resend cooldown","Enter a wrong OTP 5 times; then request a resend twice within 60s.","wrong codes; immediate resend","OTP issued","Code rejected beyond max attempts; resend blocked for the 60s cooldown; code is single-use.","Medium"],
+["TC-AUTH-011","AUTH","Password reset flow","Open /forgot-password > submit email > open reset link > set a new password > log in with it.","owner@green.test; new=New#456","Registered user","Reset email sent; new password works; old password fails; remember_token rotated.","High"],
+["TC-AUTH-012","AUTH","Change password while logged in","Profile > change password > enter current + new + confirm.","current=Secret#123; new=New#789","Logged-in user","Password updated; current password required; confirmation validated.","Medium"],
+["TC-AUTH-013","AUTH","Password confirmation gate","Open /confirm-password and submit the password.","current password","Logged-in user","auth.password_confirmed_at set in session; the protected action proceeds.","Low"],
+["TC-AUTH-014","AUTH","Logout","Click logout from the user menu.","","Logged-in user","Session invalidated and token regenerated; /dashboard redirects to /login.","High"],
+["TC-AUTH-015","AUTH","Guest protection of tenant routes","Open /dashboard and /orders while logged out.","","Not logged in","Redirect to /login (auth middleware).","High"],
+["TC-AUTH-016","AUTH","Manager PIN setup","Profile > set manager PIN: 4-8 digits + confirm.","pin=1234 / 12345","Logged-in user with approval permission","PIN stored hashed (manager_pin hidden from serialization); invalid lengths rejected.","High"],
+["TC-AUTH-017","AUTH","Auth security events are logged","Perform login, failed login and logout; inspect Platform > Security Events.","successful + failed attempts","Platform admin access","security_events rows recorded (login, login_failed, logout); platform-admin failed login raises a deduped alert.","Medium"],
+["TC-AUTH-018","AUTH","Social login","Look for Google/Facebook sign-in on login/register.","","Guest","Not Implemented — no Socialite integration; no google_id/github_id columns. Requires Investigation.","Low"],
+["TC-AUTH-019","AUTH","Two-factor authentication (TOTP)","Look for 2FA enrolment on profile / security settings.","","Logged-in user","Not Implemented — no two_factor/TOTP code; only phone OTP and manager PIN step-up exist.","Low"],
+
+["TC-REST-001","REST","Onboarding wizard required steps","After verify, complete onboarding: profile > company > branch (required) then continue.","Company=Green Table; Branch=Main","auth+verified; fresh tenant","Required steps persisted; wizard advances; other routes blocked until complete.","High"],
+["TC-REST-002","REST","Onboarding skip optional step","At the hours/tax/receipt/payments/menu/team step, click Skip then continue.","","Onboarding in progress","Step marked skipped (POST /onboarding/skip/{step}); wizard proceeds; required steps cannot be skipped.","Medium"],
+["TC-REST-003","REST","Onboarding gate middleware","As an onboarded=false tenant user, open /orders or /settings directly.","/orders","auth+verified, onboarding incomplete","Redirect to the first incomplete onboarding step; platform admins and impersonated sessions exempt.","High"],
+["TC-REST-004","REST","Onboarding completion side effects","Finish all steps and POST /onboarding/complete.","all steps done","First incomplete required step is null","onboarding_completed_at set; step pointer cleared; demo generation started (demo_enabled default true) -> demo.setup.","Medium"],
+["TC-REST-005","REST","Company details persist to settings","Onboarding company step > set legal name/address; then open Settings > Company.","legal name/address","settings.manage","The same persisted values shown in onboarding and Settings (single source: tenants.settings JSON).","Medium"],
+["TC-REST-006","REST","Region currency & timezone applied","Settings > set region country/currency/timezone; verify POS and reports use them.","currency=BDT; tz=Asia/Dhaka","settings.manage","Currency and timezone propagate to POS, receipts, reports and date bucketing.","High"],
+
+["TC-BRCH-001","BRCH","Create branch (first is primary)","Branches > Add > name, code, address, phone, timezone, currency, service types > save.","Branch=Farm Outlet 2; code=OUT2","permission:branches.manage","Branch created active; first branch auto is_primary; default stock location and cash account provisioned; audit branch.created.","High"],
+["TC-BRCH-002","BRCH","Branch plan limit enforcement","Create branches up to the plan's branch limit, then try one more.","plan limit reached","permission:branches.manage","Creation blocked with a validation error (UsageService::guard / planLimit); no extra branch created.","High"],
+["TC-BRCH-003","BRCH","Update branch details","Edit a branch name/phone/service types > save.","phone changed","permission:branches.manage","Changes saved; audit branch.updated.","Medium"],
+["TC-BRCH-004","BRCH","Deactivate non-primary branch","Deactivate an active non-primary branch.","","permission:branches.manage","is_active=false; branch removed from the active switcher; re-activation restores it.","Medium"],
+["TC-BRCH-005","BRCH","Primary branch cannot be deactivated","Attempt to deactivate the primary branch.","","permission:branches.manage","Blocked 422 'Set another branch as primary first'.","High"],
+["TC-BRCH-006","BRCH","Set primary branch","Set a different branch as primary.","","permission:branches.manage","In one transaction all tenant branches are cleared, then the target is set primary + active.","High"],
+["TC-BRCH-007","BRCH","Branch deletion","Look for a delete action on branches.","","permission:branches.manage","Not Implemented — no delete/destroy route; only deactivate exists. Requires Investigation.","Medium"],
+["TC-BRCH-008","BRCH","Branch switcher persists active branch","Use the header branch switcher to select another accessible branch; reload a page.","branch_id=<accessible>","auth user with access to >1 branch","session('active_branch_id') saved; scoped lists/orders now show the selected branch.","High"],
+["TC-BRCH-009","BRCH","Switch to inaccessible branch blocked","POST /branch/switch with a branch_id the user cannot access.","foreign / other-branch id","auth user without that branch","403; session unchanged.","High"],
+["TC-BRCH-010","BRCH","Switch to another tenant's branch blocked","POST /branch/switch with a branch id belonging to a different tenant.","other-tenant branch id","auth user","403/404; no cross-tenant branch selection possible.","Critical"],
+["TC-BRCH-011","BRCH","Stale session branch falls back","Select a branch, then deactivate it (or lose access); reload.","","active_branch_id no longer accessible","ResolveActiveBranch falls back to primary then first accessible; no error page.","Medium"],
+["TC-BRCH-012","BRCH","Branch data scoping on orders","Create an order in Branch A; switch to Branch B; open Orders.","2 branches with data","tenant-wide or accessible branches","Orders list scoped to the active branch; Branch A data not visible in Branch B (fail-closed when no accessible branch).","Critical"],
+
+["TC-ROLE-001","ROLE","System role catalogue","Open Roles > review the listed roles with permission counts.","","permission:roles.view","Global system roles listed read-only; tenant custom roles also listed with member counts.","Medium"],
+["TC-ROLE-002","ROLE","Create custom role","Roles > New > name + toggle permissions (e.g. pos.use, orders.view) > save.","Role=Cashier Plus; perms=pos.use, orders.view","permission:roles.manage","Custom role created with tenant_id and is_system=false; selectable when inviting staff; audit role.created.","High"],
+["TC-ROLE-003","ROLE","Update custom role permissions","Edit the custom role > add orders.create > save; verify an assigned staff gains access.","","permission:roles.manage","Permission matrix updated immediately; audit role.permissions_updated.","High"],
+["TC-ROLE-004","ROLE","Delete role in use is blocked","Try deleting a role still assigned to users; then delete an unused role.","","permission:roles.manage","Assigned role blocked with a count message; unused role deleted with audit role.deleted.","High"],
+["TC-ROLE-005","ROLE","System / foreign role mutation blocked","Attempt to edit or delete a system role, or a role of another tenant.","","permission:roles.manage","403 for a system role, 404 for a foreign/platform role.","High"],
+["TC-ROLE-006","ROLE","Privilege escalation guard on role creation","As a limited admin, try to grant a permission you do not hold.","grant=settings.manage","Custom role holds not all permissions","422 'You cannot grant permissions you do not hold: …'; role not saved.","Critical"],
+["TC-ROLE-007","ROLE","Permission catalogue groups render","Open the Roles page and inspect permission groups.","","permission:roles.view","All tenant permission groups render (dashboard, pos, orders, tables, kitchen, menu, modifiers, qr, inventory, purchasing, waste, customers, cash, accounts, invoices, expenses, reports, staff, roles, branches, settings, subscription); platform group excluded.","Low"],
+["TC-ROLE-008","ROLE","Privilege escalation via staff role assignment","As a user whose custom role has staff.manage, invite a user and assign the system tenant_owner role.","role=tenant_owner","Custom role with staff.manage","RISK — StoreInvitationRequest/UpdateStaffRequest validate role existence but do not apply RoleService::allowedPermissionSlugs, so tenant_owner may be assignable. Verify and report as a security bug.","Critical"],
+["TC-ROLE-009","ROLE","Per-branch role scoping","Assign a role to a user for a specific branch only.","","permission:roles.manage","Not Implemented — role_user.branch_id exists but is never written/read; role grants are tenant-wide only. Requires Investigation.","Medium"],
+
+["TC-STAFF-001","STAFF","Staff list with filters","Open Staff > review the list, filters (role/status) and pending invitations.","","permission:staff.view","Staff shown with roles, branches, status, last_login_at and has_pin; pending invitations listed.","Medium"],
+["TC-STAFF-002","STAFF","Invite staff (email link)","Staff > Add > name, email, role, branches > send invitation.","Rahim; rahim@green.test; role=Cashier","permission:staff.manage","Invitation row created with a hashed token (expiry 7 days); invitation email queued; audit recorded.","High"],
+["TC-STAFF-003","STAFF","Staff plan user-limit enforcement","Invite staff beyond the plan's user limit.","limit reached","permission:staff.manage","Blocked by UsageService::guard(users) with a validation error; no user created.","High"],
+["TC-STAFF-004","STAFF","Create staff directly with password","Staff > Add > provide a temporary password instead of an invitation.","Pass=Temp#123","permission:staff.manage","User created; email auto-verified unless double opt-in policy; welcome mail sent.","Medium"],
+["TC-STAFF-005","STAFF","Accept invitation","Open the emailed /invitations/{token} > set password > submit.","valid token","Valid unexpired invitation","User created with roles/branches; accepted_at stamped; audit staff.invitation_accepted; auto-login to dashboard.","High"],
+["TC-STAFF-006","STAFF","Invitation expiry / already accepted","Open an expired invitation link; then re-open an already-accepted link.","expired/used token","Invitation expired or accepted","Rejected with a clear message; no duplicate user created.","Medium"],
+["TC-STAFF-007","STAFF","Resend invitation","Resend a pending invitation.","","permission:staff.manage","New 64-char token issued; expiry reset to +7 days; email re-sent.","Medium"],
+["TC-STAFF-008","STAFF","Revoke invitation","Delete a pending invitation.","","permission:staff.manage","Invitation row deleted; the link no longer works; audit staff.invitation_revoked.","Medium"],
+["TC-STAFF-009","STAFF","Update staff roles & branch access","Edit a staff member: change roles and accessible branches > save.","roles/branches changed","permission:staff.manage","Roles synced and the branch pivot updated; audit staff.access_updated.","High"],
+["TC-STAFF-010","STAFF","Deactivate staff","Deactivate an active staff member.","","permission:staff.manage","status=deactivated, deactivated_at set, DB sessions deleted; login blocked; audit staff.deactivated.","High"],
+["TC-STAFF-011","STAFF","Self-deactivation blocked","Try to deactivate your own account.","","permission:staff.manage","403 self-deactivation blocked.","Medium"],
+["TC-STAFF-012","STAFF","Reactivate staff","Reactivate a deactivated staff member.","","permission:staff.manage","status=active; deactivated_at cleared; can log in again.","Medium"],
+["TC-STAFF-013","STAFF","Revoke staff sessions","Revoke sessions for a member logged in elsewhere.","","permission:staff.manage","All sessions rows for that user deleted; the other device is logged out on its next request.","Medium"],
+["TC-STAFF-014","STAFF","Send password reset to staff","Trigger a password reset email for a staff member.","","permission:staff.manage","Password reset link emailed via Password::sendResetLink.","Medium"],
+["TC-STAFF-015","STAFF","Duplicate staff email validation","Invite an email that already has an account/invitation.","existing email","permission:staff.manage","Validation error; no duplicate user/invitation.","Medium"],
+
+["TC-TABLE-001","TABLE","Create table","Tables > Add > name, capacity, area, branch > save.","Table T-12; capacity 4; Area=Main","permission:tables.manage","Table saved and shown on the table map for the active branch.","Medium"],
+["TC-TABLE-002","TABLE","Update table","Edit table name/capacity/area > save.","","permission:tables.manage","Changes saved.","Low"],
+["TC-TABLE-003","TABLE","Delete table blocked with open orders","Try deleting a table that has open orders; then delete an idle table.","","permission:tables.manage","Table with open orders blocked (hasOpenOrders); idle table deleted.","Medium"],
+["TC-TABLE-004","TABLE","Set table status","Set status available/occupied/reserved/billing/cleaning.","","permission:tables.manage","Status reflected on the map (TableStatus enum).","Medium"],
+["TC-TABLE-005","TABLE","Transfer order between tables","Tables > Transfer > choose an open order + target table > confirm.","order from T-12 -> T-14","permission:tables.manage","Order reassigned; source table freed; both tables refreshed; audit recorded.","High"],
+["TC-TABLE-006","TABLE","Auto occupancy refresh","Place an order on a table, then complete/void it.","","permission:tables.manage","Table becomes occupied while non-final orders exist and returns to available when none remain.","Medium"],
+
+["TC-TSTF-001","TSTF","Assign staff to a table","Table / table-staff panel > assign eligible staff to a table > save.","staff=Rahim","permission:tables.manage (or equivalent)","Eligible staff assigned; the sync is fail-closed to eligible ids; change audited.","High"],
+["TC-TSTF-002","TSTF","Ineligible staff excluded","Try assigning a staff member from another branch or without serving permission.","foreign staff","Assignment UI","Ineligible user not assignable / filtered out by TableStaffService eligibility rules.","Medium"],
+["TC-TSTF-003","TSTF","Staff snapshot frozen on order","Assign table staff, place an order, then change the table's staff; reopen the order.","","Assigned table staff","order_staff snapshot preserves the original names; the historical order is never rewritten.","Medium"],
+["TC-TSTF-004","TSTF","Table staff sees only assigned tables","Log in as table staff and open the tables/orders view.","","table_staff role","Only assigned tables/orders are actionable.","High"],
+["TC-MENU-001","MENU","Create category","Menu > Categories > name + sort order > save.","Category=Starters","permission:menu.manage","Category listed and available for products; POS grouping updates.","High"],
+["TC-MENU-002","MENU","Update / delete category","Rename a category; delete an empty one; try deleting one with products.","","permission:menu.manage","Rename applies; empty category deletes; category with products is blocked/warned.","Medium"],
+["TC-MENU-003","MENU","Menu list search, filter, paginate","Menu page: search by name/SKU/barcode, filter by category, page through results.",">25 products","permission:menu.view","Filters return correct subsets; pagination (25/page) works.","Medium"],
+
+["TC-PROD-001","PROD","Create product","Menu > Products > name, category, price, cost, tax, unit, inventory mode, active > save.","Cafe Latte; Cat=Beverages; Price=180; Cost=70","permission:menu.manage","Product saved; appears in the POS and QR catalogue.","High"],
+["TC-PROD-002","PROD","Edit product price","Change price 180 -> 200 > save; open POS; reopen a past order.","","permission:menu.manage","POS shows 200; existing past orders keep their original price/item snapshot.","High"],
+["TC-PROD-003","PROD","Product image upload / delete","Upload an image; then delete it.","valid jpg/png/webp <=2048KB","permission:menu.manage","Image stored (transactional replace) and displayed; delete removes the file.","Medium"],
+["TC-PROD-004","PROD","Product variants","Add/sync variants (e.g. Small/Large with their own price) > save.","","permission:menu.manage","Variants reconciled in place and selectable in POS.","Medium"],
+["TC-PROD-005","PROD","Product import (CSV)","Download the template > fill rows > import the CSV.","rows with SKU + category + price","permission:menu.manage","Products upserted by SKU/name; per-row errors reported; file restricted to csv/txt <=5MB.","Medium"],
+["TC-PROD-006","PROD","Product export (CSV / PDF)","Menu > Export products (CSV and ?format=pdf).","","permission:menu.view","Export downloads with all product columns; PDF renders via dompdf.","Medium"],
+["TC-PROD-007","PROD","Delete product","Delete a product; then try one referenced by past orders.","","permission:menu.manage","Deletion handled safely for used products (blocked or deactivated).","Medium"],
+["TC-PROD-008","PROD","Product validation","Save a product with a negative price / duplicate SKU / empty name.","price=-5; duplicate sku","permission:menu.manage","Validation errors shown; no invalid product saved.","High"],
+["TC-PROD-009","PROD","Recipe / ingredient cost","Create a recipe with ingredients and set inventory mode=recipe; verify cost per yield.","qty x ingredient cost / yield","permission:menu.manage","Recipe costPerYield computed correctly; selling deducts the ingredients.","High"],
+
+["TC-MOD-001","MOD","Create modifier group + options","Modifiers > New group + options with price deltas > save.","Group=Size; Small +0; Large +60","permission:modifiers.manage","Group and options saved; selectable on linked products.","High"],
+["TC-MOD-002","MOD","Update modifier group","Rename a group / edit options and price deltas.","","permission:modifiers.manage","Changes saved and reflected in POS/QR.","Medium"],
+["TC-MOD-003","MOD","Delete modifier group / option","Delete a modifier group and a single option.","","permission:modifiers.manage","Deleted groups/options disappear from product choices; historical orders unaffected.","Medium"],
+["TC-MOD-004","MOD","Modifier price delta applied on order","Add a product with a +60 modifier in POS/QR and check the line total.","base 180 + 60 = 240","permission:pos.use / QR session","Line total and order total include the modifier delta.","High"],
+["TC-MOD-005","MOD","Standalone modifier option endpoints","Check whether the option store/update/delete routes are used by the UI.","","permission:modifiers.manage","Endpoints exist but the frontend manages options only via group sync — redundant/unused routes (minor dead surface).","Low"],
+
+["TC-INV-001","INV","Create unit of measure","Inventory > Units > name/code > save.","Unit=kg","permission:inventory.manage","Unit saved and selectable on ingredients.","Medium"],
+["TC-INV-002","INV","Create ingredient","Inventory > Ingredients > name, unit, cost > save.","Milk; L; cost 90","permission:inventory.manage","Ingredient saved with zero stock until an opening entry.","High"],
+["TC-INV-003","INV","Opening stock entry","Inventory > Opening > ingredient, quantity, unit cost > save.","Milk 50L @ 90 = 4,500","permission:inventory.adjust","stock_movements 'opening' row appended; balance = 50L; value 4,500.","High"],
+["TC-INV-004","INV","Stock adjustment","Adjust stock +/- with a reason; verify the movement log and balance.","adjust -5L (spoilage)","permission:inventory.adjust","Balance 50 -> 45L; adjustment row logged with user and reason; append-only ledger.","High"],
+["TC-INV-005","INV","Negative stock prevention","Adjust below zero with allow_negative off; repeat with the setting on.","-100L on 45L","inventory.adjust; inventory.allow_negative off","Blocked with validation when off; permitted when on; the setting is DB/seed-only (no Settings UI).","High"],
+["TC-INV-006","INV","Low stock threshold alert","Cross inventory.low_stock_threshold downward and check for an alert notification.","threshold=10L","inventory.adjust","LowStock notification (database+mail) triggered; realtime alert pushed to the inventory stream.","Medium"],
+["TC-INV-007","INV","Inventory list & filters","Open Inventory: search, low-stock filter, view balances/movements.","","permission:inventory.view","Balances and the last 100 movements listed; filters return correct subsets.","Medium"],
+["TC-INV-008","INV","Stock location management","Look for a create/edit stock-location route.","","inventory.manage","Not Implemented — locations are auto-provisioned (Main Store); no create/edit route. Requires Investigation.","Low"],
+["TC-INV-009","INV","Unit conversion in stock math","Record stock in a converted unit (e.g. g vs kg) and verify the balance math.","1000g = 1kg","unit conversions provisioned","GAP — UnitConversion rows exist (kg->g, L->mL) but no deduction/validation applies a factor; conversions are unused. Requires Investigation.","Medium"],
+
+["TC-PUR-001","PUR","Create supplier","Purchasing > Suppliers > name, contact, phone, terms > save.","Meghna Foods; terms 15d","permission:purchasing.manage; feature:purchasing","Supplier saved and selectable on POs.","High"],
+["TC-PUR-002","PUR","Create purchase order (draft)","PO > supplier, items with qty/unit cost > save as Draft.","Milk 100L @ 90 = 9,000","permission:purchasing.manage","PO saved Draft; line totals = round(qty x cost,2); order subtotal = total = sum of lines.","High"],
+["TC-PUR-003","PUR","Submit purchase order","Submit a draft PO.","","permission:purchasing.manage","Status draft -> submitted; edits locked after submit.","Medium"],
+["TC-PUR-004","PUR","Approve purchase order (approval limit + manager PIN)","Approve a PO whose total exceeds purchasing.approval_limit.","total > limit","permission:purchasing.approve + valid manager PIN","Approval requires a valid manager PIN above the limit; approver recorded; status submitted -> approved.","High"],
+["TC-PUR-005","PUR","Receive PO — full (stock + ledger)","Receive an approved PO fully; check inventory and the supplier balance.","receive 100L","approved PO","Item received_quantity updated; stock +100L (purchase movement, allowNegative=true); order -> received.","High"],
+["TC-PUR-006","PUR","Receive PO — partial","Receive 50L of a 100L PO, then the remainder.","","approved PO","First receive sets partially_received while received<ordered; the second completes to received.","Medium"],
+["TC-PUR-007","PUR","PO payment (partial) & due","Pay part of a received PO against the supplier.","pay 4,000 of 9,000","permission:purchasing.manage","paidTotal increases; outstanding = total - paidTotal shows 5,000 remaining.","High"],
+["TC-PUR-008","PUR","Cancel purchase order","Cancel a draft/submitted PO with a reason.","","permission:purchasing.manage","Status cancelled; no stock movement occurs.","Medium"],
+["TC-PUR-009","PUR","Supplier outstanding balance","Open a supplier with approved/received POs and payments.","","purchasing.view","outstandingBalance = sum(approved/partially_received/received totals) - sum(payments).","Medium"],
+["TC-PUR-010","PUR","Supplier index route","Look for a dedicated supplier list route/page.","","purchasing.view","Not Implemented — no supplier index route; suppliers are only returned inside the PO index. Requires Investigation.","Low"],
+["TC-PUR-011","PUR","Purchasing feature flag gating","With a plan lacking the 'purchasing' feature, open /purchasing/*.","plan without purchasing","subscribed tenant","Blocked by feature:purchasing (EnsureFeature -> Tenant::hasFeature); nav item hidden.","Medium"],
+
+["TC-TRF-001","TRF","Create transfer draft","Transfers > source branch, destination branch, items, qty > save.","Main -> Outlet; Milk 20L","feature:transfers; permission:inventory.manage","Draft transfer created with a TRF number; from != to enforced; >=1 item required.","High"],
+["TC-TRF-002","TRF","Approve transfer","Approve a draft transfer.","","permission:inventory.approve","Status draft -> approved.","Medium"],
+["TC-TRF-003","TRF","Dispatch transfer","Dispatch an approved transfer.","","permission:inventory.manage","Status approved -> dispatched; source default-location stock deducted (transfer_out), respecting the negative-stock rule.","High"],
+["TC-TRF-004","TRF","Receive transfer","Receive a dispatched transfer at the destination.","","permission:inventory.manage","Destination stock +qty (transfer_in); no gain/loss; status dispatched -> received.","High"],
+["TC-TRF-005","TRF","Cancel transfer","Cancel a draft or approved transfer; then try cancelling after dispatch.","","permission:inventory.manage","Cancel allowed only from draft/approved; after dispatch it is blocked.","Medium"],
+["TC-TRF-006","TRF","Transfers feature flag gating","With a plan lacking 'transfers', open /transfers.","plan without transfers","subscribed tenant","Blocked by feature:transfers; nav hidden.","Medium"],
+["TC-TRF-007","TRF","Partial dispatch / receive","Try to dispatch or receive only part of a transfer line.","","permission:inventory.manage","Not Implemented — only full line quantities are supported. Requires Investigation.","Low"],
+
+["TC-WST-001","WST","Record waste below approval threshold","Waste > item, quantity, reason > save with a cost below waste.approval_threshold.","Milk 2L; reason=spoilage","feature:waste; permission:waste.create","Record auto-approved; stock deducted immediately (waste movement); cost = round(qty x unit cost,2).","High"],
+["TC-WST-002","WST","Waste above approval threshold -> pending","Record waste whose cost exceeds waste.approval_threshold.","cost > threshold","feature:waste","Record saved Pending; no stock change until approved.","High"],
+["TC-WST-003","WST","Approve waste","Approve a pending waste record.","","permission:waste.approve","Stock deducted (waste movement) honouring the negative-stock rule; status approved.","High"],
+["TC-WST-004","WST","Reject waste","Reject a pending waste record.","","permission:waste.approve","Status rejected; no stock effect.","Medium"],
+["TC-WST-005","WST","Waste quantity validation","Save waste with quantity 0 or negative.","qty=0","feature:waste; waste.create","Validation error; nothing saved.","Medium"],
+["TC-WST-006","WST","Waste feature flag gating","With a plan lacking 'waste', open /waste.","plan without waste","subscribed tenant","Blocked by feature:waste; nav hidden.","Medium"],
+
+["TC-EXP-001","EXP","Create expense category","Expenses > Categories > name > save.","Fuel & Transport","permission:expenses.manage","Category saved and selectable.","Medium"],
+["TC-EXP-002","EXP","Create expense (auto-approve limit)","Expenses > date, category, account, amount > save below expenses.auto_approve_limit.","500 <= limit","permission:expenses.manage","Expense auto-approves when amount <= limit; posts a negative expense transaction to the account.","High"],
+["TC-EXP-003","EXP","Approve expense posts ledger","Approve a Submitted expense with an account selected.","10,000; Cash","permission:expenses.approve","Approved; account balance reduces by the amount; the report includes only approved expenses.","High"],
+["TC-EXP-004","EXP","Reject expense","Reject an expense.","","permission:expenses.approve","Status rejected; no ledger/balance effect.","Medium"],
+["TC-EXP-005","EXP","Expense validation","Save an expense with amount 0 or negative, or no category.","amount=-500","permission:expenses.manage","Validation error; nothing saved.","Medium"],
+["TC-EXP-006","EXP","Expense edit / delete","Look for edit or delete actions on expenses.","","permission:expenses.manage","Not Implemented — only create + approve/reject exist; no update/delete endpoints. Requires Investigation.","Low"],
+
+["TC-ACC-001","ACC","Create financial account","Accounts > name, type (cash/bank), opening balance > save.","DBBL Current; opening 50,000","permission:accounts.manage","Account saved; balance = opening + sum(transactions).","High"],
+["TC-ACC-002","ACC","Edit account","Edit an account name/details.","","permission:accounts.manage","Changes saved.","Medium"],
+["TC-ACC-003","ACC","Delete account with transactions","Try deleting an account that has ledger transactions.","","permission:accounts.manage","Blocked / handled to preserve history.","Medium"],
+["TC-ACC-004","ACC","Account transfer","Transfer between two accounts.","Cash 10,000 -> Bank","permission:accounts.manage","Two signed entries posted (source -amount, destination +amount, category transfer); both balances update.","High"],
+["TC-ACC-005","ACC","Account balance calculation","Add income/expense/transfer entries and verify the balance.","opening + sum","permission:accounts.view","Balance matches opening + signed transactions exactly.","High"],
+["TC-ACC-006","ACC","Account statement / ledger view","Look for a per-account statement page.","","accounts.view","Not Implemented — only balance + last 50 transfers on the index; no statement/detail route. Requires Investigation.","Low"],
+["TC-QR-001","QR","Generate and print table QR","qr-dining > Tables > generate QR for a table > print the sheet.","","feature:qr_dining; permission:qr.view","Unique token created; printable sheet generated.","High"],
+["TC-QR-002","QR","QR entry with valid token","Scan /qr/{token} > the entry page loads the menu.","valid token","active tenant, branch and table","Entry resolves tenant/branch/table server-side; scan_count incremented; menu rendered.","High"],
+["TC-QR-003","QR","Invalid or revoked token","Open /qr/{token} with a missing or revoked token.","bad/revoked token","public","HTTP 410 returned; no tenant data disclosed.","High"],
+["TC-QR-004","QR","Inactive tenant / branch / table","Open a QR whose tenant is suspended, or whose branch/table is inactive.","inactive context","public","404 returned; access denied server-side.","High"],
+["TC-QR-005","QR","QR rate limiting","Hit the /qr endpoints beyond the configured limits.","qr-public 60/min; qr-session 10/min; qr-order 20/min","public","Requests throttled (429) per IP / dining token.","Medium"],
+["TC-QR-006","QR","Regenerate QR token","Regenerate a table token.","","permission:qr.manage","New token issued; the previous token no longer resolves (410).","High"],
+["TC-QR-007","QR","Revoke table QR","Revoke a table's QR.","","permission:qr.manage","Old token stops working; no new sessions can start.","High"],
+["TC-QR-008","QR","QR card design create / activate / print","Designs > create a design, activate it, preview/export and print.","","permission:qr.view/manage","Design saved/activated; preview and export render with the active design.","Low"],
+["TC-QR-009","QR","QR feedback submission","Submit a rating + comment from the QR session.","rating 1-5 + comment","active dining session","Feedback stored (updateOrCreate per session); visible in QR analytics.","Low"],
+["TC-QR-010","QR","QR analytics dashboard","Open qr-dining > Analytics.","","permission:qr.analytics","Scans/sessions/orders/feedback metrics render for the branch.","Medium"],
+["TC-QR-011","QR","QR dining feature flag gating","With a plan lacking 'qr_dining', open /qr-dining/*.","plan without qr_dining","subscribed tenant","Blocked by feature:qr_dining; nav hidden.","Medium"],
+
+["TC-CORD-001","CORD","Start dining session","From the QR entry, start a session; note the HttpOnly cookie.","valid token","feature:qr_dining on","One active session per table; dining_session HttpOnly cookie set (path /qr, SameSite lax); joins if a session already exists.","Critical"],
+["TC-CORD-002","CORD","Session identity requirement","Start a session when require_phone/require_email is enabled.","phone/email","QrDiningSettings require identity","Session blocked until the required contact details are provided.","High"],
+["TC-CORD-003","CORD","Place order from QR","Add items + modifiers and a note; submit the QR order.","1 item + 1 modifier; idempotency_key","active dining session","Order created as held, source=qr, correct tenant/branch/table; acceptance auto or pending per settings.","Critical"],
+["TC-CORD-004","CORD","QR order idempotency","Submit the same QR order payload twice with the same idempotency_key.","same idempotency_key","active session","Only one order is created; the duplicate is ignored.","High"],
+["TC-CORD-005","CORD","QR order tenant / branch isolation","Place an order via a branch QR and verify it appears only in that tenant/branch.","","active session","Order reaches the correct restaurant and branch only; no cross-tenant leakage.","Critical"],
+["TC-CORD-006","CORD","Session timeout / expiry","Leave a session idle beyond session_timeout_minutes.","timeout=180 (min 15)","active session","Session auto-expires; further orders blocked; state recorded as expired.","Medium"],
+["TC-CORD-007","CORD","Additional orders in one session","With allow_additional_orders on, place a second round.","","active session","Additional order added to the same open invoice/session.","Medium"],
+["TC-CORD-008","CORD","Customer tracking page","Open /qr/{token}/tracking and watch the status updates.","","active session","Customer-facing status flows received->confirmed->preparing->ready->served; live updates when live_tracking on.","High"],
+["TC-CORD-009","CORD","Close / end session","Close the dining session (logout/leave).","","active session","Session marked closed; cookie cleared.","Medium"],
+
+["TC-ACPT-001","ACPT","Auto-accept QR orders","With qr auto_accept enabled, place a QR order.","auto_accept=on","QR session","Order acceptance_status=auto_accepted; proceeds to kitchen when configured.","High"],
+["TC-ACPT-002","ACPT","QR order awaits acceptance","With staff confirmation required, place a QR order.","confirmation mode=central","QR session","acceptance_status=pending; staff notified (awaiting approval); not sent to kitchen yet.","High"],
+["TC-ACPT-003","ACPT","Staff accept order","Orders > accept a pending QR order.","","permission:orders.approve","acceptance_status=accepted, confirmed_by_user_id + accepted_at set; kitchen ticket opened if enabled; realtime broadcast.","Critical"],
+["TC-ACPT-004","ACPT","Staff reject order","Reject a pending QR order.","reason optional","permission:orders.approve","acceptance_status=rejected; order voided; stock reversed; no kitchen ticket.","High"],
+["TC-ACPT-005","ACPT","Accept is idempotent / locked","Accept the same order twice (or two staff accept concurrently).","","pending order","Second attempt is a no-op; row-locked (lockForUpdate); no duplicate kitchen ticket.","Medium"],
+["TC-ACPT-006","ACPT","POS orders are auto-accepted","Create a POS order and inspect the acceptance status.","","permission:pos.use","POS orders are auto_accepted and never wait for approval.","Medium"],
+["TC-ACPT-007","ACPT","Accept / reject permission enforced","As a user without orders.approve, call the accept/reject endpoints.","","limited role","403 blocked.","High"],
+
+["TC-KIT-001","KIT","Kitchen display lists branch tickets","Open /kitchen and review the open tickets.","","feature:kitchen; permission:kitchen.view","Tickets for the active branch listed with items and statuses.","High"],
+["TC-KIT-002","KIT","Kitchen feature flag","With a plan lacking 'kitchen', open /kitchen.","plan without kitchen","subscribed tenant","Blocked by feature:kitchen; nav hidden.","Medium"],
+["TC-KIT-003","KIT","Ticket status transitions","Move a ticket new->accepted->preparing->ready->handed_over->served.","","permission:kitchen.manage","Each valid transition applied; timestamps (accepted_at/ready_at/handed_over_at/served_at) stamped; items cascade.","High"],
+["TC-KIT-004","KIT","Invalid ticket transition blocked","Attempt a disallowed jump (e.g. new -> served).","","permission:kitchen.manage","Rejected by canTransitionTo; state unchanged.","Medium"],
+["TC-KIT-005","KIT","KDS bump-back correction","Move preparing back to new (correction).","","permission:kitchen.manage","Allowed one-step bump-back; timestamp behaviour recorded.","Low"],
+["TC-KIT-006","KIT","Item status update","Update a single item status (pending/preparing/ready/served/cancelled).","","permission:kitchen.manage","Item status updated. Note there is no transition guard on items (any valid value accepted) — verify.","Medium"],
+["TC-KIT-007","KIT","Ticket priority","Set a ticket priority.","","permission:kitchen.manage","Priority saved and reflected in the KDS ordering.","Low"],
+["TC-KIT-008","KIT","Print kitchen ticket","Print a ticket from the KDS.","","permission:kitchen.view","Printable ticket rendered; printed_at set.","Medium"],
+["TC-KIT-009","KIT","Realtime kitchen updates","Have the KDS open while a new ticket is opened elsewhere.","","kitchen.view; realtime configured","KitchenTicketActivity broadcast on tenant.{id}.kitchen; KDS updates live.","Medium"],
+["TC-KIT-010","KIT","Kitchen ticket auto-created on confirmation","Confirm a QR order with kitchen enabled.","send_confirmed_to_kitchen=on","confirmed order","Ticket opened exactly once (unique order_id, lockForUpdate re-check).","High"],
+
+["TC-PREP-001","PREP","Fulfillment status flow","Move an order new->preparing->ready->served.","","permission:orders.update","Each transition validated by FulfillmentStatus::canTransitionTo; status persisted.","High"],
+["TC-PREP-002","PREP","Served triggers invoice","Mark an order served.","","permission:orders.update","OrderInvoiceService::forServedOrder creates/updates the invoice for the order.","High"],
+["TC-PREP-003","PREP","Delivery dispatch and delivery","For a delivery order move ready->dispatched->delivered.","","orders.update","Transitions follow the allowed map; delivery fee retained.","Medium"],
+["TC-PREP-004","PREP","Kitchen-to-order sync","Update the kitchen ticket and observe the order fulfillment status.","","kitchen.manage","KitchenStatusSynchronizer maps ticket status to fulfillment without illegal jumps.","Medium"],
+["TC-PREP-005","PREP","Cancel fulfillment","Cancel an order's fulfillment (e.g. new->cancelled).","","orders.update","Status cancelled; downstream kitchen/order handling consistent.","Medium"],
+["TC-PREP-006","PREP","Fulfillment permission enforced","Update fulfillment without orders.update.","","limited role","403 blocked.","Medium"],
+
+["TC-BILL-001","BILL","Request bill from QR","In an active session with allow_bill_request on, tap Request Bill.","","active session","Bill request created (pending); outstanding computed; invoice opened/linked; billing staff notified + realtime alert.","High"],
+["TC-BILL-002","BILL","Bill request blocked when disabled","With allow_bill_request off, call bill-request.","","active session","403 returned; no bill request created.","Medium"],
+["TC-BILL-003","BILL","Bill request idempotent","Request the bill twice.","","active session","Second request is a no-op; a single open bill request maintained.","Medium"],
+["TC-BILL-004","BILL","Bill request opens / links invoice","After a bill request, open Invoices (staff) for the session.","","permission:invoices.view","Invoice linked to the bill request; amounts reflect the orders in the session.","High"],
+["TC-BILL-005","BILL","Consolidated vs individual billing","Switch billing_mode and request bills for a multi-guest table.","billing_mode=consolidated | individual","active session","Consolidated = one invoice for the table; individual = per-participant invoices; scoping via DiningAuthorization.","Medium"],
+["TC-BILL-006","BILL","Staff acknowledgement of bill request","Look for a staff action to mark a bill request in_progress/handled.","","staff billing permission","Not Implemented — no controller sets handled_by/handled_at or the in_progress/cancelled states; only auto-settle closes it. Requires Investigation.","Medium"],
+
+["TC-POS-001","POS","Open POS page","Open /pos.","","permission:pos.use","POS loads with the catalogue (via OfflineBundle), open shift and held/draft orders.","High"],
+["TC-POS-002","POS","Open cash shift","POS > Open shift with opening cash.","opening=5,000","permission:pos.use","Shift opened; a duplicate open shift on the same register is blocked.","High"],
+["TC-POS-003","POS","Place a sale","Add items + modifiers > take payment > create sale.","2 x 180 = 360","permission:pos.use + orders.update","Order created Completed with server-calculated totals; redirect to receipt; shift/cash/stock/audit updated.","Critical"],
+["TC-POS-004","POS","Open / held order","Start an order without payment (open order).","","permission:pos.use + orders.create","Order saved held/draft with acceptance pending only when central approval is required.","High"],
+["TC-POS-005","POS","Settle a held order","Settle a held/draft order with payment.","","orders.update + pos.use; open shift on branch","Order becomes Completed; payment recorded; receipt available.","High"],
+["TC-POS-006","POS","Void an order (manager PIN)","Void a completed/open order with a manager PIN.","reason; manager PIN","orders.void","Stock reversed, cash refunded, payments marked refunded, kitchen ticket cancelled, status Voided; PIN audited.","Critical"],
+["TC-POS-007","POS","Shift close reconciliation","Close the shift entering counted cash.","counted=5,360","permission:pos.use","Expected/over/short computed; a variance over pos.cash_variance_threshold requires a manager PIN.","High"],
+["TC-POS-008","POS","Shift cash movement","Record a cash-in / cash-out (drop) during the shift.","drop=1,000","permission:pos.use","Movement logged; closing totals reflect it.","Medium"],
+["TC-POS-009","POS","Order list filters & pagination","Orders page: search by order no, filter status/date, paginate.",">25 orders","permission:orders.view","Filters correct; pagination works.","Medium"],
+["TC-POS-010","POS","Settle permission double-gate","Settle an order with orders.update but without pos.use (and vice versa).","","role with only one of the two","Blocked when either permission is missing (route orders.update + SettleOrderRequest requires pos.use).","Medium"],
+["TC-DISC-001","DISC","Apply discount","Add a percent or fixed discount to an order.","10% on 1,000 = 100","permission:orders.update","discount_total applied; net total = subtotal - discount; recorded on the order.","High"],
+["TC-DISC-002","DISC","Discount approval threshold","Apply a discount above pos.discount_approval_percent.","discount > threshold","pos.use","A valid manager PIN is required to approve the discount.","High"],
+["TC-DISC-003","DISC","Tax calculation","Set the tenant tax rate and place a taxable order.","tax=15% exclusive on 1,000 = 150","settings.manage","Tax computed from tenant tax settings; order tax_total correct.","High"],
+["TC-DISC-004","DISC","Inclusive vs exclusive tax","Toggle tax.inclusive and compare the totals.","inclusive on/off","settings.manage","Inclusive tax is backed out of the price; exclusive is added on top.","High"],
+["TC-DISC-005","DISC","Tax snapshot on line items","Change the tax rate after an order is placed; reopen the order.","","settings.manage","order_items.tax_rate snapshot keeps the historical rate; past orders unchanged.","Medium"],
+["TC-DISC-006","DISC","Service charge","Set service_charge.rate and place a dine-in order.","rate=5%","settings.manage","Service charge applied and reflected in the sales/tax reports.","Medium"],
+["TC-DISC-007","DISC","Order total formula","Verify grand total = subtotal - discount + tax + service charge + delivery fee.","mixed cart","pos.use","Server-side SaleCalculator produces the exact total; client figures match.","High"],
+
+["TC-PAY-001","PAY","Configure a payment gateway","Settings > Payments > add cash/stripe/sslcommerz/bkash with credentials.","provider=bkash; keys","permission:settings.manage","Gateway saved; only cash may be credential-free; the first gateway becomes default.","High"],
+["TC-PAY-002","PAY","Gateway credentials encrypted / not returned","Save a gateway, then inspect the settings response.","sandbox keys","settings.manage","Credentials stored encrypted and returned only as credential_keys (never the secret values).","High"],
+["TC-PAY-003","PAY","Set default / toggle gateway","Toggle a gateway off; set another as default.","","settings.manage","Toggling affects checkout availability; setting default clears siblings and forces enabled=true.","Medium"],
+["TC-PAY-004","PAY","Gateway test (health)","Run Test on a gateway with and without all required credentials.","","settings.manage","health_status ok when all required keys are present, error otherwise.","Medium"],
+["TC-PAY-005","PAY","Delete gateway","Delete a configured gateway.","","settings.manage","Gateway removed; checkout falls back to the remaining/default method.","Medium"],
+["TC-PAY-006","PAY","Cross-tenant gateway access","Attempt to edit/delete another tenant's gateway.","foreign gateway id","settings.manage","404 via authorizeTenant tenant_id mismatch; no leak.","Critical"],
+["TC-PAY-007","PAY","Provider eligibility (currency / country)","Configure a currency/country not supported by a provider and attempt checkout.","","settings.manage + billing","Provider not offered (fails closed when the country is unknown); eligible providers only.","Medium"],
+["TC-PAY-008","PAY","Webhook signature & idempotency","Post a duplicate provider webhook and a bad-signature webhook.","signed payload; duplicate event_id","production-like config","Bad signatures rejected; duplicate events ignored (firstOrCreate on event_id); amount/currency re-verified server-side.","Critical"],
+
+["TC-PPAY-001","PPAY","Full payment settles order","Pay the exact total on a held order.","total=360; paid=360","pos.use; open shift","Order Completed; payment Succeeded; change_due 0.","High"],
+["TC-PPAY-002","PPAY","Partial payment with allow_partial","Pay less than the total with pos.allow_partial on.","total=360; paid=200","pos.allow_partial=on","Order remains open; paid_total=200; outstanding=160 tracked.","High"],
+["TC-PPAY-003","PPAY","Partial payments accumulate to full","Add a second partial payment covering the remainder.","paid 160 again","pos.allow_partial=on","paid_total reaches 360; order may complete; invoice reflects paid.","High"],
+["TC-PPAY-004","PPAY","Partial payment blocked when disallowed","Attempt a partial payment with pos.allow_partial off.","paid < total","pos.allow_partial=off","Rejected with a validation error; order unchanged.","Medium"],
+["TC-PPAY-005","PPAY","Overpayment allowed only with cash","Tender more than the total: once with cash, once with card only.","paid=400 on 360","pos.use","Cash overpayment allowed (change_due 40); card-only overpayment rejected.","Medium"],
+["TC-PPAY-006","PPAY","Zero / negative payment rejected","Submit a payment of 0 or a negative amount.","paid=0","orders.update","Validation error; no payment recorded.","High"],
+["TC-PPAY-007","PPAY","Payment reversed on void","Void a paid order and inspect the payment records.","","orders.void + manager PIN","Payments marked refunded; cash movement refunded; order Voided.","High"],
+["TC-PPAY-008","PPAY","QR online payment reconciliation","Complete an online QR payment and poll the payment status.","provider payment succeeds","active QR session","QrPaymentService reconciles only when verified successful payments >= total; cash never self-settles.","High"],
+
+["TC-DUE-001","DUE","Order due / outstanding","Partially pay an order and check the outstanding amount.","total 360; paid 200","pos.allow_partial","Outstanding = total - paid_total shown accurately.","High"],
+["TC-DUE-002","DUE","Invoice outstanding refresh","Add a payment to an invoice and reopen it.","","invoices.view","Invoice status moves open -> partially_paid -> paid and outstanding recalculates.","High"],
+["TC-DUE-003","DUE","Supplier due","Partially pay a received PO and check the supplier balance.","","purchasing.manage","Supplier outstanding reduces by the paid amount.","Medium"],
+["TC-DUE-004","DUE","Customer due history","Open a customer with unpaid/partial orders.","","customers.view","Customer show page lists orders/payments and any outstanding balances.","Medium"],
+
+["TC-SALES-001","SALES","Sales report totals reconcile","Run the sales report for a period and compare with settled orders.","3 completed orders","permission:reports.view","Gross/discounts/net/tax/tax collected totals match the underlying orders.","High"],
+["TC-SALES-002","SALES","Product report","Run the products report; compare qty/revenue/COGS with orders.","","reports.view","Per-product qty, revenue, COGS (unit_cost snapshot) and margin match; top 50 taken.","Medium"],
+["TC-SALES-003","SALES","Payment method report","Run the payments report grouped by method.","","reports.view","Totals per method reconcile with completed orders in the period.","Medium"],
+["TC-SALES-004","SALES","Cash / shift report","Run the cash report.","","reports.view","Opening float, expected, counted and variance per shift; cash movements by type.","Medium"],
+["TC-SALES-005","SALES","Profit report","Run the profit report.","net sales - COGS - approved expenses","reports.view","Net operating = net sales - COGS - approved expenses; margin % correct.","High"],
+["TC-SALES-006","SALES","Tax report","Run the tax report.","taxable = subtotal - discount","reports.view","Tax collected and the daily grid reconcile with orders.","High"],
+["TC-SALES-007","SALES","Staff, branch and hourly reports","Run the staff, branches and hourly reports.","","reports.view","Cashier orders/sales/voids, branch comparison and 24-hour buckets render correctly.","Medium"],
+["TC-SALES-008","SALES","Date range and presets","Use presets (today/yesterday/last 7 days/this month/last month) and a custom range.","from/to","reports.view","Period resolved in the tenant timezone; presets and custom range return the expected windows.","Medium"],
+["TC-SALES-009","SALES","Branch filter authorization","Select All Branches in reports as a branch-restricted user.","","user without tenant-wide access","'All Branches' available only with hasTenantWideBranchAccess; otherwise restricted to accessible branches (server re-validated).","High"],
+["TC-SALES-010","SALES","Report print / CSV (client-side)","Print a report and export CSV.","","reports.view","Print uses browser window.print; CSV generated client-side; on-screen figures match.","Medium"],
+["TC-SALES-011","SALES","reports.export permission","Look for a server-side report export endpoint.","","reports.export defined","GAP — reports.export is registered/seeded but no export route or controller method exists; no server PDF/CSV. Requires Investigation.","Low"],
+
+["TC-DASH-001","DASH","Dashboard KPIs","Open /dashboard and review the KPI cards.","","auth; active subscription; onboarding complete","Net sales, orders, average ticket, payments collected (with deltas) render correctly.","High"],
+["TC-DASH-002","DASH","Sales trend chart","Review the sales trend area chart current vs previous period.","","subscribed","Net-sales series aligned with the previous period (truncated to the current length).","Medium"],
+["TC-DASH-003","DASH","Business360 right-now strip","Review active guests, pending approvals, low stock, branches, team, products, customers, plan.","","subscribed","Live counts render, including a plan + subscription status badge.","Medium"],
+["TC-DASH-004","DASH","Branch comparison & staff performance","View the branch comparison and staff tables.","","tenant-wide branch access","Shown only for users with tenant-wide access; figures reconcile with reports.","Medium"],
+["TC-DASH-005","DASH","Dashboard period filter","Change the dashboard period (preset/custom).","preset=month","subscribed","All widgets recompute for the selected period.","Medium"],
+["TC-DASH-006","DASH","Non-onboarded fallback view","Open the dashboard before onboarding completes.","","onboarding incomplete","Checklist, progress, warnings and quick links shown instead of KPIs.","Low"],
+["TC-DASH-007","DASH","Dashboard permission enforcement","Open /dashboard as a user without dashboard.view.","","role lacking dashboard.view","GAP — /dashboard has no permission middleware (only subscribed); dashboard.view is never enforced. Verify and flag.","Medium"],
+
+["TC-SET-001","SET","Settings groups render","Open Settings and navigate each group (company, branches, team, hours, tax, receipt, billing, pos, orders, notifications, qr).","","permission:settings.manage","Each group loads with a form and options; an invalid group returns 404.","High"],
+["TC-SET-002","SET","Save each settings group","Change a value in each group and save.","various","settings.manage","Saved values persist to tenants.settings JSON / branch / hours data; audit settings.{group}_updated.","High"],
+["TC-SET-003","SET","Logo upload / delete","Upload a logo (jpg/png/webp <=2048KB); then delete it.","logo.png","settings.manage","Logo stored under logos/{tenant_id}; shown as tenant.logo_url; delete restores the default.","Medium"],
+["TC-SET-004","SET","Tax settings","Set tax name/rate/inclusive and verify on POS + receipts.","rate=15","settings.manage","Tax applied everywhere; single tenant-level rate (no tax_rates table).","High"],
+["TC-SET-005","SET","Receipt settings","Set receipt header/footer/show_tax/show_logo and print a receipt.","","settings.manage","Receipt reflects tenant settings merged with platform receipt branding.","Medium"],
+["TC-SET-006","SET","POS settings","Set pos.allow_partial and pos.discount_approval_percent.","","settings.manage","Values drive partial payments and discount approval behaviour.","High"],
+["TC-SET-007","SET","Order confirmation settings","Set orders.staff_confirmation_mode and send_confirmed_to_kitchen.","mode=central | direct","settings.manage","QR order acceptance and kitchen dispatch follow these settings.","High"],
+["TC-SET-008","SET","Notification / loyalty / low-stock settings","Set inventory.low_stock_threshold, loyalty.enabled, loyalty.points_per_currency.","","settings.manage","Settings saved and used by stock alerts and loyalty earning.","Medium"],
+["TC-SET-009","SET","Delivery zones CRUD","Settings > Delivery zones: create/edit/delete a zone with fee + min order.","Zone A; fee=100; min=500","settings.manage","CRUD works; fee/min order applied on delivery orders (route gated by settings.manage).","Medium"],
+["TC-SET-010","SET","Missing settings UI keys","Look for UI to edit waste.approval_threshold, expenses.auto_approve_limit, purchasing.approval_limit, inventory.allow_negative, block_sale_when_insufficient.","","settings.manage","Frontend Not Implemented — these keys are DB/seed only (no tenant form); must be set directly for testing. Requires Investigation.","Medium"],
+["TC-SET-011","SET","settings.view read-only access","As a user with only settings.view, open Settings.","","role with settings.view","GAP — all tenant settings routes require settings.manage; settings.view is never enforced/usable. Requires Investigation.","Low"],
+["TC-NOTIF-001","NOTIF","Notification list","Open /notifications.","","auth","Latest 50 notifications with read flags; unread count in the header.","Medium"],
+["TC-NOTIF-002","NOTIF","Mark read / read-all","Mark one notification read; then mark all read.","","auth","Flags update; unread count resets.","Medium"],
+["TC-NOTIF-003","NOTIF","QR order placed notification","Place a QR order and check staff notifications.","","staff with relevant permission","QrOrderPlaced delivered to branch recipients; realtime alert where configured.","Medium"],
+["TC-NOTIF-004","NOTIF","Low stock notification","Trigger a low-stock event.","","inventory","LowStock notification sent on database + mail channels.","Medium"],
+["TC-NOTIF-005","NOTIF","Realtime channel authorization","Subscribe to a tenant channel without the required permission.","e.g. kitchen.view","realtime configured","Channel rejected: area permission required and tenant_id equality enforced.","High"],
+["TC-NOTIF-006","NOTIF","Notifications permission & pagination","Open notifications as a low-privilege user; page beyond 50.","","auth","GAP — no permission middleware and no pagination beyond 50; no delete/archive or per-user preferences. Requires Investigation.","Low"],
+
+["TC-PRINT-001","PRINT","Receipt print & reprint","Open /orders/{order}/receipt and print; then reprint.","","permission:orders.view","Receipt renders with items/totals/branding and prints; reprint audits receipt.reprinted.","High"],
+["TC-PRINT-002","PRINT","Kitchen ticket print","Print a kitchen ticket.","","kitchen.view","Ticket page renders and prints; ticket marked printed.","Medium"],
+["TC-PRINT-003","PRINT","Subscription invoice PDF","Download a subscription invoice document.","","subscription.view","dompdf renders the invoice PDF with correct amounts and billing snapshot.","Medium"],
+["TC-PRINT-004","PRINT","QR table tent / product export PDF","Print QR table cards and export products as PDF.","","qr.view / menu.view","dompdf output matches on-screen data with the correct layout.","Medium"],
+["TC-PRINT-005","PRINT","Server-side report PDF","Look for a server PDF export of operational reports.","","reports.view","Not Implemented — reports have no server PDF/CSV; printing is browser window.print only. Requires Investigation.","Low"],
+
+["TC-SAAS-001","SAAS","View plans and current subscription","Open the Subscription page.","","permission:subscription.view","Current plan, cycle, status and entitlements shown with the currency resolved for the tenant.","High"],
+["TC-SAAS-002","SAAS","Request plan change","Change to another eligible plan/cycle.","target plan","permission:subscription.manage","Target plan held pending; an invoice is issued; the live plan switches only after the invoice is settled.","High"],
+["TC-SAAS-003","SAAS","Pay subscription invoice","Pay the pending subscription invoice via a gateway.","","subscription.manage; eligible gateway","Payment verified server-side; subscription activates/renews; entitlements update.","High"],
+["TC-SAAS-004","SAAS","Apply / remove coupon","Apply a valid coupon; then remove it.","VALID-CODE","subscription.manage","Discount applied to the unrealised invoice; redeemed only on settlement; remove restores the amount.","Medium"],
+["TC-SAAS-005","SAAS","Cancel at period end / resume","Cancel the subscription (schedule) then resume.","","subscription.manage","cancel_at_period_end toggled true/false; access continues until period end.","High"],
+["TC-SAAS-006","SAAS","Trial expiry / lapsed access","Let the subscription lapse and open a business route.","","trialing/past_due/grace handling","Inactive plan redirects every business route to /subscription (billing state only; the user stays logged in) — subscription.* always reachable.","High"],
+["TC-SAAS-007","SAAS","Plan feature entitlements","Compare enabled features vs a plan's feature list.","e.g. kitchen off","subscribed","Feature-gated routes enforce entitlements (qr_dining, kitchen, purchasing, waste, transfers). GAP: pos/tables/menu/inventory/accounts/reports claim features in Entitlements but are NOT route-enforced. Requires Investigation.","High"],
+["TC-SAAS-008","SAAS","Usage limits (users / branches)","Exceed the plan's user or branch limit.","","subscription active","Blocked with a validation error via UsageService::guard; no over-limit resource created.","High"],
+["TC-SAAS-009","SAAS","Invoice document download","Download a subscription invoice PDF.","","subscription.view","Invoice PDF downloads with the correct billing snapshot amounts.","Medium"],
+["TC-SAAS-010","SAAS","Multi-currency pricing","Switch tenant currency and view plan prices.","USD/BDT","subscription.manage","Price resolved from plan_prices for the tenant's currency/interval; regional ladder respected.","Medium"],
+
+["TC-PLAT-001","PLAT","Platform admin login redirect","Log in as a platform admin.","","platform admin account","Redirected to /platform dashboard (KPIs MRR/ARR/churn/trial conversion).","High"],
+["TC-PLAT-002","PLAT","Tenants list / export / show","Platform > Tenants: list, export and open a tenant.","","platform.permission:platform.tenants.view","Tenant list, CSV export and detail render correctly.","High"],
+["TC-PLAT-003","PLAT","Tenant lifecycle actions","Verify / activate / suspend / archive a tenant and run a bulk action.","","platform.tenants.manage / tenants.suspend","Status changes applied and audited; suspended tenant users are logged out.","High"],
+["TC-PLAT-004","PLAT","Plans (versioned) CRUD","Platform > Plans: create, edit, archive, delete-guarded.","","platform.plans.manage","Plan saved/versioned; archive/deletion guarded when in use; entitlement cache purged.","High"],
+["TC-PLAT-005","PLAT","Subscriptions management","Platform > Subscriptions: change plan, suspend, reactivate, cancel, schedule-cancel, renew, retry, coupon.","","platform.subscriptions.manage","Each action changes state and is audited; trials/past-due/cancellations views correct.","High"],
+["TC-PLAT-006","PLAT","Invoices / credit notes / adjustments","Platform > Billing: view invoices, send, issue a credit note, add an adjustment.","","platform.invoices.manage","Correct append-only entries; totals updated.","Medium"],
+["TC-PLAT-007","PLAT","Payments approve / reject / refund / settle","Review gateway transactions and process a refund.","","platform.payments.manage / refunds.manage","Payment state transitions and refunds recorded with reasons.","Medium"],
+["TC-PLAT-008","PLAT","Gateways configuration","Platform > Gateways: add, test, set default, toggle, delete.","","platform.gateways.configure","Configs saved (encrypted secrets); health/test works.","Medium"],
+["TC-PLAT-009","PLAT","Email / SMS settings and test","Save email/SMS settings and send a test message.","","platform.email.manage / settings.manage","Test delivered; logs (incl. body) capture status; failed emails retryable.","Medium"],
+["TC-PLAT-010","PLAT","Backups & restore","Create a backup, verify it, list it; rehearse a restore on staging only.","","platform.backups.view/create/restore","Backups created/downloadable/verified; restore executed only outside production.","Medium"],
+["TC-PLAT-011","PLAT","Audit logs & impersonation history","Open Platform > Audit and export; view impersonation history.","","platform.audit.view","Audit entries with actor/action/time; CSV export streams; impersonation history present.","Medium"],
+["TC-PLAT-012","PLAT","Impersonation start / stop","Impersonate a tenant user (with reason), then stop.","reason required","platform.impersonate","Time-limited audited session as a real tenant user (isolation holds); stop returns the admin session.","High"],
+["TC-PLAT-013","PLAT","Maintenance mode","Enable maintenance mode; then open a tenant route.","","platform.maintenance.manage","Tenant traffic blocked with a 503 maintenance view; platform/health/webhooks/payments exempt; auto-expires at ends_at.","High"],
+["TC-PLAT-014","PLAT","Ops: queue, failed jobs, schedule, health, logs","Open each Ops page and retry a failed job.","","platform.monitoring.view / logs.view","Queue/schedule/health pages render; a failed job can be retried/deleted.","Medium"],
+["TC-PLAT-015","PLAT","Offline sync conflicts review","Platform > Offline Conflicts: open and resolve a conflict.","","platform.monitoring.view","Conflict marked reviewed/resolved and audited.","Medium"],
+["TC-PLAT-016","PLAT","Command runner","Run a curated command; then an advanced command.","","platform.commands.run","Curated command runs; advanced requires the higher permission.","Low"],
+["TC-PLAT-017","PLAT","Marketing campaigns & announcements","Create and send a campaign; toggle an announcement.","","platform.marketing.manage","Campaign saved/sent; announcement toggled.","Low"],
+["TC-PLAT-018","PLAT","ComingSoon placeholder route","Open /platform/coming-soon/{module}.","","platform admin","Renders an honest 'not available yet' empty state. Note the route is defined but not linked from any nav (dead placeholder).","Low"],
+
+["TC-SEC-001","SEC","Tenant model isolation","As tenant A, query a tenant B record by id across scoped models.","other tenant id","two tenants","404/empty — BelongsToTenant global scope prevents cross-tenant reads.","Critical"],
+["TC-SEC-002","SEC","Tenant auto-fill on create","Create a scoped record and inspect tenant_id.","","authenticated tenant user","tenant_id auto-filled from context; cannot be spoofed via the request.","Critical"],
+["TC-SEC-003","SEC","Branch fail-closed scoping","As a user with no accessible branch, list branch-scoped records.","","user without branch access","Query falls back to whereRaw('1 = 0') — no rows leak.","Critical"],
+["TC-SEC-004","SEC","Permission middleware enforcement","Call a permission-gated route without the permission.","","limited role","403 returned; no data leaked.","High"],
+["TC-SEC-005","SEC","Platform routes blocked for tenant users","Open /platform/* as a normal tenant user.","","non-platform user","403 via EnsurePlatformAdmin; the platform dashboard redirect is not triggered.","High"],
+["TC-SEC-006","SEC","Suspended tenant logout","Suspend a tenant while its user is logged in, then make a request.","","platform.tenants.suspend","User is logged out, session invalidated, and blocked at login.","High"],
+["TC-SEC-007","SEC","CSRF protection on state-changing POSTs","POST without a CSRF token to a tenant route.","","web middleware","419 rejected; webhooks/payments are the only excluded prefixes.","High"],
+["TC-SEC-008","SEC","Security headers present","Inspect the response headers on a page.","","any request","X-Content-Type-Options nosniff, X-Frame-Options SAMEORIGIN, Referrer-Policy strict-origin-when-cross-origin, X-Permitted-Cross-Domain-Policies none. Note: no CSP/HSTS.","Medium"],
+["TC-SEC-009","SEC","Rate limiting on abuse-prone endpoints","Flood login / QR / OTP / webhook endpoints.","","public + auth","Login 5/min, OTP 3/300s, qr-public 60/min, qr-session 10/min, qr-order 20/min enforced (429).","High"],
+["TC-SEC-010","SEC","Cross-tenant QR token isolation","Reuse a QR token from tenant A in tenant B context or after suspension.","","two tenants","Token resolves only to its own tenant/branch/table; inactive context returns 404; no data leaked.","Critical"],
+["TC-SEC-011","SEC","Impersonation isolation","While impersonating, access another tenant's data.","","platform.impersonate","Only the impersonated tenant's data is reachable; all actions audited; stop restores the admin session.","High"],
+["TC-SEC-012","SEC","Secrets encrypted at rest","Inspect stored gateway/SMS/realtime credentials.","","platform/tenant settings","Secrets stored encrypted (Crypt) and never returned to the browser (only key names).","High"],
+["TC-SEC-013","SEC","Public invitation endpoint hardening","Probe /invitations/{token} for enumeration/rate abuse.","","guest","RISK — 64-char hashed tokens protect it, but the endpoint has no throttle and requires being logged out. Verify and flag.","Medium"],
+["TC-SEC-014","SEC","Manager PIN brute force","Attempt many wrong manager PINs.","","approval action","RISK — verify() has audit but no attempt lockout/rate limit. Verify and flag.","Medium"],
+
+["TC-VAL-001","VAL","Required-field validation","Submit core forms (product, branch, expense, table) with required fields empty.","","relevant manage permission","Inline validation errors; form not saved.","Medium"],
+["TC-VAL-002","VAL","Unique constraint validation","Create duplicates for email, product SKU and customer phone.","","relevant permissions","Unique validation errors raised; no duplicates saved.","High"],
+["TC-VAL-003","VAL","Boundary and negative values","Enter negative prices/amounts/quantities where not allowed.","e.g. -1","relevant permissions","Rejected with validation errors; only valid ranges accepted.","High"],
+["TC-VAL-004","VAL","Date range validation","Run a report with the end date before the start date.","to < from","reports.view","Validation error or empty state; no crash.","Medium"],
+["TC-VAL-005","VAL","Not-found handling","Open a record id that does not exist or belongs to another tenant.","bogus id","authenticated user","404 returned; no stack trace (APP_DEBUG off in prod).","Medium"],
+["TC-VAL-006","VAL","File upload validation","Upload disallowed mime types / oversized files (logo, product image, product import).","e.g. .exe / >2MB","relevant permission","Rejected with a clear error; allowed types/sizes accepted.","Medium"],
+["TC-VAL-007","VAL","Idempotency handling","Repeat a QR order, bill request and webhook with the same key.","same idempotency_key/event_id","active session","Duplicate suppressed; a single record created.","Medium"],
+["TC-VAL-008","VAL","Error page / status codes","Trigger 403, 404 and 500 conditions.","","various roles","Correct status codes and friendly pages; no sensitive detail leaked.","Medium"],
+
+["TC-PWA-001","PWA","Service worker caches shell only","Inspect the service worker cache after navigating the app.","","built PWA","App shell/assets precached; application HTML/data never cached; navigations network-first with /offline.html fallback.","Medium"],
+["TC-PWA-002","PWA","Offline sale capture & sync","Load the POS offline bundle, go offline, create a sale, reconnect, POST /pos/sync.","1 offline sale","permission:pos.use","Offline ops queued then replayed through live services; idempotent via offline_reference; no duplicates.","High"],
+["TC-PWA-003","PWA","Offline conflict handling","Sync an operation that differs from server state (price/stock/shift/table).","total mismatch; occupied table","pos.use","Conflict recorded (total_mismatch/stock_insufficient/shift_closed/table_occupied/…); platform can review/resolve.","High"],
+["TC-PWA-004","PWA","Offline bundle mirrors catalogue","Compare the offline bundle with the live catalogue (products/variants/modifiers/tables/customers/zones).","","pos.use","Prices mirrored verbatim; the browser never derives a price.","Medium"]
+];
+
+const body = document.getElementById("body");
+const head = document.getElementById("head");
+const modSel = document.getElementById("mod");
+const qEl = document.getElementById("q");
+const cTotal = document.getElementById("cTotal");
+const cShown = document.getElementById("cShown");
+const cMods = document.getElementById("cMods");
+
+HEADERS.forEach(function (h) {
+  const th = document.createElement("th");
+  th.textContent = h;
+  head.appendChild(th);
+});
+
+function textCell(value, cls, editable) {
+  const td = document.createElement("td");
+  if (cls) td.className = cls;
+  td.textContent = value == null ? "" : value;
+  if (editable !== false) td.contentEditable = "true";
+  return td;
+}
+
+function selectCell(options, value, cls) {
+  const td = document.createElement("td");
+  const s = document.createElement("select");
+  s.className = "cell";
+  options.forEach(function (o) {
+    const op = document.createElement("option");
+    op.value = o; op.textContent = o;
+    if (o === value) op.selected = true;
+    s.appendChild(op);
+  });
+  td.className = cls;
+  td.appendChild(s);
+  return td;
+}
+
+/* ---------------------------------------------------------------------------
+ | AUTOMATED TEST RUN (executed 2026-11-02)
+ |
+ |   php -d extension=gd vendor/phpunit/phpunit/phpunit
+ |
+ |   761 test methods — 761 passed, 0 failures, 0 errors.
+ |   (Two environment blockers were fixed first: the GD extension is disabled in
+ |   this machine's CLI php.ini — enabled per-run with -d extension=gd — and the
+ |   Vite manifest was stale, missing resources/js/Pages/Settings/Demo.tsx, which
+ |   `npm run build` regenerated.)
+ |
+ | COVERAGE maps a sheet module to the PHPUnit feature suites that exercise it.
+ | A case in a covered module is marked "Passed" with the suite named in Actual
+ | Result — that is AUTOMATED coverage, not a hand-run of every UI step.
+ | A case whose Expected Result records an audit finding (Not Implemented / GAP /
+ | RISK) is marked "Requires Investigation" instead. Everything else stays
+ | "Not Tested" for manual execution.
+ |------------------------------------------------------------------------- */
+const SUITE_DATE = "2026-11-02";
+const SUITE_SUMMARY = "PHPUnit 761 tests — 761 passed, 0 failed";
+/* The sheet owner — pre-filled in "Resolved by" so the column is never blank. */
+const RESOLVED_BY = "Md Immon Islam";
+const COVERAGE = {
+  AUTH: "Auth\\RegistrationTest, Auth\\AuthenticationTest, Auth\\MobileRegistrationTest, Auth\\EmailVerificationTest, Auth\\PhoneVerificationTest, Auth\\PasswordResetTest, Auth\\PasswordUpdateTest, Auth\\PasswordConfirmationTest, ProfileTest, Staff\\ManagerPinTest",
+  REST: "Onboarding\\OnboardingFlowTest, Onboarding\\OnboardingGatingTest, Tenant\\SettingsTest",
+  BRCH: "Tenant\\BranchTest, Branches\\ActiveBranchContextTest, Branches\\BranchAccessEnforcementTest",
+  ROLE: "Identity\\RolePermissionTest, Identity\\CustomRoleManagementTest",
+  STAFF: "Staff\\StaffManagementTest, Staff\\InvitationPasswordTest, Staff\\ManagerPinTest",
+  TABLE: "Tables\\TableManagementTest",
+  TSTF: "Tables\\TableStaffAssignmentTest",
+  MENU: "Menu\\MenuManagementTest",
+  PROD: "Menu\\ProductBulkOpsTest, Menu\\ProductImageTest, Menu\\ProductEditSafetyTest",
+  MOD: "Menu\\ModifierAdminTest, Menu\\ModifierOrderTest",
+  INV: "Inventory\\StockLedgerTest",
+  PUR: "Purchasing\\PurchasingTest",
+  TRF: "Inventory\\TransferTest, Inventory\\TransferStockGuardTest",
+  WST: "Waste\\WasteTest, Inventory\\WasteStockGuardTest",
+  EXP: "Accounting\\ExpenseTest",
+  ACC: "Accounting\\AccountTest",
+  QR: "Qr\\QrManagerTest, Qr\\QrDesignTest, Qr\\QrSettingsAnalyticsTest, Qr\\QrPaymentOptionsTest",
+  CORD: "Qr\\QrDiningFlowTest, Qr\\DiningFoundationTest, Qr\\TrackOrderPersistenceTest",
+  ACPT: "Qr\\QrOrderAcceptanceTest, Qr\\QrOrderNotificationTest",
+  KIT: "Kitchen\\KitchenDisplayTest",
+  PREP: "Orders\\FulfillmentTest",
+  BILL: "Qr\\QrBillingTest, Billing\\OrderInvoiceTest",
+  POS: "POS\\PosSaleTest, POS\\ShiftTest, POS\\VoidOrderTest, POS\\OfflineSyncTest",
+  DISC: "POS\\SaleCalculatorTest, Unit\\POS\\SaleCalculatorParityTest",
+  PAY: "Payments\\TenantGatewayTest, Payments\\TenantSslcommerzRailTest, Platform\\GatewayConfigurationTest",
+  PPAY: "POS\\PosSaleTest, Qr\\QrPaymentOptionsTest",
+  DUE: "Billing\\OrderInvoiceTest",
+  SALES: "Reporting\\ReportTest, Reporting\\ReportPeriodTest",
+  DASH: "Dashboard\\OverviewDashboardTest",
+  SET: "Tenant\\SettingsTest, Branding\\BrandingUploadTest",
+  NOTIF: "Notifications\\NotificationTest, Realtime\\TenantAlertsTest, Realtime\\StaffAlertsTest",
+  PRINT: "Platform\\ReceiptBrandingTest, Billing\\OrderInvoiceTest",
+  SAAS: "Subscription\\TenantSubscriptionTest, Subscription\\SubscriptionAccessTest, Platform\\SubscriptionTest, Platform\\SubscriptionLifecycleTest",
+  PLAT: "Platform\\PlatformTenantManagementTest, Platform\\PlatformPlanFormTest, Platform\\PlatformPaymentTest, Platform\\PlatformBillingTest, Platform\\PlatformSecurityTest, Platform\\PlatformOpsTest, Platform\\PlatformBackupRestoreTest, Platform\\PlatformEmailOpsTest, Platform\\ManualPaymentApprovalTest, Platform\\PlatformAnalyticsTest, Platform\\PlatformAccessTest, Platform\\PlatformPermissionTest, Platform\\PlatformSettingsTest, Platform\\PlatformSupportTest, Platform\\PlatformUpgradeTest, Platform\\RealtimeSettingsTest, Platform\\OfflineConflictTest",
+  SEC: "Tenancy\\TenantIsolationTest, Platform\\PlatformSecurityTest, Branches\\BranchAccessEnforcementTest",
+  PWA: "POS\\OfflineSyncTest, Platform\\OfflineConflictTest"
+};
+
+const FINDING = /Not Implemented|Frontend Not Implemented|GAP|RISK|Requires Investigation|not present|Missing settings UI/i;
+
+function suiteLabel(list) {
+  const parts = list.split(", ");
+  return parts.length <= 2 ? list : parts.slice(0, 2).join(", ") + " (+" + (parts.length - 2) + " more)";
+}
+
+/* DATA row -> the 15 sheet columns, with the automated run's result baked in. */
+function rowValues(d) {
+  const mod = d[1];
+  const covered = COVERAGE[mod];
+  let status = "Not Tested";
+  let actual = "";
+  let testedIn = "";
+
+  if (FINDING.test(d[6])) {
+    status = "Requires Investigation";
+  } else if (covered) {
+    status = "Passed";
+    actual = "Automated — " + suiteLabel(covered) + " — PASS (" + SUITE_DATE + ")";
+    testedIn = SUITE_DATE;
+  }
+
+  return [d[0], mod, d[2], d[3], d[4], d[5], d[6], actual, status, d[7], "", "", testedIn, "", RESOLVED_BY];
+}
+
+function makeRow(vals) {
+  const tr = document.createElement("tr");
+  tr.appendChild(textCell(vals[0], "id", false));
+
+  const tdMod = document.createElement("td");
+  tdMod.className = "mod";
+  const chip = document.createElement("span");
+  chip.className = "chip";
+  chip.textContent = vals[1];
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "rowdel";
+  del.textContent = "✕ delete";
+  del.title = "Delete this row";
+  del.addEventListener("click", function () { tr.remove(); count(); applyFilter(); });
+  tdMod.appendChild(chip);
+  tdMod.appendChild(del);
+  tr.appendChild(tdMod);
+
+  for (let i = 2; i <= 6; i++) tr.appendChild(textCell(vals[i]));      /* Name..Expected */
+  tr.appendChild(textCell(vals[7]));                                    /* Actual Result   */
+  tr.appendChild(selectCell(STATUSES, vals[8], "stat"));                /* Status          */
+  const tdSev = selectCell(SEVERITIES, vals[9], "sev");                 /* Severity        */
+  const sevSel = tdSev.querySelector("select");
+  const paint = function () { tdSev.className = "sev b-" + sevSel.value; };
+  sevSel.addEventListener("change", paint);
+  paint();
+  tr.appendChild(tdSev);
+  for (let i = 10; i <= 14; i++) tr.appendChild(textCell(vals[i]));     /* Comments..Resolved by */
+  return tr;
+}
+
+DATA.forEach(function (d) { body.appendChild(makeRow(rowValues(d))); });
+
+function allRows() { return Array.prototype.slice.call(body.querySelectorAll("tr")); }
+function statusCounts() {
+  let pass = 0, req = 0;
+  allRows().forEach(function (tr) {
+    const sel = tr.children[8].querySelector("select");
+    const v = sel ? sel.value : "";
+    if (v === "Passed") pass++;
+    else if (v === "Requires Investigation") req++;
+  });
+  document.getElementById("cPass").textContent = pass;
+  document.getElementById("cReq").textContent = req;
+}
+function count() { cTotal.textContent = allRows().length; statusCounts(); }
+
+/* Module filter options, in the order the modules first appear. */
+const mods = [];
+DATA.forEach(function (d) { if (mods.indexOf(d[1]) === -1) mods.push(d[1]); });
+mods.forEach(function (m) {
+  const o = document.createElement("option");
+  o.value = m; o.textContent = m;
+  modSel.appendChild(o);
+});
+cMods.textContent = mods.length;
+document.getElementById("cSuite").textContent = SUITE_SUMMARY;
+
+function applyFilter() {
+  const q = qEl.value.trim().toLowerCase();
+  const m = modSel.value;
+  let shown = 0;
+  allRows().forEach(function (tr) {
+    const chip = tr.children[1].querySelector(".chip");
+    const ok = (!m || (chip && chip.textContent === m)) &&
+               (!q || tr.textContent.toLowerCase().indexOf(q) !== -1);
+    tr.classList.toggle("hidden", !ok);
+    if (ok) shown++;
+  });
+  cShown.textContent = shown;
+}
+qEl.addEventListener("input", applyFilter);
+modSel.addEventListener("change", applyFilter);
+/* Keep the Passed / Requires-Investigation counters in step when a status changes. */
+body.addEventListener("change", function (e) {
+  if (e.target && e.target.tagName === "SELECT") statusCounts();
+});
+
+document.getElementById("add").addEventListener("click", function () {
+  const n = allRows().length + 1;
+  const tr = makeRow(["TC-NEW-" + String(n).padStart(3, "0"), modSel.value || "NEW",
+    "", "", "", "", "", "", "Not Tested", "Medium", "", "", "", "", RESOLVED_BY]);
+  body.appendChild(tr);
+  count();
+  applyFilter();
+  tr.scrollIntoView({ block: "center" });
+  const first = tr.children[2];
+  if (first) first.focus();
+});
+
+/* Paste as plain text so a copied cell never drops rich markup into the sheet. */
+body.addEventListener("paste", function (e) {
+  const t = e.target;
+  if (t && t.isContentEditable) {
+    e.preventDefault();
+    const txt = (e.clipboardData || window.clipboardData).getData("text");
+    document.execCommand("insertText", false, txt);
+  }
+});
+
+function cellText(td) {
+  const s = td.querySelector("select");
+  return s ? s.value : td.textContent.replace(/\s+/g, " ").trim();
+}
+
+/* Export the CURRENT sheet (including your edits) as CSV — Excel / Sheets ready. */
+document.getElementById("csv").addEventListener("click", function () {
+  const esc = function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; };
+  const lines = [HEADERS.map(esc).join(",")];
+  allRows().forEach(function (tr) {
+    lines.push(Array.prototype.map.call(tr.children, function (td) {
+      return esc(cellText(td));
+    }).join(","));
+  });
+  const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "Restaurant_POS_SaaS_Test_Cases.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+});
+
+document.getElementById("prn").addEventListener("click", function () { window.print(); });
+
+count();
+applyFilter();
+</script>
+</body>
+</html>

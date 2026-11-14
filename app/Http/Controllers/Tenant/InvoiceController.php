@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Domain\Branches\Models\Branch;
 use App\Domain\Invoicing\Enums\InvoiceStatus;
 use App\Domain\Invoicing\Models\Invoice;
 use App\Http\Controllers\Concerns\ResolvesActiveBranch;
 use App\Http\Controllers\Controller;
-use App\Domain\Branches\Models\Branch;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -75,7 +75,7 @@ class InvoiceController extends Controller
             'customer:id,name',
             'diningSession:id,status',
             'orders.table:id,name',
-            'orders.items',
+            'orders.items.round',
         ]);
 
         return Inertia::render('Invoices/Show', [
@@ -102,6 +102,7 @@ class InvoiceController extends Controller
                         'name' => $item->name,
                         'quantity' => (float) $item->quantity,
                         'line_total' => (float) $item->line_total,
+                        'round_no' => $item->round?->round_no ?? 1,
                     ]),
                 ]),
             ],

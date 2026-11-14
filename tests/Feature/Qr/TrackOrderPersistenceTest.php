@@ -17,6 +17,7 @@ use App\Domain\Tenancy\TenantContext;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
@@ -94,7 +95,7 @@ class TrackOrderPersistenceTest extends TestCase
         return Order::latest('id')->firstOrFail();
     }
 
-    protected function menuTracking(): \Illuminate\Testing\TestResponse
+    protected function menuTracking(): TestResponse
     {
         return $this->withHeader('X-Dining-Token', $this->sessionToken)
             ->get("/qr/{$this->token}/menu")

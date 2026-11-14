@@ -7,7 +7,11 @@ use App\Domain\Dining\Enums\DiningSessionStatus;
 use App\Domain\Dining\Models\BillRequest;
 use App\Domain\Dining\Models\DiningParticipant;
 use App\Domain\Dining\Models\DiningSession;
+use App\Domain\Invoicing\OrderInvoiceService;
+use App\Domain\Notifications\NotificationService;
 use App\Domain\Orders\Enums\OrderStatus;
+use App\Domain\Realtime\Events\TenantAlert;
+use App\Domain\Realtime\RealtimeBroadcaster;
 use App\Domain\Tables\Models\Table;
 use App\Domain\Tables\Models\TableQrToken;
 use App\Models\User;
@@ -133,7 +137,7 @@ class DiningSessionService
             ->selectRaw('COALESCE(SUM(total - paid_total), 0) as due')
             ->value('due');
 
-        $invoice = app(\App\Domain\Invoicing\OrderInvoiceService::class)->openInvoiceForSession($session);
+        $invoice = app(OrderInvoiceService::class)->openInvoiceForSession($session);
 
         $request = $session->billRequests()->create([
             'tenant_id' => $session->tenant_id,
@@ -152,13 +156,13 @@ class DiningSessionService
 
         // Notify the branch's billing staff once, on the newly created request.
         try {
-            app(\App\Domain\Notifications\NotificationService::class)->billRequested($request);
+            app(NotificationService::class)->billRequested($request);
         } catch (\Throwable $e) {
             report($e);
         }
 
         try {
-            app(\App\Domain\Realtime\RealtimeBroadcaster::class)->send(new \App\Domain\Realtime\Events\TenantAlert(
+            app(RealtimeBroadcaster::class)->send(new TenantAlert(
                 $session->tenant_id,
                 'billing',
                 'Bill requested',

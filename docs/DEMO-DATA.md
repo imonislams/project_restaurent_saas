@@ -34,8 +34,28 @@ everyone else gets the international bistro catalog.
 
 ## Removing it
 
-**Settings → Demo data → Remove all demo data** (or the dashboard banner). The action requires
-typing the workspace slug.
+**Settings → Demo data → Remove all demo data**. The action requires typing the workspace slug.
+
+Removal is **selective**: it is offered as five keep-bundles, and everything not kept is deleted.
+
+| Keep-bundle | Default | Covers |
+|---|---|---|
+| Menu & recipes | **kept** | categories, products, variants, availability, modifiers, recipes, ingredients, images |
+| Floor plan & QR | **kept** | the demo branch and its hours, stock location, registers, kitchen stations, areas, tables, QR codes, its cash account |
+| Team & roles | removed | demo staff accounts, tenant custom roles |
+| Guests & loyalty | removed | customers, loyalty accounts and their point history |
+| Demo settings | removed | the loyalty / low-stock / waste-threshold values the run applied (restored when not kept) |
+
+Sales, payments, shifts and cash movements, kitchen tickets, invoices, QR dining sessions and
+feedback, purchasing, waste, stock transfers, expenses, the account ledger, delivery zones and
+**stock movements/balances** are always removed — they are demo *activity*.
+
+Two consequences worth knowing before choosing:
+
+- Keeping the menu keeps its **ingredients but not the stock counts** — stock was demo activity, so
+  the pantry starts at zero.
+- Anything kept **stops being demo data**: its ledger entries are dropped, so a later removal never
+  touches it.
 
 Removal replays the ledger — a table of every row each run created — children first, in chunks:
 
@@ -46,7 +66,7 @@ Removal replays the ledger — a table of every row each run created — childre
   real orders that kept their own numbers. Generation also lifts a counter to the highest number
   already in use, so a demo can never collide with real trade.
 - Settings the demo changed (loyalty, low-stock threshold, waste approval threshold) are restored
-  from the values captured when the run started.
+  from the values captured when the run started, unless the owner chooses to keep them.
 - Notifications and usage snapshots created while demo data existed are cleared.
 - Batches keep a `removed` record, so the run history and the fact that data was removed stay
   auditable.
@@ -89,3 +109,5 @@ resumable and never duplicates orders (deterministic idempotency keys).
   lists and attribution. Invite real staff from Staff after removing the demo.
 - The demo does not touch billing, subscriptions or platform-level records.
 - Per-row `data_mode` separation is not used; provenance and removal are handled by the ledger.
+- Removal cannot keep one part of a bundle — for example the menu without its ingredients — because
+  recipes reference ingredients with a cascading key.

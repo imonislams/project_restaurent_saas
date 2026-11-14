@@ -3,7 +3,7 @@ import { useT } from '@/i18n';
 import AppShell, { NavGroup, NavItem } from '@/Layouts/AppShell';
 import { Link, router, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode } from 'react';
-import { Bell } from 'lucide-react';
+import NotificationBell from '@/Components/NotificationBell';
 import { cn } from '@/Components/ui/cn';
 
 export default function Authenticated({
@@ -43,7 +43,11 @@ export default function Authenticated({
             can('pos.use') && entitled('pos') && item(t('nav.pos'), route('pos.index'), 'cart', 'pos.*'),
             can('orders.view') && { ...item(t('nav.orders'), route('orders.index'), 'receipt', 'orders.*'), badge: Number(page.pending_approvals ?? 0) },
             can('tables.view') && entitled('tables') && item(t('nav.tables'), route('tables.index'), 'table', 'tables.*'),
-            can('kitchen.view') && entitled('kitchen') && item(t('nav.kitchen'), route('kitchen.index'), 'fire', 'kitchen.*'),
+            can('kitchen.view') &&
+                entitled('kitchen') && {
+                    ...item(t('nav.kitchen'), route('kitchen.index'), 'fire', 'kitchen.*'),
+                    newTab: true,
+                },
             can('qr.view') && entitled('qr_dining') && item(t('nav.qr_tables'), route('qr-dining.tables.index'), 'qr', 'qr-dining.tables.*'),
             can('qr.view') && entitled('qr_dining') && item(t('nav.qr_designer'), route('qr-dining.designs.index'), 'tag', 'qr-dining.designs.*'),
             can('qr.analytics') && entitled('qr_dining') && item(t('nav.qr_analytics'), route('qr-dining.analytics'), 'chart', 'qr-dining.analytics'),
@@ -92,18 +96,7 @@ export default function Authenticated({
                     ))}
                 </select>
             )}
-            <Link
-                href={route('notifications.index')}
-                className="relative flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background text-muted-foreground hover:bg-accent hover:text-foreground shadow-xs transition-colors cursor-pointer"
-                aria-label="Notifications"
-            >
-                <Bell className="h-4 w-4" />
-                {unread > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-xs">
-                        {unread > 9 ? '9+' : unread}
-                    </span>
-                )}
-            </Link>
+            <NotificationBell unread={unread} indexUrl={route('notifications.index')} recentUrl={route('notifications.recent')} readAllUrl={route('notifications.read-all')} destroyUrl={route('notifications.destroy', ':id')} />
         </div>
     );
 

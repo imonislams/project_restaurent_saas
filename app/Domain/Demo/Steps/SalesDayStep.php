@@ -642,7 +642,7 @@ class SalesDayStep implements DemoStep
             return 0;
         }
 
-        $order = DemoClock::at($at->copy()->addMinutes(3), fn () => app(QrDiningOrderService::class)->place(
+        $result = DemoClock::at($at->copy()->addMinutes(3), fn () => app(QrDiningOrderService::class)->place(
             $session,
             $participant,
             [
@@ -651,6 +651,8 @@ class SalesDayStep implements DemoStep
                 'idempotency_key' => sprintf('demo-qr-%d-%d-%d', $run->batch->getKey(), $session->getKey(), $index + 1),
             ],
         ));
+
+        $order = $result['order'];
 
         if ($isToday) {
             // Left awaiting approval on purpose: this is what fills the approval

@@ -21,6 +21,7 @@ use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\Policies\TenantPolicy;
 use App\Domain\Tenancy\TenantContext;
+use App\Listeners\LinkMarketingLeadOnRegistration;
 use App\Listeners\LogOutboundEmail;
 use App\Listeners\NotifyPlatformOnFailedJob;
 use App\Listeners\RecordAuthSecurityEvents;
@@ -30,6 +31,7 @@ use App\Support\AppVersion;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
@@ -41,12 +43,42 @@ use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use RuntimeException;
 
 class AppServiceProvider extends ServiceProvider
 {
+    /**
+     * Refuse to serve a production deployment with debug mode enabled.
+     *
+     * An unhandled exception with APP_DEBUG=true renders a stack trace with file
+     * paths, configuration values and SQL fragments. Nothing else in the stack
+     * enforces this, so the install wizard or a copied .env can silently ship it.
+     * Failing loudly at boot is the only reliable guard.
+     */
+    protected function guardProductionConfiguration(): void
+    {
+        if (! $this->app->isProduction()) {
+            return;
+        }
+
+        if (config('app.debug')) {
+            throw new RuntimeException(
+                'APP_DEBUG must be false in production: debugging mode exposes stack traces, '
+                .'file paths and configuration values to every visitor. Set APP_DEBUG=false and APP_ENV=production.'
+            );
+        }
+
+        if (config('app.key') === '' || config('app.key') === null) {
+            throw new RuntimeException(
+                'APP_KEY is not set: sessions, encrypted columns and signed URLs cannot be trusted. Run php artisan key:generate.'
+            );
+        }
+    }
+
     /**
      * Register any application services.
      */
@@ -73,6 +105,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->guardProductionConfiguration();
+
         // Uploaded media (product images, logos, avatars) must be served from
         // the origin the request actually arrived on. Basing the public disk's
         // URL on APP_URL pins every <img> to a single host/port, so images 404
@@ -136,6 +170,9 @@ class AppServiceProvider extends ServiceProvider
         // Queue monitoring: a failed job is an operator alert, not just a row.
         Event::listen(JobFailed::class, [NotifyPlatformOnFailedJob::class, 'handle']);
 
+        // Marketing CRM: a new restaurant is linked to the lead that produced it.
+        Event::listen(Registered::class, [LinkMarketingLeadOnRegistration::class, 'handle']);
+
         // Security center: record authentication events.
         Event::listen(Login::class, [RecordAuthSecurityEvents::class, 'login']);
         Event::listen(Failed::class, [RecordAuthSecurityEvents::class, 'failed']);
@@ -143,8 +180,13 @@ class AppServiceProvider extends ServiceProvider
 
         try {
             $this->app->make(MailConfigurator::class)->apply();
-        } catch (\Throwable) {
-            // Mail settings unavailable (e.g. before migration) — keep env config.
+        } catch (\Throwable $e) {
+            // Mail settings unavailable (e.g. before migration) — keep env config,
+            // but never silently: without this line a settings problem looks exactly
+            // like "mail is configured in the UI yet nothing is sent".
+            Log::warning('Stored mail settings could not be applied; using env configuration.', [
+                'error' => $e->getMessage(),
+            ]);
         }
 
         try {
@@ -176,6 +218,18 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('qr-order', fn (Request $request) => Limit::perMinute(20)->by(
             $request->header('X-Dining-Token') ?: $request->ip()
+        ));
+
+        // Authenticated workspace: bounds abuse and runaway clients on expensive
+        // endpoints (reports, exports, POS writes) without throttling normal use.
+        // Keyed per user so one tenant's terminals cannot exhaust another's.
+        RateLimiter::for('workspace', fn (Request $request) => Limit::perMinute(120)->by(
+            'u:'.($request->user()?->getKey() ?? $request->ip())
+        ));
+
+        // Heavier endpoints that allocate rows or stream whole tables.
+        RateLimiter::for('workspace-heavy', fn (Request $request) => Limit::perMinute(20)->by(
+            'h:'.($request->user()?->getKey() ?? $request->ip())
         ));
     }
 }

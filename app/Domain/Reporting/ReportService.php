@@ -388,7 +388,13 @@ class ReportService
 
     public function inventory(ReportPeriod $period): array
     {
-        $balances = StockBalance::query()->with(['stockable', 'branch:id,name', 'stockLocation:id,name'])->get();
+        // Balances are a point-in-time snapshot, not a period aggregate, but the
+        // report must still honour the requested branch: without this filter every
+        // branch's stock is summed into one figure (QA-C-04).
+        $balances = StockBalance::query()
+            ->with(['stockable', 'branch:id,name', 'stockLocation:id,name'])
+            ->when($period->branchId, fn ($query) => $query->where('branch_id', $period->branchId))
+            ->get();
 
         $rows = [];
         $totalValue = 0.0;

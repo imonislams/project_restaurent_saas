@@ -9,7 +9,7 @@ This package is a complete, versioned production build. Its contents:
 | `app/ bootstrap/ config/ database/ lang/ public/ resources/ routes/` | Application source |
 | `vendor/` | Production PHP dependencies (no dev packages) |
 | `public/build/` | Compiled frontend assets + PWA manifest and service worker |
-| `storage/ bootstrap/cache/` | Empty, writable runtime directories |
+| `bootstrap/cache/` | Empty, writable runtime directory (`storage/` is not shipped; on a fresh install create it, see below) |
 
 Verify the archive before extracting:
 
@@ -23,7 +23,10 @@ sha256sum -c application-<version>.zip.sha256
 2. **Domains** → your domain → **Manage** → set the **Document Root** to `<extract-dir>/public`.
    If the host keeps the root at `public_html` and will not change it, extract the package there
    instead and keep the shipped root `.htaccess` — it routes every request through `public/`.
-3. Make `storage/` and `bootstrap/cache/` writable (**755**, recursive).
+3. The package does **not** contain `storage/` (so upgrades never overwrite live uploads). On a
+   **first install** create it: `storage/app/public`, `storage/app/private`,
+   `storage/framework/{cache/data,sessions,views}` and `storage/logs`. Then make `storage/` and
+   `bootstrap/cache/` writable (**755**, recursive). On an upgrade, leave the existing `storage/` alone.
 4. **MySQL Databases** → create a database and user, and give the user **ALL PRIVILEGES** on it.
    Migrations need `CREATE`, `ALTER` and `INDEX`, not just `SELECT`.
 5. **Create `.env`** — enable *Show Hidden Files*, right‑click `.env.example` → **Copy** → name it
@@ -85,6 +88,46 @@ Find the PHP path in **MultiPHP Manager** (`/opt/cpanel/ea-php84/root/usr/bin/ph
 ```bash
 php artisan app:install        # interactive; every option above also works here
 ```
+
+## Configuring email
+
+Registration, verification, invitations and invoices are all email, and a fresh install ships
+`MAIL_MAILER=log`: every message is written to `storage/logs/laravel.log` and **nothing is
+delivered**. The transport accepts whatever it is given, so the app reports the mail as sent —
+this is the usual reason mail works on a developer machine and not in production. Configure one of:
+
+**Option A — `.env`** (server level; used when no mail settings are stored in the platform):
+
+```
+MAIL_MAILER=smtp
+MAIL_HOST=mail.your-host.com
+MAIL_PORT=587
+MAIL_USERNAME=you@your-host.com
+MAIL_PASSWORD=your-mailbox-password
+MAIL_FROM_ADDRESS=you@your-host.com
+```
+
+**Option B — Control Center → Email → Email Provider** (stored in the database, overrides `.env`,
+no redeploy needed; needs the `platform.email.manage` permission).
+
+Then use **Send test email** on that screen and confirm it arrives. Before it will:
+
+- The From address must be on a domain your mail provider signs for. `example.com`, `localhost` and
+  other reserved domains are rejected or quarantined by receivers, and the SMTP server still reports
+  success — use the mailbox you authenticate with when in doubt.
+- All mail (verification, invoices, campaigns) is sent immediately during the request — it does
+  not depend on a queue worker. A worker is only needed for non-email background jobs (see
+  `docs/DEPLOY-CPANEL.md` §2 for the supervised and cron options).
+- Some shared hosts block outbound SMTP on 465/587. If the test email reports a connection timeout,
+  ask the host to open the port or to send through their own mail server.
+
+Verify from a command runner (see **Cron Jobs is a command runner** above):
+
+```bash
+php artisan platform:check     # "Email transport" shows what is actually used
+```
+
+It reports `log — NOT DELIVERING, configure SMTP` until the settings above are in place.
 
 ## After installation
 

@@ -11,6 +11,7 @@ use App\Domain\Billing\ReconciliationService;
 use App\Domain\Billing\RefundService;
 use App\Domain\PaymentGateways\GatewayProviderRegistry;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -108,7 +109,7 @@ class PaymentController extends Controller
                 'failure_reason' => $payment->failure_reason,
                 'settlement_status' => $payment->settlement_status,
                 'confirmed_by' => $payment->confirmed_by
-                    ? \App\Models\User::query()->find($payment->confirmed_by)?->name
+                    ? User::query()->find($payment->confirmed_by)?->name
                     : null,
                 'confirmed_at' => $payment->confirmed_at?->toIso8601String(),
                 'confirmation_note' => $payment->confirmation_note,

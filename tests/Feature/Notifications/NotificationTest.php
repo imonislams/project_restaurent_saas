@@ -8,6 +8,7 @@ use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Inventory\Actions\ProvisionInventoryDefaults;
 use App\Domain\Inventory\Models\Ingredient;
 use App\Domain\Inventory\StockService;
+use App\Domain\Kitchen\Models\KitchenTicket;
 use App\Domain\Menu\Models\Product;
 use App\Domain\Notifications\Notifications\SalesSummaryNotification;
 use App\Domain\Payments\Actions\ProvisionPaymentDefaults;
@@ -94,7 +95,7 @@ class NotificationTest extends TestCase
         $this->assertSame('Daily sales summary', $this->owner->notifications()->first()->data['title']);
     }
 
-    public function test_a_sale_dispatches_the_kitchen_ticket_job(): void
+    public function test_a_sale_opens_the_kitchen_ticket_without_a_queue_worker(): void
     {
         Queue::fake();
 
@@ -109,7 +110,8 @@ class NotificationTest extends TestCase
             'payments' => [['payment_method_id' => $cash->id, 'amount' => 100, 'tendered' => 100]],
         ])->assertRedirect();
 
-        Queue::assertPushed(OpenKitchenTicket::class);
+        Queue::assertNotPushed(OpenKitchenTicket::class);
+        $this->assertSame(1, KitchenTicket::withoutGlobalScopes()->count());
     }
 
     public function test_the_inbox_lists_notifications_and_can_mark_them_read(): void

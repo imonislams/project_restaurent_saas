@@ -21,4 +21,5 @@ export interface DemoState {
     started_at?: string | null;
     completed_at?: string | null;
     removed_at?: string | null;
+    kept?: string[];
 }

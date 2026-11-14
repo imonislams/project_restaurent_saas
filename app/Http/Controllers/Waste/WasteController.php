@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Waste\WasteRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -81,9 +82,9 @@ class WasteController extends Controller
      * Stockable items a waste record may target, with unit cost so the UI can
      * show an accurate loss valuation / approval preview.
      *
-     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     * @return Collection<int, array<string, mixed>>
      */
-    protected function itemOptions(): \Illuminate\Support\Collection
+    protected function itemOptions(): Collection
     {
         $ingredients = Ingredient::query()->orderBy('name')->get()->map(fn (Ingredient $ingredient) => [
             'value' => 'ingredient:'.$ingredient->getKey(),

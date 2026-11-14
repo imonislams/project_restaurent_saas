@@ -73,7 +73,10 @@ class WebhookService
 
         if (in_array($provider, $manager->providers(), true)) {
             if ($provider === 'cash') {
-                return true;
+                // Cash is collected and settled in-process by SaleService. It has
+                // no provider to send a webhook, so there is nothing to verify —
+                // an unsigned request must never be treated as confirmed.
+                return false;
             }
 
             return $manager->verifyAnyEnabled($provider, json_decode($payload, true) ?: [], $signature);

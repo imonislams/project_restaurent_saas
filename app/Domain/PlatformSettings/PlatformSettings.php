@@ -53,6 +53,23 @@ class PlatformSettings
     public function forget(): void
     {
         Cache::forget(self::CACHE_KEY);
+        Cache::forget(self::CACHE_KEY.':unreadable');
+    }
+
+    /**
+     * Keys whose encrypted value cannot be read: it was written with a different
+     * APP_KEY (the key was rotated, or the database was copied between installs),
+     * so stored credentials — the SMTP password above all — are lost. Reported
+     * rather than silently ignored, otherwise mail looks configured while every
+     * login attempt sends an empty password.
+     *
+     * @return list<string>
+     */
+    public function unreadableKeys(): array
+    {
+        $this->rows();
+
+        return (array) Cache::get(self::CACHE_KEY.':unreadable', []);
     }
 
     /** The currency platform reporting/analytics is expressed in. */
@@ -90,16 +107,44 @@ class PlatformSettings
     {
         return Cache::remember(self::CACHE_KEY, 60, function () {
             try {
-                return PlatformSetting::query()->get()->map(fn (PlatformSetting $setting) => [
-                    'key' => $setting->key,
-                    'group' => $setting->group,
-                    'value' => $this->decode($setting),
-                ])->all();
+                $rows = [];
+                $unreadable = [];
+
+                foreach (PlatformSetting::query()->get() as $setting) {
+                    if ($setting->is_encrypted && $setting->value !== null && ! $this->decrypts($setting)) {
+                        $unreadable[] = $setting->key;
+                        $rows[] = ['key' => $setting->key, 'group' => $setting->group, 'value' => null];
+
+                        continue;
+                    }
+
+                    $rows[] = [
+                        'key' => $setting->key,
+                        'group' => $setting->group,
+                        'value' => $this->decode($setting),
+                    ];
+                }
+
+                // Kept beside the rows so unreadableKeys() stays readable from cache.
+                Cache::put(self::CACHE_KEY.':unreadable', $unreadable, 60);
+
+                return $rows;
             } catch (\Throwable) {
                 // Table may not exist yet (e.g. first install) — fail closed to defaults.
                 return [];
             }
         });
+    }
+
+    protected function decrypts(PlatformSetting $setting): bool
+    {
+        try {
+            Crypt::decryptString((string) $setting->value);
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     protected function decode(PlatformSetting $setting): mixed

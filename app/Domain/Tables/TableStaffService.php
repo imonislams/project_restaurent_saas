@@ -73,7 +73,7 @@ class TableStaffService
      * Replace a table's staff assignment with the given user ids.
      *
      * @param  list<int|string>  $userIds
-     * @return bool  whether the assignment actually changed
+     * @return bool whether the assignment actually changed
      */
     public function sync(Table $table, array $userIds, User $actor): bool
     {

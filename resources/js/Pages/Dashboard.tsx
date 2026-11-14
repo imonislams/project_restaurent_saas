@@ -20,6 +20,8 @@ import type { BadgeTone } from '@/Components/ui';
 import PeriodFilter from '@/Components/ui/PeriodFilter';
 import type { PeriodValue } from '@/Components/ui/PeriodFilter';
 import DemoBanner from '@/Components/Demo/DemoBanner';
+import PrintButton from '@/Components/print/PrintButton';
+import PrintDocument from '@/Components/print/PrintDocument';
 import { useT } from '@/i18n';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -251,9 +253,7 @@ export default function Dashboard({
                             <Badge tone={STATUS_TONE[tenant.status] ?? 'neutral'}>{tenant.status}</Badge>
                             {analytics && (
                                 <>
-                                    <Button size="sm" variant="secondary" onClick={() => window.print()}>
-                                        {t('dash.print')}
-                                    </Button>
+                                    <PrintButton label={t('dash.print')} title={t('nav.overview')} />
                                     <Button size="sm" variant="secondary" onClick={exportCsv}>
                                         {t('dash.export_csv')}
                                     </Button>
@@ -271,19 +271,22 @@ export default function Dashboard({
         >
             <Head title="Dashboard" />
 
-            <div className="py-6">
-                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <div className="py-6 print:py-0">
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8 print:max-w-none print:px-0">
                     {flash?.success && (
-                        <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs font-medium text-emerald-800 shadow-xs">
+                        <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs font-medium text-emerald-800 shadow-xs print:hidden">
                             <Check className="h-4 w-4 stroke-[2.5] text-emerald-600" />
                             <span>{flash.success}</span>
                         </div>
                     )}
 
                     {/* Sample-data banner: states what is demo, and how to remove it. */}
-                    <DemoBanner />
+                    <div className="print:hidden">
+                        <DemoBanner />
+                    </div>
 
                     {analytics && business360 ? (
+                        <PrintDocument title={t('nav.overview')} dateRange={periodLabel} className="space-y-6">
                         <>
                             <FilterBar
                                 actions={period && <PeriodFilter value={{ preset: period.preset as PeriodValue['preset'], from: period.from, to: period.to }} onChange={applyPeriod} />}
@@ -324,7 +327,7 @@ export default function Dashboard({
                                 ))}
                             </div>
 
-                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 print:hidden">
                                 <Card className="lg:col-span-2">
                                     <CardHeader
                                         title={t('dash.sales_performance')}
@@ -407,7 +410,7 @@ export default function Dashboard({
                                 </Card>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 print:hidden">
                                 <Card>
                                     <CardHeader title={t('dash.top_products')} description={t('dash.by_revenue')} />
                                     <CardBody className="h-56 p-4">
@@ -444,7 +447,7 @@ export default function Dashboard({
                                 </Card>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 print:hidden">
                                 <Card>
                                     <CardHeader title={t('dash.orders_by_source')} description={`${formatNumber(analytics.order_stats.total)} ${t('dash.table_orders')}`} />
                                     <CardBody className="h-52 p-4">
@@ -476,7 +479,7 @@ export default function Dashboard({
                                 </CardBody>
                             </Card>
 
-                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 print:hidden">
                                 <Card className="lg:col-span-2">
                                     <CardHeader title={t('dash.customer_segments')} description={t('dash.customer_segments_desc')} />
                                     <CardBody className="h-56 p-4">
@@ -580,6 +583,7 @@ export default function Dashboard({
                                 </Card>
                             </div>
                         </>
+                        </PrintDocument>
                     ) : (
                         <>
                             <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">

@@ -1,5 +1,6 @@
 import { Badge, Button, Card, CardBody, CardHeader, ConfirmDialog, EmptyState, TextField, formatDateTime } from '@/Components/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/Table';
+import PendingMigrations, { type MigrationState } from '@/Components/Operations/PendingMigrations';
 import PlatformLayout from '@/Layouts/PlatformLayout';
 import { router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
@@ -28,10 +29,12 @@ export default function Commands({
     curated,
     advanced,
     runs,
+    migrations,
 }: {
     curated: Action[];
     advanced: { enabled: boolean; is_super_admin: boolean; allowed_prefixes: string[] };
     runs: Run[];
+    migrations: MigrationState;
 }) {
     const [confirm, setConfirm] = useState<Action | null>(null);
     const [selected, setSelected] = useState<Run | null>(runs[0] ?? null);
@@ -160,6 +163,8 @@ export default function Commands({
                     )}
                 </CardBody>
             </Card>
+
+            <PendingMigrations migrations={migrations} />
 
             <ConfirmDialog
                 show={confirm !== null}

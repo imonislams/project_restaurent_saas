@@ -36,11 +36,27 @@ class AppVersionTest extends TestCase
     {
         config(['version.version' => '1.2.3', 'version.commit' => 'abc1234']);
 
+        // Version detail is a deliberate opt-in (QA-A-05); the default public
+        // payload is status-only.
+        config(['app.health_disclose_detail' => true]);
+
         $this->get('/health')
             ->assertOk()
             ->assertJsonPath('status', 'ok')
             ->assertJsonPath('version', '1.2.3')
             ->assertJsonPath('commit', 'abc1234');
+    }
+
+    public function test_the_health_endpoint_hides_build_detail_from_anonymous_callers(): void
+    {
+        config(['version.version' => '1.2.3', 'version.commit' => 'abc1234']);
+
+        $this->get('/health')
+            ->assertOk()
+            ->assertJsonPath('status', 'ok')
+            ->assertJsonMissingPath('version')
+            ->assertJsonMissingPath('commit')
+            ->assertJsonMissingPath('checks');
     }
 
     public function test_the_version_is_shared_with_the_frontend(): void

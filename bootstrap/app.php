@@ -2,6 +2,8 @@
 
 use App\Http\Middleware\AddCorrelationContext;
 use App\Http\Middleware\AddSecurityHeaders;
+use App\Http\Middleware\ApplySeoMetadata;
+use App\Http\Middleware\EnforceAllowedHosts;
 use App\Http\Middleware\EnsureFeature;
 use App\Http\Middleware\EnsureOnboardingComplete;
 use App\Http\Middleware\EnsurePermission;
@@ -12,16 +14,18 @@ use App\Http\Middleware\EnsureSubscriptionAccess;
 use App\Http\Middleware\EnsureTenantIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveActiveBranch;
-use App\Http\Middleware\ResolveTenant;
+use App\Http\Middleware\ResolveDiningSession;
 use App\Http\Middleware\ResolvePricingRegion;
 use App\Http\Middleware\ResolveQrContext;
-use App\Http\Middleware\ResolveDiningSession;
+use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\TrackMarketingVisit;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -39,13 +43,41 @@ return Application::configure(basePath: dirname(__DIR__))
     // Registers /broadcasting/auth (session-authenticated) and the channel rules.
     ->withBroadcasting(__DIR__.'/../routes/channels.php')
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust proxies only when the deployment declares them.
+        //
+        // Generated absolute URLs (password reset, invitation and payment-return
+        // links) are built from the request host. If the app sits behind a CDN or
+        // load balancer and forwarded headers are NOT trusted, links can be built
+        // from an attacker-supplied Host. If they ARE trusted but the proxy list is
+        // wrong, every client can spoof them. Neither default is safe silently, so
+        // the trusted list must be stated explicitly in TRUSTED_PROXIES.
+        //
+        // Use the proxy IPs/CIDRs, never '*', in production.
+        $proxies = array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('TRUSTED_PROXIES', '')),
+        )));
+
+        if ($proxies !== []) {
+            $middleware->trustProxies(
+                at: $proxies,
+                headers: Request::HEADER_X_FORWARDED_FOR
+                    | Request::HEADER_X_FORWARDED_HOST
+                    | Request::HEADER_X_FORWARDED_PORT
+                    | Request::HEADER_X_FORWARDED_PROTO,
+            );
+        }
+
         $middleware->web(append: [
+            EnforceAllowedHosts::class,
             AddCorrelationContext::class,
             AddSecurityHeaders::class,
             ResolveTenant::class,
             ResolveActiveBranch::class,
             SetLocale::class,
             ResolvePricingRegion::class,
+            ApplySeoMetadata::class,
+            TrackMarketingVisit::class,
             EnsureTenantIsActive::class,
             EnsurePlatformOperational::class,
             HandleInertiaRequests::class,
@@ -68,8 +100,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // The pricing-region cookie is written by the browser (public-site
         // location detection) and carries only a 2-letter country code, so it
-        // must not be run through cookie encryption.
-        $middleware->encryptCookies(except: ['pricing_country']);
+        // must not be run through cookie encryption. The marketing visitor id is
+        // read by the browser to attribute client-side events, so it is exempt for
+        // the same reason.
+        $middleware->encryptCookies(except: ['pricing_country', 'md_vid']);
 
         // Provider webhooks / gateway callbacks are authenticated by signature or
         // server-side verification, not CSRF tokens.
@@ -81,6 +115,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('billing:warn-expiring')->dailyAt('09:00');
         $schedule->command('billing:renew-subscriptions')->dailyAt('06:00');
         $schedule->command('usage:record')->dailyAt('02:00');
+
+        // Marketing automation: advances delayed steps, so a workflow cannot be
+        // driven by a page view.
+        $schedule->command('marketing:run-automations')->everyFiveMinutes()->withoutOverlapping();
+
+        // Marketing growth: keep integration data, attribution values and the sitemap
+        // current, and enforce the retention policy.
+        $schedule->command('marketing:sync-integrations')->hourly()->withoutOverlapping();
+        $schedule->command('marketing:refresh-attribution')->dailyAt('02:30');
+        $schedule->command('marketing:evaluate-alerts')->hourly()->withoutOverlapping();
+        $schedule->command('marketing:generate-sitemap')->dailyAt('05:00');
+        $schedule->command('marketing:prune-events')->dailyAt('04:30');
 
         // Operational alerts.
         $schedule->command('alerts:low-stock')->hourly();

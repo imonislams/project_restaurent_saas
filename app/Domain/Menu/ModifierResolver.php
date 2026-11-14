@@ -2,8 +2,10 @@
 
 namespace App\Domain\Menu;
 
+use App\Domain\Menu\Models\ModifierGroup;
 use App\Domain\Menu\Models\ModifierOption;
 use App\Domain\Menu\Models\Product;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -18,7 +20,7 @@ class ModifierResolver
      */
     public function resolve(Product $product, array $selections): array
     {
-        /** @var \Illuminate\Support\Collection<int, \App\Domain\Menu\Models\ModifierGroup> $groups */
+        /** @var Collection<int, ModifierGroup> $groups */
         $groups = $product->modifierGroups()->with('options')->get();
 
         if ($groups->isEmpty()) {

@@ -6,6 +6,8 @@ use App\Domain\Branches\Models\Branch;
 use App\Domain\CashManagement\Models\Shift;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Orders\OrderConfirmationSettings;
+use App\Domain\Orders\OrderRoundService;
 use App\Domain\POS\OfflineBundle;
 use App\Domain\POS\SaleService;
 use App\Http\Controllers\Concerns\ResolvesActiveBranch;
@@ -22,7 +24,7 @@ class PosController extends Controller
 
     public function __construct(protected SaleService $sales) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request): Response|RedirectResponse
     {
         $user = $request->user();
         $tenant = $user->tenant;
@@ -33,6 +35,30 @@ class PosController extends Controller
             ? Shift::query()->where('branch_id', $branch->getKey())->open()->latest('opened_at')->with('openedBy:id,name')->first()
             : null;
 
+        $appendOrder = null;
+
+        if ($request->filled('append')) {
+            $candidate = Order::query()->find($request->integer('append'));
+
+            if ($candidate) {
+                try {
+                    app(OrderRoundService::class)->assertCanAppend($candidate);
+
+                    $appendOrder = [
+                        'id' => $candidate->getKey(),
+                        'order_number' => $candidate->order_number,
+                        'table_name' => $candidate->table?->name,
+                        'order_type' => $candidate->order_type->value,
+                        'total' => (float) $candidate->total,
+                        'next_round' => (int) $candidate->rounds()->max('round_no') + 1,
+                    ];
+                } catch (\Throwable $e) {
+                    return redirect()->route('orders.show', $candidate)
+                        ->with('error', $e->getMessage());
+                }
+            }
+        }
+
         return Inertia::render('Pos/Index', [
             'branches' => Branch::query()->whereIn('id', $user->accessibleBranchIds())->active()->orderBy('name')->get()
                 ->map(fn (Branch $b) => ['id' => $b->getKey(), 'name' => $b->name]),
@@ -41,6 +67,9 @@ class PosController extends Controller
                 'name' => $branch->name,
                 'currency' => $branch->effectiveCurrency(),
             ] : null,
+            'canAppend' => app(OrderConfirmationSettings::class)->allowAdditionalItems()
+                && $user->hasPermission('orders.update'),
+            'appendOrder' => $appendOrder,
             'shift' => $shift ? [
                 'id' => $shift->getKey(),
                 'opening_float' => (float) $shift->opening_float,

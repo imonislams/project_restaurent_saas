@@ -14,6 +14,8 @@ import {
 } from '@/Components/ui';
 import type { TabItem } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PrintButton from '@/Components/print/PrintButton';
+import PrintDocument from '@/Components/print/PrintDocument';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useMemo, useState } from 'react';
 
@@ -223,39 +225,42 @@ export default function AccountsIndex({
                     title="Financial Accounts & Treasury"
                     description="Monitor cash drawers, operational bank balances, and execute inter-account fund transfers."
                     actions={
-                        canManage && (
-                            <div className="flex flex-wrap items-center gap-2">
-                                <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={() => {
-                                        transferForm.reset();
-                                        setTransferModalOpen(true);
-                                    }}
-                                >
-                                    ⇄ Transfer Funds
-                                </Button>
-                                <Button
-                                    variant="primary"
-                                    size="sm"
-                                    onClick={() => {
-                                        setEditingAccount(null);
-                                        accountForm.reset();
-                                        setAccountModalOpen(true);
-                                    }}
-                                >
-                                    + Add Account
-                                </Button>
-                            </div>
-                        )
+                        <div className="flex flex-wrap items-center gap-2">
+                            <PrintButton title="Financial Accounts" />
+                            {canManage && (
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() => {
+                                            transferForm.reset();
+                                            setTransferModalOpen(true);
+                                        }}
+                                    >
+                                        ⇄ Transfer Funds
+                                    </Button>
+                                    <Button
+                                        variant="primary"
+                                        size="sm"
+                                        onClick={() => {
+                                            setEditingAccount(null);
+                                            accountForm.reset();
+                                            setAccountModalOpen(true);
+                                        }}
+                                    >
+                                        + Add Account
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
                     }
                 />
             }
         >
             <Head title="Financial Accounts & Treasury" />
 
-            <div className="py-6">
-                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <div className="py-6 print:py-0">
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8 print:max-w-none print:px-0">
                     {/* Flash messages */}
                     {flash?.success && (
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -268,6 +273,7 @@ export default function AccountsIndex({
                         </div>
                     )}
 
+                    <PrintDocument title="Financial Accounts" className="space-y-6">
                     {/* KPI Cards */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <KpiCard
@@ -294,11 +300,13 @@ export default function AccountsIndex({
                     </div>
 
                     {/* Navigation Tabs */}
+                    <div className="print:hidden">
                     <Tabs
                         tabs={tabs}
                         value={activeTab}
                         onChange={(tabKey) => setActiveTab(tabKey as any)}
                     />
+                    </div>
 
                     {/* TAB 1: FINANCIAL ACCOUNTS */}
                     {activeTab === 'accounts' && (
@@ -350,7 +358,7 @@ export default function AccountsIndex({
                                                     <th className="px-6 py-3.5 text-right">Current Balance</th>
                                                     <th className="px-6 py-3.5 text-center">Status</th>
                                                     {canManage && (
-                                                        <th className="px-6 py-3.5 text-right">Actions</th>
+                                                        <th className="px-6 py-3.5 text-right print:hidden">Actions</th>
                                                     )}
                                                 </tr>
                                             </thead>
@@ -394,7 +402,7 @@ export default function AccountsIndex({
                                                             )}
                                                         </td>
                                                         {canManage && (
-                                                            <td className="px-6 py-4 text-right">
+                                                            <td className="px-6 py-4 text-right print:hidden">
                                                                 <div className="flex items-center justify-end gap-1.5">
                                                                     <Button
                                                                         size="xs"
@@ -521,6 +529,7 @@ export default function AccountsIndex({
                             </CardBody>
                         </Card>
                     )}
+                    </PrintDocument>
                 </div>
             </div>
 

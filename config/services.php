@@ -37,7 +37,10 @@ return [
 
     'payments' => [
         // Shared secret used to verify signed provider webhooks (HMAC-SHA256).
-        'stub_secret' => env('PAYMENT_STUB_SECRET', 'stub-secret'),
+        // Deliberately has no default: a shipped fallback would let anyone with
+        // access to the source forge a valid signature. StubGateway rejects
+        // every webhook while this is unset.
+        'stub_secret' => env('PAYMENT_STUB_SECRET'),
     ],
 
     'sms' => [

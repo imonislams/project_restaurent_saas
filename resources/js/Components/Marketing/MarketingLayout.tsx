@@ -1,4 +1,6 @@
+import MarketingConsentProvider from '@/Components/Marketing/MarketingConsent';
 import MarketingFooter from '@/Components/Marketing/MarketingFooter';
+import WhatsAppButton from '@/Components/Marketing/WhatsAppButton';
 import MarketingNavbar from '@/Components/Marketing/MarketingNavbar';
 import { usePricingRegion } from '@/hooks/use-pricing-region';
 import { PropsWithChildren, ReactNode, useEffect, useRef } from 'react';
@@ -79,20 +81,23 @@ export default function MarketingLayout({ children, announcement, className = ''
     usePricingRegion();
 
     return (
-        <div className={`min-h-screen flex flex-col bg-white mk-root text-stone-900 antialiased selection:bg-[#EC3013] selection:text-white ${className}`}>
-            {announcement && (
-                <div className="bg-[#201E1D] px-4 py-2 text-center text-xs font-medium text-stone-200 border-b border-stone-800">
-                    {announcement}
-                </div>
-            )}
+        <MarketingConsentProvider>
+            <div className={`min-h-screen flex flex-col bg-white mk-root text-stone-900 antialiased selection:bg-[#EC3013] selection:text-white ${className}`}>
+                {announcement && (
+                    <div className="bg-[#201E1D] px-4 py-2 text-center text-xs font-medium text-stone-200 border-b border-stone-800">
+                        {announcement}
+                    </div>
+                )}
 
-            <MarketingNavbar />
+                <MarketingNavbar />
 
-            <main ref={main} className="flex-1 w-full">
-                {children}
-            </main>
+                <main ref={main} className="flex-1 w-full">
+                    {children}
+                </main>
 
-            <MarketingFooter />
-        </div>
+                <MarketingFooter />
+                <WhatsAppButton />
+            </div>
+        </MarketingConsentProvider>
     );
 }

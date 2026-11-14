@@ -4,12 +4,15 @@ namespace App\Domain\Invoicing;
 
 use App\Domain\Auditing\AuditLogger;
 use App\Domain\Dining\Enums\BillingMode;
+use App\Domain\Dining\Models\DiningSession;
 use App\Domain\Documents\DocumentNumberGenerator;
 use App\Domain\Invoicing\Enums\InvoiceStatus;
 use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Invoicing\Models\InvoiceOrder;
+use App\Domain\Notifications\NotificationService;
 use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Payments\Models\Payment;
 use App\Domain\Tenancy\TenantContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -40,6 +43,20 @@ class OrderInvoiceService
     }
 
     /**
+     * Refuse to change an order whose bill has already been finalized.
+     */
+    public function assertEditableForOrder(Order $order): void
+    {
+        $invoice = $this->invoiceForOrder($order);
+
+        if ($invoice && ! $invoice->isEditable()) {
+            throw ValidationException::withMessages([
+                'invoice' => 'This bill is finalized and can no longer be changed.',
+            ]);
+        }
+    }
+
+    /**
      * Ensure a served order is on an open invoice, creating one if needed.
      */
     public function forServedOrder(Order $order): ?Invoice
@@ -60,7 +77,7 @@ class OrderInvoiceService
 
         // First time this order is billed — tell the branch's billing users.
         try {
-            app(\App\Domain\Notifications\NotificationService::class)->orderServedForBilling($order, $invoice);
+            app(NotificationService::class)->orderServedForBilling($order, $invoice);
         } catch (\Throwable $e) {
             report($e);
         }
@@ -71,7 +88,7 @@ class OrderInvoiceService
     /**
      * The open invoice for a dining session, if one exists.
      */
-    public function openInvoiceForSession(\App\Domain\Dining\Models\DiningSession $session): ?Invoice
+    public function openInvoiceForSession(DiningSession $session): ?Invoice
     {
         return Invoice::query()
             ->where('dining_session_id', $session->getKey())
@@ -83,7 +100,7 @@ class OrderInvoiceService
     /**
      * Link a payment to the invoice its order is billed on (idempotent).
      */
-    public function linkPayment(\App\Domain\Payments\Models\Payment $payment): void
+    public function linkPayment(Payment $payment): void
     {
         if ($payment->invoice_id || ! $payment->order) {
             return;
@@ -92,6 +109,32 @@ class OrderInvoiceService
         if ($invoice = $this->invoiceForOrder($payment->order)) {
             $payment->forceFill(['invoice_id' => $invoice->getKey()])->save();
         }
+    }
+
+    /**
+     * Ensure a completed/settled order has an invoice and that its totals are
+     * current. Unlike the served-order flow this also creates the invoice for
+     * orders that were paid before the kitchen marked them served.
+     */
+    public function ensureForOrder(Order $order): Invoice
+    {
+        if ($existing = $this->invoiceForOrder($order)) {
+            return $this->recalculate($existing);
+        }
+
+        return DB::transaction(function () use ($order): Invoice {
+            // Serialize concurrent settlement of the same order so two
+            // invoices can never be created for it.
+            $locked = Order::query()->whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            if ($existing = $this->invoiceForOrder($locked)) {
+                return $this->recalculate($existing);
+            }
+
+            $invoice = $this->create($locked);
+
+            return $this->addOrder($invoice, $locked);
+        });
     }
 
     /**
@@ -164,6 +207,14 @@ class OrderInvoiceService
             'status' => $status,
             'paid_at' => $status === InvoiceStatus::Paid ? ($invoice->paid_at ?? now()) : null,
         ])->save();
+
+        // Keep the per-order snapshot used by the invoice detail in step with
+        // the order's current total (it grows when a round is appended).
+        foreach ($orders as $order) {
+            $invoice->orders()->updateExistingPivot($order->getKey(), [
+                'amount' => (float) $order->total,
+            ]);
+        }
 
         return $invoice;
     }

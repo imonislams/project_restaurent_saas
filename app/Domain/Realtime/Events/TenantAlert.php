@@ -2,6 +2,7 @@
 
 namespace App\Domain\Realtime\Events;
 
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -25,7 +26,7 @@ class TenantAlert implements ShouldBroadcastNow
         public ?int $branchId = null,
     ) {}
 
-    /** @return array<int, \Illuminate\Broadcasting\Channel> */
+    /** @return array<int, Channel> */
     public function broadcastOn(): array
     {
         return [new PrivateChannel('tenant.'.$this->tenantId.'.'.$this->area)];

@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { PRODUCT_GROUPS, PRODUCTS, SOLUTION_WORKFLOWS } from './Catalog/catalog';
 import { trackConversion } from './Telemetry';
 
-const TRIGGER = 'text-sm font-medium text-stone-700 hover:text-stone-900 bg-transparent hover:bg-stone-50 data-[state=open]:bg-stone-50';
+const TRIGGER = 'text-sm font-medium text-stone-900 bg-transparent hover:text-[#EC3013] hover:bg-transparent data-[state=open]:bg-transparent';
 const ITEM = 'group flex items-start gap-3 rounded-lg p-2.5 transition-colors hover:bg-stone-50 focus:bg-stone-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#EC3013]';
 const ICON = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-stone-700 transition-colors group-hover:bg-[#EC3013]/10 group-hover:text-[#EC3013]';
 
@@ -12,7 +12,7 @@ const track = (kind: 'product' | 'solution', slug: string) => trackConversion('n
 
 export function ProductsMenu({ isActive }: { isActive: boolean }) {
     return (
-        <NavigationMenuItem>
+        <NavigationMenuItem value="products" className="relative">
             <NavigationMenuTrigger className={`${TRIGGER} ${isActive ? 'text-[#EC3013]' : ''}`} onPointerEnter={() => undefined}>Products</NavigationMenuTrigger>
             <NavigationMenuContent>
                 <div className="w-[820px] max-w-[calc(100vw-2rem)] rounded-xl border border-stone-200 bg-white p-4 shadow-lg">
@@ -53,7 +53,7 @@ const TYPES: [string, string, string][] = [
 
 export function SolutionsMenu({ isActive }: { isActive: boolean }) {
     return (
-        <NavigationMenuItem>
+        <NavigationMenuItem value="solutions" className="relative">
             <NavigationMenuTrigger className={`${TRIGGER} ${isActive ? 'text-[#EC3013]' : ''}`}>Solutions</NavigationMenuTrigger>
             <NavigationMenuContent>
                 <div className="w-[760px] max-w-[calc(100vw-2rem)] rounded-xl border border-stone-200 bg-white p-4 shadow-lg">

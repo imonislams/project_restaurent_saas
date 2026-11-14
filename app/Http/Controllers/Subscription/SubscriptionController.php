@@ -9,6 +9,7 @@ use App\Domain\Billing\Models\PaymentGateway;
 use App\Domain\Billing\Models\PlatformPayment;
 use App\Domain\Billing\PlatformPaymentService;
 use App\Domain\Billing\PricingRegionContext;
+use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Subscriptions\Enums\BillingCycle;
 use App\Domain\Subscriptions\Enums\PlanRegion;
 use App\Domain\Subscriptions\Models\Plan;
@@ -282,7 +283,7 @@ class SubscriptionController extends Controller
     public function payInvoice(Request $request, SubscriptionInvoice $invoice): SymfonyResponse
     {
         abort_unless($invoice->tenant_id === $request->user()->tenant_id, 404);
-        abort_unless(app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('features.gateway_checkout', true), 403, 'Online checkout is disabled.');
+        abort_unless(app(PlatformSettings::class)->get('features.gateway_checkout', true), 403, 'Online checkout is disabled.');
 
         $data = $request->validate([
             'gateway_id' => ['required', 'integer', 'exists:payment_gateways,id'],

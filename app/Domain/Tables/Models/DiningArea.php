@@ -2,8 +2,8 @@
 
 namespace App\Domain\Tables\Models;
 
-use App\Domain\Branches\Models\Branch;
 use App\Domain\Branches\Concerns\BelongsToBranch;
+use App\Domain\Branches\Models\Branch;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DiningArea extends Model
 {
-    use BelongsToTenant, BelongsToBranch;
+    use BelongsToBranch, BelongsToTenant;
 
     protected $fillable = ['tenant_id', 'branch_id', 'name', 'sort_order', 'is_active'];
 

@@ -1,6 +1,8 @@
 import { Badge, Button, Card, CardBody, CardHeader, PageHeader } from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PrintButton from '@/Components/print/PrintButton';
+import PrintDocument from '@/Components/print/PrintDocument';
 import { Head, Link } from '@inertiajs/react';
 
 interface InvoiceOrder {
@@ -13,7 +15,7 @@ interface InvoiceOrder {
     paid_total: number;
     amount: number;
     placed_at: string | null;
-    items: { name: string; quantity: number; line_total: number }[];
+    items: { name: string; quantity: number; line_total: number; round_no?: number }[];
 }
 
 interface InvoiceDetail {
@@ -57,6 +59,7 @@ export default function InvoiceShow({ invoice }: { invoice: InvoiceDetail }) {
                     actions={
                         <div className="flex items-center gap-2">
                             <Badge tone={STATUS_TONES[invoice.status] ?? 'neutral'}>{invoice.status_label}</Badge>
+                            <PrintButton title={`Invoice ${invoice.number}`} />
                             <Link href={route('invoices.index')}>
                                 <Button size="sm" variant="secondary">Back</Button>
                             </Link>
@@ -67,8 +70,12 @@ export default function InvoiceShow({ invoice }: { invoice: InvoiceDetail }) {
         >
             <Head title={`Invoice ${invoice.number}`} />
 
-            <div className="py-6">
-                <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 sm:px-6 lg:grid-cols-3 lg:px-8">
+            <div className="py-6 print:py-0">
+                <PrintDocument
+                    title={`Invoice ${invoice.number}`}
+                    dateRange={invoice.issued_at ? new Date(invoice.issued_at).toLocaleString() : undefined}
+                >
+                <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 sm:px-6 lg:grid-cols-3 lg:px-8 print:max-w-none print:grid-cols-1 print:px-0">
                     <div className="space-y-6 lg:col-span-2">
                         {invoice.orders.map((order) => (
                             <Card key={order.id}>
@@ -76,7 +83,7 @@ export default function InvoiceShow({ invoice }: { invoice: InvoiceDetail }) {
                                     title={`Order ${order.order_number}`}
                                     description={[order.table_name, order.placed_at ? new Date(order.placed_at).toLocaleString() : null].filter(Boolean).join(' · ')}
                                     action={
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 print:hidden">
                                             <Badge tone="neutral">{order.fulfillment_status}</Badge>
                                             <Link href={route('orders.show', order.id)}>
                                                 <Button size="xs" variant="secondary">View order</Button>
@@ -89,6 +96,11 @@ export default function InvoiceShow({ invoice }: { invoice: InvoiceDetail }) {
                                         {order.items.map((item, index) => (
                                             <li key={index} className="flex items-center justify-between py-2 text-sm">
                                                 <span className="text-gray-700">
+                                                    {(item.round_no ?? 1) > 1 && (
+                                                        <span className="mr-1 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-gray-500">
+                                                            R{item.round_no}
+                                                        </span>
+                                                    )}
                                                     <span className="font-mono text-gray-500">{item.quantity}×</span> {item.name}
                                                 </span>
                                                 <span className="font-mono tabular-nums text-gray-900">{money(item.line_total)}</span>
@@ -137,6 +149,7 @@ export default function InvoiceShow({ invoice }: { invoice: InvoiceDetail }) {
                         </Card>
                     </div>
                 </div>
+                </PrintDocument>
             </div>
         </AuthenticatedLayout>
     );

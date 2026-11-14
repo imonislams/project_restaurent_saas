@@ -5,7 +5,8 @@ import { useT } from '@/i18n';
 import AppShell, { NavGroup, NavItem } from '@/Layouts/AppShell';
 import { Link, router, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode } from 'react';
-import { Bell, Store } from 'lucide-react';
+import NotificationBell from '@/Components/NotificationBell';
+import { Store } from 'lucide-react';
 
 interface NavSpec {
     label: string;
@@ -19,6 +20,8 @@ interface NavSection {
     key: string;
     label: string;
     items: NavSpec[];
+    /** Long sections collapse so the sidebar stays scannable. */
+    collapsible?: boolean;
 }
 
 /**
@@ -86,14 +89,107 @@ const NAV: NavSection[] = [
             { label: 'Email Provider', icon: 'sliders', permission: 'platform.email.manage', routeName: 'platform.email.settings', pattern: 'platform.email.settings' },
             { label: 'SMS Provider', icon: 'envelope', permission: 'platform.settings.view', routeName: 'platform.sms.index', pattern: 'platform.sms.*' },
             { label: 'Notifications', icon: 'bell', permission: 'platform.email.view', routeName: 'platform.notifications.index', pattern: 'platform.notifications.*' },
+            // Announcements are in-app tenant banners, so they belong with the
+            // other outbound communications rather than in the growth workspace.
+            { label: 'Announcements', icon: 'megaphone', permission: 'platform.marketing.manage', routeName: 'platform.marketing.announcements', pattern: 'platform.marketing.announcements*' },
+        ],
+    },
+    // ------------------------------------------------------------------
+    // Marketing & Growth
+    //
+    // Each sub-group is its own collapsible section so the sidebar stays
+    // scannable as the workspace fills out. Entries appear only once their page
+    // exists — there are no links to unbuilt screens.
+    // ------------------------------------------------------------------
+    {
+        key: 'marketing',
+        label: 'Marketing & Growth',
+        collapsible: true,
+        items: [
+            { label: 'Marketing Dashboard', icon: 'activity', permission: 'platform.marketing.view', routeName: 'platform.marketing.dashboard', pattern: 'platform.marketing.dashboard' },
         ],
     },
     {
-        key: 'marketing',
-        label: 'Marketing',
+        key: 'marketing-automation',
+        label: 'Automation',
+        collapsible: true,
         items: [
-            { label: 'Campaigns', icon: 'envelope', permission: 'platform.marketing.manage', routeName: 'platform.marketing.campaigns', pattern: 'platform.marketing.campaigns*' },
-            { label: 'Announcements', icon: 'bell', permission: 'platform.marketing.manage', routeName: 'platform.marketing.announcements', pattern: 'platform.marketing.announcements*' },
+            { label: 'Email Campaigns', icon: 'envelope', permission: 'platform.marketing.manage', routeName: 'platform.marketing.automation.campaigns', pattern: 'platform.marketing.automation.campaigns*' },
+            { label: 'Audience', icon: 'users', permission: 'platform.marketing.manage', routeName: 'platform.marketing.automation.audience', pattern: 'platform.marketing.automation.audience*' },
+            { label: 'Workflows', icon: 'refresh', permission: 'platform.marketing.manage', routeName: 'platform.marketing.automation.workflows', pattern: 'platform.marketing.automation.workflows*' },
+        ],
+    },
+    {
+        key: 'marketing-campaigns',
+        label: 'Campaigns',
+        collapsible: true,
+        items: [
+            { label: 'Campaigns', icon: 'megaphone', permission: 'platform.marketing.view', routeName: 'platform.marketing.campaigns.index', pattern: 'platform.marketing.campaigns.index' },
+            { label: 'UTM Builder', icon: 'tag', permission: 'platform.marketing.view', routeName: 'platform.marketing.campaigns.utm', pattern: 'platform.marketing.campaigns.utm' },
+        ],
+    },
+    {
+        key: 'marketing-leads',
+        label: 'Leads & CRM',
+        collapsible: true,
+        items: [
+            { label: 'Leads', icon: 'users', permission: 'platform.marketing.view', routeName: 'platform.marketing.leads.index', pattern: 'platform.marketing.leads.index' },
+            { label: 'Follow-ups', icon: 'clock', permission: 'platform.marketing.view', routeName: 'platform.marketing.leads.followups', pattern: 'platform.marketing.leads.followups' },
+            { label: 'Sources & Conversion', icon: 'chart', permission: 'platform.marketing.view', routeName: 'platform.marketing.leads.sources', pattern: 'platform.marketing.leads.sources' },
+        ],
+    },
+    {
+        key: 'marketing-reports',
+        label: 'Reporting',
+        collapsible: true,
+        items: [
+            { label: 'Reports & Insights', icon: 'chart', permission: 'platform.marketing.view', routeName: 'platform.marketing.reports.index', pattern: 'platform.marketing.reports.*' },
+        ],
+    },
+    {
+        key: 'marketing-growth',
+        label: 'Customer Growth',
+        collapsible: true,
+        items: [
+            { label: 'Conversion Funnel', icon: 'filter', permission: 'platform.marketing.view', routeName: 'platform.marketing.growth.funnel', pattern: 'platform.marketing.growth.funnel' },
+            { label: 'Revenue Attribution', icon: 'chart', permission: 'platform.marketing.view', routeName: 'platform.marketing.growth.attribution', pattern: 'platform.marketing.growth.attribution' },
+            { label: 'Acquisition & Retention', icon: 'users', permission: 'platform.marketing.view', routeName: 'platform.marketing.growth.customers', pattern: 'platform.marketing.growth.customers' },
+        ],
+    },
+    {
+        key: 'marketing-seo',
+        label: 'SEO',
+        collapsible: true,
+        items: [
+            { label: 'SEO Dashboard', icon: 'search', permission: 'platform.marketing.view', routeName: 'platform.marketing.seo.dashboard', pattern: 'platform.marketing.seo.dashboard' },
+            { label: 'Website SEO', icon: 'cog', permission: 'platform.marketing.view', routeName: 'platform.marketing.seo.website', pattern: 'platform.marketing.seo.website' },
+            { label: 'Page Meta Tags', icon: 'file', permission: 'platform.marketing.view', routeName: 'platform.marketing.seo.pages', pattern: 'platform.marketing.seo.pages' },
+            { label: 'Sitemap', icon: 'grid', permission: 'platform.marketing.view', routeName: 'platform.marketing.seo.sitemap', pattern: 'platform.marketing.seo.sitemap' },
+            { label: 'robots.txt', icon: 'shield', permission: 'platform.marketing.view', routeName: 'platform.marketing.seo.robots', pattern: 'platform.marketing.seo.robots' },
+            { label: 'Redirects', icon: 'transfer', permission: 'platform.marketing.view', routeName: 'platform.marketing.seo.redirects', pattern: 'platform.marketing.seo.redirects' },
+            { label: 'SEO Performance', icon: 'chart', permission: 'platform.marketing.view', routeName: 'platform.marketing.seo.performance', pattern: 'platform.marketing.seo.performance' },
+        ],
+    },
+    {
+        key: 'marketing-tracking',
+        label: 'Tracking & Analytics',
+        collapsible: true,
+        items: [
+            { label: 'Tracking Pixels', icon: 'activity', permission: 'platform.marketing.view', routeName: 'platform.marketing.tracking.pixels', pattern: 'platform.marketing.tracking.pixels' },
+            { label: 'Google Analytics & Tag Manager', icon: 'chart', permission: 'platform.marketing.view', routeName: 'platform.marketing.tracking.google', pattern: 'platform.marketing.tracking.google' },
+            { label: 'Search Console', icon: 'search', permission: 'platform.marketing.view', routeName: 'platform.marketing.tracking.search-console', pattern: 'platform.marketing.tracking.search-console' },
+            { label: 'Google Ads', icon: 'megaphone', permission: 'platform.marketing.view', routeName: 'platform.marketing.tracking.google-ads', pattern: 'platform.marketing.tracking.google-ads' },
+            { label: 'Event Manager', icon: 'file', permission: 'platform.marketing.view', routeName: 'platform.marketing.tracking.events', pattern: 'platform.marketing.tracking.events' },
+        ],
+    },
+    {
+        key: 'marketing-settings',
+        label: 'Marketing Settings',
+        collapsible: true,
+        items: [
+            { label: 'Integrations', icon: 'sliders', permission: 'platform.marketing.view', routeName: 'platform.marketing.integrations.index', pattern: 'platform.marketing.integrations.*' },
+            { label: 'Tracking Preferences', icon: 'sliders', permission: 'platform.marketing.manage', routeName: 'platform.marketing.tracking.preferences', pattern: 'platform.marketing.tracking.preferences' },
+            { label: 'Consent & Privacy', icon: 'shield', permission: 'platform.marketing.view', routeName: 'platform.marketing.consent.index', pattern: 'platform.marketing.consent.index' },
         ],
     },
     {
@@ -143,6 +239,7 @@ const NAV: NavSection[] = [
             { label: 'Real-time Notifications', icon: 'bell', permission: 'platform.settings.view', routeName: 'platform.realtime.index', pattern: 'platform.realtime.*' },
             { label: 'Operations', icon: 'server', permission: 'platform.settings.view', routeName: 'platform.settings.operations', pattern: 'platform.settings.operations' },
             { label: 'Security Policy', icon: 'shield', permission: 'platform.settings.view', routeName: 'platform.settings.security', pattern: 'platform.settings.security' },
+            { label: 'Social Media', icon: 'megaphone', permission: 'platform.settings.view', routeName: 'platform.settings.social', pattern: 'platform.settings.social' },
             { label: 'Receipt Branding', icon: 'receipt', permission: 'platform.settings.view', routeName: 'platform.settings.receipts', pattern: 'platform.settings.receipts' },
             { label: 'Feature Flags', icon: 'flag', permission: 'platform.settings.view', routeName: 'platform.settings.features', pattern: 'platform.settings.features' },
         ],
@@ -164,6 +261,7 @@ export default function PlatformLayout({
     const nav: NavGroup[] = NAV.map((section) => ({
         key: section.key,
         label: section.label,
+        collapsible: section.collapsible,
         items: section.items
             .filter((item) => can(item.permission))
             .map<NavItem>((item) => ({
@@ -181,19 +279,7 @@ export default function PlatformLayout({
 
     const topbarRight = (
         <div className="flex items-center gap-2">
-            <Link
-                href={route('platform.notifications.index')}
-                className="relative flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background text-foreground shadow-2xs transition-colors hover:bg-accent cursor-pointer"
-                title="Notifications"
-                aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
-            >
-                <Bell className="h-4 w-4" />
-                {unread > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-xs">
-                        {unread > 9 ? '9+' : unread}
-                    </span>
-                )}
-            </Link>
+            <NotificationBell unread={unread} indexUrl={route('platform.notifications.index')} recentUrl={route('platform.notifications.recent')} readAllUrl={route('platform.notifications.read-all')} destroyUrl={route('platform.notifications.destroy', ':id')} />
             <Link
                 href={route('dashboard')}
                 className="flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-accent transition-colors shadow-2xs cursor-pointer"

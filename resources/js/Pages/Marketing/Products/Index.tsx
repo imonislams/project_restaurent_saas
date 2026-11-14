@@ -1,6 +1,6 @@
 import { MarketingHead, MarketingLayout, Reveal, trackConversion } from '@/Components/Marketing';
 import { PRODUCT_GROUPS, PRODUCTS } from '@/Components/Marketing/Catalog/catalog';
-import { CtaBand, DemoButton, GhostLink, ProductLink, SectionTitle, breadcrumbSchema } from '@/Components/Marketing/Catalog/pageParts';
+import { CtaBand, TrialButton, GhostLink, ProductLink, SectionTitle, breadcrumbSchema } from '@/Components/Marketing/Catalog/pageParts';
 import { useVisible } from '@/Components/Marketing/Journey/shared';
 import { useEffect, useRef, useState } from 'react';
 
@@ -52,7 +52,7 @@ export default function ProductsIndex({ canonical }: { canonical: string }) {
                         <span className="mk-eyebrow">Touch Dine products</span>
                         <h1 className="mt-3 text-4xl font-extrabold leading-[1.08] tracking-tight text-stone-900 sm:text-5xl">Every module a restaurant runs on, connected.</h1>
                         <p className="mt-5 max-w-xl text-lg leading-relaxed text-stone-600">Ten modules, one record of every order. Start with the ones you need and add the rest when you are ready.</p>
-                        <div className="mt-8 flex flex-col gap-3.5 sm:flex-row"><DemoButton where="products_hero" className="w-full sm:w-auto" /><GhostLink href="/solutions" where="products_hero_solutions">Explore Solutions</GhostLink></div>
+                        <div className="mt-8 flex flex-col gap-3.5 sm:flex-row"><TrialButton where="products_hero" className="w-full sm:w-auto" /><GhostLink href="/solutions" where="products_hero_solutions">Explore Solutions</GhostLink></div>
                     </div>
                     <OrderPath />
                 </div>

@@ -4,7 +4,7 @@ import {
     trackConversion,
 } from '@/Components/Marketing';
 import { SOLUTION_WORKFLOWS } from '@/Components/Marketing/Catalog/catalog';
-import { CtaBand, DemoButton, SectionTitle, breadcrumbSchema } from '@/Components/Marketing/Catalog/pageParts';
+import { CtaBand, TrialButton, SectionTitle, breadcrumbSchema } from '@/Components/Marketing/Catalog/pageParts';
 import { Link } from '@inertiajs/react';
 
 interface SolutionCard {
@@ -90,7 +90,7 @@ export default function SolutionsIndex({ canonical }: { canonical: string }) {
                     <span className="mk-eyebrow">Touch Dine solutions</span>
                     <h1 className="mt-3 max-w-3xl text-4xl font-extrabold leading-[1.08] tracking-tight text-stone-900 sm:text-5xl">Start with the problem on your floor.</h1>
                     <p className="mt-5 max-w-2xl text-lg leading-relaxed text-stone-600">Each solution follows one real restaurant workflow from start to finish and shows which Touch Dine modules handle each step.</p>
-                    <div className="mt-8"><DemoButton where="solutions_hero" /></div>
+                    <div className="mt-8"><TrialButton where="solutions_hero" /></div>
                 </div>
             </section>
 

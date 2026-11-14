@@ -12,6 +12,8 @@ import {
 } from '@/Components/ui';
 import type { BadgeTone } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PrintButton from '@/Components/print/PrintButton';
+import PrintDocument from '@/Components/print/PrintDocument';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useMemo, useState } from 'react';
 
@@ -254,23 +256,26 @@ export default function TransfersIndex({
                     title="Stock Transfers"
                     description="Move inventory safely between kitchen branches with full dispatch and receipt reconciliation."
                     actions={
-                        canManage && (
-                            <Button
-                                variant="primary"
-                                size="sm"
-                                onClick={() => setCreateModalOpen(true)}
-                            >
-                                + New Stock Transfer
-                            </Button>
-                        )
+                        <div className="flex flex-wrap items-center gap-2">
+                            <PrintButton title="Stock Transfers" />
+                            {canManage && (
+                                <Button
+                                    variant="primary"
+                                    size="sm"
+                                    onClick={() => setCreateModalOpen(true)}
+                                >
+                                    + New Stock Transfer
+                                </Button>
+                            )}
+                        </div>
                     }
                 />
             }
         >
             <Head title="Stock Transfers" />
 
-            <div className="py-6">
-                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <div className="py-6 print:py-0">
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8 print:max-w-none print:px-0">
                     {/* Flash messages */}
                     {flash?.success && (
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -283,6 +288,7 @@ export default function TransfersIndex({
                         </div>
                     )}
 
+                    <PrintDocument title="Stock Transfers" className="space-y-6">
                     {/* KPI Summary Cards */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <KpiCard
@@ -311,7 +317,7 @@ export default function TransfersIndex({
                     </div>
 
                     {/* Workflow Explanation Banner */}
-                    <div className="rounded-lg border border-primary/25 bg-primary/5 p-4 text-xs text-primary">
+                    <div className="rounded-lg border border-primary/25 bg-primary/5 p-4 text-xs text-primary print:hidden">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <span className="font-semibold text-primary">
                                 📦 Inter-Branch Transfer Lifecycle:
@@ -342,7 +348,7 @@ export default function TransfersIndex({
                             title="Branch Shipments"
                             description={`${filteredTransfers.length} of ${transfers.length} total transfers`}
                             action={
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 print:hidden">
                                     <input
                                         type="text"
                                         placeholder="Search transfer # or branch…"
@@ -355,7 +361,7 @@ export default function TransfersIndex({
                         />
 
                         {/* Status Filter Chips */}
-                        <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50/50 px-6 py-2.5 text-xs">
+                        <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50/50 px-6 py-2.5 text-xs print:hidden">
                             <span className="font-semibold text-gray-500">Filter:</span>
                             <button
                                 type="button"
@@ -424,7 +430,7 @@ export default function TransfersIndex({
                                     }
                                 />
                             ) : (
-                                <div className="overflow-x-auto">
+                                <div className="overflow-x-auto print:overflow-visible">
                                     <table className="w-full text-left text-sm">
                                         <thead className="border-b border-gray-200 bg-gray-50/80 text-xs font-semibold uppercase tracking-wider text-gray-500">
                                             <tr>
@@ -433,7 +439,7 @@ export default function TransfersIndex({
                                                 <th className="px-6 py-3.5 text-right">Items Shipped</th>
                                                 <th className="px-6 py-3.5 text-center">Transfer Status</th>
                                                 <th className="px-6 py-3.5">Dispatch Notes</th>
-                                                <th className="px-6 py-3.5 text-right">Lifecycle Actions</th>
+                                                <th className="px-6 py-3.5 text-right print:hidden">Lifecycle Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100 bg-white">
@@ -469,7 +475,7 @@ export default function TransfersIndex({
                                                     <td className="px-6 py-4 text-xs text-gray-500 max-w-xs truncate">
                                                         {t.notes ?? '—'}
                                                     </td>
-                                                    <td className="px-6 py-4 text-right">
+                                                    <td className="px-6 py-4 text-right print:hidden">
                                                         <div className="flex items-center justify-end gap-1.5">
                                                             {canApprove && t.can_approve && (
                                                                 <Button
@@ -518,6 +524,7 @@ export default function TransfersIndex({
                             )}
                         </CardBody>
                     </Card>
+                    </PrintDocument>
                 </div>
             </div>
 

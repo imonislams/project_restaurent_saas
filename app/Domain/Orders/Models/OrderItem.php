@@ -16,6 +16,7 @@ class OrderItem extends Model
     protected $fillable = [
         'tenant_id',
         'order_id',
+        'order_round_id',
         'product_id',
         'product_variant_id',
         'name',
@@ -50,6 +51,11 @@ class OrderItem extends Model
         return $this->belongsTo(Order::class);
     }
 
+    public function round(): BelongsTo
+    {
+        return $this->belongsTo(OrderRound::class, 'order_round_id');
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
@@ -65,4 +71,3 @@ class OrderItem extends Model
         return $this->hasMany(OrderItemModifier::class);
     }
 }
-

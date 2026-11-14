@@ -1,5 +1,6 @@
 <?php
 
+use App\Logging\DatabaseHandler;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -66,7 +67,7 @@ return [
         'database' => [
             'driver' => 'monolog',
             'level' => env('LOG_DATABASE_LEVEL', 'warning'),
-            'handler' => App\Logging\DatabaseHandler::class,
+            'handler' => DatabaseHandler::class,
         ],
 
         'single' => [

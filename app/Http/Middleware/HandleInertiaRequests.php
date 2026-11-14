@@ -5,8 +5,12 @@ namespace App\Http\Middleware;
 use App\Domain\Billing\PricingRegionContext;
 use App\Domain\Communications\AnnouncementService;
 use App\Domain\Demo\DemoDataService;
+use App\Domain\Marketing\MarketingPublicConfig;
+use App\Domain\Orders\Enums\OrderStatus;
 use App\Domain\Orders\Models\Order;
+use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Realtime\RealtimeManager;
+use App\Domain\Subscriptions\Models\Plan;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
 use App\Support\AppVersion;
@@ -104,6 +108,7 @@ class HandleInertiaRequests extends Middleware
             // scopes apply, so this is limited to the user's branches.
             'pending_approvals' => fn () => ($user && $tenant && $user->hasPermission('orders.approve'))
                 ? (int) Order::query()
+                    ->where('status', OrderStatus::Held->value)
                     ->where('acceptance_status', 'pending')
                     ->count()
                 : 0,
@@ -122,6 +127,31 @@ class HandleInertiaRequests extends Middleware
                 ? app(AnnouncementService::class)->forTenant($tenant)
                 : [],
             'locale' => app()->getLocale(),
+            // WhatsApp support chat link (wa.me) for the website; null when no number is set.
+            'whatsapp_support' => function () {
+                $settings = app(PlatformSettings::class);
+                $digits = preg_replace('/\D+/', '', (string) $settings->get('social.whatsapp', ''));
+
+                if ($digits === '' || $digits === null) {
+                    return null;
+                }
+
+                $message = trim((string) $settings->get('social.whatsapp_message', ''));
+
+                return [
+                    'url' => 'https://wa.me/'.$digits.($message !== '' ? '?text='.rawurlencode($message) : ''),
+                    'widget' => (bool) $settings->get('social.whatsapp_widget', true),
+                ];
+            },
+            // Public social profiles from Platform Settings → Social Media (empty ones omitted).
+            'social_links' => fn () => collect(['facebook', 'instagram', 'x', 'linkedin', 'youtube', 'tiktok'])
+                ->mapWithKeys(fn (string $key) => [$key => (string) app(PlatformSettings::class)->get('social.'.$key, '')])
+                ->filter()
+                ->all(),
+            // Public-site marketing: which tags to load, the visitor's consent state
+            // and where to send events. Public identifiers only, and nothing is
+            // loaded for a provider that is not switched on and verified.
+            'marketing' => fn () => app(MarketingPublicConfig::class)->forRequest($request),
             // Detected pricing region (Bangladesh / International) for the public site.
             'pricing_region' => fn () => app(PricingRegionContext::class)->region(),
             'pricing_region_source' => fn () => app(PricingRegionContext::class)->source(),
@@ -135,10 +165,7 @@ class HandleInertiaRequests extends Middleware
             'locales' => collect(config('app.locales', ['en' => 'English']))
                 ->map(fn ($label, $code) => ['value' => $code, 'label' => $label])->values(),
             // Enabled plan features (null = unrestricted, e.g. no subscription).
-            'features' => $tenant === null ? null : collect([
-                'pos', 'kitchen', 'tables', 'menu', 'qr_dining', 'inventory',
-                'purchasing', 'waste', 'transfers', 'accounts', 'reports',
-            ])->filter(fn (string $feature) => $tenant->hasFeature($feature))->values(),
+            'features' => $tenant === null ? null : collect(Plan::ALL_FEATURES)->filter(fn (string $feature) => $tenant->hasFeature($feature))->values(),
         ];
     }
 }

@@ -12,6 +12,7 @@ use App\Domain\Tenancy\TenantContext;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class QrManagerTest extends TestCase
@@ -101,7 +102,7 @@ class QrManagerTest extends TestCase
 
         $this->assertNull(app(TableQrService::class)->activeToken($table));
 
-        \Illuminate\Support\Facades\Route::middleware(['web', 'qr.context'])->get('/__qr/{token}', fn () => response()->json(['ok' => true]));
+        Route::middleware(['web', 'qr.context'])->get('/__qr/{token}', fn () => response()->json(['ok' => true]));
         $this->getJson("/__qr/{$token->token}")->assertStatus(410);
     }
 

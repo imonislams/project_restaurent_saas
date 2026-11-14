@@ -3,9 +3,11 @@
 namespace App\Domain\Kitchen;
 
 use App\Domain\Auditing\AuditLogger;
+use App\Domain\Invoicing\OrderInvoiceService;
 use App\Domain\Kitchen\Enums\KitchenTicketStatus;
 use App\Domain\Kitchen\Models\KitchenTicket;
 use App\Domain\Orders\Enums\FulfillmentStatus;
+use App\Domain\Orders\Models\Order;
 
 /**
  * Keeps the Order System's fulfillment state aligned with the Kitchen, which is
@@ -38,40 +40,74 @@ class KitchenStatusSynchronizer
             return;
         }
 
-        $target = self::fulfillmentFor($ticket->status);
+        $target = $this->aggregateFor($order, $ticket);
 
         if ($target === null || $order->fulfillment_status === $target) {
             return;
         }
 
-        // Never force an illegal fulfillment jump (e.g. Served → Preparing);
-        // the order keeps its own guard, the kitchen stays authoritative.
-        if (! $order->fulfillment_status->canTransitionTo($target)) {
-            return;
-        }
-
+        // The kitchen is authoritative and orders may legitimately move
+        // backwards when a new round of food is added after the first was
+        // served, so the order-level transition guard does not apply here.
         $order->forceFill(['fulfillment_status' => $target])->save();
 
         $order->statusHistory()->create([
             'tenant_id' => $order->tenant_id,
             'status' => $order->status,
             'user_id' => null,
-            'note' => 'Kitchen: '.$ticket->status->label(),
+            'note' => 'Kitchen: '.$ticket->status->label()
+                .($ticket->round_no > 1 ? ' (round '.$ticket->round_no.')' : ''),
         ]);
 
         $this->audit->log('order.fulfillment_synced', $order, [
             'kitchen_status' => $ticket->status->value,
+            'round_no' => $ticket->round_no,
             'fulfillment_status' => $target->value,
         ], null, $order->tenant_id);
 
-        // Serving is the trigger for the Bill/Invoice workflow. Idempotent and
-        // best-effort: a failure here must never break the kitchen update.
-        if ($target === FulfillmentStatus::Served) {
+        // Serving is the trigger for the Bill/Invoice workflow. With rounds,
+        // the bill is only complete once every non-cancelled round is served.
+        if ($target === FulfillmentStatus::Served && $this->allRoundsServed($order)) {
             try {
-                app(\App\Domain\Invoicing\OrderInvoiceService::class)->forServedOrder($order);
+                app(OrderInvoiceService::class)->forServedOrder($order);
             } catch (\Throwable $e) {
                 report($e);
             }
         }
+    }
+
+    /**
+     * The order tracks its least-advanced round, so a newly added round puts
+     * the order back into the kitchen queue.
+     */
+    protected function aggregateFor(Order $order, KitchenTicket $ticket): ?FulfillmentStatus
+    {
+        $tickets = $order->kitchenTickets()
+            ->where('status', '!=', KitchenTicketStatus::Cancelled->value)
+            ->get();
+
+        if ($tickets->isEmpty()) {
+            return self::fulfillmentFor($ticket->status);
+        }
+
+        $rank = fn (KitchenTicketStatus $status): int => match ($status) {
+            KitchenTicketStatus::New, KitchenTicketStatus::Accepted => 0,
+            KitchenTicketStatus::Preparing => 1,
+            KitchenTicketStatus::Ready, KitchenTicketStatus::HandedOver => 2,
+            KitchenTicketStatus::Served => 3,
+            KitchenTicketStatus::Cancelled => 4,
+        };
+
+        $least = $tickets->sortBy(fn (KitchenTicket $row) => $rank($row->status))->first();
+
+        return self::fulfillmentFor($least->status);
+    }
+
+    protected function allRoundsServed(Order $order): bool
+    {
+        return $order->kitchenTickets()
+            ->where('status', '!=', KitchenTicketStatus::Cancelled->value)
+            ->where('status', '!=', KitchenTicketStatus::Served->value)
+            ->doesntExist();
     }
 }

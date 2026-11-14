@@ -6,6 +6,7 @@ use App\Domain\Auditing\AuditLogger;
 use App\Domain\Billing\Models\BillingAdjustment;
 use App\Domain\Billing\Models\CreditNote;
 use App\Domain\Documents\DocumentNumberGenerator;
+use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Subscriptions\Models\SubscriptionInvoice;
 use App\Mail\InvoiceIssuedMail;
 use App\Models\User;
@@ -34,7 +35,7 @@ class InvoiceService
 
         return [
             'platform' => [
-                'name' => app(\App\Domain\PlatformSettings\PlatformSettings::class)->get('general.platform_name', config('app.name')),
+                'name' => app(PlatformSettings::class)->get('general.platform_name', config('app.name')),
                 'email' => config('mail.from.address'),
             ],
             'invoice' => $invoice,
@@ -65,16 +66,23 @@ class InvoiceService
 
     public function send(SubscriptionInvoice $invoice, User $actor): SubscriptionInvoice
     {
-        $invoice->forceFill([
-            'sent_at' => now(),
-            'delivery_status' => 'queued',
-        ])->save();
-
         $email = $invoice->tenant?->getSetting('billing.email', $invoice->tenant?->business_email);
 
+        $delivered = false;
+
         if ($email) {
-            Mail::to($email)->queue(new InvoiceIssuedMail($invoice->fresh(['items'])));
+            try {
+                Mail::to($email)->send(new InvoiceIssuedMail($invoice->fresh(['items'])));
+                $delivered = true;
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
+
+        $invoice->forceFill([
+            'sent_at' => now(),
+            'delivery_status' => $delivered ? 'sent' : 'failed',
+        ])->save();
 
         $this->audit->log('platform.invoice_sent', $invoice, ['number' => $invoice->number], $actor, $invoice->tenant_id);
 

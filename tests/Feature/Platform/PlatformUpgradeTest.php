@@ -3,17 +3,21 @@
 namespace Tests\Feature\Platform;
 
 use App\Domain\Communications\AnnouncementService;
+use App\Domain\Communications\EmailTemplateService;
 use App\Domain\Communications\Models\Announcement;
 use App\Domain\Communications\Models\Campaign;
 use App\Domain\Communications\Models\EmailTemplate;
 use App\Domain\Identity\Enums\RoleName;
+use App\Domain\Marketing\Models\MarketingSubscriber;
 use App\Domain\Operations\CommandRunner;
 use App\Domain\Operations\Models\CommandRun;
 use App\Domain\PlatformAnalytics\PlatformAnalyticsService;
 use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Subscriptions\CouponService;
+use App\Domain\Subscriptions\Enums\BillingCycle;
 use App\Domain\Subscriptions\Models\Coupon;
 use App\Domain\Subscriptions\Models\Plan;
+use App\Domain\Subscriptions\PricingService;
 use App\Domain\Subscriptions\SubscriptionService;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Models\User;
@@ -117,7 +121,7 @@ class PlatformUpgradeTest extends TestCase
 
         EmailTemplate::where('key', 'invoice_issued')->update(['body' => '<p>CUSTOM BODY {{ invoice_number }}</p>']);
 
-        $rendered = app(\App\Domain\Communications\EmailTemplateService::class)
+        $rendered = app(EmailTemplateService::class)
             ->render('invoice_issued', ['invoice_number' => 'INV-9']);
 
         $this->assertStringContainsString('<p>CUSTOM BODY INV-9</p>', $rendered['body']);
@@ -125,7 +129,7 @@ class PlatformUpgradeTest extends TestCase
 
     public function test_template_stores_content_and_wraps_it_in_the_branded_shell(): void
     {
-        $service = app(\App\Domain\Communications\EmailTemplateService::class);
+        $service = app(EmailTemplateService::class);
 
         // Stored body is editable content, not a full HTML document.
         $stored = EmailTemplate::where('key', 'invoice_issued')->value('body');
@@ -146,7 +150,7 @@ class PlatformUpgradeTest extends TestCase
 
     public function test_legacy_full_document_body_is_not_double_wrapped(): void
     {
-        $service = app(\App\Domain\Communications\EmailTemplateService::class);
+        $service = app(EmailTemplateService::class);
 
         $full = '<!DOCTYPE html><html><body><p>Legacy</p></body></html>';
 
@@ -195,32 +199,42 @@ class PlatformUpgradeTest extends TestCase
         $this->assertFalse($coupon->fresh()->isRedeemable($tenant));
     }
 
-    public function test_campaign_sends_to_the_matching_audience_only(): void
+    public function test_a_campaign_is_delivered_to_marketing_subscribers_only(): void
     {
-        Mail::fake();
-
-        $active = Tenant::factory()->create(['status' => 'active']);
-        $suspended = Tenant::factory()->create(['status' => 'suspended']);
-        $this->ownerFor($active);
-        $this->ownerFor($suspended);
+        // Promotional mail now goes to opted-in subscribers, not to tenant owners.
+        MarketingSubscriber::create([
+            'email' => 'opted-in@restaurant.test',
+            'source' => 'manual',
+            'status' => 'subscribed',
+            'consent_at' => now(),
+        ]);
+        MarketingSubscriber::create([
+            'email' => 'left@restaurant.test',
+            'source' => 'manual',
+            'status' => 'unsubscribed',
+        ]);
 
         $admin = $this->admin();
 
-        $this->actingAs($admin)->post('/platform/marketing/campaigns', [
+        $this->actingAs($admin)->post('/platform/marketing/automation/campaigns', [
             'name' => 'Welcome',
             'subject' => 'Hello',
             'body' => '<p>Hi</p>',
-            'audience' => ['status' => 'active'],
         ])->assertRedirect();
 
         $campaign = Campaign::firstOrFail();
         $this->assertSame('draft', $campaign->status);
 
-        $this->actingAs($admin)->post("/platform/marketing/campaigns/{$campaign->id}/send")->assertRedirect();
+        $this->actingAs($admin)
+            ->post("/platform/marketing/automation/campaigns/{$campaign->id}/send")
+            ->assertRedirect();
 
         $campaign->refresh();
+
         $this->assertSame('sent', $campaign->status);
-        $this->assertSame(1, $campaign->recipients_count);
+        $this->assertSame(1, $campaign->sent_count);
+        $this->assertSame(1, $campaign->sends()->count(), 'Only the subscribed address may be queued.');
+        $this->assertSame('opted-in@restaurant.test', $campaign->sends()->value('email'));
     }
 
     public function test_active_announcement_is_shared_to_the_matching_tenant(): void
@@ -287,10 +301,29 @@ class PlatformUpgradeTest extends TestCase
         $this->assertStringNotContainsString('abcdef123456', $runner->redact('APP_KEY=abcdef123456'));
     }
 
+    public function test_the_queue_drain_action_is_whitelisted_and_actually_runs(): void
+    {
+        $runner = app(CommandRunner::class);
+        $action = $runner->curated()['queue_work'] ?? null;
+
+        $this->assertNotNull($action, 'queue:work is missing from the curated whitelist.');
+
+        // It must drain and exit. A bare `queue:work` daemon never returns, so the
+        // runner's 120s timeout would kill it and every click would report failure.
+        $this->assertStringContainsString('queue:work', $action['command']);
+        $this->assertStringContainsString('--stop-when-empty', $action['command']);
+        $this->assertStringContainsString('--max-time=', $action['command']);
+        $this->assertStringContainsString('{php}', $action['command']);
+
+        $run = $runner->run($action['command'], 'curated');
+
+        $this->assertSame(0, $run->exit_code, $run->output);
+    }
+
     public function test_zero_tenant_usage_is_not_confused_with_an_unknown_plan(): void
     {
         // Guards the currency fallback path used by plans without a per-currency price.
         $plan = Plan::where('slug', 'starter')->firstOrFail();
-        $this->assertNull(app(\App\Domain\Subscriptions\PricingService::class)->priceFor($plan, 'EUR', \App\Domain\Subscriptions\Enums\BillingCycle::Monthly));
+        $this->assertNull(app(PricingService::class)->priceFor($plan, 'EUR', BillingCycle::Monthly));
     }
 }

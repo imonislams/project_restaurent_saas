@@ -6,8 +6,8 @@ use App\Domain\Accounting\Models\FinancialAccount;
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Identity\Models\Invitation;
 use App\Domain\Inventory\Models\Unit;
-use App\Domain\Payments\Models\PaymentMethod;
 use App\Domain\PaymentGateways\Models\TenantGateway;
+use App\Domain\Payments\Models\PaymentMethod;
 use App\Domain\Subscriptions\Models\Plan;
 use App\Domain\Subscriptions\Models\Subscription;
 use App\Domain\Tenancy\Enums\TenantStatus;
@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class Tenant extends Model
 {
@@ -113,9 +114,19 @@ class Tenant extends Model
         Cache::forget("tenant:{$tenantId}:plan");
     }
 
-    /** Feature entitlements resolved server-side from the plan. No plan = no features. */
+    /**
+     * Feature entitlements resolved server-side from the plan. No plan = no features.
+     *
+     * While the subscription is in its trial (the demo), every feature is unlocked
+     * regardless of the chosen plan so the owner can try the whole product. The plan's
+     * limits (branches, users, orders per month) still apply — see planLimit().
+     */
     public function hasFeature(string $feature): bool
     {
+        if ($this->currentPlan() !== null && $this->subscription()->first()?->onTrial()) {
+            return in_array($feature, Plan::ALL_FEATURES, true);
+        }
+
         return $this->currentPlan()?->hasFeature($feature) ?? false;
     }
 
@@ -215,7 +226,7 @@ class Tenant extends Model
     protected function logoUrl(): Attribute
     {
         return Attribute::get(
-            fn () => $this->logo_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->logo_path) : null,
+            fn () => $this->logo_path ? Storage::disk('public')->url($this->logo_path) : null,
         );
     }
 }

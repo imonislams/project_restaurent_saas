@@ -13,6 +13,8 @@ import {
 } from '@/Components/ui';
 import type { BadgeTone, TabItem } from '@/Components/ui';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PrintButton from '@/Components/print/PrintButton';
+import PrintDocument from '@/Components/print/PrintDocument';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useMemo, useState } from 'react';
 
@@ -235,32 +237,35 @@ export default function PurchasingIndex({
                     title="Purchasing & Suppliers"
                     description="Issue purchase orders, track supplier accounts payable, and receive stock deliveries."
                     actions={
-                        canManage && (
-                            <div className="flex flex-wrap items-center gap-2">
-                                <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={() => setSupplierModalOpen(true)}
-                                >
-                                    + Add Supplier
-                                </Button>
-                                <Button
-                                    variant="primary"
-                                    size="sm"
-                                    onClick={() => setOrderModalOpen(true)}
-                                >
-                                    + New Purchase Order
-                                </Button>
-                            </div>
-                        )
+                        <div className="flex flex-wrap items-center gap-2">
+                            <PrintButton title="Purchasing & Suppliers" />
+                            {canManage && (
+                                <>
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() => setSupplierModalOpen(true)}
+                                    >
+                                        + Add Supplier
+                                    </Button>
+                                    <Button
+                                        variant="primary"
+                                        size="sm"
+                                        onClick={() => setOrderModalOpen(true)}
+                                    >
+                                        + New Purchase Order
+                                    </Button>
+                                </>
+                            )}
+                        </div>
                     }
                 />
             }
         >
             <Head title="Purchasing & Suppliers" />
 
-            <div className="py-6">
-                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <div className="py-6 print:py-0">
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8 print:max-w-none print:px-0">
                     {/* Flash messages */}
                     {flash?.success && (
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -273,6 +278,7 @@ export default function PurchasingIndex({
                         </div>
                     )}
 
+                    <PrintDocument title="Purchasing & Suppliers" className="space-y-6">
                     {/* KPI Cards */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <KpiCard
@@ -300,11 +306,13 @@ export default function PurchasingIndex({
                     </div>
 
                     {/* Navigation Tabs */}
+                    <div className="print:hidden">
                     <Tabs
                         tabs={tabs}
                         value={activeTab}
                         onChange={(tabKey) => setActiveTab(tabKey as any)}
                     />
+                    </div>
 
                     {/* TAB 1: PURCHASE ORDERS */}
                     {activeTab === 'orders' && (
@@ -357,7 +365,7 @@ export default function PurchasingIndex({
                                         }
                                     />
                                 ) : (
-                                    <div className="overflow-x-auto">
+                                    <div className="overflow-x-auto print:overflow-visible">
                                         <table className="w-full text-left text-sm">
                                             <thead className="border-b border-gray-200 bg-gray-50/80 text-xs font-semibold uppercase tracking-wider text-gray-500">
                                                 <tr>
@@ -367,7 +375,7 @@ export default function PurchasingIndex({
                                                     <th className="px-6 py-3.5 text-right">Items</th>
                                                     <th className="px-6 py-3.5 text-right">PO Total</th>
                                                     <th className="px-6 py-3.5 text-center">Order Status</th>
-                                                    <th className="px-6 py-3.5 text-right">Actions</th>
+                                                    <th className="px-6 py-3.5 text-right print:hidden">Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100 bg-white">
@@ -398,7 +406,7 @@ export default function PurchasingIndex({
                                                                 {o.status_label}
                                                             </Badge>
                                                         </td>
-                                                        <td className="px-6 py-4 text-right">
+                                                        <td className="px-6 py-4 text-right print:hidden">
                                                             <div className="flex items-center justify-end gap-2">
                                                                 <Link
                                                                     href={route('purchasing.orders.show', o.id)}
@@ -459,7 +467,7 @@ export default function PurchasingIndex({
                                         description="Add suppliers to associate with purchase orders and ingredient supplies."
                                     />
                                 ) : (
-                                    <div className="overflow-x-auto">
+                                    <div className="overflow-x-auto print:overflow-visible">
                                         <table className="w-full text-left text-sm">
                                             <thead className="border-b border-gray-200 bg-gray-50/80 text-xs font-semibold uppercase tracking-wider text-gray-500">
                                                 <tr>
@@ -509,6 +517,7 @@ export default function PurchasingIndex({
                             </CardBody>
                         </Card>
                     )}
+                    </PrintDocument>
                 </div>
             </div>
 

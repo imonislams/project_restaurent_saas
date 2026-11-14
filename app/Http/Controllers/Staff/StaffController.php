@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Staff;
 
-use App\Domain\Identity\Enums\RoleName;
 use App\Domain\Identity\InvitationService;
 use App\Domain\Identity\InvitationSettings;
 use App\Domain\Identity\Models\Invitation;
@@ -87,9 +86,11 @@ class StaffController extends Controller
             return back()->with('success', 'Team member added. Share the password with them directly.');
         }
 
-        $this->invitations->invite($tenant, $data, $request->user());
+        $problem = $this->invitations->invite($tenant, $data, $request->user());
 
-        return back()->with('success', 'Invitation sent.');
+        return $problem === null
+            ? back()->with('success', 'Invitation sent.')
+            : back()->with('error', 'Invitation created, but the email could not be sent: '.$problem.' Use Resend once the email settings are fixed.');
     }
 
     public function update(UpdateStaffRequest $request, User $staff): RedirectResponse
@@ -147,9 +148,11 @@ class StaffController extends Controller
     {
         $this->authorize('create', User::class);
 
-        $this->invitations->resend($invitation);
+        $problem = $this->invitations->resend($invitation);
 
-        return back()->with('success', 'Invitation resent.');
+        return $problem === null
+            ? back()->with('success', 'Invitation resent.')
+            : back()->with('error', 'Invitation updated, but the email could not be sent: '.$problem);
     }
 
     public function destroyInvitation(Invitation $invitation): RedirectResponse
@@ -162,21 +165,15 @@ class StaffController extends Controller
     }
 
     /**
-     * Assignable roles: global tenant roles plus the tenant's own custom roles.
+     * Assignable roles: global tenant roles (unless customised by this tenant)
+     * plus the tenant's own custom roles and customised copies.
      *
      * @return Collection<int, array{value: string, label: string}>
      */
     protected function roleOptions(?int $tenantId): Collection
     {
         return Role::query()
-            ->where(function ($query) use ($tenantId) {
-                $query->whereNull('tenant_id');
-
-                if ($tenantId !== null) {
-                    $query->orWhere('tenant_id', $tenantId);
-                }
-            })
-            ->whereNotIn('slug', RoleName::platformValues())
+            ->assignableTo($tenantId)
             ->orderByDesc('is_system')
             ->orderBy('name')
             ->get()

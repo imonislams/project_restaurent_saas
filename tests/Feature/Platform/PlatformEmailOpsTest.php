@@ -5,6 +5,7 @@ namespace Tests\Feature\Platform;
 use App\Domain\Communications\Models\EmailLog;
 use App\Domain\Identity\Enums\RoleName;
 use App\Domain\PlatformSettings\MailConfigurator;
+use App\Domain\PlatformSettings\Models\PlatformSetting;
 use App\Domain\PlatformSettings\PlatformSettings;
 use App\Domain\Subscriptions\SubscriptionService;
 use App\Domain\Tenancy\Models\Tenant;
@@ -35,6 +36,86 @@ class PlatformEmailOpsTest extends TestCase
         $admin->assignRole(RoleName::SaasSuperAdmin);
 
         return $admin;
+    }
+
+    public function test_smtp_credentials_without_a_mailer_switch_the_transport_to_smtp(): void
+    {
+        $settings = app(PlatformSettings::class);
+
+        // An administrator who fills in a server, login and password means to send
+        // through it, even if the mailer select was left untouched. A production
+        // .env ships MAIL_MAILER=log, so without this every message is only logged.
+        foreach (['host' => 'smtp.mailprovider.com', 'port' => 587, 'username' => 'mailer@touchandsolve.com', 'encryption' => 'tls'] as $key => $value) {
+            $settings->set('mail.'.$key, $value, 'mail');
+        }
+
+        config(['mail.default' => 'log']);
+        app(MailConfigurator::class)->apply();
+
+        $this->assertSame('smtp', config('mail.default'));
+        $this->assertSame('smtp.mailprovider.com', config('mail.mailers.smtp.host'));
+    }
+
+    public function test_the_email_pages_warn_when_nothing_is_being_delivered(): void
+    {
+        config(['mail.default' => 'log']);
+
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->get('/platform/email')->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Platform/Email/Dashboard')
+                ->where('provider.transport', 'log')
+                ->where('provider.warning', fn ($warning) => is_string($warning) && str_contains($warning, 'Nothing is being delivered')));
+
+        $this->actingAs($admin)->get('/platform/email/settings')->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Platform/Email/Settings')
+                ->where('transport', 'log')
+                ->where('warning', fn ($warning) => is_string($warning) && str_contains($warning, 'Nothing is being delivered')));
+    }
+
+    public function test_a_password_encrypted_with_another_app_key_is_reported_not_ignored(): void
+    {
+        $settings = app(PlatformSettings::class);
+
+        $settings->set('mail.mailer', 'smtp', 'mail');
+        $settings->set('mail.host', 'smtp.mailprovider.com', 'mail');
+        $settings->set('mail.username', 'mailer@touchandsolve.com', 'mail');
+
+        // A password written by a different installation — same envelope, a different
+        // APP_KEY — which is what a key rotation or a copied database leaves behind.
+        // It can never be decrypted again, so it has to be reported rather than sent
+        // as an empty credential.
+        PlatformSetting::create([
+            'key' => 'mail.password',
+            'group' => 'mail',
+            'is_encrypted' => true,
+            'value' => base64_encode((string) json_encode([
+                'iv' => base64_encode(random_bytes(16)),
+                'value' => base64_encode('the-real-password'),
+                'mac' => hash_hmac('sha256', 'foreign', 'key'),
+                'tag' => '',
+            ])),
+        ]);
+
+        $settings->forget();
+
+        $this->assertContains('mail.password', $settings->unreadableKeys());
+        $this->assertNull($settings->group('mail')['mail.password'] ?? null);
+
+        $admin = $this->admin();
+        config(['mail.default' => 'smtp']);
+
+        $this->actingAs($admin)->get('/platform/email/settings')->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Platform/Email/Settings')
+                ->where('settings.has_password', false)
+                ->where('settings.credential_readable', false)
+                ->where('warning', fn ($warning) => is_string($warning) && str_contains($warning, 'different APP_KEY')));
+
+        // A password that cannot be read must never be sent as an empty one.
+        $this->assertNull($settings->group('mail')['mail.password'] ?? null);
     }
 
     public function test_outbound_email_is_recorded(): void
@@ -70,7 +151,7 @@ class PlatformEmailOpsTest extends TestCase
 
         $this->actingAs($this->admin())->post("/platform/email/logs/{$log->id}/retry")->assertRedirect();
 
-        Mail::assertQueued(InvoiceIssuedMail::class);
+        Mail::assertSent(InvoiceIssuedMail::class);
         $this->assertDatabaseHas('audit_logs', ['action' => 'platform.email_retried']);
     }
 

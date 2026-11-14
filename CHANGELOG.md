@@ -7,7 +7,75 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-11-12
+
 ### Added
+
+- Public documentation centre with recorded walkthroughs.
+- Additional item rounds on an order, with combined invoicing.
+- Built-in roles can be edited per tenant.
+- Platform Command Center can manage pending migrations.
+
+### Changed
+
+- Marketing navigation: black items with brand-red hover; dropdowns align under their triggers
+  and close after navigation.
+- Report and document print layouts standardised; the POS receipt screen opens after settling.
+
+### Fixed
+
+- Staff invitation email delivery failures are now surfaced.
+- The marketing contact form persists the inquiry category as a lead.
+- Platform KPI cards no longer truncate labels or overflow values.
+- Stale approval badges cleared; demo purge hardened.
+- Kitchen Display opens in a normal new browser tab; table cards keep content within bounds.
+
+## [1.0.5] - 2026-11-09
+
+### Changed
+
+- **A trial unlocks every feature.** While a subscription is in its trial (the demo) all plan-gated
+  features are available regardless of the chosen plan, so the owner can try the whole product.
+  The plan's limits (branches, users, orders per month) still apply, and once the trial ends only
+  the plan's own features remain.
+- Release packaging keeps only the newest `application-v*.zip` in `dist/`.
+
+### Fixed
+
+- `PlatformAdminSeeder` reads its credentials through `config('platform.admin.*')`, so it works
+  when the configuration is cached in production (`env()` returns null there).
+
+## [1.0.4] - 2026-11-09
+
+Mail delivery and platform-admin provisioning fixes.
+
+### Added
+
+- **`PlatformAdminSeeder`.** Creates or repairs the platform administrator (super-admin role,
+  verified email, active) and is safe to re-run: `php artisan db:seed --class=PlatformAdminSeeder`.
+  Credentials come from `PLATFORM_ADMIN_EMAIL`, `PLATFORM_ADMIN_PASSWORD` and `PLATFORM_ADMIN_NAME`;
+  local and test installs fall back to `platform@example.com`, any other environment refuses to
+  run without an explicit password. `DatabaseSeeder` now calls it.
+
+### Changed
+
+- **Mail no longer depends on a queue worker.** Marketing and campaign email jobs are no longer
+  queued (`ShouldQueue` removed) and run synchronously, so email is delivered in the request that
+  triggers it. Invoice, notification and test emails were already sent directly.
+
+## [1.0.3] - 2026-11-03
+
+First production release. Establishes the deployment pipeline (versioned packages, atomic
+release-directory deploys), a self-locking headless installer, and the fixes needed to run
+reliably on shared cPanel hosting.
+
+### Added
+
+- **Selective demo removal.** “Remove all demo data” now offers five keep-bundles — menu & recipes
+  and the floor plan & QR by default, plus team & roles, guests & loyalty and the demo's settings —
+  with per-bundle record counts and a summary of the activity that is always removed. Anything kept
+  leaves the demo ledger and becomes ordinary workspace data, so a later removal never touches it.
+  Removal moved to a single place: the dashboard banner now links to **Settings → Demo data**.
 
 - **Team invitations: a password the owner sets, and a verification policy.** The invite drawer
   accepts an optional password — the account is created immediately with its roles and branch
@@ -120,6 +188,22 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Settings configured in the database were silently ignored.** Rotating `APP_KEY` — re-running
+  `key:generate`, or copying a database between installs — makes every encrypted setting unreadable.
+  The SMTP password then decoded to `null`, so mail failed authentication while the screen still
+  reported it as configured. Unreadable encrypted values are now reported: the Email pages show
+  "the saved SMTP password cannot be read … re-enter it", the password field is flagged, and
+  `platform:check` says `SMTP password unreadable, re-enter it`. A failure to apply stored settings
+  at boot is logged as a warning instead of silently falling back to `.env`.
+- **Email silently not delivered on a fresh production install.** A production `.env` is copied from
+  `.env.example`, which ships `MAIL_MAILER=log`: every message is appended to
+  `storage/logs/laravel.log` and nothing leaves the server, while the app (and the email log) reports
+  success. Stored SMTP settings now take effect even when the mailer select was left empty (a server,
+  login and password imply `smtp`), the Control Center email pages show a red "Email is not being
+  delivered" banner with the fix and report the **effective** transport, `php artisan platform:check`
+  flags `log — NOT DELIVERING, configure SMTP`, `app:install` warns about it, and `deploy/INSTALL.md`
+  gained a **Configuring email** section (`.env` vs Control Center, From-domain rule, queue worker,
+  blocked outbound ports).
 - **Downloading an invoice PDF returned a 500 once the invoice was paid.** The document view tested
   `(float) $invoice->paid_at`, casting a Carbon date to a float
   (`Object of class Illuminate\Support\Carbon could not be converted to float`). It now tests the
@@ -163,11 +247,6 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the sender that will actually be used, and the From Address field explains the
   requirement.
 
-## [0.3.0] - 2026-10-26
-
-A production release pipeline: versioned packages built by CI, a self-locking first-run
-installer, and atomic release-directory deployment.
-
 ### Added
 
 - **Versioned production package.** Tagging `vX.Y.Z` builds `application-vX.Y.Z.zip` — production
@@ -198,6 +277,15 @@ installer, and atomic release-directory deployment.
 
 ### Fixed
 
+- **Packaged releases were missing `vendor/*/dist`,** including Ziggy's `route.umd.js`, which the
+  `@routes` directive reads while rendering the layout — so every page returned 500. The packaging
+  step now fails the build if that asset is absent.
+- **Seeding was not idempotent.** `db:seed` crashed on a duplicate `platform@example.com`, and the
+  demo tenant was recreated on every run. Both are now created only when missing.
+- **The installer reused an existing administrator row without applying the supplied password,** so
+  the credentials given to `app:install` did not work at login. They are now authoritative.
+- **Re-running the installer rotated `APP_KEY`,** invalidating sessions and every value encrypted
+  at rest (gateway credentials, backups). An existing key is now preserved.
 - **A failed installation reported nothing useful.** `app:install` caught `RuntimeException` but
   not driver or migration failures, so a failing install gave a stack trace instead of the reason.
   It now prints the underlying message and reports the exception to the log.

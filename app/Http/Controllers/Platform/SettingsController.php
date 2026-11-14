@@ -8,6 +8,7 @@ use App\Domain\PlatformSettings\SettingsSchema;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -47,6 +48,10 @@ class SettingsController extends Controller
 
         foreach ($schema['fields'] as $field) {
             $rules['values.'.$field['name']] = SettingsSchema::rulesFor($field);
+
+            if ($field['type'] === 'image') {
+                $rules['files.'.$field['name']] = ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'];
+            }
         }
 
         $data = $request->validate($rules);
@@ -58,6 +63,19 @@ class SettingsController extends Controller
             $before[$field['name']] = $this->settings->get($field['setting'], $field['default'] ?? null);
 
             $value = $data['values'][$field['name']] ?? null;
+
+            if ($field['type'] === 'image') {
+                // Uploaded file wins; an empty value clears the image; otherwise keep the stored one.
+                $upload = $request->file('files.'.$field['name']);
+
+                if ($upload !== null) {
+                    $value = Storage::disk('public')->url($upload->store('branding', 'public'));
+                } elseif ($value === null || $value === '') {
+                    $value = null;
+                } else {
+                    $value = $before[$field['name']];
+                }
+            }
 
             if ($field['type'] === 'boolean') {
                 $value = (bool) $value;

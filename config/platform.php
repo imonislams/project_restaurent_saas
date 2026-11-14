@@ -109,8 +109,22 @@ return [
     */
 
     'backups' => [
-        'encrypt' => (bool) env('PLATFORM_BACKUP_ENCRYPT', false),
+        // Encrypted by default: a backup contains every tenant's business data
+        // plus credential material (password hashes, manager PINs), so an
+        // unencrypted artefact is a full-disclosure risk the moment it leaves the
+        // host. Opt out only for a throwaway local database.
+        'encrypt' => (bool) env('PLATFORM_BACKUP_ENCRYPT', true),
         'retention_days' => (int) env('PLATFORM_BACKUP_RETENTION_DAYS', 30),
+    ],
+
+    /*
+    | Platform administrator created by PlatformAdminSeeder. Read through config
+    | (not env() in the seeder) so it still works when the config is cached.
+    */
+    'admin' => [
+        'name' => env('PLATFORM_ADMIN_NAME', 'Platform Admin'),
+        'email' => env('PLATFORM_ADMIN_EMAIL', 'platform@example.com'),
+        'password' => env('PLATFORM_ADMIN_PASSWORD'),
     ],
 
 ];

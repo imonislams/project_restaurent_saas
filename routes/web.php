@@ -6,12 +6,18 @@ use App\Http\Controllers\CashManagement\ShiftController;
 use App\Http\Controllers\Customers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Delivery\DeliveryZoneController;
+use App\Http\Controllers\DocumentationController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\Inventory\InventoryController;
 use App\Http\Controllers\Inventory\TransferController;
 use App\Http\Controllers\Kitchen\KitchenDisplayController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Loyalty\LoyaltyController;
+use App\Http\Controllers\Marketing\ConsentController as MarketingConsentController;
+use App\Http\Controllers\Marketing\EmailTrackingController;
+use App\Http\Controllers\Marketing\EventCollectController as MarketingEventCollectController;
+use App\Http\Controllers\Marketing\MarketingRedirectController;
+use App\Http\Controllers\Marketing\SeoFileController;
 use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\Menu\MenuController;
 use App\Http\Controllers\Menu\ModifierController;
@@ -40,6 +46,19 @@ use App\Http\Controllers\Platform\GatewayController as PlatformGatewayController
 use App\Http\Controllers\Platform\GatewayEventController as PlatformGatewayEventController;
 use App\Http\Controllers\Platform\ImpersonationController as PlatformImpersonationController;
 use App\Http\Controllers\Platform\InvoiceController as PlatformInvoiceController;
+use App\Http\Controllers\Platform\Marketing\AudienceController as PlatformAudienceController;
+use App\Http\Controllers\Platform\Marketing\AutomationController as PlatformAutomationController;
+use App\Http\Controllers\Platform\Marketing\CampaignController as PlatformMarketingCampaignController;
+use App\Http\Controllers\Platform\Marketing\ConsentController as PlatformMarketingConsentController;
+use App\Http\Controllers\Platform\Marketing\DashboardController as PlatformMarketingDashboardController;
+use App\Http\Controllers\Platform\Marketing\GrowthController as PlatformGrowthController;
+use App\Http\Controllers\Platform\Marketing\IntegrationController as PlatformMarketingIntegrationController;
+use App\Http\Controllers\Platform\Marketing\LeadController as PlatformLeadController;
+use App\Http\Controllers\Platform\Marketing\ReportsController as PlatformReportsController;
+use App\Http\Controllers\Platform\Marketing\SeoController as PlatformSeoController;
+use App\Http\Controllers\Platform\Marketing\TechnicalSeoController as PlatformTechnicalSeoController;
+use App\Http\Controllers\Platform\Marketing\TrackingController as PlatformMarketingTrackingController;
+use App\Http\Controllers\Platform\Marketing\UtmController as PlatformUtmController;
 use App\Http\Controllers\Platform\NotificationController as PlatformNotificationController;
 use App\Http\Controllers\Platform\OfflineConflictController as PlatformOfflineConflictController;
 use App\Http\Controllers\Platform\OpsController as PlatformOpsController;
@@ -102,20 +121,48 @@ Route::get('/solutions/{solution}', [MarketingController::class, 'solution'])->n
 Route::get('/pricing', [MarketingController::class, 'pricing'])->name('pricing');
 Route::get('/about', [MarketingController::class, 'about'])->name('about');
 Route::get('/contact', [MarketingController::class, 'contact'])->name('contact');
-Route::post('/contact', [MarketingController::class, 'contactSubmit'])->name('contact.submit');
+Route::post('/contact', [MarketingController::class, 'contactSubmit'])
+    ->middleware('throttle:10,1')
+    ->name('contact.submit');
+
+// Public marketing telemetry. Both are unauthenticated and therefore rate limited;
+// the event endpoint accepts catalogued event names only and drops anything the
+// visitor has not consented to.
+Route::post('/marketing/events', MarketingEventCollectController::class)
+    ->middleware('throttle:marketing-events')
+    ->name('marketing.events.collect');
+Route::post('/marketing/consent', MarketingConsentController::class)
+    ->middleware('throttle:marketing-consent')
+    ->name('marketing.consent');
 Route::get('/resources', [MarketingController::class, 'resources'])->name('resources.index');
 Route::get('/resources/{slug}', [MarketingController::class, 'resourceArticle'])->name('resources.show');
+
+/*
+|--------------------------------------------------------------------------
+| Public documentation centre
+|--------------------------------------------------------------------------
+| Read-only learning content with no tenant data, so it is reachable without
+| an account. Signed-in users still get the in-app shell (see the pages).
+*/
+Route::get('/docs', [DocumentationController::class, 'index'])->name('docs.index');
+Route::get('/docs/{page}', [DocumentationController::class, 'show'])->name('docs.show');
+
 Route::get('/help', [MarketingController::class, 'help'])->name('help');
 Route::get('/privacy-policy', [MarketingController::class, 'privacyPolicy'])->name('privacy');
 Route::get('/terms-of-service', [MarketingController::class, 'termsOfService'])->name('terms');
 Route::get('/cookie-policy', [MarketingController::class, 'cookiePolicy'])->name('cookies');
 Route::get('/refund-policy', [MarketingController::class, 'refundPolicy'])->name('refund');
-Route::get('/sitemap.xml', function () {
-    return response(file_get_contents(public_path('sitemap.xml')), 200, ['Content-Type' => 'application/xml']);
-});
-Route::get('/robots.txt', function () {
-    return response(file_get_contents(public_path('robots.txt')), 200, ['Content-Type' => 'text/plain']);
-});
+// Served from admin configuration, with the static files in public/ as the fallback.
+// Published marketing landing pages. A draft slug is a 404.
+
+// Marketing email tracking. Token-addressed, so no session is needed and nothing is
+// enumerable without the token from that recipient's own copy.
+Route::get('/m/o/{token}', [EmailTrackingController::class, 'open'])->name('marketing.email.open');
+Route::get('/m/c/{token}', [EmailTrackingController::class, 'click'])->name('marketing.email.click');
+Route::get('/m/u/{token}', [EmailTrackingController::class, 'unsubscribe'])->name('marketing.email.unsubscribe');
+
+Route::get('/sitemap.xml', [SeoFileController::class, 'sitemap'])->name('sitemap');
+Route::get('/robots.txt', [SeoFileController::class, 'robots'])->name('robots');
 
 // Public invitation acceptance (staff join via emailed link).
 Route::middleware('guest')->group(function () {
@@ -194,7 +241,7 @@ Route::prefix('qr')->name('qr.')->middleware(['qr.context', 'throttle:qr-public'
     });
 });
 
-Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->group(function () {
+Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed', 'throttle:workspace'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     /*
@@ -236,6 +283,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->g
         Route::middleware('permission:roles.manage')->group(function () {
             Route::post('/', [TenantRoleController::class, 'store'])->name('store');
             Route::patch('/{role}', [TenantRoleController::class, 'update'])->name('update');
+            Route::post('/{role}/reset', [TenantRoleController::class, 'reset'])->name('reset');
             Route::delete('/{role}', [TenantRoleController::class, 'destroy'])->name('destroy');
         });
     });
@@ -313,6 +361,10 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->g
     Route::prefix('inventory')->name('inventory.')->group(function () {
         Route::get('/', [InventoryController::class, 'index'])
             ->middleware('permission:inventory.view')->name('index');
+        Route::get('/balance', [InventoryController::class, 'balance'])
+            ->middleware('permission:inventory.view')->name('balance');
+        Route::get('/print', [InventoryController::class, 'printStock'])
+            ->middleware('permission:inventory.view')->name('print');
 
         Route::middleware('permission:inventory.manage')->group(function () {
             Route::post('/units', [InventoryController::class, 'storeUnit'])->name('units.store');
@@ -332,7 +384,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->g
     Route::get('/pos', [PosController::class, 'index'])
         ->middleware('permission:pos.use')->name('pos.index');
     Route::post('/pos/orders', [PosController::class, 'store'])
-        ->middleware(['permission:pos.use', 'permission:orders.update'])->name('pos.orders.store');
+        ->middleware(['permission:pos.use', 'permission:orders.update', 'throttle:workspace-heavy'])->name('pos.orders.store');
     Route::post('/pos/orders/open', [PosController::class, 'open'])
         ->middleware(['permission:pos.use', 'permission:orders.create'])->name('pos.orders.open');
 
@@ -364,6 +416,13 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->g
         ->middleware('permission:orders.approve')->name('orders.accept');
     Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])
         ->middleware('permission:orders.approve')->name('orders.reject');
+
+    Route::post('/orders/{order}/items', [OrderController::class, 'appendItems'])
+        ->middleware(['permission:pos.use', 'permission:orders.update'])->name('orders.items.store');
+    Route::post('/orders/{order}/rounds/{round}/accept', [OrderController::class, 'acceptRound'])
+        ->middleware('permission:orders.approve')->name('orders.rounds.accept');
+    Route::post('/orders/{order}/rounds/{round}/cancel', [OrderController::class, 'cancelRound'])
+        ->middleware('permission:orders.update')->name('orders.rounds.cancel');
 
     Route::prefix('invoices')->name('invoices.')->group(function () {
         Route::get('/', [TenantInvoiceController::class, 'index'])
@@ -474,11 +533,14 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'subscribed'])->g
     });
 
     Route::get('/reports', [ReportController::class, 'index'])
-        ->middleware('permission:reports.view')->name('reports.index');
+        ->middleware(['permission:reports.view', 'throttle:workspace-heavy'])->name('reports.index');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/recent', [NotificationController::class, 'recent'])->name('notifications.recent');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::delete('/notifications', [NotificationController::class, 'clear'])->name('notifications.clear');
 
     Route::prefix('customers')->name('customers.')->group(function () {
         Route::get('/', [CustomerController::class, 'index'])
@@ -674,6 +736,10 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
     Route::middleware('platform.permission:platform.gateways.configure')->group(function () {
         Route::get('/gateways', [PlatformGatewayController::class, 'index'])->name('gateways.index');
         Route::get('/gateways/sslcommerz', [PlatformGatewayController::class, 'sslcommerz'])->name('gateways.sslcommerz');
+        Route::delete('/notifications/{id}', [PlatformNotificationController::class, 'destroy'])
+            ->middleware('platform.permission:platform.email.view')->name('notifications.destroy');
+        Route::delete('/notifications', [PlatformNotificationController::class, 'clear'])
+            ->middleware('platform.permission:platform.email.view')->name('notifications.clear');
         Route::get('/gateways/health', [PlatformGatewayController::class, 'index'])->name('gateways.health');
         Route::post('/gateways', [PlatformGatewayController::class, 'store'])->name('gateways.store');
         Route::patch('/gateways/{gateway}', [PlatformGatewayController::class, 'update'])->name('gateways.update');
@@ -777,7 +843,7 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
 
     Route::middleware('platform.permission:platform.settings.view')->group(function () {
         foreach ([
-            'general', 'branding', 'localization', 'billing',
+            'general', 'branding', 'social', 'localization', 'billing',
             'operations', 'security', 'retention', 'features', 'receipts',
         ] as $settingsGroup) {
             Route::get("/settings/{$settingsGroup}", [PlatformSettingsController::class, 'show'])
@@ -786,7 +852,7 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
         }
     });
     Route::post('/settings/{group}', [PlatformSettingsController::class, 'update'])
-        ->whereIn('group', ['general', 'branding', 'localization', 'billing', 'operations', 'security', 'retention', 'features', 'receipts'])
+        ->whereIn('group', ['general', 'branding', 'social', 'localization', 'billing', 'operations', 'security', 'retention', 'features', 'receipts'])
         ->middleware('platform.permission:platform.settings.manage')->name('settings.update');
 
     Route::get('/diagnostics', [PlatformDiagnosticsController::class, 'index'])
@@ -808,12 +874,131 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
     Route::post('/email/templates/{key}/test', [PlatformEmailTemplateController::class, 'sendTest'])
         ->middleware('platform.permission:platform.email.manage')->name('email.templates.test');
 
+    // ------------------------------------------------------------------
+    // Marketing & Growth Center
+    //
+    // A separate workspace for the SaaS owner's own marketing: website
+    // tracking, SEO, campaigns, the lead CRM, email automation and growth
+    // reporting. Platform-level only — no tenant can reach any of it.
+    // ------------------------------------------------------------------
+    Route::middleware('platform.permission:platform.marketing.view')->group(function () {
+        Route::get('/marketing', [PlatformMarketingDashboardController::class, 'index'])->name('marketing.dashboard');
+
+        Route::get('/marketing/tracking/pixels', [PlatformMarketingTrackingController::class, 'pixels'])->name('marketing.tracking.pixels');
+        Route::get('/marketing/tracking/google', [PlatformMarketingTrackingController::class, 'google'])->name('marketing.tracking.google');
+        Route::get('/marketing/tracking/search-console', [PlatformMarketingTrackingController::class, 'searchConsole'])->name('marketing.tracking.search-console');
+        Route::get('/marketing/tracking/google-ads', [PlatformMarketingTrackingController::class, 'googleAds'])->name('marketing.tracking.google-ads');
+        Route::get('/marketing/tracking/events', [PlatformMarketingTrackingController::class, 'events'])->name('marketing.tracking.events');
+
+        Route::get('/marketing/campaigns', [PlatformMarketingCampaignController::class, 'index'])->name('marketing.campaigns.index');
+        Route::get('/marketing/campaigns/utm', [PlatformUtmController::class, 'index'])->name('marketing.campaigns.utm');
+
+        Route::get('/marketing/leads', [PlatformLeadController::class, 'index'])->name('marketing.leads.index');
+        Route::get('/marketing/leads/followups', [PlatformLeadController::class, 'followUps'])->name('marketing.leads.followups');
+        Route::get('/marketing/leads/sources', [PlatformLeadController::class, 'sources'])->name('marketing.leads.sources');
+        Route::get('/marketing/leads/{lead}', [PlatformLeadController::class, 'show'])->whereNumber('lead')->name('marketing.leads.show');
+
+        Route::get('/marketing/reports', [PlatformReportsController::class, 'index'])->name('marketing.reports.index');
+
+        Route::get('/marketing/growth/funnel', [PlatformGrowthController::class, 'funnel'])->name('marketing.growth.funnel');
+        Route::get('/marketing/growth/attribution', [PlatformGrowthController::class, 'attribution'])->name('marketing.growth.attribution');
+        Route::get('/marketing/growth/customers', [PlatformGrowthController::class, 'customers'])->name('marketing.growth.customers');
+
+        Route::get('/marketing/seo', [PlatformSeoController::class, 'dashboard'])->name('marketing.seo.dashboard');
+        Route::get('/marketing/seo/website', [PlatformSeoController::class, 'website'])->name('marketing.seo.website');
+        Route::get('/marketing/seo/pages', [PlatformSeoController::class, 'pages'])->name('marketing.seo.pages');
+        Route::get('/marketing/seo/sitemap', [PlatformTechnicalSeoController::class, 'sitemap'])->name('marketing.seo.sitemap');
+        Route::get('/marketing/seo/robots', [PlatformTechnicalSeoController::class, 'robots'])->name('marketing.seo.robots');
+        Route::get('/marketing/seo/redirects', [PlatformTechnicalSeoController::class, 'redirects'])->name('marketing.seo.redirects');
+        Route::get('/marketing/seo/performance', [PlatformSeoController::class, 'performance'])->name('marketing.seo.performance');
+
+        Route::get('/marketing/settings/integrations', [PlatformMarketingIntegrationController::class, 'index'])->name('marketing.integrations.index');
+        Route::get('/marketing/settings/consent', [PlatformMarketingConsentController::class, 'index'])->name('marketing.consent.index');
+    });
+
     Route::middleware('platform.permission:platform.marketing.manage')->group(function () {
-        Route::get('/marketing/campaigns', [PlatformCampaignController::class, 'index'])->name('marketing.campaigns');
-        Route::post('/marketing/campaigns', [PlatformCampaignController::class, 'store'])->name('marketing.campaigns.store');
-        Route::put('/marketing/campaigns/{campaign}', [PlatformCampaignController::class, 'update'])->name('marketing.campaigns.update');
-        Route::post('/marketing/campaigns/{campaign}/send', [PlatformCampaignController::class, 'send'])->name('marketing.campaigns.send');
-        Route::delete('/marketing/campaigns/{campaign}', [PlatformCampaignController::class, 'destroy'])->name('marketing.campaigns.destroy');
+        Route::get('/marketing/tracking/preferences', [PlatformMarketingTrackingController::class, 'preferences'])->name('marketing.tracking.preferences');
+        Route::post('/marketing/tracking/preferences', [PlatformMarketingTrackingController::class, 'updatePreferences'])->name('marketing.tracking.preferences.update');
+        Route::post('/marketing/tracking/{provider}/test-event', [PlatformMarketingTrackingController::class, 'testEvent'])->name('marketing.tracking.test-event');
+
+        Route::post('/marketing/campaigns', [PlatformMarketingCampaignController::class, 'store'])->name('marketing.campaigns.store');
+        Route::put('/marketing/campaigns/{campaign}', [PlatformMarketingCampaignController::class, 'update'])->name('marketing.campaigns.update');
+        Route::delete('/marketing/campaigns/{campaign}', [PlatformMarketingCampaignController::class, 'destroy'])->name('marketing.campaigns.destroy');
+        Route::post('/marketing/campaigns/{campaign}/spend', [PlatformMarketingCampaignController::class, 'spend'])->name('marketing.campaigns.spend');
+
+        Route::put('/marketing/leads/{lead}', [PlatformLeadController::class, 'update'])->whereNumber('lead')->name('marketing.leads.update');
+
+        Route::post('/marketing/reports/insights/{insight}/acknowledge', [PlatformReportsController::class, 'acknowledge'])->name('marketing.reports.acknowledge');
+        Route::post('/marketing/reports/evaluate', [PlatformReportsController::class, 'evaluate'])->name('marketing.reports.evaluate');
+
+        Route::post('/marketing/seo/website', [PlatformSeoController::class, 'updateWebsite'])->name('marketing.seo.website.update');
+        Route::post('/marketing/seo/pages/{route}', [PlatformSeoController::class, 'updatePage'])->where('route', '[a-z0-9.]+')->name('marketing.seo.pages.update');
+
+        Route::post('/marketing/seo/sitemap', [PlatformTechnicalSeoController::class, 'updateSitemap'])->name('marketing.seo.sitemap.update');
+        Route::post('/marketing/seo/sitemap/regenerate', [PlatformTechnicalSeoController::class, 'regenerate'])->name('marketing.seo.sitemap.regenerate');
+        Route::post('/marketing/seo/robots', [PlatformTechnicalSeoController::class, 'updateRobots'])->name('marketing.seo.robots.update');
+
+        Route::post('/marketing/seo/redirects', [PlatformTechnicalSeoController::class, 'storeRedirect'])->name('marketing.seo.redirects.store');
+        Route::post('/marketing/seo/redirects/import', [PlatformTechnicalSeoController::class, 'importRedirects'])->name('marketing.seo.redirects.import');
+        Route::put('/marketing/seo/redirects/{redirect}', [PlatformTechnicalSeoController::class, 'updateRedirect'])->name('marketing.seo.redirects.update');
+        Route::delete('/marketing/seo/redirects/{redirect}', [PlatformTechnicalSeoController::class, 'destroyRedirect'])->name('marketing.seo.redirects.destroy');
+    });
+
+    // Exports carry their own permission.
+    Route::get('/marketing/leads/export', [PlatformLeadController::class, 'export'])
+        ->middleware('platform.permission:platform.marketing.export')
+        ->name('marketing.leads.export');
+
+    Route::get('/marketing/reports/export/{report}', [PlatformReportsController::class, 'export'])
+        ->middleware('platform.permission:platform.marketing.export')
+        ->name('marketing.reports.export');
+
+    Route::get('/marketing/seo/redirects/export', [PlatformTechnicalSeoController::class, 'exportRedirects'])
+        ->middleware('platform.permission:platform.marketing.export')
+        ->name('marketing.seo.redirects.export');
+
+    // Integration credentials are the most sensitive setting in this workspace, so
+    // they carry their own permission rather than riding on marketing.manage.
+    Route::middleware('platform.permission:platform.marketing.integrations.manage')->group(function () {
+        Route::get('/marketing/integrations/google/authorize/{provider}', [PlatformMarketingIntegrationController::class, 'googleAuthorize'])->name('marketing.integrations.google.authorize');
+        Route::get('/marketing/integrations/google/callback', [PlatformMarketingIntegrationController::class, 'googleCallback'])->name('marketing.integrations.google.callback');
+
+        Route::post('/marketing/integrations/{provider}', [PlatformMarketingIntegrationController::class, 'update'])->name('marketing.integrations.update');
+        Route::post('/marketing/integrations/{provider}/test', [PlatformMarketingIntegrationController::class, 'test'])->name('marketing.integrations.test');
+        Route::post('/marketing/integrations/{provider}/toggle', [PlatformMarketingIntegrationController::class, 'toggle'])->name('marketing.integrations.toggle');
+        Route::post('/marketing/integrations/{provider}/disconnect', [PlatformMarketingIntegrationController::class, 'disconnect'])->name('marketing.integrations.disconnect');
+        Route::post('/marketing/integrations/{provider}/sync', [PlatformMarketingIntegrationController::class, 'sync'])->name('marketing.integrations.sync');
+    });
+
+    Route::post('/marketing/settings/consent', [PlatformMarketingConsentController::class, 'update'])
+        ->middleware('platform.permission:platform.marketing.consent.manage')
+        ->name('marketing.consent.update');
+
+    Route::middleware('platform.permission:platform.marketing.manage')->group(function () {
+        // Email campaigns live under Automation: the marketing section reserves
+        // /marketing/campaigns for real campaigns. The legacy path below keeps old
+        // bookmarks working until that screen lands.
+        Route::get('/marketing/automation/campaigns', [PlatformCampaignController::class, 'index'])->name('marketing.automation.campaigns');
+        Route::post('/marketing/automation/campaigns', [PlatformCampaignController::class, 'store'])->name('marketing.automation.campaigns.store');
+        Route::put('/marketing/automation/campaigns/{campaign}', [PlatformCampaignController::class, 'update'])->name('marketing.automation.campaigns.update');
+        Route::post('/marketing/automation/campaigns/{campaign}/send', [PlatformCampaignController::class, 'send'])->name('marketing.automation.campaigns.send');
+        Route::post('/marketing/automation/campaigns/{campaign}/test', [PlatformCampaignController::class, 'test'])->name('marketing.automation.campaigns.test');
+
+        Route::get('/marketing/automation/audience', [PlatformAudienceController::class, 'index'])->name('marketing.automation.audience');
+        Route::post('/marketing/automation/audience/subscribers', [PlatformAudienceController::class, 'storeSubscriber'])->name('marketing.automation.audience.subscribers.store');
+        Route::post('/marketing/automation/audience/import', [PlatformAudienceController::class, 'importSubscribers'])->name('marketing.automation.audience.import');
+        Route::delete('/marketing/automation/audience/subscribers/{subscriber}', [PlatformAudienceController::class, 'destroySubscriber'])->name('marketing.automation.audience.subscribers.destroy');
+        Route::post('/marketing/automation/audience/suppressions', [PlatformAudienceController::class, 'storeSuppression'])->name('marketing.automation.audience.suppressions.store');
+        Route::delete('/marketing/automation/audience/suppressions/{suppression}', [PlatformAudienceController::class, 'destroySuppression'])->name('marketing.automation.audience.suppressions.destroy');
+        Route::post('/marketing/automation/audience/segments', [PlatformAudienceController::class, 'storeSegment'])->name('marketing.automation.audience.segments.store');
+
+        Route::get('/marketing/automation/workflows', [PlatformAutomationController::class, 'index'])->name('marketing.automation.workflows');
+        Route::post('/marketing/automation/workflows', [PlatformAutomationController::class, 'store'])->name('marketing.automation.workflows.store');
+        Route::post('/marketing/automation/workflows/{automation}/toggle', [PlatformAutomationController::class, 'toggle'])->name('marketing.automation.workflows.toggle');
+        Route::post('/marketing/automation/workflows/run', [PlatformAutomationController::class, 'runNow'])->name('marketing.automation.workflows.run');
+        Route::post('/marketing/automation/workflows/presets', [PlatformAutomationController::class, 'seedPresets'])->name('marketing.automation.workflows.presets');
+        Route::delete('/marketing/automation/workflows/{automation}', [PlatformAutomationController::class, 'destroy'])->name('marketing.automation.workflows.destroy');
+        Route::delete('/marketing/automation/campaigns/{campaign}', [PlatformCampaignController::class, 'destroy'])->name('marketing.automation.campaigns.destroy');
 
         Route::get('/marketing/announcements', [PlatformAnnouncementController::class, 'index'])->name('marketing.announcements');
         Route::post('/marketing/announcements', [PlatformAnnouncementController::class, 'store'])->name('marketing.announcements.store');
@@ -826,9 +1011,13 @@ Route::middleware(['auth', 'platform'])->prefix('platform')->name('platform.')->
         Route::get('/commands', [PlatformCommandController::class, 'index'])->name('commands.index');
         Route::post('/commands/run', [PlatformCommandController::class, 'runCurated'])->name('commands.run');
         Route::post('/commands/advanced', [PlatformCommandController::class, 'runAdvanced'])->name('commands.advanced');
+        Route::post('/commands/migrations', [PlatformCommandController::class, 'runMigrations'])
+            ->middleware('throttle:6,1')->name('commands.migrations.run');
     });
     Route::get('/notifications', [PlatformNotificationController::class, 'index'])
         ->middleware('platform.permission:platform.email.view')->name('notifications.index');
+    Route::get('/notifications/recent', [PlatformNotificationController::class, 'recent'])
+        ->middleware('platform.permission:platform.email.view')->name('notifications.recent');
     Route::post('/notifications/read-all', [PlatformNotificationController::class, 'markAllRead'])
         ->middleware('platform.permission:platform.email.view')->name('notifications.read-all');
     Route::get('/gateways/health', [PlatformGatewayController::class, 'index'])
@@ -867,3 +1056,7 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Applies admin-managed redirects to anything no route matched. Registered last, so
+// it only ever sees a request that would otherwise be a 404.
+Route::fallback(MarketingRedirectController::class)->name('marketing.redirects.resolve');

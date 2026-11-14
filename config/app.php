@@ -43,6 +43,55 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Health Endpoint Detail
+    |--------------------------------------------------------------------------
+    |
+    | When false (the default), GET /health returns only the overall status to
+    | anonymous callers; version, commit and per-check detail are reserved for
+    | platform admins. Set this to true only when a trusted monitor needs the
+    | full payload and the endpoint is not publicly reachable.
+    |
+    */
+
+    'health_disclose_detail' => (bool) env('HEALTH_DISCLOSE_DETAIL', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Content-Security-Policy
+    |--------------------------------------------------------------------------
+    |
+    | Report-Only by default: violations are reported but nothing is blocked, so
+    | the policy can be proven against real traffic before it is enforced. Set
+    | CSP_REPORT_ONLY=false to enforce, or CSP_ENABLED=false to disable entirely.
+    |
+    */
+
+    'csp_enabled' => (bool) env('CSP_ENABLED', true),
+
+    'csp_report_only' => (bool) env('CSP_REPORT_ONLY', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allowed Hosts
+    |--------------------------------------------------------------------------
+    |
+    | Hosts the application will answer for. A request whose Host header is not
+    | in this list is rejected before routing, so a forged Host can never be
+    | reflected into a generated absolute URL (password reset, invitation or
+    | payment-return links). Empty means "do not check" — acceptable for a local
+    | dev host, not for production.
+    |
+    | Accepts a comma-separated list; subdomains of a listed host are allowed.
+    |
+    */
+
+    'allowed_hosts' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('ALLOWED_HOSTS', '')),
+    ))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------
     |

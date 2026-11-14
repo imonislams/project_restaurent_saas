@@ -11,9 +11,9 @@ enum InventoryMode: string
     public function label(): string
     {
         return match ($this) {
-            self::None => 'Not tracked',
-            self::Product => 'Track this product\'s own stock',
-            self::Recipe => 'Deduct ingredients via recipe',
+            self::None => 'Don\'t track stock',
+            self::Product => 'Count the item itself (e.g. bottled drinks)',
+            self::Recipe => 'Use ingredients — build a recipe (e.g. burger)',
         };
     }
 

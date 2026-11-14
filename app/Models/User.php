@@ -5,14 +5,15 @@ namespace App\Models;
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Identity\Concerns\HasRoles;
 use App\Domain\Identity\Enums\RoleName;
+use App\Domain\Identity\Models\PhoneVerificationCode;
 use App\Domain\Tenancy\Models\Tenant;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
@@ -127,7 +128,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function phoneVerificationCodes(): HasMany
     {
-        return $this->hasMany(\App\Domain\Identity\Models\PhoneVerificationCode::class);
+        return $this->hasMany(PhoneVerificationCode::class);
     }
 
     /** Public URL of the user's profile photo (null when none is set). */

@@ -50,6 +50,16 @@ class OrderConfirmationSettings
     }
 
     /**
+     * Whether additional items may be appended to an existing active order
+     * instead of opening a separate order. Defaults to off so existing
+     * restaurants keep their independent-order behaviour until opted in.
+     */
+    public function allowAdditionalItems(): bool
+    {
+        return (bool) $this->get('orders.allow_additional_items', false);
+    }
+
+    /**
      * Whether an order taken by restricted service staff must await central
      * approval (central mode, or direct branch order-taking turned off).
      */

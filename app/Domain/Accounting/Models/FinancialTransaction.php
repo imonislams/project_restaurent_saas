@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class FinancialTransaction extends Model
 {
-    use BelongsToTenant, BelongsToBranch;
+    use BelongsToBranch, BelongsToTenant;
 
     protected static function branchScopeAllowsNull(): bool
     {

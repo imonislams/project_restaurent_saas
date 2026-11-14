@@ -23,6 +23,13 @@ class MailConfigurator
 
         if (! empty($value('mailer'))) {
             config(['mail.default' => $value('mailer')]);
+        } elseif (! empty($value('host')) && ! empty($value('username'))) {
+            // SMTP credentials with no explicit mailer: an administrator who filled
+            // in a server, login and password means to send through it. Without this
+            // the transport would stay on the env default — and a production .env
+            // ships MAIL_MAILER=log, so every message would be written to the log
+            // file instead of being delivered.
+            config(['mail.default' => 'smtp']);
         }
 
         $port = $value('port');
@@ -62,6 +69,49 @@ class MailConfigurator
         if (! empty($value('from_name'))) {
             config(['mail.from.name' => $value('from_name')]);
         }
+    }
+
+    /**
+     * The delivery problem with the configuration currently in effect (after
+     * apply()), or null when mail can be delivered. Reflects what the mailer
+     * will actually do, not merely what is stored.
+     */
+    public function deliveryProblem(): ?string
+    {
+        return self::problemFor(
+            (string) config('mail.default'),
+            self::deliverableFromAddress(
+                config('mail.from.address'),
+                $this->settings->get('mail.username') ?? config('mail.mailers.smtp.username'),
+            ),
+            in_array('mail.password', $this->settings->unreadableKeys(), true),
+        );
+    }
+
+    /**
+     * Why outbound mail would not be delivered, built from values a caller has
+     * already resolved. Null means the configuration can deliver.
+     */
+    public static function problemFor(string $transport, ?string $from, bool $passwordUnreadable = false): ?string
+    {
+        if (in_array($transport, ['log', 'array'], true)) {
+            return 'Nothing is being delivered: the active transport is "'.$transport.'", so every message is written '
+                .'to the application log instead of being sent. Fill in your SMTP host, port, username and password and '
+                .'choose the "smtp" mailer — or set MAIL_MAILER=smtp and the MAIL_* values in .env.';
+        }
+
+        if ($passwordUnreadable) {
+            return 'The saved SMTP password cannot be read: it was encrypted with a different APP_KEY (the key was '
+                .'changed, or this database came from another install). Delivery fails authentication until the password '
+                .'is re-entered and saved.';
+        }
+
+        if ($from === null) {
+            return 'The From address cannot deliver mail: it is missing, not an email address, or on a reserved domain '
+                .'(example.com). Use an address on your mail provider\'s domain — your SMTP username is a safe choice.';
+        }
+
+        return null;
     }
 
     /**

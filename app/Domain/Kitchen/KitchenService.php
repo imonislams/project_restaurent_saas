@@ -7,7 +7,9 @@ use App\Domain\Kitchen\Enums\KitchenItemStatus;
 use App\Domain\Kitchen\Enums\KitchenTicketStatus;
 use App\Domain\Kitchen\Models\KitchenTicket;
 use App\Domain\Kitchen\Models\KitchenTicketItem;
+use App\Domain\Notifications\NotificationService;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Orders\Models\OrderRound;
 use App\Domain\Realtime\Events\KitchenTicketActivity;
 use App\Domain\Realtime\RealtimeBroadcaster;
 use App\Domain\Tenancy\TenantContext;
@@ -45,6 +47,117 @@ class KitchenService
             return $existing;
         }
 
+        $round = $order->rounds()->orderBy('round_no')->first();
+
+        // Legacy orders (created before rounds existed) keep the old whole-order
+        // snapshot behaviour.
+        if (! $round) {
+            return $this->openLegacyTicket($order);
+        }
+
+        if (! $round->isActive()) {
+            return null;
+        }
+
+        return $this->openTicketForRound($round);
+    }
+
+    /**
+     * Open the kitchen ticket for one round. Only that round's items are
+     * copied, which is what keeps previously sent food off the pass.
+     */
+    public function openTicketForRound(OrderRound $round): ?KitchenTicket
+    {
+        if (! $this->enabled()) {
+            return null;
+        }
+
+        if ($round->kitchen_ticket_id) {
+            return KitchenTicket::query()->with('items')->find($round->kitchen_ticket_id);
+        }
+
+        $order = $round->order()->first();
+
+        if (! $order || $round->items()->count() === 0 || ! $round->isActive()) {
+            return null;
+        }
+
+        try {
+            $ticket = DB::transaction(function () use ($round, $order) {
+                // Serialize concurrent dispatch for this round, then re-check.
+                $locked = OrderRound::query()->whereKey($round->getKey())->lockForUpdate()->first();
+
+                if (! $locked || ! $locked->isActive()) {
+                    return null;
+                }
+
+                if ($locked->kitchen_ticket_id) {
+                    return KitchenTicket::query()->with('items')->find($locked->kitchen_ticket_id);
+                }
+
+                $ticket = KitchenTicket::create([
+                    'tenant_id' => $order->tenant_id,
+                    'branch_id' => $order->branch_id,
+                    'order_id' => $order->getKey(),
+                    'order_round_id' => $locked->getKey(),
+                    'round_no' => $locked->round_no,
+                    'status' => KitchenTicketStatus::New,
+                    'priority' => 'normal',
+                    'notes' => $order->notes,
+                ]);
+
+                foreach ($locked->items()->with(['product', 'modifiers'])->get() as $item) {
+                    $modifiers = $item->modifiers->map(fn ($modifier) => [
+                        'name' => $modifier->name,
+                        'group_name' => $modifier->group_name,
+                        'price_delta' => (float) $modifier->price_delta,
+                        'quantity' => (float) $modifier->quantity,
+                    ])->all();
+
+                    $ticket->items()->create([
+                        'tenant_id' => $order->tenant_id,
+                        'order_item_id' => $item->getKey(),
+                        'station_id' => $item->product?->kitchen_station_id,
+                        'name' => $item->name,
+                        'quantity' => $item->quantity,
+                        'status' => KitchenItemStatus::Pending,
+                        'notes' => $item->notes,
+                        'modifiers' => $modifiers ?: null,
+                    ]);
+                }
+
+                $locked->forceFill([
+                    'kitchen_ticket_id' => $ticket->getKey(),
+                    'sent_to_kitchen_at' => now(),
+                ])->save();
+
+                $this->audit->log('kitchen.ticket_opened', $ticket, [
+                    'order_number' => $order->order_number,
+                    'round_no' => $locked->round_no,
+                ]);
+
+                return $ticket->load('items');
+            });
+        } catch (QueryException $e) {
+            // A concurrent creation won the unique(order_id, round_no) race.
+            return $round->fresh()?->kitchenTicket;
+        }
+
+        if (! $ticket) {
+            return null;
+        }
+
+        // A ticket really was created — tell the kitchen board and the order list.
+        app(RealtimeBroadcaster::class)->send(new KitchenTicketActivity($ticket, KitchenTicketStatus::New->value));
+
+        return $ticket;
+    }
+
+    /**
+     * Whole-order snapshot for orders that predate the round model.
+     */
+    protected function openLegacyTicket(Order $order): ?KitchenTicket
+    {
         if ($order->items()->count() === 0) {
             return null;
         }
@@ -62,6 +175,7 @@ class KitchenService
                     'tenant_id' => $order->tenant_id,
                     'branch_id' => $order->branch_id,
                     'order_id' => $order->getKey(),
+                    'round_no' => 1,
                     'status' => KitchenTicketStatus::New,
                     'priority' => 'normal',
                     'notes' => $order->notes,
@@ -94,11 +208,10 @@ class KitchenService
                 return $ticket->load('items');
             });
         } catch (QueryException $e) {
-            // A concurrent creation won the unique(order_id) race.
+            // A concurrent creation won the unique(order_id, round_no) race.
             return $order->kitchenTicket()->with('items')->first();
         }
 
-        // A ticket really was created — tell the kitchen board and the order list.
         app(RealtimeBroadcaster::class)->send(new KitchenTicketActivity($ticket, KitchenTicketStatus::New->value));
 
         return $ticket;
@@ -172,7 +285,7 @@ class KitchenService
         }
 
         try {
-            $notifier = app(\App\Domain\Notifications\NotificationService::class);
+            $notifier = app(NotificationService::class);
 
             match ($status) {
                 KitchenTicketStatus::Ready => $notifier->orderReady($order),
@@ -206,21 +319,19 @@ class KitchenService
         $ticket->forceFill(['printed_at' => now()])->save();
     }
 
-    public function cancelForOrder(Order $order): void
+    public function cancelForRound(OrderRound $round): void
     {
-        if (! $ticket = $order->kitchenTicket) {
+        $ticket = $round->kitchenTicket()->first();
+
+        if (! $ticket || $ticket->status->isTerminal()) {
             return;
         }
 
-        if ($ticket->status->isTerminal()) {
-            return;
-        }
-
-        DB::transaction(function () use ($ticket) {
+        DB::transaction(function () use ($ticket): void {
             $ticket->forceFill([
                 'status' => KitchenTicketStatus::Cancelled,
                 'cancelled_at' => $ticket->cancelled_at ?? now(),
-                'notes' => trim(($ticket->notes ?? '').' [order voided]'),
+                'notes' => trim(($ticket->notes ?? '').' [round cancelled]'),
             ])->save();
 
             $ticket->items()->where('status', '!=', KitchenItemStatus::Served->value)
@@ -228,6 +339,35 @@ class KitchenService
         });
 
         $this->sync->sync($ticket->fresh());
+    }
+
+    public function cancelForOrder(Order $order): void
+    {
+        $tickets = $order->kitchenTickets()
+            ->whereNotIn('status', [
+                KitchenTicketStatus::Served->value,
+                KitchenTicketStatus::Cancelled->value,
+            ])
+            ->get();
+
+        if ($tickets->isEmpty()) {
+            return;
+        }
+
+        foreach ($tickets as $ticket) {
+            DB::transaction(function () use ($ticket): void {
+                $ticket->forceFill([
+                    'status' => KitchenTicketStatus::Cancelled,
+                    'cancelled_at' => $ticket->cancelled_at ?? now(),
+                    'notes' => trim(($ticket->notes ?? '').' [order voided]'),
+                ])->save();
+
+                $ticket->items()->where('status', '!=', KitchenItemStatus::Served->value)
+                    ->update(['status' => KitchenItemStatus::Cancelled->value]);
+            });
+
+            $this->sync->sync($ticket->fresh());
+        }
     }
 
     protected function syncTicketFromItems(KitchenTicket $ticket): void

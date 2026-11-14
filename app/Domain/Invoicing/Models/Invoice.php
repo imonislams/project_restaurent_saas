@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Invoice extends Model
 {
-    use BelongsToTenant, BelongsToBranch, SoftDeletes;
+    use BelongsToBranch, BelongsToTenant, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',

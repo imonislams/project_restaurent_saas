@@ -1,4 +1,5 @@
 import MiseLogo from '@/Components/Brand/MiseLogo';
+import { cn } from '@/Components/ui/cn';
 import {
     NavigationMenu,
     NavigationMenuContent,
@@ -19,12 +20,14 @@ import { Link, usePage } from '@inertiajs/react';
 import { MobileGroups, ProductsMenu, SolutionsMenu } from './MegaMenus';
 import {
     ArrowRight,
+    ArrowUpRight,
     BarChart3,
     BookOpen,
     Boxes,
     Building2,
     ChefHat,
     Coffee,
+    FileText,
     HelpCircle,
     LayoutGrid,
     Mail,
@@ -43,6 +46,12 @@ export default function MarketingNavbar() {
 
     const [mobileOpen, setMobileOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [menuValue, setMenuValue] = useState('');
+
+    // Close an open dropdown after Inertia navigates to a new page.
+    useEffect(() => {
+        setMenuValue('');
+    }, [url]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -72,7 +81,7 @@ export default function MarketingNavbar() {
                     <MiseLogo href="/" size="md" />
 
                     <div className="hidden lg:flex items-center">
-                        <NavigationMenu>
+                        <NavigationMenu value={menuValue} onValueChange={setMenuValue}>
                             <NavigationMenuList className="gap-1">
                                 <ProductsMenu isActive={isActive('/products')} />
 
@@ -80,9 +89,11 @@ export default function MarketingNavbar() {
                                 <NavigationMenuItem>
                                     <Link
                                         href="/features"
-                                        className={`${navigationMenuTriggerStyle()} text-sm font-medium text-stone-700 hover:text-stone-900 bg-transparent hover:bg-stone-50 ${
-                                            isActive('/features') ? 'text-[#EC3013] font-semibold' : ''
-                                        }`}
+                                        className={cn(
+                                            navigationMenuTriggerStyle(),
+                                            'text-sm font-medium text-stone-900 bg-transparent hover:text-[#EC3013] hover:bg-transparent',
+                                            isActive('/features') && 'text-[#EC3013] font-semibold'
+                                        )}
                                     >
                                         Features
                                     </Link>
@@ -94,21 +105,42 @@ export default function MarketingNavbar() {
                                 <NavigationMenuItem>
                                     <Link
                                         href="/pricing"
-                                        className={`${navigationMenuTriggerStyle()} text-sm font-medium text-stone-700 hover:text-stone-900 bg-transparent hover:bg-stone-50 ${
-                                            isActive('/pricing') ? 'text-[#EC3013] font-semibold' : ''
-                                        }`}
+                                        className={cn(
+                                            navigationMenuTriggerStyle(),
+                                            'text-sm font-medium text-stone-900 bg-transparent hover:text-[#EC3013] hover:bg-transparent',
+                                            isActive('/pricing') && 'text-[#EC3013] font-semibold'
+                                        )}
                                     >
                                         Pricing
                                     </Link>
                                 </NavigationMenuItem>
 
                                 {/* Resources Dropdown */}
-                                <NavigationMenuItem>
-                                    <NavigationMenuTrigger className="text-sm font-medium text-stone-700 hover:text-stone-900 bg-transparent hover:bg-stone-50 data-[state=open]:bg-stone-50">
+                                <NavigationMenuItem value="resources" className="relative">
+                                    <NavigationMenuTrigger className="text-sm font-medium text-stone-900 bg-transparent hover:text-[#EC3013] hover:bg-transparent data-[state=open]:bg-transparent">
                                         Resources
                                     </NavigationMenuTrigger>
                                     <NavigationMenuContent>
                                         <div className="w-[320px] p-3 bg-white rounded-xl shadow-lg border border-stone-200 flex flex-col gap-1">
+                                            <a
+                                                href={route('docs.index')}
+                                                target="_blank"
+                                                rel="noopener"
+                                                onClick={() => setMenuValue('')}
+                                                className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-stone-50 transition-colors"
+                                            >
+                                                <FileText className="w-4 h-4 text-stone-500 group-hover:text-[#EC3013]" />
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="text-sm font-semibold text-stone-900 group-hover:text-[#EC3013]">
+                                                        Documentation
+                                                    </div>
+                                                    <div className="text-xs text-stone-500">
+                                                        Screenshots, guides & walkthroughs
+                                                    </div>
+                                                </div>
+                                                <ArrowUpRight className="w-3.5 h-3.5 shrink-0 text-stone-400 group-hover:text-[#EC3013]" />
+                                            </a>
+
                                             <Link
                                                 href="/resources"
                                                 className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-stone-50 transition-colors"
@@ -262,6 +294,16 @@ export default function MarketingNavbar() {
                                         <span>Resources & Guides</span>
                                         <ArrowRight className="w-4 h-4 text-stone-400" />
                                     </Link>
+                                    <a
+                                        href={route('docs.index')}
+                                        target="_blank"
+                                        rel="noopener"
+                                        onClick={() => setMobileOpen(false)}
+                                        className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-stone-700 hover:bg-stone-50 transition-colors"
+                                    >
+                                        <span>Documentation</span>
+                                        <ArrowUpRight className="w-4 h-4 text-stone-400" />
+                                    </a>
                                     <Link
                                         href="/help"
                                         onClick={() => setMobileOpen(false)}

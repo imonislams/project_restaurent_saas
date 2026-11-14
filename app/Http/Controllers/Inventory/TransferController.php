@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockTransferRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -88,9 +89,9 @@ class TransferController extends Controller
     /**
      * Stockable items a transfer may move (ingredients and products).
      *
-     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     * @return Collection<int, array<string, mixed>>
      */
-    protected function itemOptions(): \Illuminate\Support\Collection
+    protected function itemOptions(): Collection
     {
         $ingredients = Ingredient::query()->orderBy('name')->get()->map(fn (Ingredient $ingredient) => [
             'value' => 'ingredient:'.$ingredient->getKey(),

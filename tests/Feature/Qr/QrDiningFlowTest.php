@@ -3,6 +3,7 @@
 namespace Tests\Feature\Qr;
 
 use App\Domain\Branches\Models\Branch;
+use App\Domain\Dining\DiningSessionService;
 use App\Domain\Dining\Models\DiningSession;
 use App\Domain\Dining\Models\DiningSession as SessionModel;
 use App\Domain\Menu\Enums\InventoryMode;
@@ -200,7 +201,7 @@ class QrDiningFlowTest extends TestCase
         $product = $this->product();
 
         $session = SessionModel::firstOrFail();
-        app(\App\Domain\Dining\DiningSessionService::class)->close($session, 'settled');
+        app(DiningSessionService::class)->close($session, 'settled');
 
         $this->withHeader('X-Dining-Token', $sessionToken)
             ->postJson("/qr/{$this->token}/orders", [

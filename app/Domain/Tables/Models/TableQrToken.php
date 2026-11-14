@@ -2,9 +2,9 @@
 
 namespace App\Domain\Tables\Models;
 
+use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Tables\Factories\TableQrTokenFactory;
-use App\Domain\Branches\Concerns\BelongsToBranch;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class TableQrToken extends Model
 {
-    use BelongsToTenant, BelongsToBranch, HasFactory;
+    use BelongsToBranch, BelongsToTenant, HasFactory;
 
     protected $fillable = [
         'tenant_id',

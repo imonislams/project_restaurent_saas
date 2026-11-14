@@ -92,18 +92,23 @@ class EmailController extends Controller
         $class = $log->retry_class;
         $mailable = $class::fromRetryPayload($log->retry_payload ?? []);
 
-        Mail::to($log->to_email)->queue($mailable);
+        Mail::to($log->to_email)->send($mailable);
 
         $this->audit->log('platform.email_retried', $log, ['to' => $log->to_email], request()->user(), $log->tenant_id);
 
-        return back()->with('success', 'Retry queued.');
+        return back()->with('success', 'Retry sent.');
     }
 
     public function settings(): Response
     {
+        $settings = $this->settings->group('mail');
+        $transport = (string) config('mail.default');
+
         return Inertia::render('Platform/Email/Settings', [
             'settings' => $this->maskedSettings(),
             'mailers' => ['smtp', 'log', 'array', 'sendmail'],
+            'transport' => $transport,
+            'warning' => $this->deliveryWarning($transport, $this->effectiveFromAddress($settings)),
         ]);
     }
 
@@ -174,13 +179,31 @@ class EmailController extends Controller
     protected function providerSummary(): array
     {
         $settings = $this->settings->group('mail');
+        $transport = (string) config('mail.default');
+        $from = $this->effectiveFromAddress($settings);
 
         return [
-            'mailer' => $settings['mail.mailer'] ?? config('mail.default'),
-            'from_address' => $this->effectiveFromAddress($settings) ?? '',
+            'mailer' => $settings['mail.mailer'] ?? $transport,
+            'transport' => $transport,
+            'from_address' => $from ?? '',
             'configured' => ($settings['mail.mailer'] ?? null) !== null,
             'host' => $settings['mail.host'] ?? null,
+            'warning' => $this->deliveryWarning($transport, $from),
         ];
+    }
+
+    /**
+     * Why mail would silently not arrive, in words an administrator can act on.
+     * This is the difference between "the app sent it" and "it was delivered" —
+     * a log transport reports success while nothing ever leaves the server.
+     */
+    protected function deliveryWarning(string $transport, ?string $from): ?string
+    {
+        return MailConfigurator::problemFor(
+            $transport,
+            $from,
+            in_array('mail.password', $this->settings->unreadableKeys(), true),
+        );
     }
 
     /** @return array<string, mixed> */
@@ -197,6 +220,7 @@ class EmailController extends Controller
             'from_address' => $this->effectiveFromAddress($settings) ?? '',
             'from_name' => $settings['mail.from_name'] ?? config('mail.from.name'),
             'has_password' => ! empty($settings['mail.password']),
+            'credential_readable' => ! in_array('mail.password', $this->settings->unreadableKeys(), true),
         ];
     }
 

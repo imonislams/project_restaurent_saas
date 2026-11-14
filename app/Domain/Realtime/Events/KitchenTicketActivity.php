@@ -3,6 +3,7 @@
 namespace App\Domain\Realtime\Events;
 
 use App\Domain\Kitchen\Models\KitchenTicket;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -24,7 +25,7 @@ class KitchenTicketActivity implements ShouldBroadcastNow
         public string $status,
     ) {}
 
-    /** @return array<int, \Illuminate\Broadcasting\Channel> */
+    /** @return array<int, Channel> */
     public function broadcastOn(): array
     {
         return [
@@ -46,6 +47,7 @@ class KitchenTicketActivity implements ShouldBroadcastNow
             'status' => $this->status,
             'branch_id' => $this->ticket->branch_id,
             'order_number' => $this->ticket->order?->order_number,
+            'round_no' => $this->ticket->round_no,
             'items' => $this->ticket->items()->count(),
         ];
     }

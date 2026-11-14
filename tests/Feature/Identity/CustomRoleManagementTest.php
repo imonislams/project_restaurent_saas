@@ -149,18 +149,221 @@ class CustomRoleManagementTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'role.permissions_updated']);
     }
 
-    public function test_system_roles_cannot_be_edited_or_deleted(): void
+    public function test_builtin_roles_can_be_customised_per_tenant(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $owner = $this->owner($tenant);
+        $staff = User::factory()->forTenant($tenant)->create();
+        $cashier = Role::whereNull('tenant_id')->where('slug', RoleName::Cashier->value)->firstOrFail();
+        $staff->assignRole($cashier);
+
+        $this->actingAs($owner)->patch("/roles/{$cashier->id}", [
+            'name' => 'Cashier',
+            'permissions' => ['orders.view', 'orders.create', 'orders.void'],
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $copy = Role::where('tenant_id', $tenant->id)
+            ->where('based_on_role_id', $cashier->id)
+            ->firstOrFail();
+
+        $this->assertSame('Cashier', $copy->name);
+        $this->assertFalse($copy->is_system);
+        $this->assertEqualsCanonicalizing(
+            ['orders.view', 'orders.create', 'orders.void'],
+            $copy->permissions()->pluck('slug')->all(),
+        );
+
+        $staff->refresh();
+        $this->assertTrue($staff->roles->pluck('id')->contains($copy->id));
+        $this->assertFalse($staff->roles->pluck('id')->contains($cashier->id));
+
+        // The shared global definition is untouched.
+        $this->assertFalse($cashier->fresh()->permissions->contains('slug', 'orders.void'));
+
+        // The global system role itself can never be deleted from the tenant screen.
+        $this->actingAs($owner)->delete("/roles/{$cashier->id}")->assertForbidden();
+
+        $this->assertDatabaseHas('audit_logs', ['action' => 'role.customized_from_system']);
+    }
+
+    public function test_customising_a_system_role_does_not_affect_other_tenants(): void
+    {
+        $tenantA = Tenant::factory()->create();
+        $tenantB = Tenant::factory()->create();
+        $ownerA = $this->owner($tenantA);
+        $ownerB = $this->owner($tenantB);
+        $cashier = Role::whereNull('tenant_id')->where('slug', RoleName::Cashier->value)->firstOrFail();
+
+        $this->actingAs($ownerA)->patch("/roles/{$cashier->id}", [
+            'name' => 'Cashier',
+            'permissions' => ['orders.view', 'orders.void'],
+        ])->assertRedirect();
+
+        $this->assertDatabaseMissing('roles', [
+            'tenant_id' => $tenantB->id,
+            'based_on_role_id' => $cashier->id,
+        ]);
+
+        // Tenant A no longer sees the global row (it is shadowed by its copy).
+        $this->actingAs($ownerA)->get('/roles')->assertOk()->assertInertia(
+            fn ($page) => $page->where(
+                'roles',
+                fn ($roles) => collect($roles)->doesntContain(fn ($role) => $role['id'] === $cashier->id),
+            ),
+        );
+
+        // Tenant B still sees the untouched global row.
+        $this->actingAs($ownerB)->get('/roles')->assertOk()->assertInertia(
+            fn ($page) => $page->where(
+                'roles',
+                fn ($roles) => collect($roles)->contains(fn ($role) => $role['id'] === $cashier->id),
+            ),
+        );
+    }
+
+    public function test_repeated_edits_update_the_same_tenant_copy(): void
     {
         $tenant = Tenant::factory()->create();
         $owner = $this->owner($tenant);
         $cashier = Role::whereNull('tenant_id')->where('slug', RoleName::Cashier->value)->firstOrFail();
 
         $this->actingAs($owner)->patch("/roles/{$cashier->id}", [
-            'name' => 'Hacked Cashier',
-            'permissions' => ['orders.void'],
-        ])->assertForbidden();
+            'name' => 'Cashier',
+            'permissions' => ['orders.view'],
+        ])->assertRedirect();
 
-        $this->actingAs($owner)->delete("/roles/{$cashier->id}")->assertForbidden();
+        $copy = Role::where('tenant_id', $tenant->id)
+            ->where('based_on_role_id', $cashier->id)
+            ->firstOrFail();
+
+        $this->actingAs($owner)->patch("/roles/{$copy->id}", [
+            'name' => 'Cashier Plus',
+            'permissions' => ['orders.view', 'orders.approve'],
+        ])->assertRedirect();
+
+        $this->assertSame(
+            1,
+            Role::where('tenant_id', $tenant->id)->where('based_on_role_id', $cashier->id)->count(),
+        );
+        $this->assertSame('Cashier Plus', $copy->fresh()->name);
+        $this->assertEqualsCanonicalizing(
+            ['orders.view', 'orders.approve'],
+            $copy->permissions()->pluck('slug')->all(),
+        );
+    }
+
+    public function test_branch_scoped_assignment_is_preserved_when_customising_a_role(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $owner = $this->owner($tenant);
+        $branch = $tenant->branches()->create(['name' => 'Main', 'code' => 'MAIN']);
+        $staff = User::factory()->forTenant($tenant)->create();
+        $cashier = Role::whereNull('tenant_id')->where('slug', RoleName::Cashier->value)->firstOrFail();
+
+        $staff->roles()->attach($cashier->id, ['branch_id' => $branch->id]);
+
+        $this->actingAs($owner)->patch("/roles/{$cashier->id}", [
+            'name' => 'Cashier',
+            'permissions' => ['orders.view'],
+        ])->assertRedirect();
+
+        $copy = Role::where('tenant_id', $tenant->id)
+            ->where('based_on_role_id', $cashier->id)
+            ->firstOrFail();
+
+        $this->assertDatabaseHas('role_user', [
+            'user_id' => $staff->id,
+            'role_id' => $copy->id,
+            'branch_id' => $branch->id,
+        ]);
+        $this->assertDatabaseMissing('role_user', [
+            'user_id' => $staff->id,
+            'role_id' => $cashier->id,
+        ]);
+    }
+
+    public function test_locked_owner_and_admin_roles_cannot_be_customised(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $owner = $this->owner($tenant);
+
+        foreach ([RoleName::TenantOwner, RoleName::TenantAdmin] as $roleName) {
+            $role = Role::whereNull('tenant_id')->where('slug', $roleName->value)->firstOrFail();
+
+            $this->actingAs($owner)->patch("/roles/{$role->id}", [
+                'name' => $role->name,
+                'permissions' => [],
+            ])->assertForbidden();
+        }
+
+        $this->assertDatabaseCount('roles', 17);
+    }
+
+    public function test_owner_can_reset_a_customised_role_to_the_system_default(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $owner = $this->owner($tenant);
+        $staff = User::factory()->forTenant($tenant)->create();
+        $cashier = Role::whereNull('tenant_id')->where('slug', RoleName::Cashier->value)->firstOrFail();
+        $staff->assignRole($cashier);
+
+        $this->actingAs($owner)->patch("/roles/{$cashier->id}", [
+            'name' => 'Cashier',
+            'permissions' => ['orders.view'],
+        ])->assertRedirect();
+
+        $copy = Role::where('tenant_id', $tenant->id)
+            ->where('based_on_role_id', $cashier->id)
+            ->firstOrFail();
+
+        $this->actingAs($owner)->post("/roles/{$copy->id}/reset")->assertRedirect();
+
+        $this->assertDatabaseMissing('roles', ['id' => $copy->id]);
+        $staff->refresh();
+        $this->assertTrue($staff->roles->pluck('id')->contains($cashier->id));
+        $this->assertDatabaseHas('audit_logs', ['action' => 'role.reset_to_system']);
+    }
+
+    public function test_staff_role_options_hide_a_shadowed_system_role(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $owner = $this->owner($tenant);
+        $cashier = Role::whereNull('tenant_id')->where('slug', RoleName::Cashier->value)->firstOrFail();
+
+        $this->actingAs($owner)->patch("/roles/{$cashier->id}", [
+            'name' => 'Cashier',
+            'permissions' => ['orders.view'],
+        ])->assertRedirect();
+
+        $copy = Role::where('tenant_id', $tenant->id)
+            ->where('based_on_role_id', $cashier->id)
+            ->firstOrFail();
+
+        $this->actingAs($owner)->get('/staff')->assertOk()->assertInertia(
+            fn ($page) => $page->where('roles', function ($roles) use ($cashier, $copy) {
+                $values = collect($roles)->pluck('value');
+
+                return $values->contains($copy->slug) && ! $values->contains($cashier->slug);
+            }),
+        );
+    }
+
+    public function test_role_ids_resolve_to_the_tenant_copy_for_stale_assignments(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $owner = $this->owner($tenant);
+        $cashier = Role::whereNull('tenant_id')->where('slug', RoleName::Cashier->value)->firstOrFail();
+
+        $this->actingAs($owner)->patch("/roles/{$cashier->id}", [
+            'name' => 'Cashier',
+            'permissions' => ['orders.view'],
+        ])->assertRedirect();
+
+        $copy = Role::where('tenant_id', $tenant->id)
+            ->where('based_on_role_id', $cashier->id)
+            ->firstOrFail();
+
+        $this->assertSame([$copy->id], Role::idsForTenant([$cashier->slug], $tenant->id));
     }
 
     public function test_owner_cannot_manage_another_tenants_custom_role(): void

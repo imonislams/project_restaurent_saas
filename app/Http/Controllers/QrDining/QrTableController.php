@@ -11,6 +11,7 @@ use App\Domain\Tables\QrCodeRenderer;
 use App\Domain\Tables\TableQrService;
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
@@ -55,7 +56,7 @@ class QrTableController extends Controller
 
         return Inertia::render('QrDining/Tables', [
             'tables' => $tables,
-            'branches' => \App\Domain\Branches\Models\Branch::query()
+            'branches' => Branch::query()
                 ->whereIn('id', $accessible)->orderBy('name')->get()
                 ->map(fn ($b) => ['id' => $b->getKey(), 'name' => $b->name]),
             'areas' => DiningArea::query()
@@ -71,14 +72,14 @@ class QrTableController extends Controller
         ]);
     }
 
-    public function regenerate(Request $request, Table $table): \Illuminate\Http\RedirectResponse
+    public function regenerate(Request $request, Table $table): RedirectResponse
     {
         $this->qr->regenerate($table, $request->user());
 
         return back()->with('success', 'A new QR code was generated for '.$table->name.'.');
     }
 
-    public function revoke(Request $request, Table $table): \Illuminate\Http\RedirectResponse
+    public function revoke(Request $request, Table $table): RedirectResponse
     {
         $this->qr->revoke($table);
 

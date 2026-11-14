@@ -13,35 +13,53 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Tenant-scoped custom role management.
+ * Tenant-scoped role management.
  *
  * Custom roles are ordinary `roles` rows with a non-null `tenant_id` and
- * `is_system = false`. The existing global roles (tenant_id = null) remain the
- * fixed, system-defined catalogue and are never editable or deletable here.
+ * `is_system = false`. Built-in system roles remain global rows
+ * (`tenant_id = null`); the first time a tenant edits one, a tenant-owned copy
+ * is created (`based_on_role_id` points at the system role) and the tenant's
+ * users are moved onto it. Edits never touch the shared global definition.
  */
 class RoleService
 {
     public function __construct(protected AuditLogger $audit) {}
 
     /**
-     * Roles visible to a tenant: the global non-platform roles plus the tenant's
-     * own custom roles. Assigned users are always limited to this tenant, so a
-     * global role shared by many tenants never leaks another tenant's users.
+     * Roles visible to a tenant: the global non-platform roles that the tenant
+     * has not customised (plus nothing else), the tenant's customised copies,
+     * and its own custom roles. Assigned users are always limited to this
+     * tenant, so a global role shared by many tenants never leaks another
+     * tenant's users.
      *
      * @return list<array<string, mixed>>
      */
     public function rolesForTenant(Tenant $tenant): array
     {
+        $tenantId = $tenant->getKey();
+
+        $shadowedRoleIds = Role::query()
+            ->where('tenant_id', $tenantId)
+            ->whereNotNull('based_on_role_id')
+            ->pluck('based_on_role_id')
+            ->all();
+
         $membership = DB::table('role_user')
             ->join('users', 'users.id', '=', 'role_user.user_id')
-            ->where('users.tenant_id', $tenant->getKey())
+            ->where('users.tenant_id', $tenantId)
             ->select('role_user.role_id', 'users.id', 'users.name', 'users.email')
             ->get()
             ->groupBy('role_id');
 
         return Role::query()
-            ->where(function ($query) use ($tenant) {
-                $query->whereNull('tenant_id')->orWhere('tenant_id', $tenant->getKey());
+            ->where(function ($query) use ($tenantId, $shadowedRoleIds) {
+                $query->where(function ($query) use ($shadowedRoleIds) {
+                    $query->whereNull('tenant_id');
+
+                    if ($shadowedRoleIds !== []) {
+                        $query->whereNotIn('id', $shadowedRoleIds);
+                    }
+                })->orWhere('tenant_id', $tenantId);
             })
             ->whereNotIn('slug', RoleName::platformValues())
             ->with('permissions:id,slug')
@@ -58,6 +76,9 @@ class RoleService
                     'description' => $role->description,
                     'is_system' => (bool) $role->is_system,
                     'is_custom' => $role->tenant_id !== null,
+                    'is_customized' => $role->isDerived(),
+                    'locked' => $role->isLocked(),
+                    'editable' => ! $role->isLocked(),
                     'permissions' => $role->permissions->pluck('slug')->all(),
                     'users' => $users->map(fn ($user) => [
                         'id' => $user->id,
@@ -137,36 +158,42 @@ class RoleService
     }
 
     /**
+     * Update a tenant-owned role, or customise a built-in system role for this
+     * tenant (copy-on-write — the shared global definition is never touched).
+     *
      * @param  array{name: string, description?: ?string, permissions?: list<string>}  $data
      */
     public function update(Tenant $tenant, Role $role, array $data, User $actor): Role
     {
-        $this->guardManaged($tenant, $role);
+        $this->guardEditable($tenant, $role);
 
         $name = trim((string) $data['name']);
-        $this->guardName($tenant, $name, $role->getKey());
         $permissions = $this->validatePermissions($data['permissions'] ?? [], $actor);
 
         return DB::transaction(function () use ($tenant, $role, $name, $data, $permissions, $actor) {
-            $before = $role->permissions()->pluck('slug')->all();
+            $target = $this->resolveEditableRole($tenant, $role, $actor);
 
-            $role->forceFill([
+            $this->guardName($tenant, $name, $target->getKey(), $target->based_on_role_id);
+
+            $before = $target->permissions()->pluck('slug')->all();
+
+            $target->forceFill([
                 'name' => $name,
                 'description' => $data['description'] ?? null,
             ])->save();
 
-            $role->permissions()->sync($this->permissionIds($permissions));
+            $target->permissions()->sync($this->permissionIds($permissions));
 
             $this->audit->logChange(
                 'role.permissions_updated',
-                $role,
-                ['name' => $role->name, 'permissions' => $before],
-                ['name' => $role->name, 'permissions' => $permissions],
+                $target,
+                ['name' => $target->name, 'permissions' => $before],
+                ['name' => $target->name, 'permissions' => $permissions],
                 $actor,
                 $tenant->getKey(),
             );
 
-            return $role->load('permissions:id,slug');
+            return $target->load('permissions:id,slug');
         });
     }
 
@@ -197,16 +224,157 @@ class RoleService
     }
 
     /**
-     * Only the tenant's own, non-system roles may be edited or deleted.
+     * Restore the platform default for a customised system role: move users
+     * back to the global role and delete the tenant copy.
+     */
+    public function resetToDefault(Tenant $tenant, Role $role, User $actor): ?Role
+    {
+        abort_unless($role->tenant_id === $tenant->getKey() && $role->isDerived(), 404);
+
+        return DB::transaction(function () use ($tenant, $role, $actor) {
+            $source = $role->source;
+
+            if ($source !== null) {
+                $this->moveUsers($tenant, $role, $source);
+            }
+
+            $snapshot = [
+                'name' => $role->name,
+                'slug' => $role->slug,
+                'source' => $source?->slug,
+                'permissions' => $role->permissions()->pluck('slug')->all(),
+            ];
+
+            $role->permissions()->detach();
+            $role->delete();
+
+            $this->audit->log('role.reset_to_system', null, $snapshot, $actor, $tenant->getKey());
+
+            return $source;
+        });
+    }
+
+    /**
+     * Only tenant-owned, non-system roles may be edited or deleted directly.
      */
     protected function guardManaged(Tenant $tenant, Role $role): void
     {
         abort_unless($role->tenant_id === $tenant->getKey(), 404);
-        abort_if($role->is_system, 403, 'System roles cannot be modified.');
+        abort_if($role->is_system, 403, 'System roles cannot be deleted.');
         abort_if(in_array($role->slug, RoleName::platformValues(), true), 404);
     }
 
-    protected function guardName(Tenant $tenant, string $name, ?int $ignoreId = null): void
+    /**
+     * Editing is allowed for the tenant's own roles and for the built-in system
+     * roles the platform leaves open (everything except owner/admin).
+     */
+    protected function guardEditable(Tenant $tenant, Role $role): void
+    {
+        if ($role->tenant_id === $tenant->getKey() && ! $role->is_system) {
+            return;
+        }
+
+        abort_unless($this->isCustomizableSystemRole($role), 404);
+        abort_if($role->isLocked(), 403, 'This role cannot be customised.');
+    }
+
+    protected function isCustomizableSystemRole(Role $role): bool
+    {
+        return $role->tenant_id === null
+            && $role->is_system
+            && ! $role->isLocked()
+            && ! in_array($role->slug, RoleName::platformValues(), true);
+    }
+
+    /**
+     * A tenant-owned role is edited in place; a built-in system role is copied
+     * into the tenant first so the shared definition stays untouched.
+     */
+    protected function resolveEditableRole(Tenant $tenant, Role $role, User $actor): Role
+    {
+        if ($role->tenant_id === $tenant->getKey() && ! $role->is_system) {
+            return $role;
+        }
+
+        return $this->copySystemRoleForTenant($tenant, $role, $actor);
+    }
+
+    /**
+     * Find (or create) this tenant's copy of a built-in role and move the
+     * tenant's users onto it, preserving their branch assignment.
+     */
+    protected function copySystemRoleForTenant(Tenant $tenant, Role $source, User $actor): Role
+    {
+        $existing = Role::query()
+            ->where('tenant_id', $tenant->getKey())
+            ->where('based_on_role_id', $source->getKey())
+            ->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $copy = Role::create([
+            'tenant_id' => $tenant->getKey(),
+            'based_on_role_id' => $source->getKey(),
+            'name' => $source->name,
+            'slug' => $this->uniqueSlug($tenant, $source->name.' custom'),
+            'description' => $source->description,
+            'is_system' => false,
+        ]);
+
+        $sourcePermissions = $source->permissions()->pluck('permissions.id')->all();
+        $copy->permissions()->sync($sourcePermissions);
+
+        $this->moveUsers($tenant, $source, $copy);
+
+        $this->audit->log('role.customized_from_system', $copy, [
+            'source' => $source->slug,
+            'name' => $copy->name,
+            'permissions' => $source->permissions()->pluck('slug')->all(),
+        ], $actor, $tenant->getKey());
+
+        return $copy;
+    }
+
+    /**
+     * Re-point this tenant's role assignments from one role to another without
+     * losing the `role_user.branch_id` scoping.
+     */
+    protected function moveUsers(Tenant $tenant, Role $from, Role $to): void
+    {
+        $userIds = DB::table('users')->where('tenant_id', $tenant->getKey())->pluck('id');
+
+        if ($userIds->isEmpty()) {
+            return;
+        }
+
+        $assignments = DB::table('role_user')
+            ->where('role_id', $from->getKey())
+            ->whereIn('user_id', $userIds)
+            ->get();
+
+        if ($assignments->isEmpty()) {
+            return;
+        }
+
+        foreach ($assignments as $assignment) {
+            DB::table('role_user')->insertOrIgnore([
+                'user_id' => $assignment->user_id,
+                'role_id' => $to->getKey(),
+                'branch_id' => $assignment->branch_id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        DB::table('role_user')
+            ->where('role_id', $from->getKey())
+            ->whereIn('user_id', $assignments->pluck('user_id'))
+            ->delete();
+    }
+
+    protected function guardName(Tenant $tenant, string $name, ?int $ignoreId = null, ?int $ignoreSourceId = null): void
     {
         if ($name === '') {
             throw ValidationException::withMessages(['name' => 'A role name is required.']);
@@ -218,6 +386,7 @@ class RoleService
                 $query->whereNull('tenant_id')->orWhere('tenant_id', $tenant->getKey());
             })
             ->when($ignoreId, fn ($query) => $query->whereKeyNot($ignoreId))
+            ->when($ignoreSourceId, fn ($query) => $query->whereKeyNot($ignoreSourceId))
             ->exists();
 
         if ($exists) {

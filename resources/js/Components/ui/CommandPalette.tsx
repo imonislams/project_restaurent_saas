@@ -10,6 +10,8 @@ export interface CommandItem {
     href: string;
     icon: IconName;
     keywords?: string;
+    /** Open in a new browser tab via a native anchor. */
+    newTab?: boolean;
 }
 
 export default function CommandPalette({
@@ -24,6 +26,7 @@ export default function CommandPalette({
     const [query, setQuery] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
+    const rowRefs = useRef<(HTMLAnchorElement | null)[]>([]);
 
     useEffect(() => {
         if (show) {
@@ -50,7 +53,9 @@ export default function CommandPalette({
 
     const selectItem = (item: CommandItem) => {
         onClose();
-        router.visit(item.href);
+        if (!item.newTab) {
+            router.visit(item.href);
+        }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -62,7 +67,14 @@ export default function CommandPalette({
             setSelectedIndex((prev) => (prev - 1 >= 0 ? prev - 1 : filtered.length - 1));
         } else if (e.key === 'Enter' && filtered[selectedIndex]) {
             e.preventDefault();
-            selectItem(filtered[selectedIndex]);
+            const item = filtered[selectedIndex];
+            if (item.newTab) {
+                // Click the real anchor so the browser honours the new-tab target.
+                rowRefs.current[selectedIndex]?.click();
+                onClose();
+            } else {
+                selectItem(item);
+            }
         }
     };
 
@@ -94,10 +106,22 @@ export default function CommandPalette({
                             {filtered.map((item, idx) => {
                                 const isSelected = idx === selectedIndex;
                                 return (
-                                    <button
+                                    <a
                                         key={item.id}
-                                        type="button"
-                                        onClick={() => selectItem(item)}
+                                        href={item.href}
+                                        target={item.newTab ? '_blank' : undefined}
+                                        rel={item.newTab ? 'noopener' : undefined}
+                                        ref={(el) => {
+                                            rowRefs.current[idx] = el;
+                                        }}
+                                        onClick={(e) => {
+                                            if (item.newTab) {
+                                                onClose();
+                                            } else {
+                                                e.preventDefault();
+                                                selectItem(item);
+                                            }
+                                        }}
                                         onMouseEnter={() => setSelectedIndex(idx)}
                                         className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs transition ${
                                             isSelected
@@ -123,7 +147,7 @@ export default function CommandPalette({
                                                 <span className="text-[10px] font-semibold text-primary">↵ Jump</span>
                                             )}
                                         </div>
-                                    </button>
+                                    </a>
                                 );
                             })}
                         </div>

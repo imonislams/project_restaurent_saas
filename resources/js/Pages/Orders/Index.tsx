@@ -13,6 +13,8 @@ import {
     TableRow,
 } from '@/Components/ui/Table';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PrintButton from '@/Components/print/PrintButton';
+import PrintDocument from '@/Components/print/PrintDocument';
 import { BranchSummary } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Printer } from 'lucide-react';
@@ -182,19 +184,22 @@ export default function OrdersIndex({
                     title="Orders Management"
                     description="Monitor, filter, settle, and audit sales transactions across all channels."
                     actions={
-                        <Link href={route('pos.index')}>
-                            <Button icon={<Icon name="cart" className="h-4 w-4" />}>
-                                Open POS
-                            </Button>
-                        </Link>
+                        <div className="flex items-center gap-2">
+                            <PrintButton title="Orders Report" />
+                            <Link href={route('pos.index')}>
+                                <Button icon={<Icon name="cart" className="h-4 w-4" />}>
+                                    Open POS
+                                </Button>
+                            </Link>
+                        </div>
                     }
                 />
             }
         >
             <Head title="Orders Management" />
 
-            <div className="py-6 space-y-6">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
+            <div className="py-6 space-y-6 print:py-0">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 print:max-w-none print:px-0">
                     {/* Flash messages */}
                     {flash?.success && (
                         <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-medium text-emerald-700 dark:text-emerald-400">
@@ -209,6 +214,7 @@ export default function OrdersIndex({
                         </div>
                     )}
 
+                    <PrintDocument title="Orders Report" dateRange={`${from} → ${to}`} className="space-y-6">
                     {/* KPI Summary Cards */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <KpiCard
@@ -236,7 +242,7 @@ export default function OrdersIndex({
                     </div>
 
                     {/* Filter & Search Bar */}
-                    <Card>
+                    <Card className="print:hidden">
                         <CardContent className="p-4 space-y-3">
                             {/* Quick Presets Row */}
                             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
@@ -403,7 +409,7 @@ export default function OrdersIndex({
                                 </p>
                             </div>
                         ) : (
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto print:overflow-visible">
                                 <Table>
                                     <TableHeader>
                                         <TableRow className="hover:bg-transparent">
@@ -414,7 +420,7 @@ export default function OrdersIndex({
                                             <TableHead className="px-5 py-3 text-right">Total Amount</TableHead>
                                             <TableHead className="px-5 py-3">Status</TableHead>
                                             <TableHead className="px-5 py-3">Timestamp</TableHead>
-                                            <TableHead className="px-5 py-3 text-right">Actions</TableHead>
+                                            <TableHead className="px-5 py-3 text-right print:hidden">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -500,7 +506,7 @@ export default function OrdersIndex({
                                                     </TableCell>
 
                                                     {/* Actions */}
-                                                    <TableCell className="px-5 py-3.5 text-right whitespace-nowrap">
+                                                    <TableCell className="px-5 py-3.5 text-right whitespace-nowrap print:hidden">
                                                         <div className="flex items-center justify-end gap-1.5">
                                                             {canApprove && order.acceptance_status === 'pending' && (
                                                                 <>
@@ -545,7 +551,7 @@ export default function OrdersIndex({
 
                     {/* Pagination */}
                     {orders.links && orders.links.length > 3 && (
-                        <div className="flex items-center justify-between border-t border-border pt-4">
+                        <div className="flex items-center justify-between border-t border-border pt-4 print:hidden">
                             <div className="text-xs text-muted-foreground">
                                 Showing {orders.from ?? 1} to {orders.to ?? orders.data.length} of {orders.total ?? orders.data.length} results
                             </div>
@@ -567,6 +573,7 @@ export default function OrdersIndex({
                             </div>
                         </div>
                     )}
+                    </PrintDocument>
                 </div>
             </div>
         </AuthenticatedLayout>

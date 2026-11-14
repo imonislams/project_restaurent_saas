@@ -79,6 +79,9 @@ class RolePermissionSeeder extends Seeder
                 'platform.payments.view', 'platform.payments.manage', 'platform.refunds.manage',
                 'platform.email.view', 'platform.email.manage',
                 'platform.marketing.view', 'platform.marketing.manage',
+                'platform.marketing.publish', 'platform.marketing.leads.assign',
+                'platform.marketing.consent.manage', 'platform.marketing.export',
+                'platform.marketing.reports.view',
                 'platform.backups.view', 'platform.backups.create',
                 'platform.maintenance.view', 'platform.maintenance.manage',
                 'platform.commands.run',
@@ -115,6 +118,7 @@ class RolePermissionSeeder extends Seeder
                 'platform.billing.view', 'platform.invoices.view', 'platform.payments.view',
                 'platform.logs.view', 'platform.audit.view', 'platform.security.view',
                 'platform.support.view',
+                'platform.marketing.view', 'platform.marketing.export', 'platform.marketing.reports.view',
             ]),
 
             RoleName::TenantOwner->value => $all,
