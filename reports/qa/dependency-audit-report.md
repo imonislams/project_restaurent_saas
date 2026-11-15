@@ -226,3 +226,38 @@ but genuinely do not ship — I verified that rather than assuming it, because "
 audit summary means nothing until you know whether the code reaches production.
 
 Category A is now **fully tested** — 12 of 12 cases executed, with no blocked items remaining.
+
+---
+
+## Remediation 2026-11-15 — QA-A-09 resolved, advisories at zero
+
+The `composer update` was run, scoped to the affected package families and their dependencies.
+
+| | Before | After |
+|---|---|---|
+| `composer audit` advisories | **9** across 6 packages | **0** |
+| Packages updated | — | 30 |
+| Major version bumps | — | **0** |
+| Laravel version | v12.70.1 | v12.72.0 |
+| Test suite | 997 passed | **1000 passed / 0 failed** |
+
+The key entries:
+
+```
+laravel/framework         v12.70.1 → v12.72.0
+symfony/http-foundation    v7.4.21 → v7.4.23   ← the password-reset poisoning path
+symfony/http-kernel        v7.4.21 → v7.4.23
+symfony/routing            v7.4.21 → v7.4.23
+symfony/mime               v7.4.19 → v7.4.22
+symfony/yaml               v8.1.9  → v8.1.11
+```
+
+All patch or minor releases. `composer update --dry-run` was run first to confirm no major bumps
+appeared in the resolve before anything was written.
+
+**CI gate can now be made blocking.** QA-E-04 added the `audit:dependencies` job with
+`allow_failure: true`, deliberately, because a non-zero advisory count would have turned every
+pipeline red. With the count at zero that deferral no longer has a reason — the job should become
+`allow_failure: false` so the next advisory fails the build instead of being discovered later.
+
+**Revised verdict for Category A: PASS.**

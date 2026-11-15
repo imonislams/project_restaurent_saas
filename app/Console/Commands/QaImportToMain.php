@@ -187,8 +187,8 @@ class QaImportToMain extends Command
         return array_map(
             fn ($r) => $r->column_name,
             DB::connection(self::QA)->select(
-                "select column_name from information_schema.columns
-                 where table_schema = database() and table_name = ? order by ordinal_position",
+                'select column_name from information_schema.columns
+                 where table_schema = database() and table_name = ? order by ordinal_position',
                 [$table],
             ),
         );
@@ -382,9 +382,9 @@ class QaImportToMain extends Command
 
         DB::connection(self::MAIN)->statement(
             "insert into `tenants` ({$colList})
-             select ".implode(', ', $exprs)."
+             select ".implode(', ', $exprs).'
              from `tenants`
-             where id between ? and ?",
+             where id between ? and ?',
             [$from, $to],
         );
     }
@@ -417,8 +417,7 @@ class QaImportToMain extends Command
             "insert into `{$table}` ({$colList})
              select ".implode(', ', $exprs)."
              from `{$table}`
-             where tenant_id between ? and ?"
-                , [$from, $to],
+             where tenant_id between ? and ?", [$from, $to],
         );
     }
 
@@ -432,7 +431,7 @@ class QaImportToMain extends Command
     protected function copyRoleAssignments(int $from, int $to, int $offset): void
     {
         $rows = DB::connection(self::QA)->select(
-            'select ru.user_id, ru.role_id, ru.branch_id, r.slug, r.tenant_id as role_tenant
+            'select ru.user_id, ru.role_id, r.slug, r.tenant_id as role_tenant
              from role_user ru
              join roles r on r.id = ru.role_id
              join users u on u.id = ru.user_id
@@ -463,7 +462,6 @@ class QaImportToMain extends Command
             DB::connection(self::MAIN)->table('role_user')->insertOrIgnore([
                 'user_id' => (int) $row->user_id + $offset,
                 'role_id' => $roleId,
-                'branch_id' => $row->branch_id === null ? null : (int) $row->branch_id + $offset,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

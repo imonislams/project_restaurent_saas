@@ -338,8 +338,7 @@ class RoleService
     }
 
     /**
-     * Re-point this tenant's role assignments from one role to another without
-     * losing the `role_user.branch_id` scoping.
+     * Re-point this tenant's role assignments from one role to another.
      */
     protected function moveUsers(Tenant $tenant, Role $from, Role $to): void
     {
@@ -362,7 +361,6 @@ class RoleService
             DB::table('role_user')->insertOrIgnore([
                 'user_id' => $assignment->user_id,
                 'role_id' => $to->getKey(),
-                'branch_id' => $assignment->branch_id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

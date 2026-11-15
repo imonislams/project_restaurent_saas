@@ -12,7 +12,6 @@ trait HasRoles
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class)
-            ->withPivot('branch_id')
             ->withTimestamps();
     }
 

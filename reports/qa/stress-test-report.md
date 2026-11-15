@@ -225,3 +225,28 @@ and not a practical limit for this product's workload.
 
 The honest caveat is that the ceiling I measured is a floor: the environment is unusually weak, and
 the real numbers will be better on production hardware.
+
+---
+
+## Update 2026-11-15 — the floor was confirmed, and the prediction was right
+
+I wrote above that the 16 MB buffer pool made these numbers "pessimistic by an unknown factor, and I
+will not guess that factor." It has now been measured rather than guessed: the pool was raised to
+256 MB (QA-E-00) and the same POS measurement re-run.
+
+| Metric | 16 MB pool | 256 MB pool | Change |
+|---|---|---|---|
+| avg latency | 383.4 ms | **132.8 ms** | **−65%** |
+| throughput | 2.61 sales/sec | **7.53 sales/sec** | **+189%** |
+| queries per sale | 59.1 | 59.1 | **unchanged** |
+
+**The 8-writer saturation plateau was the buffer pool, not lock contention.** Since the query count is
+identical before and after, the application's work did not change — only the engine's ability to serve
+it. That settles the open question in this category.
+
+**QA-D-01 is closed as resolved** (reclassified from Medium defect to capacity characteristic,
+then fixed at the environment level). The revised throughput ceiling of 7.53 sales/sec per branch is
+~27,000 sales/hour, well beyond any realistic restaurant load.
+
+**Still open — QA-E-03.** This result says nothing about the production database host. If that host is
+also configured with a small buffer pool, it will show the same ceiling. It must be checked there.

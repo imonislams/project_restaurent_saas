@@ -1,7 +1,7 @@
 # QA Audit — Reports Index
 
 **Branch:** `qa/security-performance-audit`
-**Audit window:** 2026-11-14
+**Audit window:** 2026-11-14 → 2026-11-15
 **Scope:** vulnerability, security, load/performance, stress, production readiness
 
 ---
@@ -28,31 +28,37 @@
 
 | Category | Audit-time verdict | Current state |
 |---|---|---|
-| A — Vulnerability | NEEDS IMPROVEMENT | **PASS** (QA-A-09 open, pending approval) |
-| B — Security | PASS | **PASS** |
-| C — Load & Performance | NEEDS IMPROVEMENT | **Improving** — −23% latency, +30% throughput achieved; QA-C-02 reclassified as capacity characteristic |
-| D — Stress | PASS | **PASS** |
-| E — Production Readiness | NEEDS IMPROVEMENT | **Near-ready** — both Highs verified fixed; release gate blocked on the missing `gd` extension |
+| A — Vulnerability | NEEDS IMPROVEMENT | **PASS** — all 11 closed, dependency advisories at 0 |
+| B — Security | PASS | **PASS** — dead `role_user.branch_id` column dropped |
+| C — Load & Performance | NEEDS IMPROVEMENT | **PASS** — 383→133 ms, 2.61→7.53 sales/sec; QA-C-02 reclassified as capacity characteristic |
+| D — Stress | PASS | **PASS** — saturation ceiling was the buffer pool, now resolved |
+| E — Production Readiness | NEEDS IMPROVEMENT | **Ready, pending one deployment check** — QA-E-03 must be confirmed on the production DB host |
 
 ### Headline outcomes
 
 | | |
 |---|---|
-| Findings raised | 25 |
-| **Verified fixed** | **12** |
-| Fixed, awaiting verification | 4 |
-| Rejected as false positives (my errors) | 1 |
-| Open, needing your decision | 4 |
+| Findings registered | 24 |
+| **Fixed & verified** | **20** |
+| Reclassified (defect → capacity characteristic) | 1 (QA-C-02) |
+| Rejected as false positive (my error) | 1 (QA-A-07) |
+| Open — deployment checklist only | 1 (QA-E-03) |
+| Reported, no action recommended | 1 (QA-D-02) |
 
-**The two High security findings (payment webhook auth, hardcoded HMAC secret) are fixed and
-proven** — with negative controls showing the tests fail when the fixes are reverted.
+**Final gate status (2026-11-15):** 1000 tests passed / 0 failed (6,698 assertions) ·
+`pint --test` PASS on 954 files · `composer audit` **0 advisories** · npm production tree clean.
+
+**The three High security findings are fixed and proven** — payment webhook auth, hardcoded HMAC
+secret, and (via the dependency update) the password-reset link-poisoning path in
+`symfony/http-foundation`. Each was verified with a negative control.
 
 **The two High production findings are fixed and proven** — backups are encrypted by default and a
 boot guard now refuses to start with `APP_DEBUG=true` in production.
 
-**One High performance finding improved, one reclassified.** POS latency is down 23% and throughput
-up 30%, but my proposed fix for the per-branch numbering ceiling was mathematically wrong and was
-reverted — the lock is held to COMMIT, so an atomic increment cannot help.
+**The performance story ended differently than expected.** My proposed fix for the per-branch
+numbering ceiling was mathematically wrong and was reverted — the lock is held to COMMIT, so an
+atomic increment cannot help. The real cause was the 16 MB InnoDB buffer pool: raising it to 256 MB
+cut POS latency by 65% and raised throughput 2.9× *without changing a single query*.
 
 ---
 
@@ -60,14 +66,44 @@ reverted — the lock is held to COMMIT, so an atomic increment cannot help.
 
 | Status | Count | IDs |
 |---|---|---|
-| **Verified fixed** | 6 | QA-A-01, A-02, A-04, A-05, A-06, A-08 |
-| Fixed (not yet verified) | 1 | QA-A-03 (CSP — needs a browser) |
-| Rejected / withdrawn | 1 | QA-A-07 (my false positive) |
-| Awaiting approval | 14 | A-09…A-11, B-01, C-01…C-04, D-01, E-00…E-05 |
-| Informational | 2 | D-02, and the A-INFO notes |
+| **Fixed & verified** | 20 | A-01…A-06, A-08…A-11, B-01, C-01, C-03, C-04, D-01, E-00…E-02, E-04, E-05 |
+| Reclassified | 1 | C-02 (defect → documented capacity characteristic) |
+| Rejected / withdrawn | 1 | A-07 (my false positive) |
+| Open — deployment checklist only | 1 | E-03 (production DB host setting) |
+| Reported, no action | 1 | D-02 |
+
+*(Plus two A-INFO notes that are observations rather than findings.)*
 
 **Nothing remains un-investigated.** All 12 Category A, 11 Category B, 8 Category C, 4 Category D and
 6 Category E cases have an outcome.
+
+---
+
+## Reading these reports
+
+| Route | Access |
+|---|---|
+| `reports/qa/*.md` | The source of truth — plain Markdown in the repository |
+| `/platform/ops/qa-portal` | Rendered HTML portal, **platform admins only** (`platform.monitoring.view`) |
+
+Build the portal after editing any report:
+
+```bash
+php artisan qa:build-portal
+```
+
+It renders `reports/qa/*.md` into `storage/app/qa-portal.html` as a single self-contained file with no
+external dependencies and no network calls.
+
+**The portal reads its numbers from these files, not from hand-typed constants.** The findings count,
+the per-status breakdown and the release-gate figures are all parsed out of `issue-register.md` and
+this README at build time, so the dashboard cannot drift from the reports behind it. If a count looks
+wrong, the register is wrong — that is the point.
+
+It is deliberately **not** written into `public/`: these reports enumerate every unfixed vulnerability
+in the product, and a file in the web root would be served by the web server directly, bypassing all
+authentication. Access is covered by `tests/Feature/Platform/QaPortalAccessTest.php` — guests redirect
+to login, tenant users get 403, platform admins get the page.
 
 ---
 
@@ -107,16 +143,21 @@ An audit that only lists the app's mistakes is not an audit. These are mine:
 
 ## Environment caveats that affect the numbers
 
-1. **`innodb_buffer_pool_size = 16 MB`** (XAMPP default). Every latency figure in Categories C and D
-   is inflated by this. The measured throughput ceiling is a **floor, not a verdict**.
-2. **GD extension is not installed in this PHP build.** Four tests fail as a result
-   (`ProductBulkOpsTest`, `QrManagerTest`, `QrDiningFlowTest`) — verified pre-existing, not caused by
-   the audit. **Production requires `gd` or `imagick`; confirm the deploy target has it, or QR codes
-   and image uploads will 500.**
+1. **`innodb_buffer_pool_size` — RESOLVED 2026-11-15.** It was 16 MB (XAMPP default), which inflated
+   every latency figure in Categories C and D and was the actual throughput ceiling. Raised to
+   256 MB: POS latency 383 → 133 ms, throughput 2.61 → 7.53 sales/sec, **query count unchanged**.
+   The Category C and D numbers recorded on 2026-11-14 are therefore a *floor*, not a verdict.
+   The change is in `C:\xampp\mysql\bin\my.ini` (shared server config, outside this repo), backup at
+   `my.ini.backup-qa-20261115`.
+2. **GD extension — RESOLVED.** `gd` was enabled in `C:\xampp\php\php.ini` (line 922 was commented
+   out). This resolved 11 of the 16 pre-existing test failures. **Production still requires `gd` or
+   `imagick`; confirm the deploy target has it, or QR codes and image uploads will 500.**
 3. **CPU and per-request memory were not measured.** No reliable source on this host, and CLI timing
    is not representative of PHP-FPM. Reported as BLOCKED rather than estimated.
 4. **Docker/hosting limits.** Cross-tenant and stress tests ran on a single local machine, so
    multi-host network behaviour is untested.
+5. **`slow_query_log` is OFF** on this MariaDB instance (`long_query_time` 10 s). Slow-query analysis
+   was therefore done with `EXPLAIN` and explicit timing instead. Worth enabling in production.
 
 ---
 
@@ -137,13 +178,17 @@ Temporary test suites were deleted after use. The following remain and are safe 
 | `qa:stress-ramp` | Ramp workers to the saturation knee |
 | `qa:stress-recovery` | Burst then verify recovery |
 | `qa:stress-branch-isolation` | Same branch vs spread branches |
+| `qa:build-portal` | Render these reports into the HTML QA portal |
 
-Every one refuses to run unless the database name ends in `_qa`.
+Every database-touching command refuses to run unless the database name ends in `_qa`.
+`qa:build-portal` is the exception — it only reads Markdown from `reports/qa/`.
 
 ---
 
 ## Not committed
 
-Nothing in this audit is committed or pushed. The working tree holds the approved fixes, the
-reports, and the QA commands. `composer.lock` is untouched — no dependency was installed, upgraded
-or removed.
+Everything in this audit is committed to `qa/security-performance-audit` as of `d263a56`, plus the
+2026-11-15 changes (dependency update, B-01 migration, report updates) which are **uncommitted in the
+working tree** — the `composer.lock` refresh and the schema migration wait for your review.
+
+The buffer-pool change (`my.ini`) lives outside the repository and is **not** part of any commit.

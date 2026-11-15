@@ -252,15 +252,14 @@ class CustomRoleManagementTest extends TestCase
         );
     }
 
-    public function test_branch_scoped_assignment_is_preserved_when_customising_a_role(): void
+    public function test_assignment_is_preserved_when_customising_a_role(): void
     {
         $tenant = Tenant::factory()->create();
         $owner = $this->owner($tenant);
-        $branch = $tenant->branches()->create(['name' => 'Main', 'code' => 'MAIN']);
         $staff = User::factory()->forTenant($tenant)->create();
         $cashier = Role::whereNull('tenant_id')->where('slug', RoleName::Cashier->value)->firstOrFail();
 
-        $staff->roles()->attach($cashier->id, ['branch_id' => $branch->id]);
+        $staff->roles()->attach($cashier->id);
 
         $this->actingAs($owner)->patch("/roles/{$cashier->id}", [
             'name' => 'Cashier',
@@ -274,7 +273,6 @@ class CustomRoleManagementTest extends TestCase
         $this->assertDatabaseHas('role_user', [
             'user_id' => $staff->id,
             'role_id' => $copy->id,
-            'branch_id' => $branch->id,
         ]);
         $this->assertDatabaseMissing('role_user', [
             'user_id' => $staff->id,

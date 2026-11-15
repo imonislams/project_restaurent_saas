@@ -323,3 +323,37 @@ which is exactly what QA-C-01 already did.
 The migration's indexes exist and are reversible. At the current dataset size (717 orders) MySQL still
 prefers the older single-column indexes for `orders` and `stock_movements`; `payments_tenant_status_paid_index`
 **is** used. Re-measure at 10× volume before concluding either way.
+
+---
+
+## Update 2026-11-15 — the real bottleneck was the database, not the application
+
+Everything above was measured with `innodb_buffer_pool_size = 16 MB`. That was the ceiling, and it has
+now been raised to 256 MB (QA-E-00). **Query count did not change at all — 59.1 per sale, before and
+after.** Only the storage engine's ability to serve those queries changed.
+
+| Metric | Before E-00 | After E-00 | Change |
+|---|---|---|---|
+| avg latency | 383.4 ms | **132.8 ms** | **−65%** |
+| p95 | 670.5 ms | 421.1 ms | −37% |
+| p99 | 670.5 ms | 421.1 ms | −37% |
+| throughput | 2.61 sales/sec | **7.53 sales/sec** | **+189%** |
+| queries / sale | 59.1 | 59.1 | unchanged |
+
+The "383.4 ms" baseline is itself higher than the 258.7 ms recorded at audit time, because the QA
+dataset grew from 3,670 to 5,556 orders in the interim — a useful reminder that these figures are
+volume-sensitive.
+
+**What this means for the findings:**
+
+- **QA-C-01 (65→59 queries)** — the code change is real and worth keeping, but it was never the main
+  lever. Verified.
+- **QA-C-02 (numbering ceiling)** — reclassified as a documented capacity characteristic. At
+  7.53 sales/sec per branch that is ~27,000 sales/hour, far above any realistic restaurant load.
+- **QA-D-01 (saturation at 8 writers)** — **resolved by the buffer-pool fix.** The 8-worker plateau
+  was the pool thrashing, not lock contention.
+- **QA-E-03 (production buffer pool)** — still open. Someone must confirm the value on the production
+  database host; this repository cannot answer it.
+
+**Revised verdict for Category C: PASS**, with the standing caveat that all measurements come from a
+single local host over loopback, not a real network + PHP-FPM deployment.

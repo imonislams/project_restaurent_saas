@@ -41,10 +41,8 @@ test:php:
 # Dependency advisories are a release gate, not a report. A vulnerable lock file
 # must fail the pipeline rather than be discovered during an audit months later.
 #
-# allow_failure is true for now ON PURPOSE: the lock file currently carries 9 known
-# advisories (see reports/qa/dependency-audit-report.md). Making this blocking
-# before the patch update lands would turn every pipeline red and bury real test
-# failures. Flip it to false in the same change that runs `composer update`.
+# Blocking as of 2026-11-15: the QA-A-09 update cleared all 9 advisories, so a
+# non-zero count now means a new advisory was introduced and the build should stop.
 audit:dependencies:
   stage: test
   rules:
@@ -54,7 +52,6 @@ audit:dependencies:
   script:
     - *setup
     - composer audit --no-interaction
-  allow_failure: true
 
 # Frontend advisories, scoped to what actually ships. Dev-only toolchain noise is
 # reported but does not block; a production dependency advisory does.

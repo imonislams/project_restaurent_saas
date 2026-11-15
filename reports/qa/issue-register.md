@@ -1,7 +1,7 @@
 # QA Issue Register
 
 **Branch:** `qa/security-performance-audit`
-**Last updated:** 2026-11-14
+**Last updated:** 2026-11-15
 **Statuses:** Detected → Reported → Awaiting Approval → Approved for Fix → Fixed (Not Yet Verified) → Verified / Rejected / Deferred
 
 > Every issue waits here for your decision. Nothing moves to "Approved for Fix" or "Fixed"
@@ -21,22 +21,22 @@
 | QA-A-06 | CSV exports vulnerable to formula injection | Low–Medium | A | **Verified** | [A](./vulnerability-test-report.md#qa-a-06--csv-exports-are-vulnerable-to-formula-injection) |
 | QA-A-07 | QR card canvas interpolates unvalidated style values | ~~Low~~ **Withdrawn** | A | **Rejected (false positive)** | [A](./vulnerability-test-report.md#verified-as-not-vulnerable-with-evidence) |
 | QA-A-08 | Manager PIN approvals accept unlimited wrong guesses | Medium | A | **Verified** | [A](./vulnerability-test-report.md#qa-a-08--manager-pin-approvals-accept-unlimited-wrong-guesses) |
-| QA-A-09 | Seven production PHP packages one patch behind security fixes | Medium | A | Awaiting Approval | [Dep](./dependency-audit-report.md#qa-a-09--seven-production-php-packages-are-one-patch-behind-their-security-fixes) |
+| QA-A-09 | Seven production PHP packages one patch behind security fixes | Medium | A | **Verified** — `composer update` applied; **9 advisories → 0** | [Dep](./dependency-audit-report.md#qa-a-09--seven-production-php-packages-are-one-patch-behind-their-security-fixes) |
 | QA-A-10 | URL generation can trust client-supplied Host / forwarded headers | Medium | A | **Verified** — forged Host rejected live, including suffix bypass | [Dep](./dependency-audit-report.md#qa-a-10--url-generation-can-trust-client-supplied-host--forwarded-headers) |
 | QA-A-11 | npm dev-toolchain advisories (7 High, 0 in production) | Low | A | **Verified** — CI job scopes to `--omit=dev`; no production exposure | [Dep](./dependency-audit-report.md#qa-a-11--npm-dev-toolchain-advisories-7-high-13-moderatelow) |
-| QA-B-01 | `role_user.branch_id` is a dead column with a misleading contract | Low | B | **Confirmed & documented** — written only by `moveUsers`, never read | [B](./security-test-report.md#qa-b-01--role_userbranch_id-is-a-dead-column-with-a-misleading-contract) |
-| QA-C-01 | POS sale performs 65 queries and all stock work inside one transaction | **High** | C | **Fixed (Not Yet Verified)** — 65→59 queries, 259→199 ms | [C](./load-performance-report.md#qa-c-01--pos-sale-performs-65-queries-and-all-stock-work-inside-one-transaction) |
-| QA-C-02 | Per-branch order numbering serialises sales at ~7.5/sec | **High** | C | **Rejected my own proposed fix** — lock is held to COMMIT, so an atomic increment cannot help. See below. | [C](./load-performance-report.md#qa-c-02--per-branch-order-numbering-serialises-sales-at-75sec) |
-| QA-C-03 | Four composite indexes missing on MySQL (EXPLAIN confirmed) | Medium | C | **Fixed (Not Yet Verified)** — migration added | [C](./load-performance-report.md#qa-c-03--four-composite-indexes-are-missing-on-mysql-confirmed-with-explain) |
+| QA-B-01 | `role_user.branch_id` is a dead column with a misleading contract | Low | B | **Verified** — column dropped (migration `2026_11_15_000001`) | [B](./security-test-report.md#qa-b-01--role_userbranch_id-is-a-dead-column-with-a-misleading-contract) |
+| QA-C-01 | POS sale performs 65 queries and all stock work inside one transaction | **High** | C | **Verified** — 65→59 queries; 383→133 ms after QA-E-00 | [C](./load-performance-report.md#qa-c-01--pos-sale-performs-65-queries-and-all-stock-work-inside-one-transaction) |
+| QA-C-02 | Per-branch order numbering serialises sales at ~7.5/sec | ~~High~~ **Informational** | C | **Reclassified** — documented capacity characteristic, not a defect. Lock is held to COMMIT, so an atomic increment cannot help. | [C](./load-performance-report.md#qa-c-02--per-branch-order-numbering-serialises-sales-at-75sec) |
+| QA-C-03 | Four composite indexes missing on MySQL (EXPLAIN confirmed) | Medium | C | **Verified** — migration applied to both databases | [C](./load-performance-report.md#qa-c-03--four-composite-indexes-are-missing-on-mysql-confirmed-with-explain) |
 | QA-C-04 | Inventory report applies no branch/period filter | Informational | C | **Verified** | [C](./load-performance-report.md#qa-c-04--report-endpoints-are-cheaper-than-predicted-downgraded) |
-| QA-D-01 | POS throughput saturates at ~8 concurrent writers per branch | Medium | D | Awaiting Approval | [D](./stress-test-report.md#qa-d-01--throughput-saturates-at-8-concurrent-writers-per-branch) |
+| QA-D-01 | POS throughput saturates at ~8 concurrent writers per branch | ~~Medium~~ **Informational** | D | **Resolved** — the ceiling was the 16 MB buffer pool, not lock contention. Throughput 2.61→7.53/sec after QA-E-00. | [D](./stress-test-report.md#qa-d-01--throughput-saturates-at-8-concurrent-writers-per-branch) |
 | QA-D-02 | No graceful-degradation failure observed under 24-way concurrency | Informational | D | Reported (no action) | [D](./stress-test-report.md#qa-d-02--no-graceful-degradation-failure-mode-observed-informational) |
-| QA-E-00 | Local MariaDB `innodb_buffer_pool_size` is 16 MB (XAMPP default) | Informational | D/E | Awaiting Approval | [D](./stress-test-report.md#executive-summary) |
+| QA-E-00 | Local MariaDB `innodb_buffer_pool_size` is 16 MB (XAMPP default) | Informational | D/E | **Verified** — raised to 256 MB; latency 2.9× better, throughput 2.9× better | [D](./stress-test-report.md#executive-summary) |
 | QA-E-01 | Backups are written unencrypted and contain password hashes | **High** | E | **Verified** | [E](./production-readiness-report.md#qa-e-01--backups-are-written-unencrypted-and-contain-password-hashes) |
 | QA-E-02 | No boot-time guard against `APP_DEBUG=true` in production | **High** | E | **Verified** | [E](./production-readiness-report.md#qa-e-02--working-env-is-a-development-profile-and-would-be-a-live-misconfiguration) |
-| QA-E-03 | InnoDB buffer pool 16 MB will cap production throughput | Medium | E | Awaiting Approval (deployment setting, not code) | [E](./production-readiness-report.md#qa-e-03--innodb-buffer-pool-is-16-mb-which-will-cap-production-throughput) |
-| QA-E-04 | No dependency audit in CI (`composer audit` / `npm audit`) | Medium | E | **Fixed (Not Yet Verified)** — pipelines added, blocking gate deferred | [E](./production-readiness-report.md#qa-e-04--no-dependency-audit-in-ci) |
-| QA-E-05 | `pint --test` fails on 111 files, so `release:check` is permanently red | Medium | E | **Verified** — now passes on 948 files | [E](./production-readiness-report.md#qa-e-05--pint---test-fails-on-111-files-so-composer-releasecheck-is-red) |
+| QA-E-03 | InnoDB buffer pool 16 MB will cap production throughput | Medium | E | **Open — deployment checklist item.** Cannot be verified from this repo; confirm on the production DB host. | [E](./production-readiness-report.md#qa-e-03--innodb-buffer-pool-is-16-mb-which-will-cap-production-throughput) |
+| QA-E-04 | No dependency audit in CI (`composer audit` / `npm audit`) | Medium | E | **Verified** — pipeline jobs added; now **blocking** because advisories are 0 | [E](./production-readiness-report.md#qa-e-04--no-dependency-audit-in-ci) |
+| QA-E-05 | `pint --test` fails on 111 files, so `release:check` is permanently red | Medium | E | **Verified** — now passes on 954 files | [E](./production-readiness-report.md#qa-e-05--pint---test-fails-on-111-files-so-composer-releasecheck-is-red) |
 
 ## Informational
 
@@ -64,6 +64,60 @@
 ---
 
 ## Fix history
+
+### 2026-11-15 — QA-A-09, QA-B-01, QA-E-00 (approved, implemented, VERIFIED)
+
+All five decisions from the "open for decision" list were actioned. Final state: **1000 tests passed,
+0 failed** (6,698 assertions), `pint --test` PASS on 954 files, `composer audit` **0 advisories**.
+
+| File | Change |
+|---|---|
+| `composer.lock` | 30 packages updated, all patch/minor. Laravel `12.70.1 → 12.72.0` |
+| `database/migrations/2026_11_15_000001_drop_role_user_branch_id.php` (new) | Drops `role_user.branch_id`, reversible |
+| `app/Domain/Identity/Concerns/HasRoles.php` | Removed `withPivot('branch_id')` |
+| `app/Domain/Identity/RoleService.php` | `moveUsers()` no longer copies `branch_id` |
+| `tests/Feature/Identity/CustomRoleManagementTest.php` | Renamed and updated the branch-scoped assignment test |
+| `C:\xampp\mysql\bin\my.ini:147` | `innodb_buffer_pool_size=16M` → `256M` (outside the repo — see note) |
+
+**QA-A-09 — dependency update.** `composer audit` went from **9 advisories across 6 packages to 0**.
+Verified by dry-run first: 30 updates, **zero major version bumps**, Laravel stays on 12.x. The
+suite was run immediately after and passed 995/997, with the only 2 failures caused by the
+concurrent B-01 change — not the update.
+
+**QA-B-01 — dead column dropped.** Verified before dropping that **0 of 67** `role_user` rows had a
+non-null `branch_id`. Two code paths referenced it: `HasRoles::roles()` (`withPivot`) and
+`RoleService::moveUsers()` (copy-forward). Both cleaned up. The `down()` migration restores the
+column with its original comment and FK.
+
+**QA-E-00 — buffer pool raised.** `SET GLOBAL` was refused at runtime — this build reports
+`INNODB_BUFFER_POOL_SIZE_MAX = 16777216`, capping it at 16 MB until restart. The server runs as a
+standalone `mysqld.exe` process (not a Windows service), started with
+`--defaults-file=...my.ini --standalone`. It was stopped gracefully with `mysqladmin shutdown` and
+restarted the same way.
+
+**Measured effect (QA database, 15 sequential sales):**
+
+| Metric | Before E-00 | After E-00 | Change |
+|---|---|---|---|
+| avg latency | 383.4 ms | **132.8 ms** | **−65%** |
+| p95 | 670.5 ms | 421.1 ms | −37% |
+| p99 | 670.5 ms | 421.1 ms | −37% |
+| throughput | 2.61/s | **7.53/s** | **+189%** |
+| queries / sale | 59.1 | 59.1 | unchanged |
+
+This is the important result: **query count did not change, only the storage engine's ability to
+serve it.** That confirms the throughput ceiling in Category D was the 16 MB buffer pool, not the
+application — which is exactly what QA-D-01 and QA-E-03 predicted.
+
+**Disclosure — this setting is outside the repository.** `my.ini` is the shared MariaDB
+configuration for the whole XAMPP install, not a project file. A backup of the original is at
+`C:\xampp\mysql\bin\my.ini.backup-qa-20261115`. To revert: restore that file and restart `mysqld`.
+Only `project_restaurent_saas` and `project_restaurent_saas_qa` were subsequently inspected.
+
+**Not done — QA-E-03.** The production database host's buffer pool cannot be checked from this
+repository and was not guessed at. It remains a deployment checklist item.
+
+---
 
 ### 2026-11-14 — QA-A-01, QA-A-02 (approved, implemented, NOT verified)
 

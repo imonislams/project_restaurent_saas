@@ -214,20 +214,23 @@ than the page it feeds.
 | Field | Value |
 |---|---|
 | **Severity** | **Low** (downgraded from High) |
-| **Status** | Reported — Awaiting Approval |
+| **Status** | **Verified fixed 2026-11-15** — column dropped |
 | **Affected module** | `database/migrations/2026_10_11_000011…`, `HasRoles` |
 | **Affected endpoint** | None today |
 
 **Evidence:** the column exists with `comment('NULL = tenant-wide role assignment')` and is loaded via
-`withPivot('branch_id')`, but no code path writes it and no code path reads it. Branch scoping uses
-`branch_user` exclusively.
+`withPivot('branch_id')`. `RoleService::moveUsers()` copies it forward when re-pointing a role, but no
+authorization path reads it. Branch scoping uses `branch_user` exclusively.
 
 **Business impact:** none today. The risk is a future developer building per-branch role scoping on
 this column, believing the comment, and shipping an unenforced control — the exact failure mode I
 wrongly attributed to the current code.
 
-**Recommended solution:** either drop the column and the `withPivot`, or implement enforcement. Decide
-which; leaving it is the worst option because it reads as working.
+**Resolution (2026-11-15) — dropped.** The column is gone, along with `withPivot('branch_id')` in
+`HasRoles` and the copy-forward line in `RoleService::moveUsers()`. Migration
+`2026_11_15_000001_drop_role_user_branch_id` is reversible. Before dropping, I confirmed **0 of 67**
+`role_user` rows held a non-null value, so nothing was lost. Branch access continues to come from
+`branch_user`, which was always the real mechanism.
 
 ---
 
@@ -259,7 +262,7 @@ this is the one item from Category A that touches Category B's boundary.
 
 ## Recommendations
 
-1. Decide the fate of `role_user.branch_id` (QA-B-01). Small, but it is a trap.
+1. ~~Decide the fate of `role_user.branch_id` (QA-B-01).~~ **Done 2026-11-15 — dropped.**
 2. Consider a `BelongsToTenant` scope on `EmailLog` even though it is platform-only today — it stores
    full email bodies and is one route mistake from disclosure. Defense in depth, not a current bug.
 3. Keep every new model behind *either* a global scope *or* a policy, and add the cross-tenant test to
@@ -272,8 +275,8 @@ this is the one item from Category A that touches Category B's boundary.
 **PASS**
 
 Every isolation boundary held under direct attack: tenant, branch, role, platform, impersonation,
-credential, gate, payload and realtime. The one open item (QA-B-01) is dormant schema debt with no
-present exploit, and the one inherited item (QA-A-10) is a dependency/deployment concern, not an
-isolation defect.
+credential, gate, payload and realtime. The one schema-debt item (QA-B-01) has since been removed
+rather than left as a trap, and the one inherited item (QA-A-10) is a dependency/deployment concern,
+not an isolation defect.
 
 This is the first category that passes, and it passes on evidence rather than assertion.

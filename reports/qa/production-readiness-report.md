@@ -293,32 +293,43 @@ The verdict above records the state at audit time. This section records what has
 |---|---|---|---|
 | QA-E-01 | **Verified fixed** | `platform.backups.encrypt` now defaults to **true** | A real backup run produces a `.enc` file that is a genuine `Crypt` payload; a seeded email address was asserted **absent** from the file as plaintext |
 | QA-E-02 | **Verified fixed** | `AppServiceProvider::guardProductionConfiguration()` throws at boot when `APP_ENV=production` and `APP_DEBUG=true`, or when `APP_KEY` is missing | 4 tests: allowed in local/testing, throws in production with debug on, throws with no key, passes with debug off + key present |
-| QA-E-03 | **Open — not a code change** | Nothing changed | `innodb_buffer_pool_size` is a database server setting. It belongs on the deployment checklist, not in the repo. **Still 16 MB locally.** |
-| QA-E-04 | **Fixed, unverified** | `audit:dependencies` (`composer audit`) and `audit:npm` (`npm audit --omit=dev`) jobs added to CI | Cannot run until pushed. Both set to `allow_failure: true` **deliberately** — the lock file still carries 9 known advisories, so a blocking gate would turn every pipeline red on day one. Flip to `false` in the change that runs `composer update` (QA-A-09). |
-| QA-E-05 | **Verified fixed** | `vendor/bin/pint` run across the repository | `pint --test` now **passes on 948 files** (was 111 failures). 127 files changed. Full suite run before and after: identical failure counts (16 both ways), so nothing regressed. |
+| QA-E-03 | **Open — deployment checklist** | Nothing changed in this repository | `innodb_buffer_pool_size` is a database server setting. **Locally it was raised 16 MB → 256 MB on 2026-11-15** (see QA-E-00), which cut POS latency 65% and raised throughput 2.9×. The production host's value is still unverified and cannot be checked from here. |
+| QA-E-04 | **Verified** | `audit:dependencies` (`composer audit`) and `audit:npm` (`npm audit --omit=dev`) jobs in CI. **Both now blocking** as of 2026-11-15. | The deferral had one reason: 9 open advisories would have turned every pipeline red. QA-A-09 cleared them to **0**, so `allow_failure` was removed and a new advisory now fails the build. |
+| QA-E-05 | **Verified fixed** | `vendor/bin/pint` run across the repository | `pint --test` now **passes on 954 files** (was 111 failures). 127 files changed. Full suite run before and after: identical failure counts (16 both ways), so nothing regressed. |
 
-### The release gate is still not green — and it is not pint's fault
+### The release gate is now green
 
-`composer release:check` runs `pint --test` **then** `php artisan test`. Pint now passes, but the suite
-still has **16 failures**, all pre-existing:
+`composer release:check` runs `pint --test` **then** `php artisan test`. Both now pass.
 
-- **~9** from the missing **`gd` extension** (image upload, logo upload, QR PNG/PDF rendering)
-- **~7** from marketing SEO/title assertions unrelated to any change made here
+| Gate | Audit time | 2026-11-15 |
+|---|---|---|
+| `pint --test` | 111 files failing | **PASS** on 954 files |
+| `php artisan test` | 16 failed / 980 passed | **1000 passed, 0 failed** (6,698 assertions) |
+| `composer audit` | 9 advisories | **0** |
 
-**Installing `gd` on the CI runner is the single change that would make the gate meaningful.** Until
-then, `composer release:check` will fail on code that is fine, which is exactly the condition that
-trains people to ignore a red gate.
+The 16 audit-time failures were resolved in two distinct ways:
+
+- **~9 from the missing `gd` extension** — root cause was `;extension=gd` commented out at
+  `C:\xampp\php\php.ini:922`. Enabled, which resolved 11 tests. **This remains a deployment
+  requirement**: the deploy target and CI runner both need `gd` or `imagick`, or QR codes and image
+  uploads return 500.
+- **5 genuine defects** in tests and docs (a `10` vs `10.0` type assertion, a false docblock claim
+  about queue ordering, a brand-suffix title, an empty sitemap fallback, and a stale `/docs` test).
+  Each was fixed on its merits — the `EmailMarketingService` docblock was corrected rather than the
+  behaviour changed.
 
 ### Revised verdict
 
-**Near-ready.** Of the two High findings, both are fixed and verified (encrypted backups, boot-time
-debug guard). The release gate is unblocked on formatting but blocked on an environment dependency.
+**Ready, with one open deployment item.** Of the two High findings, both are fixed and verified
+(encrypted backups, boot-time debug guard). Formatting, tests and dependency advisories are all green.
 
 **Before go-live, three things are yours, not the code's:**
 
-1. Install `gd` (or `imagick`) on the deploy target and CI runner — `docs/PRODUCTION.md` §1 already
-   requires it, and without it QR codes and image uploads return 500.
+1. Confirm `gd` (or `imagick`) is present on the deploy target and CI runner — `docs/PRODUCTION.md`
+   §1 already requires it.
 2. Set `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true` in the live `.env` — the
-   new boot guard will now refuse to start if debug is left on, which is the intended behaviour.
+   new boot guard will refuse to start if debug is left on, which is the intended behaviour.
 3. Set `TRUSTED_PROXIES` and `ALLOWED_HOSTS` if the app sits behind a CDN or load balancer (QA-A-10),
-   and confirm `innodb_buffer_pool_size` on the database host (QA-E-03).
+   and **confirm `innodb_buffer_pool_size` on the database host** (QA-E-03). If it is 16 MB there,
+   the measurements in this report — and the 65% latency improvement seen locally — apply directly to
+   your production throughput.

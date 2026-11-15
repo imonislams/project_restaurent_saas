@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Domain\Branches\Models\Branch;
 use App\Domain\Customers\Models\Customer;
+use App\Domain\Inventory\Models\Ingredient;
 use App\Domain\Loyalty\Models\LoyaltyAccount;
 use App\Domain\Menu\Models\Product;
 use App\Domain\Menu\Models\ProductVariant;
@@ -11,13 +12,11 @@ use App\Domain\POS\SaleService;
 use App\Domain\Purchasing\Models\PurchaseOrder;
 use App\Domain\Purchasing\Models\PurchaseOrderItem;
 use App\Domain\Purchasing\Models\Supplier;
-use App\Domain\Inventory\Models\Ingredient;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 /**
  * Fills the gaps in the QA load-test dataset: order history for every tenant,
