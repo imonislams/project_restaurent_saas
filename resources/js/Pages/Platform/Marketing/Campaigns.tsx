@@ -198,7 +198,7 @@ export default function Campaigns({
                             )}
 
                             {campaign.recent.length > 0 && (
-                                <div className="overflow-hidden rounded-md border border-border">
+                                <div className="overflow-x-auto rounded-md border border-border">
                                     <table className="w-full text-left text-xs">
                                         <thead className="bg-muted/40 text-muted-foreground">
                                             <tr>

@@ -32,7 +32,7 @@ export default function Entitlements({
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-56 sticky left-0 bg-background/95 backdrop-blur-xs font-semibold">Feature</TableHead>
+                                    <TableHead className="w-36 sm:w-56 sticky left-0 bg-background/95 backdrop-blur-xs font-semibold">Feature</TableHead>
                                     {plans.map((plan) => (
                                         <TableHead key={plan.id} className="text-center font-semibold">
                                             {plan.name}

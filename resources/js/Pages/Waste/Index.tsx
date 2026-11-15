@@ -290,7 +290,7 @@ export default function WasteIndex({
                         />
 
                         {/* Status Filter Chips */}
-                        <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50/50 px-6 py-2.5 text-xs print:hidden">
+                        <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 bg-gray-50/50 px-4 py-2.5 text-xs print:hidden sm:px-6">
                             <span className="font-semibold text-gray-500">Filter Status:</span>
                             <button
                                 type="button"

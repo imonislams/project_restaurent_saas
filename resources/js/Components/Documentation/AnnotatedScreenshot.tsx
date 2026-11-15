@@ -49,8 +49,8 @@ function AnnotatedStage({
     return (
         <div
             className={cn(
-                'relative w-full overflow-hidden rounded-md border border-border bg-white',
-                zoomed ? 'min-w-[1280px]' : 'min-w-[720px]'
+                'relative w-full max-w-full overflow-hidden rounded-md border border-border bg-white',
+                zoomed ? 'min-w-0 sm:min-w-[1280px]' : 'min-w-0 sm:min-w-[720px]'
             )}
         >
             <div ref={stageRef} className="relative">

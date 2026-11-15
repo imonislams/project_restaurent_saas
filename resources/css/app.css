@@ -68,6 +68,15 @@
         -moz-osx-font-smoothing: grayscale;
     }
 
+    /* Never let a single wide row (table, chart, toolbar) push the whole
+       document sideways on a phone. Tables scroll inside their own wrapper;
+       `clip` (unlike `hidden`) does not create a scroll container, so sticky
+       headers and the sidebar keep working. */
+    html,
+    body {
+        overflow-x: clip;
+    }
+
     body {
         overscroll-behavior: none;
     }
@@ -359,5 +368,34 @@
     a {
         color: inherit !important;
         text-decoration: none !important;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * POS terminal, phones only (below md).
+ * `.h-dvh-safe` always declares a valid height first, so browsers without
+ * `dvh` (iOS < 15.4) keep the flex column instead of collapsing it; the second
+ * declaration wins where supported and matches the visible viewport under
+ * mobile browser toolbars. From `md` up the page keeps its original
+ * `md:h-screen`, so the desktop terminal is unchanged.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+    .h-dvh-safe {
+        height: 100vh;
+        height: 100dvh;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * iOS Safari zooms the whole page when a focused form control renders below
+ * 16px. That zoom makes cards and dialogs appear far wider than the screen —
+ * e.g. "select the table and the card jumps off-screen". Every control is
+ * therefore 16px below md; compact sizes stay on tablet/desktop.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+    input:not([type='checkbox']):not([type='radio']):not([type='range']),
+    select,
+    textarea {
+        font-size: 16px;
     }
 }

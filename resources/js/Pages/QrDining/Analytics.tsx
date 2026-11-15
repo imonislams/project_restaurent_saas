@@ -98,24 +98,26 @@ export default function QrAnalytics({
                                     No QR orders in this period yet.
                                 </p>
                             ) : (
-                                <table className="w-full text-left text-sm">
-                                    <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
-                                        <tr>
-                                            <th className="px-5 py-3">Item</th>
-                                            <th className="px-5 py-3 text-right">Quantity</th>
-                                            <th className="px-5 py-3 text-right">Revenue</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {analytics.top_items.map((item) => (
-                                            <tr key={item.name} className="hover:bg-gray-50">
-                                                <td className="px-5 py-3 font-medium text-gray-800">{item.name}</td>
-                                                <td className="px-5 py-3 text-right tabular-nums">{item.quantity}</td>
-                                                <td className="px-5 py-3 text-right font-mono text-xs">{money(item.revenue)}</td>
+                                <div className="w-full overflow-x-auto">
+                                    <table className="w-full min-w-[22rem] text-left text-sm">
+                                        <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                                            <tr>
+                                                <th className="px-5 py-3">Item</th>
+                                                <th className="px-5 py-3 text-right">Quantity</th>
+                                                <th className="px-5 py-3 text-right">Revenue</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {analytics.top_items.map((item) => (
+                                                <tr key={item.name} className="hover:bg-gray-50">
+                                                    <td className="px-5 py-3 font-medium text-gray-800">{item.name}</td>
+                                                    <td className="px-5 py-3 text-right tabular-nums">{item.quantity}</td>
+                                                    <td className="px-5 py-3 text-right font-mono text-xs">{money(item.revenue)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             )}
                         </CardBody>
                     </Card>

@@ -38,7 +38,7 @@ export function ToastProvider({ children }: PropsWithChildren) {
     return (
         <ToastContext.Provider value={{ push }}>
             {children}
-            <div className="pointer-events-none fixed bottom-4 right-4 z-[70] flex w-88 max-w-full flex-col gap-2.5 p-2 sm:p-0" aria-live="polite">
+            <div className="pointer-events-none fixed bottom-4 right-3 z-[70] flex w-[min(24rem,calc(100vw-1.5rem))] flex-col gap-2.5 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:right-4 sm:w-[min(24rem,calc(100vw-2rem))] sm:p-0" aria-live="polite">
                 {toasts.map((t) => (
                     <div
                         key={t.id}

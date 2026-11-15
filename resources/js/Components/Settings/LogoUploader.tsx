@@ -45,13 +45,13 @@ export default function LogoUploader() {
                     </div>
                 )}
 
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
                     <input
                         ref={inputRef}
                         type="file"
                         accept="image/png,image/jpeg,image/webp"
                         onChange={pick}
-                        className="block text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
+                        className="block w-full min-w-0 max-w-full text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
                     />
                     <Button type="button" size="sm" onClick={submit} loading={form.processing} disabled={!form.data.logo}>
                         Upload

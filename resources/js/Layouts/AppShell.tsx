@@ -465,7 +465,7 @@ export default function AppShell({
                 {/* Main Inset Application Shell */}
                 <SidebarInset className="min-w-0 bg-background print:ml-0 print:w-full">
                     {/* Top Navigation Bar */}
-                    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-card/95 px-4 backdrop-blur shadow-xs sm:px-6 print:hidden">
+                    <header className="sticky top-0 z-20 flex h-auto min-h-[3.5rem] shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border/80 bg-card/95 px-3 py-1.5 backdrop-blur shadow-xs sm:h-14 sm:flex-nowrap sm:gap-3 sm:px-6 sm:py-0 print:hidden">
                         <div className="flex items-center gap-2.5 min-w-0">
                             {/* Accessible shadcn Sidebar Trigger */}
                             <SidebarTrigger />
@@ -490,12 +490,12 @@ export default function AppShell({
                         </div>
 
                         {/* Topbar Right Tools: Search, Shortcuts, Language, Notifications, User */}
-                        <div className="flex items-center gap-2 sm:gap-2.5">
+                        <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2.5">
                             {/* Command Search Trigger */}
                             <button
                                 type="button"
                                 onClick={() => setCommandPaletteOpen(true)}
-                                className="flex items-center gap-2 rounded-md border border-input bg-muted/40 px-2.5 py-1.5 text-[13px] text-muted-foreground hover:border-border hover:bg-background hover:text-foreground transition-colors shadow-xs sm:w-60 cursor-pointer"
+                                className="flex shrink-0 items-center gap-2 rounded-md border border-input bg-muted/40 px-2.5 py-1.5 text-[13px] text-muted-foreground hover:border-border hover:bg-background hover:text-foreground transition-colors shadow-xs sm:w-60 cursor-pointer"
                             >
                                 <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                 <span className="hidden sm:inline truncate text-left flex-1">Search or jump to...</span>
@@ -511,7 +511,7 @@ export default function AppShell({
                                 target="_blank"
                                 rel="noopener"
                                 title="Documentation (opens in a new tab)"
-                                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-2 text-[13px] font-medium text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-foreground"
+                                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-input bg-background px-2 text-[13px] font-medium text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-foreground"
                             >
                                 <FileText className="h-3.5 w-3.5 shrink-0" />
                                 <span className="hidden sm:inline">Docs</span>
@@ -539,14 +539,14 @@ export default function AppShell({
                     <div className="print:hidden">{banner}</div>
 
                     {/* Page Content Body */}
-                    <main className="flex-1">
+                    <main className="min-w-0 max-w-full flex-1">
                         {header && (
                             <div className="border-b border-border/60 bg-card print:hidden">
-                                <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">{header}</div>
+                                <div className="mx-auto w-full min-w-0 max-w-7xl px-4 py-4 sm:px-6 lg:px-8">{header}</div>
                             </div>
                         )}
                         {padded ? (
-                            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-6">{children}</div>
+                            <div className="mx-auto w-full min-w-0 max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-6">{children}</div>
                         ) : (
                             children
                         )}

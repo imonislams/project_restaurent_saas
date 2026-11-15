@@ -246,6 +246,8 @@ export default function PosIndex({
     const [showShift, setShowShift] = useState(!shift);
     const [showHeldOrders, setShowHeldOrders] = useState(false);
     const [showShortcuts, setShowShortcuts] = useState(false);
+    // The cart is a bottom sheet on phones and a static sidebar from md up.
+    const [mobileCartOpen, setMobileCartOpen] = useState(false);
     const [editingNoteKey, setEditingNoteKey] = useState<string | null>(null);
     const [itemNoteInput, setItemNoteInput] = useState('');
     const [configuring, setConfiguring] = useState<{ product: Product; variant: Variant | null } | null>(null);
@@ -537,6 +539,7 @@ export default function PosIndex({
                 setShowShortcuts(false);
                 setShowTablePrompt(false);
                 setEditingNoteKey(null);
+                setMobileCartOpen(false);
             } else if (e.key === '?' && !['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) {
                 e.preventDefault();
                 setShowShortcuts(true);
@@ -640,13 +643,13 @@ export default function PosIndex({
     }
 
     return (
-        <div className="flex h-screen flex-col overflow-hidden bg-background font-sans select-none">
+        <div className="pos-screen flex h-dvh-safe flex-col overflow-hidden bg-background font-sans select-none md:h-screen">
             <Head title={`POS Terminal · ${branch.name}`} />
 
             {/* --- TOP BAR --- */}
-            <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-3 md:px-4 shadow-xs z-20">
+            <header className="flex h-auto shrink-0 flex-wrap items-center justify-between gap-y-1.5 border-b border-border bg-card px-3 py-1.5 shadow-xs md:h-14 md:flex-nowrap md:gap-y-0 md:px-4 md:py-0 z-20">
                 {/* Left: Brand + Branch + Shift Status */}
-                <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-2.5 sm:gap-3">
                     <Link
                         href={route('dashboard')}
                         title="Back to Admin Dashboard"
@@ -661,10 +664,10 @@ export default function PosIndex({
                     </Link>
 
                     {/* Branch Switcher */}
-                    <div className="relative">
+                    <div className="relative min-w-0">
                         <select
                             aria-label="Branch selector"
-                            className="h-8 rounded-md border border-input bg-background py-1 pl-2.5 pr-8 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+                            className="h-8 max-w-[8.5rem] truncate rounded-md border border-input bg-background py-1 pl-2.5 pr-8 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
                             value={branch.id}
                             onChange={(e) =>
                                 router.post(route('branch.switch'), { branch_id: Number(e.target.value) }, { preserveScroll: true })
@@ -706,7 +709,7 @@ export default function PosIndex({
                 </div>
 
                 {/* Center / Right: Quick Actions & Live Info */}
-                <div className="flex items-center gap-1.5 sm:gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
                     {/* Parked / Held Orders Drawer Button */}
                     <button
                         type="button"
@@ -837,7 +840,7 @@ export default function PosIndex({
             {/* --- MAIN WORKSPACE --- */}
             <div className="flex flex-1 overflow-hidden">
                 {/* 1. Category Sidebar */}
-                <aside className="w-48 shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white p-2 hidden sm:flex">
+                <aside className="w-40 shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white p-2 hidden md:flex lg:w-48">
                     <div className="mb-2 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-gray-400">
                         Categories
                     </div>
@@ -900,7 +903,7 @@ export default function PosIndex({
                 </aside>
 
                 {/* 2. Middle Product Catalog Workspace */}
-                <main className="flex flex-1 flex-col overflow-hidden bg-gray-50">
+                <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-gray-50">
                     {/* Search & Category Pills (on small screens) */}
                     <div className="border-b border-gray-200 bg-white p-2.5 shadow-subtle">
                         <div className="flex items-center gap-2">
@@ -919,41 +922,58 @@ export default function PosIndex({
                                     className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2 pl-9 pr-8 text-xs sm:text-sm text-gray-900 shadow-subtle placeholder:text-gray-400 focus:border-ring focus:bg-white focus:outline-none focus:ring-1 focus:ring-ring"
                                 />
                                 {search && (
-                                     <button
-                                         type="button"
-                                         onClick={() => setSearch('')}
-                                         className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600"
-                                     >
-                                         ✕
-                                     </button>
-                                 )}
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearch('')}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600"
+                                    >
+                                        ✕
+                                    </button>
+                                )}
                             </div>
+                        </div>
 
-                            {/* Small-screen category selector */}
-                            <div className="sm:hidden">
-                                <select
-                                    aria-label="Filter category"
-                                    value={activeCategory}
-                                    onChange={(e) =>
-                                        setActiveCategory(
-                                            e.target.value === 'all' ? 'all' : Number(e.target.value),
-                                         )
-                                     }
-                                     className="h-9 rounded-xl border border-gray-200 bg-gray-50 px-2 text-xs font-semibold text-gray-800"
-                                 >
-                                     <option value="all">All items ({products.length})</option>
-                                     {categories.map((c) => (
-                                         <option key={c.id} value={c.id}>
-                                             {c.name}
-                                         </option>
-                                     ))}
-                                 </select>
-                            </div>
+                        {/* Small-screen category chips (the rail is hidden below md) */}
+                        <div className="-mx-2.5 mt-2 flex gap-1.5 overflow-x-auto px-2.5 pb-0.5 [scrollbar-width:none] md:hidden">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    playSound('tap');
+                                    setActiveCategory('all');
+                                }}
+                                className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition ${
+                                    activeCategory === 'all'
+                                        ? 'bg-primary text-primary-foreground shadow-xs'
+                                        : 'bg-gray-100 text-gray-700'
+                                }`}
+                            >
+                                All items ({products.length})
+                            </button>
+                            {categories.map((c) => {
+                                const active = activeCategory === c.id;
+                                return (
+                                    <button
+                                        key={c.id}
+                                        type="button"
+                                        onClick={() => {
+                                            playSound('tap');
+                                            setActiveCategory(c.id);
+                                        }}
+                                        className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition ${
+                                            active
+                                                ? 'bg-primary text-primary-foreground shadow-xs'
+                                                : 'bg-gray-100 text-gray-700'
+                                        }`}
+                                    >
+                                        {c.name}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
                     {/* Product Grid */}
-                    <div className="grid flex-1 auto-rows-min grid-cols-1 gap-3 overflow-y-auto p-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid flex-1 auto-rows-min grid-cols-2 gap-2 overflow-y-auto p-2 pb-24 sm:gap-3 sm:p-3 sm:pb-24 md:pb-3 sm:grid-cols-2 lg:grid-cols-3">
                         {filtered.map((product) => {
                             const unitPrice = priceFor(product);
                             const inCartCount = cart
@@ -989,10 +1009,36 @@ export default function PosIndex({
                     </div>
                 </main>
 
-                {/* 3. Right Cart & Checkout Panel */}
-                <aside className="flex w-96 shrink-0 flex-col border-l border-gray-200 bg-white shadow-card z-10">
+                {/* 3. Right Cart & Checkout Panel — static sidebar from md up, bottom sheet on phones */}
+                {mobileCartOpen && (
+                    <div
+                        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs md:hidden"
+                        onClick={() => setMobileCartOpen(false)}
+                        aria-hidden
+                    />
+                )}
+                <aside
+                    className={`fixed inset-x-0 bottom-0 z-40 flex max-h-[87dvh] w-full flex-col overflow-y-auto overscroll-contain rounded-t-2xl border-t border-gray-200 bg-white shadow-elevated transition-transform duration-200 md:static md:h-auto md:max-h-none md:w-80 md:shrink-0 md:overflow-visible md:rounded-none md:border-l md:border-t-0 md:shadow-card md:z-10 md:translate-y-0 lg:w-96 ${
+                        mobileCartOpen
+                            ? 'translate-y-0'
+                            : 'pointer-events-none invisible translate-y-full md:visible md:pointer-events-auto'
+                    }`}
+                >
                     {/* Order Context & Header */}
-                    <div className="border-b border-gray-200 p-3 bg-gray-50/50">
+                    <div className="sticky top-0 z-10 shrink-0 border-b border-gray-200 bg-gray-50 p-3">
+                        {/* Mobile sheet handle + close */}
+                        <div className="mb-2 flex items-center justify-between md:hidden">
+                            <span className="w-6" />
+                            <span className="h-1 w-10 rounded-full bg-gray-300" />
+                            <button
+                                type="button"
+                                onClick={() => setMobileCartOpen(false)}
+                                aria-label="Close cart"
+                                className="w-6 text-right text-gray-400 hover:text-gray-600"
+                            >
+                                ✕
+                            </button>
+                        </div>
                         {/* Order Type Tabs */}
                         <div className="grid grid-cols-4 gap-1 rounded-xl bg-gray-200/80 p-1">
                             {ORDER_TYPES.map((type) => {
@@ -1021,13 +1067,13 @@ export default function PosIndex({
                         {/* Dine-In Controls */}
                         {orderType === 'dine_in' && (
                             <div className="mt-2.5">
-                                <div className="grid grid-cols-3 gap-2">
-                                    <div className="col-span-2">
+                                <div className="grid grid-cols-[minmax(0,1fr)_4.5rem] gap-2 sm:grid-cols-3">
+                                    <div className="min-w-0 sm:col-span-2">
                                         <select
                                             ref={tableRef}
                                             aria-label="Table selection"
                                             aria-invalid={tableMissing}
-                                            className={`w-full rounded-xl border bg-background py-1.5 px-2.5 text-xs font-medium text-foreground shadow-xs focus:ring-1 focus:ring-ring ${
+                                            className={`w-full min-w-0 max-w-full rounded-xl border bg-background py-1.5 px-2.5 text-xs font-medium text-foreground shadow-xs focus:ring-1 focus:ring-ring ${
                                                 tableMissing ? 'border-red-400 focus:border-red-500' : 'border-input focus:border-ring'
                                             }`}
                                             value={tableId}
@@ -1047,7 +1093,7 @@ export default function PosIndex({
                                             ))}
                                         </select>
                                     </div>
-                                    <div className="relative">
+                                    <div className="relative min-w-0">
                                         <input
                                             type="number"
                                             min={1}
@@ -1139,7 +1185,7 @@ export default function PosIndex({
                     </div>
 
                     {/* Cart Lines List */}
-                    <div className="flex-1 overflow-y-auto p-3 divide-y divide-gray-100">
+                    <div className="shrink-0 p-3 divide-y divide-gray-100 md:min-h-0 md:flex-1 md:overflow-y-auto md:overscroll-contain">
                         {cart.length === 0 ? (
                             <div className="flex h-full flex-col items-center justify-center py-12 text-center text-gray-400">
                                 <Icon name="cart" className="h-10 w-10 text-gray-300 mb-2" />
@@ -1176,7 +1222,7 @@ export default function PosIndex({
                                                 <button
                                                     type="button"
                                                     onClick={() => removeLine(line.key)}
-                                                    className="mt-0.5 text-[10px] text-red-500 hover:text-red-700 transition"
+                                                    className="mt-0.5 px-1 py-1 text-[10px] text-red-500 hover:text-red-700 transition"
                                                     title="Remove item"
                                                 >
                                                     Remove
@@ -1190,7 +1236,7 @@ export default function PosIndex({
                                                 <button
                                                     type="button"
                                                     onClick={() => updateQty(line.key, -1)}
-                                                    className="flex h-6 w-6 items-center justify-center rounded-md bg-white text-xs font-bold text-gray-700 hover:bg-gray-100 transition shadow-subtle"
+                                                    className="flex h-8 w-8 md:h-6 md:w-6 items-center justify-center rounded-md bg-white text-xs font-bold text-gray-700 hover:bg-gray-100 transition shadow-subtle"
                                                     title="Decrease quantity"
                                                 >
                                                     −
@@ -1202,12 +1248,12 @@ export default function PosIndex({
                                                     onChange={(e) =>
                                                         setDirectQty(line.key, Number(e.target.value))
                                                     }
-                                                    className="w-9 border-none bg-transparent p-0 text-center font-mono text-xs font-bold text-gray-900 focus:outline-none"
+                                                    className="w-11 md:w-9 border-none bg-transparent p-0 text-center font-mono text-xs font-bold text-gray-900 focus:outline-none"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={() => updateQty(line.key, 1)}
-                                                    className="flex h-6 w-6 items-center justify-center rounded-md bg-white text-xs font-bold text-gray-700 hover:bg-gray-100 transition shadow-subtle"
+                                                    className="flex h-8 w-8 md:h-6 md:w-6 items-center justify-center rounded-md bg-white text-xs font-bold text-gray-700 hover:bg-gray-100 transition shadow-subtle"
                                                     title="Increase quantity"
                                                 >
                                                     +
@@ -1243,7 +1289,21 @@ export default function PosIndex({
                     </div>
 
                     {/* Financial Summary & Pay Action Panel */}
-                    <div className="border-t border-gray-200 bg-gray-50/70 p-3">
+                    <div className="sticky bottom-0 z-10 shrink-0 border-t border-gray-200 bg-gray-50 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-3">
+                        {/* Order-level kitchen note */}
+                        <details className="mb-2">
+                            <summary className="cursor-pointer select-none text-[11px] font-semibold text-gray-500 hover:text-gray-700">
+                                Order note{orderNotes ? ' · added' : ''}
+                            </summary>
+                            <textarea
+                                rows={2}
+                                value={orderNotes}
+                                onChange={(e) => setOrderNotes(e.target.value)}
+                                placeholder="Printed on the kitchen ticket"
+                                className="select-text mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs"
+                            />
+                        </details>
+
                         {/* Discount Selector & Preset Chips */}
                         <div className="mb-2">
                             <div className="flex items-center gap-1.5 mb-1.5">
@@ -1380,6 +1440,7 @@ export default function PosIndex({
                                 disabled={cart.length === 0 || !shift}
                                 onClick={() => {
                                     playSound('tap');
+                                    setMobileCartOpen(false);
                                     if (guardTable(() => setShowPayment(true))) setShowPayment(true);
                                 }}
                                 className="mt-3 flex w-full items-center justify-between rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 active:scale-[0.99] transition disabled:opacity-50 disabled:pointer-events-none"
@@ -1431,6 +1492,29 @@ export default function PosIndex({
                 </aside>
             </div>
 
+            {/* --- MOBILE STICKY CART BAR (phones only; the panel above is the sheet) --- */}
+            <button
+                type="button"
+                onClick={() => setMobileCartOpen(true)}
+                className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t border-gray-200 bg-white px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.08)] md:hidden"
+            >
+                <span className="flex min-w-0 items-center gap-2">
+                    <Icon name="cart" className="h-4 w-4 shrink-0 text-gray-500" />
+                    <span className="truncate text-xs font-semibold text-gray-700">
+                        {cart.reduce((sum, l) => sum + l.quantity, 0)} item
+                        {cart.reduce((sum, l) => sum + l.quantity, 0) === 1 ? '' : 's'}
+                    </span>
+                </span>
+                <span className="flex items-center gap-3">
+                    <span className="font-mono text-sm font-bold tracking-tight text-gray-900">
+                        {money(totals.total, currency)}
+                    </span>
+                    <span className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-xs">
+                        View cart
+                    </span>
+                </span>
+            </button>
+
             {/* --- MODAL 1: PAYMENT & CHECKOUT (Split & Cash) --- */}
             {showPayment && (
                 <PaymentModal
@@ -1477,7 +1561,7 @@ export default function PosIndex({
             {/* --- MODAL: CONFIGURE MODIFIERS --- */}
             {configuring && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-xs sm:items-center sm:p-4">
-                    <div className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-t-2xl bg-white shadow-elevated sm:rounded-2xl">
+                    <div className="flex max-h-[92dvh] w-full max-w-lg flex-col rounded-t-2xl bg-white shadow-elevated sm:rounded-2xl">
                         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
                             <div>
                                 <h3 className="text-sm font-bold text-gray-900">{configuring.product.name}</h3>
@@ -1570,8 +1654,8 @@ export default function PosIndex({
 
             {/* --- TABLE REQUIRED PROMPT --- */}
             {showTablePrompt && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-                    <div role="alertdialog" aria-labelledby="table-prompt-title" className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-elevated">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 backdrop-blur-xs sm:p-4">
+                    <div role="alertdialog" aria-labelledby="table-prompt-title" className="max-h-[92dvh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-6 shadow-elevated">
                         <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                             <h3 id="table-prompt-title" className="text-base font-bold text-gray-900">
                                 {t('pos.table_required')}
@@ -1648,8 +1732,8 @@ export default function PosIndex({
 
             {/* --- MODAL 5: KEYBOARD SHORTCUTS CHEATSHEET --- */}
             {showShortcuts && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-elevated">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4">
+                    <div className="max-h-[92dvh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-5 shadow-elevated">
                         <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                             <h3 className="text-sm font-bold text-gray-900">POS Keyboard Shortcuts</h3>
                             <button
@@ -1729,7 +1813,7 @@ function ProductCard({
 
     return (
         <div
-            className={`group relative aspect-[3/2] overflow-hidden rounded-3xl border bg-card shadow-subtle transition-[transform,box-shadow,border-color] duration-150 ${
+            className={`group relative min-w-0 aspect-[3/2] overflow-hidden rounded-xl border bg-card shadow-subtle transition-[transform,box-shadow,border-color] duration-150 lg:rounded-3xl ${
                 product.is_available
                     ? 'cursor-pointer border-border hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-card'
                     : 'border-border/50'
@@ -1764,12 +1848,12 @@ function ProductCard({
             <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-t from-black/90 via-black/55 to-transparent" />
 
             {categoryName && (
-                <span className="pointer-events-none absolute left-2.5 top-2.5 z-[3] rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground shadow-subtle">
+                <span className="pointer-events-none absolute left-1.5 top-1.5 z-[3] max-w-[calc(100%-3.5rem)] truncate rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-bold text-primary-foreground shadow-subtle lg:left-2.5 lg:top-2.5 lg:px-2.5 lg:py-1 lg:text-xs">
                     {categoryName}
                 </span>
             )}
             {inCartCount > 0 && (
-                <span className="pointer-events-none absolute right-2.5 top-2.5 z-[3] flex h-6 min-w-6 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-primary-foreground shadow-subtle">
+                <span className="pointer-events-none absolute right-1.5 top-1.5 z-[3] flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground shadow-subtle lg:right-2.5 lg:top-2.5 lg:h-6 lg:min-w-6 lg:px-1.5 lg:text-xs">
                     ×{inCartCount}
                 </span>
             )}
@@ -1784,19 +1868,19 @@ function ProductCard({
             />
 
             {/* Name, sizes and price overlaid on the image. */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex flex-col gap-1 p-3">
-                <div className="line-clamp-2 min-w-0 break-words text-lg font-extrabold leading-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex flex-col gap-0.5 p-2 lg:gap-1 lg:p-3">
+                <div className="line-clamp-2 min-w-0 break-words text-[13px] font-extrabold leading-tight text-white lg:text-lg [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
                     {product.name}
                 </div>
 
                 {!product.is_available ? (
-                    <div className="text-base font-extrabold tracking-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
+                    <div className="text-sm font-extrabold tracking-tight text-white lg:text-base [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
                         {t('pos.sold_out')}
                     </div>
                 ) : hasVariants ? (
                     // The base price is the item sold as-is, shown as "Regular"; each size keeps
                     // its own price. Every option stays tappable so a size is still one tap away.
-                    <div className="pointer-events-auto flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm font-bold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
+                    <div className="pointer-events-auto flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] font-bold text-white lg:gap-x-2 lg:text-sm [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
                         <button
                             type="button"
                             onClick={() => onAdd(product, null)}
@@ -1818,7 +1902,7 @@ function ProductCard({
                         ))}
                     </div>
                 ) : (
-                    <div className="text-base font-extrabold tracking-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
+                    <div className="text-sm font-extrabold tracking-tight text-white lg:text-base [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
                         {money(unitPrice, currency)}
                     </div>
                 )}
@@ -2047,8 +2131,8 @@ function PaymentModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-elevated border border-gray-100 flex flex-col max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-xs sm:items-center sm:p-4">
+            <div className="flex max-h-[92dvh] w-full max-w-lg flex-col rounded-t-2xl border border-gray-100 bg-white p-6 shadow-elevated sm:max-h-[90vh] sm:rounded-2xl overflow-y-auto">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                     <h3 className="text-base font-bold text-gray-900">Payment &amp; Checkout</h3>
                     <button
@@ -2223,7 +2307,7 @@ function PaymentModal({
                                 <div key={index} className="flex items-center gap-2">
                                     <select
                                         aria-label="Payment Method"
-                                        className="flex-1 rounded-xl border border-gray-300 bg-white py-1.5 px-2 text-xs font-semibold text-gray-800"
+                                        className="min-w-0 flex-1 rounded-xl border border-gray-300 bg-white py-1.5 px-2 text-xs font-semibold text-gray-800"
                                         value={row.method_id}
                                         onChange={(e) => handleUpdateSplitMethod(index, Number(e.target.value))}
                                     >
@@ -2233,7 +2317,7 @@ function PaymentModal({
                                             </option>
                                         ))}
                                     </select>
-                                    <div className="relative w-32">
+                                    <div className="relative w-24 shrink-0 sm:w-32">
                                         <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-xs font-mono text-gray-400">
                                             {currency}
                                         </span>
@@ -2252,7 +2336,7 @@ function PaymentModal({
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveSplitRow(index)}
-                                            className="text-xs text-red-500 hover:text-red-700 p-1"
+                                            className="shrink-0 p-1 text-xs text-red-500 hover:text-red-700"
                                         >
                                             ✕
                                         </button>
@@ -2338,8 +2422,8 @@ function ShiftModal({
     // If shift is closed, show Open Shift view
     if (!shift) {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-                <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-elevated">
+            <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-xs sm:items-center sm:p-4">
+                <div className="max-h-[92dvh] w-full max-w-sm overflow-y-auto rounded-t-2xl bg-white p-6 shadow-elevated sm:rounded-2xl">
                     <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                         <h3 className="text-base font-bold text-gray-900">Open Cash Register Shift</h3>
                         <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
@@ -2408,8 +2492,8 @@ function ShiftModal({
 
     // Active Shift Management View
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-elevated max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 backdrop-blur-xs sm:p-4">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-elevated max-h-[92dvh] overflow-y-auto">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                     <div>
                         <h3 className="text-base font-bold text-gray-900">Shift #{shift.id} &amp; Drawer</h3>
@@ -2612,9 +2696,9 @@ function HeldOrdersDrawer({
                         </div>
                     ) : (
                         openOrders.map((order) => (
-                            <div key={order.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between">
-                                <div>
-                                    <div className="flex items-center gap-2">
+                            <div key={order.id} className="py-3 first:pt-0 last:pb-0 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex flex-wrap items-center gap-1.5">
                                         <span className="font-mono text-xs font-bold text-gray-900">
                                             {order.order_number}
                                         </span>
@@ -2643,7 +2727,7 @@ function HeldOrdersDrawer({
                                     )}
                                 </div>
 
-                                <div className="flex items-center gap-2">
+                                <div className="flex shrink-0 items-center gap-2">
                                     {canAppend && order.acceptance_status !== 'rejected' && (
                                         <Link
                                             href={route('pos.index', { append: order.id })}
@@ -2664,11 +2748,11 @@ function HeldOrdersDrawer({
                     )}
                 </div>
 
-                <div className="border-t border-gray-200 p-4 bg-gray-50">
+                <div className="border-t border-gray-200 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-gray-50">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="w-full rounded-xl border border-gray-300 py-2 text-xs font-semibold text-gray-700 hover:bg-white"
+                        className="w-full rounded-xl border border-gray-300 py-2.5 text-xs font-semibold text-gray-700 hover:bg-white"
                     >
                         Close Panel
                     </button>
@@ -2704,8 +2788,8 @@ function ItemNoteModal({
     ];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-elevated">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+            <div className="max-h-[92dvh] w-full max-w-sm overflow-y-auto rounded-t-2xl bg-white p-5 shadow-elevated sm:rounded-2xl">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
                     <h3 className="text-sm font-bold text-gray-900">Kitchen Preparation Note</h3>
                     <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>

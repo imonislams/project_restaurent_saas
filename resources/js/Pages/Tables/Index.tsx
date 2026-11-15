@@ -457,7 +457,7 @@ export default function TablesIndex({
                                 </div>
 
                                 {/* Status Filter Pills */}
-                                <div className="inline-flex items-center rounded-lg border border-border bg-muted/40 p-0.5 text-xs">
+                                <div className="inline-flex max-w-full flex-wrap items-center rounded-lg border border-border bg-muted/40 p-0.5 text-xs">
                                     <button
                                         onClick={() => setSelectedStatus('all')}
                                         className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${

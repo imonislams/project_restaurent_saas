@@ -27,7 +27,7 @@ export default function Tabs({
         return (
             <div
                 className={cn(
-                    'inline-flex h-9 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground',
+                    'inline-flex max-w-full items-center justify-start overflow-x-auto rounded-md bg-muted p-1 text-muted-foreground [scrollbar-width:none]',
                     className
                 )}
                 role="tablist"
@@ -41,7 +41,7 @@ export default function Tabs({
                             aria-selected={active}
                             onClick={() => onChange(tab.key)}
                             className={cn(
-                                'inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm px-3 py-1 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer',
+                                'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-sm px-3 py-1.5 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer',
                                 active
                                     ? 'bg-background text-foreground shadow-xs'
                                     : 'hover:text-foreground/80'

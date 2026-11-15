@@ -274,7 +274,7 @@ export default function KitchenIndex({
             {/* --- TOP CONTROL BAR --- */}
             <header className={`sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 border-b px-3 sm:px-5 py-2.5 backdrop-blur-md shadow-subtle ${headerBg}`}>
                 {/* Left: Branding + Branch Selector + Station Pills */}
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <div className="flex min-w-0 max-w-full flex-1 flex-wrap items-center gap-2 sm:gap-3">
                     <div className="flex items-center gap-2">
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-sm shadow-subtle">
                             <Icon name="fire" className="h-5 w-5" />
@@ -305,7 +305,7 @@ export default function KitchenIndex({
                     </select>
 
                     {/* Station Filter Tabs */}
-                    <div className="flex items-center gap-1 overflow-x-auto">
+                    <div className="flex min-w-0 max-w-full items-center gap-1 overflow-x-auto">
                         <button
                             type="button"
                             onClick={() => applyFilters({ station_id: null })}

@@ -148,7 +148,7 @@ export default function Receipt({
                     </div>
 
                     {/* Itemized Table */}
-                    <div className="py-3 border-b-2 border-dashed border-gray-300">
+                    <div className="py-3 border-b-2 border-dashed border-gray-300 overflow-x-auto print:overflow-visible">
                         <table className="w-full text-left text-xs">
                             <thead>
                                 <tr className="border-b border-gray-200 pb-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">

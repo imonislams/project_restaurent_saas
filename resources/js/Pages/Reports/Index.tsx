@@ -321,19 +321,19 @@ export default function ReportsIndex({
 
                                 {/* Custom Date Inputs & Branch Selector */}
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <div className="flex items-center gap-1.5">
+                                    <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                                         <input
                                             type="date"
                                             value={from}
                                             onChange={(e) => setFrom(e.target.value)}
-                                            className="h-8 rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-primary focus:ring-primary"
+                                            className="h-8 min-w-0 max-w-full rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-primary focus:ring-primary"
                                         />
                                         <span className="text-gray-400 text-xs">to</span>
                                         <input
                                             type="date"
                                             value={to}
                                             onChange={(e) => setTo(e.target.value)}
-                                            className="h-8 rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-primary focus:ring-primary"
+                                            className="h-8 min-w-0 max-w-full rounded-md border-gray-300 font-mono text-xs shadow-sm focus:border-primary focus:ring-primary"
                                         />
                                     </div>
 

@@ -278,7 +278,7 @@ export default function PlatformLayout({
     const unread: number = Number(page.platform_notifications?.unread ?? 0);
 
     const topbarRight = (
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
             <NotificationBell unread={unread} indexUrl={route('platform.notifications.index')} recentUrl={route('platform.notifications.recent')} readAllUrl={route('platform.notifications.read-all')} destroyUrl={route('platform.notifications.destroy', ':id')} />
             <Link
                 href={route('dashboard')}

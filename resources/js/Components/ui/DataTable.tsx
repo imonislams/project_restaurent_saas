@@ -59,7 +59,7 @@ export default function DataTable<T extends Record<string, any>>({
         align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
 
     return (
-        <div className="rounded-md border border-border bg-card overflow-hidden print:overflow-visible print:rounded-none print:border-0">
+        <div className="min-w-0 w-full max-w-full rounded-md border border-border bg-card overflow-hidden print:overflow-visible print:rounded-none print:border-0">
             <Table>
                 <TableHeader>
                     <TableRow className="bg-muted/40 hover:bg-muted/40 print:bg-transparent">
