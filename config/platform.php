@@ -118,6 +118,19 @@ return [
     ],
 
     /*
+    | Database host capacity expectations (QA-E-03).
+    |
+    | A 16 MB InnoDB buffer pool — the XAMPP default — was measured as the real
+    | POS throughput ceiling: raising it to 256 MB cut latency 65% and nearly
+    | tripled throughput with no change in query count. `php artisan platform:check`
+    | reads the live value and fails below this minimum, so a host left at the
+    | default is caught at deploy rather than discovered in a load test.
+    */
+    'database' => [
+        'min_buffer_pool_mb' => (int) env('PLATFORM_DB_MIN_BUFFER_POOL_MB', 128),
+    ],
+
+    /*
     | Platform administrator created by PlatformAdminSeeder. Read through config
     | (not env() in the seeder) so it still works when the config is cached.
     */

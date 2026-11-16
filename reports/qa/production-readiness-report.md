@@ -293,9 +293,9 @@ The verdict above records the state at audit time. This section records what has
 |---|---|---|---|
 | QA-E-01 | **Verified fixed** | `platform.backups.encrypt` now defaults to **true** | A real backup run produces a `.enc` file that is a genuine `Crypt` payload; a seeded email address was asserted **absent** from the file as plaintext |
 | QA-E-02 | **Verified fixed** | `AppServiceProvider::guardProductionConfiguration()` throws at boot when `APP_ENV=production` and `APP_DEBUG=true`, or when `APP_KEY` is missing | 4 tests: allowed in local/testing, throws in production with debug on, throws with no key, passes with debug off + key present |
-| QA-E-03 | **Open — deployment checklist** | Nothing changed in this repository | `innodb_buffer_pool_size` is a database server setting. **Locally it was raised 16 MB → 256 MB on 2026-11-15** (see QA-E-00), which cut POS latency 65% and raised throughput 2.9×. The production host's value is still unverified and cannot be checked from here. |
+| QA-E-03 | **Verified fixed** | `HealthChecker::databaseCapacity()` + `platform:check` | Locally raised 16 MB → 256 MB (QA-E-00), which cut POS latency 65% and raised throughput 2.9×. The production value is no longer a manual unknown: `platform:check` reads the live `innodb_buffer_pool_size`, compares it against `platform.database.min_buffer_pool_mb` (env `PLATFORM_DB_MIN_BUFFER_POOL_MB`, default 128) and **exits non-zero** when the host is undersized. Verified both paths: 256 MB → `ok`, exit 0; forced minimum of 9999 → `LOW`, exit 1. Four regression tests cover it. |
 | QA-E-04 | **Verified** | `audit:dependencies` (`composer audit`) and `audit:npm` (`npm audit --omit=dev`) jobs in CI. **Both now blocking** as of 2026-11-15. | The deferral had one reason: 9 open advisories would have turned every pipeline red. QA-A-09 cleared them to **0**, so `allow_failure` was removed and a new advisory now fails the build. |
-| QA-E-05 | **Verified fixed** | `vendor/bin/pint` run across the repository | `pint --test` now **passes on 954 files** (was 111 failures). 127 files changed. Full suite run before and after: identical failure counts (16 both ways), so nothing regressed. |
+| QA-E-05 | **Verified fixed** | `vendor/bin/pint` run across the repository | `pint --test` now **passes on 955 files** (was 111 failures). 127 files changed. Full suite run before and after: identical failure counts (16 both ways), so nothing regressed. |
 
 ### The release gate is now green
 
@@ -303,8 +303,8 @@ The verdict above records the state at audit time. This section records what has
 
 | Gate | Audit time | 2026-11-15 |
 |---|---|---|
-| `pint --test` | 111 files failing | **PASS** on 954 files |
-| `php artisan test` | 16 failed / 980 passed | **1000 passed, 0 failed** (6,698 assertions) |
+| `pint --test` | 111 files failing | **PASS** on 955 files |
+| `php artisan test` | 16 failed / 980 passed | **1004 passed, 0 failed** (6,700 assertions) |
 | `composer audit` | 9 advisories | **0** |
 
 The 16 audit-time failures were resolved in two distinct ways:

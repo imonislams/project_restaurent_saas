@@ -30,12 +30,64 @@ class HealthChecker
                 return Storage::disk('local')->exists($path);
             }),
             'public_storage' => $this->publicStorageCheck(),
+            'database_capacity' => $this->databaseCapacity(),
             'queue' => [
                 'ok' => true,
                 'queued' => DB::table('jobs')->count(),
                 'failed' => DB::table('failed_jobs')->count(),
             ],
         ];
+    }
+
+    /**
+     * Report the InnoDB buffer pool against a recommended minimum.
+     *
+     * QA-E-03: a 16 MB pool (the XAMPP default) was the real throughput ceiling —
+     * raising it to 256 MB cut POS latency 65% and nearly tripled throughput with
+     * no change in query count. The point of this check is that nobody has to
+     * remember to look: the deployed host reports its own value.
+     *
+     * `ok` is always true so a small pool never turns /health red or blocks a
+     * deploy. Enforcement belongs in `platform:check`, which exits non-zero —
+     * failing the liveness probe would take the site down over a tuning setting.
+     *
+     * @return array<string, mixed>
+     */
+    public function databaseCapacity(): array
+    {
+        try {
+            $driver = DB::connection()->getDriverName();
+
+            if (! in_array($driver, ['mysql', 'mariadb'], true)) {
+                return ['ok' => true, 'applicable' => false, 'detail' => "not applicable on {$driver}"];
+            }
+
+            $row = DB::selectOne("show variables like 'innodb_buffer_pool_size'");
+            $poolMb = (int) round(((int) ($row->Value ?? 0)) / 1048576);
+
+            $sizeRow = DB::selectOne(
+                'select coalesce(sum(data_length + index_length), 0) as bytes
+                 from information_schema.tables where table_schema = database()'
+            );
+            $dataMb = (int) round(((int) ($sizeRow->bytes ?? 0)) / 1048576);
+
+            $minimumMb = (int) config('platform.database.min_buffer_pool_mb', 128);
+            $recommended = $poolMb >= $minimumMb;
+
+            return [
+                'ok' => true,
+                'applicable' => true,
+                'buffer_pool_mb' => $poolMb,
+                'data_mb' => $dataMb,
+                'minimum_mb' => $minimumMb,
+                'recommended' => $recommended,
+                'detail' => $recommended
+                    ? "{$poolMb} MB (data {$dataMb} MB) — meets the {$minimumMb} MB minimum"
+                    : "{$poolMb} MB (data {$dataMb} MB) — BELOW the {$minimumMb} MB minimum",
+            ];
+        } catch (Throwable $e) {
+            return ['ok' => true, 'applicable' => false, 'detail' => $e->getMessage()];
+        }
     }
 
     public function healthy(): bool

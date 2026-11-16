@@ -24,11 +24,15 @@ class PlatformReadinessCheck extends Command
         $queuedJobs = (int) ($checks['queue']['queued'] ?? 0);
         $lastBackup = Backup::query()->latest('id')->first();
 
+        $capacity = $checks['database_capacity'] ?? [];
+        $capacityOk = ($capacity['applicable'] ?? false) ? (bool) ($capacity['recommended'] ?? true) : true;
+
         $rows = [
             'Database' => ($checks['database']['ok'] ?? false) ? 'ok' : 'FAILED',
             'Cache' => ($checks['cache']['ok'] ?? false) ? 'ok' : 'FAILED',
             'Storage' => ($checks['storage']['ok'] ?? false) ? 'ok' : 'FAILED',
             'Public files' => ($checks['public_storage']['linked'] ?? false) ? 'ok' : 'missing storage:link',
+            'InnoDB pool' => $this->capacityLabel($capacity),
             'Queued jobs' => (string) $queuedJobs,
             'Failed jobs' => $failedJobs === 0 ? 'none' : "{$failedJobs} — review",
             'Last backup' => $lastBackup ? ($lastBackup->created_at?->diffForHumans() ?? 'unknown') : 'none',
@@ -45,9 +49,29 @@ class PlatformReadinessCheck extends Command
             $this->line(str_pad($label, 22).$value);
         }
 
-        $healthy = ($checks['database']['ok'] ?? false) && ($checks['cache']['ok'] ?? false) && $failedJobs === 0;
+        if (! $capacityOk) {
+            $this->newLine();
+            $this->warn('The database buffer pool is below the recommended minimum.');
+            $this->line('  Raise innodb_buffer_pool_size and restart the database server.');
+            $this->line('  A 16 MB pool was measured as the POS throughput ceiling (see QA-E-03).');
+        }
+
+        $healthy = ($checks['database']['ok'] ?? false)
+            && ($checks['cache']['ok'] ?? false)
+            && $failedJobs === 0
+            && $capacityOk;
 
         return $healthy ? self::SUCCESS : self::FAILURE;
+    }
+
+    /** @param array<string, mixed> $capacity */
+    protected function capacityLabel(array $capacity): string
+    {
+        if (! ($capacity['applicable'] ?? false)) {
+            return 'n/a — '.($capacity['detail'] ?? 'not applicable');
+        }
+
+        return ($capacity['recommended'] ?? false ? 'ok — ' : 'LOW — ').($capacity['detail'] ?? '');
     }
 
     /**

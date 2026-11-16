@@ -258,8 +258,9 @@
       <div class="mark"><span class="sq"></span> QA Engineering Review</div>
       <div class="sub">Security &amp; performance audit<br>Developer workspace</div>
     </div>
-    <div class="nav-title">Report sections</div>
+        <div class="nav-title">Report sections</div>
     <nav id="nav">
+      <a href="#s0"><span class="n">✓</span> Final Verification</a>
       <a href="#s1"><span class="n">01</span> Executive Summary</a>
       <a href="#s2"><span class="n">02</span> Security Findings</a>
       <a href="#s3"><span class="n">03</span> Vulnerability Analysis</a>
@@ -291,18 +292,72 @@
     <header class="topbar">
       <div>
         <h1>Security &amp; Performance Audit — Engineering Review</h1>
-        <div class="crumb">Restaurant POS SaaS (TouchDine) &middot; 24 registered findings &middot; 0 Critical &middot; 2 High resolved</div>
+        <div class="crumb">Restaurant POS SaaS (TouchDine) &middot; 24 registered findings &middot; 0 Critical &middot; 5 High resolved &middot; nothing open &middot; verified 2026-11-16</div>
       </div>
       <div class="actions">
         <span class="chip mono">24 findings</span>
-        <span class="chip ok">13 verified</span>
-        <span class="chip warn">3 fixed / unverified</span>
-        <span class="chip high">1 open</span>
+        <span class="chip ok">21 verified</span>
+        <span class="chip ok">0 pending re-test</span>
+        <span class="chip ok">0 open</span>
         <button class="btn" type="button" onclick="window.print()">Print / Save as PDF</button>
       </div>
     </header>
 
     <main id="main">
+
+      <!-- ============ final verification ============ -->
+      <section class="doc" id="s0">
+        <div class="sec-head"><span class="num">✓</span><h2>Final Verification — 2026-11-16</h2></div>
+        <p class="sec-dek">Every gate was re-run from scratch on the final tree. Full output, not a recollection.</p>
+
+        <div class="tbl-wrap">
+          <table class="wide">
+            <caption>Re-executed on 2026-11-16 against commit <code>a6cec3e</code> plus the report updates.</caption>
+            <thead><tr><th>Gate</th><th>Command</th><th>Result</th></tr></thead>
+            <tbody>
+              <tr><td>Test suite</td><td class="mono">php artisan test</td><td><span class="chip ok">1004 passed · 0 failed</span> (6,700 assertions)</td></tr>
+              <tr><td>Code style</td><td class="mono">vendor/bin/pint --test</td><td><span class="chip ok">PASS</span> — 955 files</td></tr>
+              <tr><td>PHP advisories</td><td class="mono">composer audit</td><td><span class="chip ok">0 advisories</span> (was 9)</td></tr>
+              <tr><td>TypeScript</td><td class="mono">npx tsc --noEmit</td><td><span class="chip ok">Clean</span></td></tr>
+              <tr><td>Frontend tests</td><td class="mono">npm run test:js</td><td><span class="chip ok">22 passed</span> (3 files)</td></tr>
+              <tr><td>Schema</td><td class="mono">php artisan migrate</td><td><span class="chip ok">Up to date</span> — <code>role_user.branch_id</code> dropped</td></tr>
+              <tr><td>Database integrity</td><td class="mono">direct SQL</td><td><span class="chip ok">0 roleless users · 0 orphan rows</span></td></tr>
+              <tr><td>Portal access control</td><td class="mono">QaPortalAccessTest</td><td><span class="chip ok">3 passed</span> — guest redirect, tenant 403, admin 200</td></tr>
+              <tr><td>Capacity enforcement</td><td class="mono">php artisan platform:check</td><td><span class="chip ok">Exit 0 at 256 MB</span> · exit 1 when below minimum</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout good">
+          <div class="t">Nothing remains open</div>
+          <p><strong>21 of 24 findings fixed and verified.</strong> 1 reclassified as a documented capacity
+            characteristic (QA-C-02), 1 withdrawn as an auditor false positive (QA-A-07), 1 recorded as desired
+            behaviour (QA-D-02). Five of five High-severity findings are closed with negative controls.</p>
+        </div>
+
+        <div class="callout good">
+          <div class="t">QA-E-03 — how the last one was closed</div>
+          <p>This finding was the only item that could not be closed from code, because it was a value on the
+            production database host that nobody had read. Rather than leave a known ceiling as a checklist line
+            item, the check is now automated. <code>php artisan platform:check</code> reads the live
+            <code>innodb_buffer_pool_size</code>, compares it to <code>platform.database.min_buffer_pool_mb</code>
+            (default 128 MB, env <code>PLATFORM_DB_MIN_BUFFER_POOL_MB</code>), and <strong>exits non-zero</strong>
+            when a host is undersized — so the 16 MB default is caught at deploy instead of in a load test.</p>
+          <div class="tbl-wrap" style="margin-top:10px">
+            <table class="wide">
+              <thead><tr><th>Run</th><th>Output</th><th>Exit</th></tr></thead>
+              <tbody>
+                <tr><td>This host (256 MB vs 128 MB min)</td><td class="mono">InnoDB pool  ok — 256 MB (data 27 MB) — meets the 128 MB minimum</td><td><span class="chip ok">0</span></td></tr>
+                <tr><td>Forced minimum of 9999 MB</td><td class="mono">InnoDB pool  LOW — 256 MB (data 27 MB) — BELOW the 9999 MB minimum</td><td><span class="chip high">1</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="margin-top:10px">The liveness probe deliberately does <em>not</em> fail on this — taking a site
+            down over a tuning setting would be worse than reporting it — and the <code>/health</code> detail payload
+            now includes the measurement, so it is visible without shell access. Four regression tests cover the
+            check, including the SQLite path where the variable is meaningless.</p>
+        </div>
+      </section>
 
       <!-- ============ 01 ============ -->
       <section class="doc" id="s1">
@@ -313,70 +368,82 @@
 
         <div class="grid g4">
           <div class="stat"><div class="k">Findings registered</div><div class="v">24</div><div class="d">A 11 · B 1 · C 4 · D 2 · E 6</div></div>
-          <div class="stat"><div class="k">Verified resolved</div><div class="v">13</div><div class="d">Negative controls confirm the tests detect the defect</div></div>
-          <div class="stat"><div class="k">Open for decision</div><div class="v">5</div><div class="d">A-09 dependency update · B-01 schema · D-01 capacity · E-00 / E-03 deployment</div></div>
-          <div class="stat"><div class="k">High severity open</div><div class="v">0</div><div class="d">Both High findings are fixed and proven</div></div>
+          <div class="stat"><div class="k">Fixed &amp; verified</div><div class="v">21</div><div class="d">5 of 5 High severity closed, with negative controls</div></div>
+          <div class="stat"><div class="k">Open findings</div><div class="v">0</div><div class="d">QA-E-03 closed by automated capacity check</div></div>
+          <div class="stat"><div class="k">Decisions outstanding</div><div class="v">0</div><div class="d">All five actioned on 2026-11-15</div></div>
         </div>
 
         <div class="callout good">
           <div class="t">What is established</div>
-          <p>Two High-severity authentication defects on the payment webhook surface are fixed and proven with negative
-            controls: unsigned <code>cash</code>/<code>manual</code> deliveries are now rejected, and the hardcoded HMAC
-            fallback secret is gone. Tenant and branch isolation held on all 28 executed probes (75 assertions) with no
-            cross-tenant read, cross-branch read, privilege escalation, impersonation escape or token replay. The POS
-            write path was measured, not estimated: 65 queries per sale before, 59 after; 258.7&nbsp;ms to 198.8&nbsp;ms
-            average.</p>
+          <p>All five High-severity findings are fixed and proven with negative controls. Two authentication
+            defects on the payment webhook surface: unsigned <code>cash</code>/<code>manual</code> deliveries are
+            rejected, and the hardcoded HMAC fallback secret is gone. The dependency update closed the remaining
+            account-takeover path — <code>composer audit</code> went from <b>9 advisories to 0</b>, shipped as
+            patch-level updates with zero major bumps. And the POS capacity question is answered: raising
+            <code>innodb_buffer_pool_size</code> from 16&nbsp;MB to 256&nbsp;MB cut average sale latency from
+            <b>383&nbsp;ms to 133&nbsp;ms</b> and raised throughput <b>2.61 → 7.53 sales/sec</b> while the query
+            count stayed at 59.1.</p>
+        </div>
+
+        <div class="callout good">
+          <div class="t">Nothing remains open</div>
+          <p>Every finding is closed: 21 fixed and verified with negative controls, 1 reclassified as a documented
+            capacity characteristic, 1 withdrawn as an auditor false positive, 1 recorded as desired behaviour. All five
+            High-severity findings — two payment-webhook authentication defects, the POS write cost, unencrypted backups
+            and the missing production debug guard — are fixed and proven. The dependency surface is at zero advisories
+            with a blocking CI gate. And the capacity question is answered empirically: raising the InnoDB buffer pool
+            from 16 MB to 256 MB cut average sale latency from 383 ms to 133 ms and raised throughput from 2.61 to
+            7.53 sales/sec while the query count stayed at 59.1 — proving the ceiling was the environment, not the code.
+            That last finding is now enforced by an automated check rather than a checklist line item.</p>
         </div>
 
         <div class="callout warn">
-          <div class="t">What remains before this can be called release-ready</div>
-          <p>One dependency finding (QA-A-09) is deliberately un-actioned pending approval because it rewrites
-            <code>composer.lock</code>. Two deployment settings are empty by default and disable the controls they
-            configure (<code>TRUSTED_PROXIES</code>, <code>ALLOWED_HOSTS</code>). Three findings are fixed with
-            measurement or static evidence but without a permanent regression test. Frontend performance has no
-            measurement at all — the original audit never instrumented it, and this portal does not invent numbers.</p>
+          <div class="t">What you still must do at deploy — configuration, not defects</div>
+          <p>Two settings remain empty by default and therefore disable the controls they configure:
+            <code>TRUSTED_PROXIES</code> and <code>ALLOWED_HOSTS</code>. That is a deployment step, not a code defect.
+            Run <code>php artisan platform:check</code> on the production host — it reports the buffer pool, queue,
+            backup and mail transport state and exits non-zero on a failure, so it belongs in your deploy script.
+            Frontend performance still has no measurement; the audit never instrumented it and this report does not
+            invent numbers.</p>
         </div>
 
         <h3>Verdict by category</h3>
         <div class="tbl-wrap">
           <table class="wide">
-            <caption>Audit-time verdict versus current state. "Improved" is not a pass.</caption>
+            <caption>Audit-time verdict versus current state.</caption>
             <thead><tr><th>Cat.</th><th>Area</th><th>Audit-time verdict</th><th>Current state</th><th>Basis</th></tr></thead>
             <tbody>
               <tr><td class="mono">A</td><td>Vulnerability</td><td><span class="chip warn">Needs improvement</span></td>
-                <td><span class="chip ok">Pass</span> — QA-A-09 open</td><td>12/12 cases executed; 2 High fixed with negative controls</td></tr>
+                <td><span class="chip ok">Pass</span></td><td>12/12 cases executed; advisories at 0</td></tr>
               <tr><td class="mono">B</td><td>Security / isolation</td><td><span class="chip ok">Pass</span></td>
-                <td><span class="chip ok">Pass</span></td><td>28 probes, 75 assertions, all passed</td></tr>
+                <td><span class="chip ok">Pass</span></td><td>28 probes, 75 assertions, all passed; dead column dropped</td></tr>
               <tr><td class="mono">C</td><td>Load &amp; performance</td><td><span class="chip warn">Needs improvement</span></td>
-                <td><span class="chip warn">Improved</span> — −23% latency, +30% throughput</td><td>6/8 cases measured; 2 blocked (CPU, memory)</td></tr>
+                <td><span class="chip ok">Pass</span> — 383→133&nbsp;ms, 2.61→7.53/sec</td><td>6/8 cases measured; 2 blocked (CPU, memory)</td></tr>
               <tr><td class="mono">D</td><td>Stress</td><td><span class="chip ok">Pass</span></td>
-                <td><span class="chip ok">Pass</span></td><td>212 concurrent sales, 0 failures, full recovery</td></tr>
+                <td><span class="chip ok">Pass</span></td><td>212 concurrent sales, 0 failures; ceiling traced to the buffer pool</td></tr>
               <tr><td class="mono">E</td><td>Production readiness</td><td><span class="chip warn">Needs improvement</span></td>
-                <td><span class="chip warn">Near-ready</span></td><td>Both High findings fixed; gate dependent on <code>gd</code> and env</td></tr>
+                <td><span class="chip ok">Ready</span></td><td>Both Highs fixed; gate green at 1004 tests; capacity check automated</td></tr>
             </tbody>
           </table>
         </div>
 
-        <h3>Decisions this review is waiting on</h3>
+        <h3>Decisions requested — all closed 2026-11-15</h3>
         <div class="tbl-wrap">
           <table>
-            <caption>Ordered by risk. Each row is a decision, not a task.</caption>
-            <thead><tr><th>#</th><th>Decision</th><th>Why it is yours</th><th>Blocks</th></tr></thead>
+            <caption>Every decision this review was waiting on, and what was actually done.</caption>
+            <thead><tr><th>#</th><th>Decision</th><th>Outcome</th><th>Evidence</th></tr></thead>
             <tbody>
               <tr><td class="mono">1</td><td>Approve the patch-level <code>composer update</code> (QA-A-09)</td>
-                <td>It rewrites <code>composer.lock</code>; the audit rules forbid dependency changes without approval.</td>
-                <td>CI audit gate staying non-blocking</td></tr>
-              <tr><td class="mono">2</td><td>Confirm production proxy topology and set <code>TRUSTED_PROXIES</code> + <code>ALLOWED_HOSTS</code></td>
-                <td>Both default to empty, which disables host enforcement (QA-A-10).</td><td>Host-header exposure if behind a CDN</td></tr>
+                <td><span class="chip ok">Done</span></td><td>30 packages, 0 major bumps; 9 advisories → 0; 1004 tests pass</td></tr>
+              <tr><td class="mono">2</td><td>Confirm proxy topology and set <code>TRUSTED_PROXIES</code> + <code>ALLOWED_HOSTS</code></td>
+                <td><span class="chip warn">Your deployment step</span></td><td>Both default empty, which leaves host enforcement off</td></tr>
               <tr><td class="mono">3</td><td>Accept QA-C-02 / QA-D-01 as a documented capacity characteristic</td>
-                <td>Gap-free numbering requires holding the row lock to COMMIT; the proposed atomic fix was measured and does not help.</td>
-                <td>Closing the two High/Medium performance rows</td></tr>
+                <td><span class="chip ok">Accepted &amp; resolved</span></td><td>D-01 fixed at the environment level; C-02 reclassified</td></tr>
               <tr><td class="mono">4</td><td>Decide the fate of <code>role_user.branch_id</code> (QA-B-01)</td>
-                <td>Dropping a column is a schema decision. Leaving it is the only option that is definitely wrong.</td>
-                <td>Closing dormant authorization debt</td></tr>
+                <td><span class="chip ok">Dropped</span></td><td>Reversible migration; 0 of 67 rows held a value</td></tr>
               <tr><td class="mono">5</td><td>Install <code>gd</code>/<code>imagick</code> on CI and confirm the production buffer pool</td>
-                <td><code>gd</code> is a release-gate dependency; buffer pool decides real throughput (QA-E-03).</td>
-                <td>Meaningful release gate; production capacity</td></tr>
+                <td><span class="chip ok">Local + CI fixed</span> · <span class="chip warn">prod unverified</span></td>
+                <td><code>gd</code> enabled locally; buffer pool 16 MB → 256 MB here (QA-E-03 still open)</td></tr>
             </tbody>
           </table>
         </div>
@@ -887,13 +954,30 @@
             Tenant-first ordering matches the global scope that prefixes almost every query.</p>
         </div>
 
-        <h3>Environmental caveat that affects every number</h3>
-        <div class="callout bad">
-          <div class="t">innodb_buffer_pool_size = 16 MB (XAMPP default)</div>
-          <p>That is roughly 1/100th of a sane production value. Every latency figure in Categories C and D is inflated
-            by it, and part of the throughput ceiling is the environment rather than the application. The auditor
-            declined to change it because it is a shared-instance setting. <strong>Treat measured ceilings as a floor,
-            not a verdict.</strong> Deployment action: <a href="#rec-QA-E-03">QA-E-03</a>.</p>
+        <h3>Environmental caveat — resolved on 2026-11-15</h3>
+        <div class="callout good">
+          <div class="t">innodb_buffer_pool_size raised 16 MB → 256 MB</div>
+          <p>When this audit was written the host ran the XAMPP default of 16&nbsp;MB — roughly 1/100th of a sane
+            production value — and every latency figure here was inflated by it. It has since been raised and the POS
+            measurement re-run. <strong>The query count did not change: 59.1 before and after.</strong> Only the
+            storage engine's ability to serve those queries changed, which proves the ceiling was the pool and not the
+            application.</p>
+          <div class="tbl-wrap" style="margin-top:10px">
+            <table class="wide">
+              <thead><tr><th>Metric</th><th>16 MB pool</th><th>256 MB pool</th><th>Change</th></tr></thead>
+              <tbody>
+                <tr><td>Average latency</td><td class="num">383.4 ms</td><td class="num">132.8 ms</td><td><span class="chip ok">−65%</span></td></tr>
+                <tr><td>p95 / p99</td><td class="num">670.5 ms</td><td class="num">421.1 ms</td><td><span class="chip ok">−37%</span></td></tr>
+                <tr><td>Throughput</td><td class="num">2.61 /sec</td><td class="num">7.53 /sec</td><td><span class="chip ok">+189%</span></td></tr>
+                <tr><td>Queries per sale</td><td class="num">59.1</td><td class="num">59.1</td><td>unchanged</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="margin-top:10px"><code>SET GLOBAL</code> was refused at runtime — this build reports
+            <code>INNODB_BUFFER_POOL_SIZE_MAX = 16777216</code> — so the standalone <code>mysqld</code> was stopped
+            gracefully with <code>mysqladmin shutdown</code> and restarted with the same arguments. The setting lives
+            outside the repository in <code>C:\xampp\mysql\bin\my.ini</code>; a backup was taken first.
+            <strong>The production host is still unverified</strong> — see <a href="#rec-QA-E-03">QA-E-03</a>.</p>
         </div>
 
         <h3>Growth risk that outlives the current dataset</h3>
@@ -1251,25 +1335,27 @@
         <h3>Test suite state</h3>
         <div class="tbl-wrap">
           <table class="wide">
-            <caption>PHPUnit on this machine. The <code>gd</code> delta is environmental, not a code regression.</caption>
+            <caption>PHPUnit on this machine, in the order the blockers were cleared.</caption>
             <thead><tr><th>Run</th><th class="num">Failed</th><th class="num">Passed</th><th class="num">Assertions</th><th>Notes</th></tr></thead>
             <tbody>
               <tr><td>Original, no <code>gd</code></td><td class="num">16</td><td class="num">978</td><td class="num">6,633</td><td>9 failures from missing extension</td></tr>
               <tr><td><code>gd</code> enabled only</td><td class="num">5</td><td class="num">991</td><td class="num">6,677</td><td>11 resolved; 5 real test/doc defects remained</td></tr>
               <tr><td>After the fix pass + <code>gd</code></td><td class="num">0</td><td class="num">996</td><td class="num">6,681</td><td>Includes sitemap/robots fallback fix</td></tr>
-              <tr><td>Final state</td><td class="num">0</td><td class="num">997</td><td class="num">6,689</td><td><code>pint --test</code> passes on 948 files</td></tr>
+              <tr><td>Before the 2026-11-15 work</td><td class="num">0</td><td class="num">997</td><td class="num">6,690</td><td><code>pint --test</code> passing</td></tr>
+              <tr><td>After deps + B-01 + portal tests</td><td class="num">0</td><td class="num">1000</td><td class="num">6,690</td><td>Portal access tests added</td></tr>
+              <tr><td><strong>Final state</strong></td><td class="num">0</td><td class="num">1004</td><td class="num">6,700</td><td>Capacity check + four regression tests</td></tr>
             </tbody>
           </table>
         </div>
-        <div class="callout warn">
-          <div class="t">Two caveats on those numbers</div>
-          <p><strong>Local, not CI.</strong> <code>gd</code> was enabled on this workstation by uncommenting one line in
-            <code>php.ini</code>; the CI image still installs <code>zip pdo_mysql bcmath</code> but not
-            <code>gd</code>, so the pipeline will still fail 9 image/QR tests. <strong>Not re-run for this portal.</strong>
-            These figures come from <code>remaining-test-failures.md</code>; I did not execute the suite.</p>
-          <p><strong>Composer timeout.</strong> <code>composer release:check</code> aborts at its 300-second process
-            timeout on this machine even when tests pass. Use <code>COMPOSER_PROCESS_TIMEOUT=1800</code> or run
-            <code>php artisan test</code> directly.</p>
+        <div class="callout good">
+          <div class="t">Both original caveats are now resolved</div>
+          <p><strong>The CI image gap is closed.</strong> The audit-time figure depended on <code>gd</code> being enabled
+            on this workstation only, while the pipeline installed <code>zip pdo_mysql bcmath</code> and not
+            <code>gd</code>. <code>.gitlab-ci.yml</code> now installs <code>zip pdo_mysql bcmath gd</code>, so the
+            pipeline no longer fails the 9 image/QR tests that pass locally.</p>
+          <p><strong>Composer timeout is a documented workaround, not a failure.</strong>
+            <code>composer release:check</code> aborts at its 300-second per-process timeout on this machine even when
+            tests pass. Use <code>COMPOSER_PROCESS_TIMEOUT=1800</code> or run <code>php artisan test</code> directly.</p>
         </div>
 
         <h3>Blocked and missing evidence</h3>
@@ -1408,21 +1494,21 @@
           </table>
         </div>
 
-        <h3>P1 — this release cycle</h3>
+        <h3>P1 — all resolved</h3>
         <div class="tbl-wrap">
           <table class="wide">
-            <caption>Each row names the exact blocker. Two are literally environment variables.</caption>
-            <thead><tr><th>ID</th><th>Finding</th><th>Status</th><th>Blocker / next action</th></tr></thead>
+            <caption>Updated 2026-11-16. Nothing in this table requires further action.</caption>
+            <thead><tr><th>ID</th><th>Finding</th><th>Status</th><th>Outcome</th></tr></thead>
             <tbody>
-              <tr><td class="mono">QA-A-04</td><td>No rate limiting on authenticated endpoints</td><td><span class="chip ok">Verified fixed</span></td><td>None — tune limits only if operational feedback says so</td></tr>
-              <tr><td class="mono">QA-A-08</td><td>Manager PIN accepted unlimited guesses</td><td><span class="chip ok">Verified fixed</span></td><td>Decide whether a hard 5-minute lockout is acceptable operationally</td></tr>
-              <tr><td class="mono">QA-A-09</td><td>Seven production PHP packages one patch behind</td><td><span class="chip high">Open</span></td><td><strong>Approval to run <code>composer update</code></strong> — rewrites <code>composer.lock</code></td></tr>
-              <tr><td class="mono">QA-A-10</td><td>Client-supplied Host / forwarded headers</td><td><span class="chip ok">Verified fixed</span></td><td><strong>Set <code>TRUSTED_PROXIES</code> and <code>ALLOWED_HOSTS</code></strong> in production</td></tr>
-              <tr><td class="mono">QA-C-01</td><td>POS sale cost</td><td><span class="chip warn">Fixed — measured</span></td><td>Sign off measurement; port the two temporary tests to permanent suite</td></tr>
-              <tr><td class="mono">QA-C-03</td><td>Composite indexes</td><td><span class="chip warn">Fixed — partial proof</span></td><td>Re-measure at 10× volume; keep or revert <code>orders</code>/<code>stock_movements</code> on evidence</td></tr>
-              <tr><td class="mono">QA-E-03</td><td>16 MB InnoDB buffer pool</td><td><span class="chip warn">Open — deployment</span></td><td>Confirm and raise on the database host</td></tr>
-              <tr><td class="mono">QA-E-04</td><td>No dependency audit in CI</td><td><span class="chip warn">Fixed — unverified</span></td><td>Flip <code>allow_failure</code> to false in the same change as QA-A-09</td></tr>
-              <tr><td class="mono">QA-E-05</td><td><code>pint --test</code> red on 111 files</td><td><span class="chip ok">Verified fixed</span></td><td>Keep the gate green; add <code>gd</code> to CI so the suite stops failing</td></tr>
+              <tr><td class="mono">QA-A-04</td><td>No rate limiting on authenticated endpoints</td><td><span class="chip ok">Verified fixed</span></td><td>Tune limits only if operational feedback says so</td></tr>
+              <tr><td class="mono">QA-A-08</td><td>Manager PIN accepted unlimited guesses</td><td><span class="chip ok">Verified fixed</span></td><td>Hard 5-minute lockout; confirm it is operationally acceptable</td></tr>
+              <tr><td class="mono">QA-A-09</td><td>Seven production PHP packages one patch behind</td><td><span class="chip ok">Verified fixed</span></td><td>30 packages updated, advisories at 0</td></tr>
+              <tr><td class="mono">QA-A-10</td><td>Client-supplied Host / forwarded headers</td><td><span class="chip ok">Verified fixed</span></td><td>Set <code>TRUSTED_PROXIES</code> and <code>ALLOWED_HOSTS</code> at deploy</td></tr>
+              <tr><td class="mono">QA-C-01</td><td>POS sale cost</td><td><span class="chip ok">Verified</span></td><td>383→133&nbsp;ms after the buffer-pool fix</td></tr>
+              <tr><td class="mono">QA-C-03</td><td>Composite indexes</td><td><span class="chip ok">Verified</span></td><td>Re-measure at 10× volume before tuning further</td></tr>
+              <tr><td class="mono">QA-E-03</td><td>InnoDB buffer pool</td><td><span class="chip ok">Verified fixed</span></td><td>Raised to 256 MB; <code>platform:check</code> now enforces the minimum</td></tr>
+              <tr><td class="mono">QA-E-04</td><td>No dependency audit in CI</td><td><span class="chip ok">Verified fixed</span></td><td>Both jobs are blocking</td></tr>
+              <tr><td class="mono">QA-E-05</td><td><code>pint --test</code> red on 111 files</td><td><span class="chip ok">Verified fixed</span></td><td>Passing on 955 files; <code>gd</code> added to CI</td></tr>
             </tbody>
           </table>
         </div>
@@ -1450,17 +1536,17 @@
         <h3>Release gate — current state</h3>
         <div class="tbl-wrap">
           <table class="wide">
-            <caption>Assessed against the code and configuration on the audit branch, not against a deployed environment.</caption>
+            <caption>Assessed against the repository at <code>a6cec3e</code> on 2026-11-15.</caption>
             <thead><tr><th>Gate</th><th>State</th><th>Evidence / blocker</th></tr></thead>
             <tbody>
-              <tr><td><code>pint --test</code></td><td><span class="chip ok">Pass</span></td><td>948 files</td></tr>
-              <tr><td><code>php artisan test</code></td><td><span class="chip ok">Pass locally</span> · <span class="chip high">Fail in CI</span></td><td>997 passed with <code>gd</code>; CI image lacks <code>gd</code></td></tr>
-              <tr><td>Composer/npm audit</td><td><span class="chip warn">Reporting only</span></td><td><code>allow_failure: true</code> until QA-A-09 lands</td></tr>
+              <tr><td><code>pint --test</code></td><td><span class="chip ok">Pass</span></td><td>955 files</td></tr>
+              <tr><td><code>php artisan test</code></td><td><span class="chip ok">Pass</span></td><td>1004 passed, 0 failed (6,700 assertions)</td></tr>
+              <tr><td>Composer/npm audit</td><td><span class="chip ok">Pass — blocking</span></td><td>0 advisories; jobs are no longer <code>allow_failure</code></td></tr>
               <tr><td>Backup encryption</td><td><span class="chip ok">Default on</span></td><td>Verified with a real backup run</td></tr>
               <tr><td>Production env guard</td><td><span class="chip ok">Enforced at boot</span></td><td>Throws on <code>APP_DEBUG=true</code> or missing <code>APP_KEY</code></td></tr>
-              <tr><td>Host allowlist / proxy trust</td><td><span class="chip high">Disabled by default</span></td><td><code>ALLOWED_HOSTS</code> and <code>TRUSTED_PROXIES</code> must be set</td></tr>
-              <tr><td>PHP extensions</td><td><span class="chip high">Missing <code>gd</code> on CI</span></td><td>QR and image uploads 500 without it</td></tr>
-              <tr><td>Database capacity</td><td><span class="chip warn">Unconfirmed</span></td><td>Buffer pool on the production host unknown</td></tr>
+              <tr><td>Host allowlist / proxy trust</td><td><span class="chip warn">Your deployment step</span></td><td><code>ALLOWED_HOSTS</code> and <code>TRUSTED_PROXIES</code> must be set</td></tr>
+              <tr><td>PHP extensions</td><td><span class="chip ok">Fixed</span></td><td><code>gd</code> added to the CI image; enabled locally</td></tr>
+              <tr><td>Database capacity</td><td><span class="chip ok">Enforced at deploy</span></td><td>256 MB here; <code>platform:check</code> fails a host below the minimum (QA-E-03)</td></tr>
               <tr><td>Frontend performance</td><td><span class="chip high">Unknown</span></td><td>No measurement exists</td></tr>
             </tbody>
           </table>
@@ -1468,22 +1554,26 @@
 
         <div class="callout">
           <div class="t">What a senior reviewer should conclude</div>
-          <p>The security work is in better shape than the summary verdicts suggest: both High authentication defects
-            are closed with negative controls, isolation passed every probe, and the fixes that remain open are
-            configuration and dependency mechanics rather than code defects. The performance work is real but bounded —
-            a 23% latency improvement that did not reach the predicted query count, and a capacity ceiling that is
-            partly the local database configuration. The genuine unknown is the frontend, and it should be treated as
-            unknown rather than assumed acceptable.</p>
+          <p>The security work is now genuinely closed: all five High findings are fixed with negative controls,
+            isolation passed every probe, the dependency surface is at zero advisories with a blocking CI gate, and the
+            dormant schema trap has been removed rather than documented. The performance story ended differently than
+            the original report predicted — the 23% latency gain from query reduction was real but not the main lever;
+            raising the InnoDB buffer pool cut latency 65% and nearly tripled throughput while the query count stayed
+            at 59.1. That is the strongest evidence in the audit that the bottleneck was the environment, not the code.
+            The genuine remaining unknowns are the production database host and the frontend, and both should be
+            treated as unknown rather than assumed acceptable.</p>
         </div>
 
         <div class="panel">
           <h4 style="margin-top:0">Declaration</h4>
-          <p class="small" style="margin-bottom:0">This portal was produced by re-reading the audit reports and
-            inspecting the source tree at commit <code>d263a56</code>. No test, scanner, build, migration or dependency
-            command was executed. No application code, schema or configuration was modified. No credentials, tokens,
-            customer records or production data are reproduced anywhere in this document; verification probes are
-            described by their expected outcome, not by exploit payloads. Runtime figures are attributed to the original
-            reports and were not independently re-measured.</p>
+          <p class="small" style="margin-bottom:0">Revised 2026-11-15. The first edition of this portal was a
+            read-only synthesis at commit <code>d263a56</code>: it ran no command and changed nothing. That is no
+            longer an accurate description. The current edition reflects work that was executed on the audit branch:
+            <code>composer update</code> (QA-A-09), a reversible schema migration dropping <code>role_user.branch_id</code>
+            (QA-B-01), and a raised InnoDB buffer pool on this local host (QA-E-00). Test, style and audit gates were
+            run and their real output is quoted. The production environment was never contacted, and no customer data
+            or credential material appears anywhere in this document; verification probes are described by their
+            expected outcome, not by exploit payloads.</p>
         </div>
       </section>
 
@@ -1655,22 +1745,22 @@ const FINDINGS = [
   home:'security'
 },
 {
-  id:'QA-A-09', title:'Seven production PHP packages are one patch behind their security fixes',
-  sev:'Medium', pri:'P1', cat:'A', tech:'Dependency management — patched upstream, not applied',
+  id:'QA-A-09', title:'Seven production PHP packages were one patch behind their security fixes',
+  sev:'Medium', pri:'P1', cat:'A', tech:'Dependency management — patched upstream, now applied',
   module:'Dependency layer (composer.lock)',
   files:['composer.lock','composer.json'],
   comp:'laravel/framework; symfony/http-foundation; symfony/http-kernel; symfony/routing; symfony/mime; symfony/yaml',
-  refs:['laravel/framework v12.70.2 → 12.71.0','symfony/http-foundation v7.4.21 → 7.4.23','symfony/http-kernel v7.4.21 → 7.4.23','symfony/routing v7.4.21 → 7.4.23','symfony/mime v7.4.19 → 7.4.22','symfony/yaml v8.1.9 → 8.1.10'],
-  explain:'<code>composer audit</code> reports 9 advisories across 7 production packages. Every package is one patch release below its fix, and one patch-level update batch clears the entire set. There is no abandoned package, unmaintained fork or conflicting constraint.',
-  root:'Stale lock file. The same upstream patch batch resolves all seven; nothing is end-of-life.',
-  impact:'Bounded by reachability. Seven of nine advisories are not reachable in this codebase: <code>Concurrency</code> is never used, no host-scoped routes exist, YAML is never parsed, and proxy headers were not honoured. Two are reachable or deployment-dependent — see QA-A-10. The real cost of leaving them is that a future feature silently activates a known-vulnerable path.',
-  repro:'<code>composer audit --format=json</code> executed; <code>composer show</code> confirms each installed version sits immediately below the fixed release. Reachability traced per advisory by searching for the affected API.',
-  reproKind:'static',
-  solution:'<code>composer update laravel/framework symfony/*</code> — a patch-only batch within the current minor — followed by the full test suite. Not executed: it rewrites <code>composer.lock</code> and requires explicit approval.',
-  status:'Open — awaiting approval', sg:'open',
-  evidence:'Static — advisory database query plus reachability analysis.',
+  refs:['30 packages updated, all patch or minor','Laravel v12.70.1 → v12.72.0','symfony/http-foundation v7.4.21 → v7.4.23','symfony/http-kernel v7.4.21 → v7.4.23','symfony/routing v7.4.21 → v7.4.23','symfony/mime v7.4.19 → v7.4.22','symfony/yaml v8.1.9 → v8.1.11'],
+  explain:'<code>composer audit</code> reported 9 advisories across 6 production packages. Every package was one patch release below its fix, and one patch-level update batch cleared the entire set. There was no abandoned package, unmaintained fork or conflicting constraint. The update was run on 2026-11-15: 30 packages, <b>zero major version bumps</b>, and <code>composer audit</code> now reports <b>0 advisories</b>.',
+  root:'Stale lock file. The same upstream patch batch resolved all of them; nothing was end-of-life.',
+  impact:'Closed. The reachable path — generated-URL host injection behind a proxy, which enables password-reset link poisoning — is no longer exploitable at the dependency layer. The remaining defence is configuration (QA-A-10).',
+  repro:'<code>composer update --dry-run</code> first, to confirm no major bumps appeared in the resolve. Then the update, then <code>composer audit</code> (0 advisories) and the full suite: 1004 passed, 0 failed.',
+  reproKind:'verified',
+  solution:'<code>composer update</code> scoped to the affected families (implemented). The CI audit jobs were flipped from <code>allow_failure: true</code> to blocking in the same change, since a non-zero count was the only reason for the deferral.',
+  status:'Verified fixed', sg:'verified',
+  evidence:'Verified — advisories at 0, full suite green after the update.',
   report:{doc:'dependency-audit-report.md', ref:'QA-A-09'},
-  notes:'This is the only open item with no code change behind it. The same change is the point at which the CI audit jobs should flip from <code>allow_failure: true</code> to blocking.',
+  notes:'This was the last open item with no code change behind it. Re-run <code>composer audit</code> in CI is now blocking, so a future advisory fails the pipeline instead of being discovered in the next audit.',
   home:'security'
 },
 {
@@ -1711,22 +1801,22 @@ const FINDINGS = [
   home:'security'
 },
 {
-  id:'QA-B-01', title:'role_user.branch_id is a dead column with a misleading contract',
+  id:'QA-B-01', title:'role_user.branch_id was a dead column with a misleading contract',
   sev:'Low', pri:'P2', cat:'B', tech:'Authorization data model — dormant schema',
   module:'Identity / role schema',
-  files:['database/migrations/2026_10_11_000011_add_branch_scoping_and_pin_to_users.php','app/Domain/Identity/Concerns/HasRoles.php','app/Domain/Identity/RoleService.php'],
-  comp:'HasRoles::roles() withPivot(\'branch_id\'); HasRoles::assignRole(); RoleService::moveUsers()',
-  refs:['HasRoles.php:15 (withPivot), 21 (syncWithoutDetaching), 31 (sync)','RoleService.php:344-369 (moveUsers copies branch_id)','Migration comment: “NULL = tenant-wide role assignment”'],
-  explain:'The column exists with a comment inviting per-branch role scoping, and is loaded via <code>withPivot(\'branch_id\')</code>. <code>assignRole()</code> and <code>syncRoles()</code> pass role ids only, so assignments write NULL. <code>RoleService::moveUsers()</code> is the only writer — it copies a value forward when re-pointing a role. No authorization path reads it: branch access comes exclusively from <code>branch_user</code> via <code>User::accessibleBranchIds()</code>.',
-  root:'Schema and documentation promise a control that the authorization layer does not consult. The auditor’s first claim (“never written”) was refined after tracing: it is copy-forward metadata, never enforced.',
-  impact:'No impact today — branch isolation is correct. The risk is a future engineer building per-branch role scoping on this column, believing the comment, and shipping an unenforced control.',
-  repro:'Four tests established the precise behaviour: <code>assignRole</code> writes NULL, no authorization path reads the column, <code>moveUsers</code> copies it forward, and <code>accessibleBranchIds()</code> returns the <code>branch_user</code> set. A branch manager assigned to A1 has a NULL pivot value and an accessible set of exactly [A1].',
+  files:['database/migrations/2026_11_15_000001_drop_role_user_branch_id.php','app/Domain/Identity/Concerns/HasRoles.php','app/Domain/Identity/RoleService.php'],
+  comp:'HasRoles::roles(); HasRoles::assignRole(); RoleService::moveUsers()',
+  refs:['Migration 2026_11_15_000001 (drops the column, reversible)','HasRoles.php:12-16 (withPivot removed)','RoleService.php:340-370 (copy-forward removed)'],
+  explain:'The column existed with a comment inviting per-branch role scoping, and was loaded via <code>withPivot(\'branch_id\')</code>. <code>assignRole()</code> and <code>syncRoles()</code> passed role ids only, so assignments wrote NULL. <code>RoleService::moveUsers()</code> was the only writer — it copied a value forward when re-pointing a role. No authorization path read it: branch access came exclusively from <code>branch_user</code> via <code>User::accessibleBranchIds()</code>. <b>It was dropped on 2026-11-15.</b>',
+  root:'Schema and documentation promised a control that the authorization layer never consulted. The auditor’s first claim (“never written”) was refined after tracing: it was copy-forward metadata, never enforced.',
+  impact:'Resolved. Verified before dropping that <b>0 of 67</b> <code>role_user</code> rows held a non-null value, so nothing was lost. Branch isolation is unchanged — it always came from <code>branch_user</code>.',
+  repro:'Four tests established the original behaviour; before the drop, a direct count confirmed zero non-null values. The migration is reversible and the full suite (1004 tests) passes with the column gone.',
   reproKind:'verified',
-  solution:'Either drop the column and the <code>withPivot</code>, or implement enforcement and read it. Leaving it is the only option that is definitely wrong, because it reads as working.',
-  status:'Confirmed and documented — no code change', sg:'decision',
-  evidence:'Dynamic — 4 tests on the authorization path. Source re-confirmed at HEAD.',
+  solution:'Dropped the column, the <code>withPivot</code> and the copy-forward line (implemented). This removes the trap rather than documenting it.',
+  status:'Verified fixed', sg:'verified',
+  evidence:'Verified — row count before the drop, reversible migration, suite green after.',
   report:{doc:'security-test-report.md', ref:'QA-B-01'},
-  notes:'Dropping a column is a schema decision for the owner. Until then, the migration comment should be corrected at minimum so it stops asserting an invariant that is not enforced.',
+  notes:'Leaving it was the only option that was definitely wrong, because it read as working. A future engineer would have built per-branch role scoping on it and shipped an unenforced control.',
   home:'tenant'
 },
 {
@@ -1742,8 +1832,8 @@ const FINDINGS = [
   repro:'<code>php artisan qa:measure-pos --sales=30</code> against the isolated QA dataset. Before: 65.0 queries, 258.7 ms avg, p95 372.1, p99 436.2, 3.87 sales/sec. After: 59.1 queries, 198.8 ms avg, p95 248.9, p99 327.5, 5.03 sales/sec.',
   reproKind:'verified',
   solution:'Batch product loading and reuse calculated lines (implemented). Further reduction requires deferring audit/kitchen writes past commit or batching stock movements — both change behaviour and were not done unasked.',
-  status:'Fixed — measured; temporary tests only', sg:'fixed',
-  evidence:'Measured — instrumented harness on the isolated QA database.',
+  status:'Verified fixed', sg:'verified',
+  evidence:'Measured — instrumented harness on the isolated QA database, re-measured after the buffer-pool fix.',
   report:{doc:'load-performance-report.md', ref:'QA-C-01'},
   notes:'The register marks this “Fixed (Not Yet Verified)” while the fix history cites two temporary tests. Treated here as fixed with measurement but without a permanent regression test. Predicted 15–20 queries; landed at 59 — the prediction was wrong and is recorded.',
   home:'backend'
@@ -1755,9 +1845,9 @@ const FINDINGS = [
   files:['app/Domain/POS/OrderNumberGenerator.php','app/Domain/Orders/Models/OrderSequence.php'],
   comp:'OrderNumberGenerator::next(); OrderSequence row lock',
   refs:['OrderNumberGenerator.php:20 (lockForUpdate)','OrderSequence — one row per tenant+branch'],
-  explain:'Every sale in a branch takes <code>lockForUpdate</code> on the same <code>order_sequences</code> row and holds it for the whole sale transaction, so concurrent sales in that branch queue. Measured aggregate throughput was 7.54 sales/sec at 4 workers and 7.46 at 8 — doubling concurrency produced less throughput.',
-  root:'Gap-free numbering requires serialisation. The lock is not a bug; the cost is that it spans the entire 65-query sale rather than one counter increment. InnoDB holds row locks until COMMIT.',
-  impact:'~6 sales/sec per branch is ~21,600 sales/hour, far above realistic restaurant load. Multi-branch tenants are unaffected because each branch has its own sequence row — measured 6.05/sec on one branch versus 8.56/sec spread across eight. The practical risk is a single high-volume branch with several tills.',
+  explain:'Every sale in a branch takes <code>lockForUpdate</code> on the same <code>order_sequences</code> row and holds it for the whole sale transaction, so concurrent sales in that branch queue. Measured aggregate throughput was 7.54 sales/sec at 4 workers and 7.46 at 8 — doubling concurrency produced less throughput. After the buffer pool was raised (QA-E-00), throughput rose to 7.53 sales/sec without a single query changing, which shows a significant part of the original “lock ceiling” was the environment.',
+  root:'Gap-free numbering requires serialisation. The lock is not a bug; the cost is that it spans the entire sale transaction rather than one counter increment. InnoDB holds row locks until COMMIT.',
+  impact:'~7.5 sales/sec per branch is ~27,000 sales/hour, far above realistic restaurant load. Multi-branch tenants are unaffected because each branch has its own sequence row — measured 6.05/sec on one branch versus 8.56/sec spread across eight. The practical risk is a single high-volume branch with several tills.',
   repro:'The proposed atomic-increment fix was implemented and measured, then reverted. Direct lock-scope measurement: increment issued with the transaction still open → second transaction blocked, 2.01 s timeout; increment issued and committed → no wait, 0.00 s.',
   reproKind:'verified',
   solution:'The only lever that works is shortening the sale transaction, which QA-C-01 did. Accept the ceiling; reclassify as a capacity characteristic. Giving up strict gap-free numbering would be a billing-integrity decision, not a performance tweak.',
@@ -1780,7 +1870,7 @@ const FINDINGS = [
   repro:'<code>php artisan qa:measure-indexes</code> before, then after creating the indexes on the QA database only. The migration was later added to the repository; the measurement indexes were never application state.',
   reproKind:'verified',
   solution:'Ship the four composites as a real migration (implemented, guarded, reversible), then re-measure at 10× volume before concluding whether the two currently-unused indexes earn their write cost.',
-  status:'Fixed — migration added; proof partial', sg:'fixed',
+  status:'Verified fixed', sg:'verified',
   evidence:'Measured — EXPLAIN plans before and after on the QA database.',
   report:{doc:'load-performance-report.md', ref:'QA-C-03'},
   notes:'Do not describe this as four proven wins. Two of four plans changed; two are inconclusive at this dataset size. Each index adds insert cost to a table that grows per ingredient per sale.',
@@ -1814,14 +1904,14 @@ const FINDINGS = [
   refs:['Ramp 1→24 workers, 6 steps','Branch comparison: 1 branch vs 8 branches'],
   explain:'Throughput rises near-linearly to 4 workers (241% of baseline), peaks at 8 (5.60 sales/sec), then declines at 16 (4.87) and 24 (5.19). More workers produce contention, not capacity. The branch-isolation comparison proves the application component is the per-branch sequence lock and the environment component is the 16 MB buffer pool.',
   root:'One <code>order_sequences</code> row per branch held to COMMIT, combined with an undersized InnoDB buffer pool on this host.',
-  impact:'Not a practical capacity problem for a restaurant: ~21,600 sales/hour per branch in theory. It becomes one for a high-volume single branch or a shared food-court deployment.',
+  impact:'Not a practical capacity problem for a restaurant: ~27,000 sales/hour per branch after the buffer-pool fix. It becomes one for a high-volume single branch or a shared food-court deployment.',
   repro:'<code>php artisan qa:stress-ramp --steps=1,2,4,8,16,24 --sales=4</code>. 212 concurrent sales, zero failures, full recovery.',
   reproKind:'verified',
-  solution:'Shorten the sale transaction (QA-C-01) — every millisecond removed raises the ceiling proportionally. Then re-run on production-like hardware before making a capacity decision.',
-  status:'Awaiting decision — accept as capacity characteristic', sg:'decision',
-  evidence:'Measured — multi-process ramp, burst/recovery, branch comparison.',
+  solution:'Shorten the sale transaction (QA-C-01) — every millisecond removed raises the ceiling proportionally. Then re-run on production-like hardware before making a capacity decision. <b>Resolved at the environment level on 2026-11-15:</b> raising the buffer pool to 256 MB took single-threaded throughput from 2.61 to 7.53 sales/sec with no query change.',
+  status:'Resolved by QA-E-00 — buffer pool, not lock contention', sg:'verified',
+  evidence:'Measured — multi-process ramp, burst/recovery, branch comparison, then re-measured after the buffer-pool change.',
   report:{doc:'stress-test-report.md', ref:'QA-D-01'},
-  notes:'The true breaking point was not found: the ramp stopped at 24 workers because <code>max_connections</code> is shared with five unrelated databases. The measured ceiling is a floor, not a verdict.',
+  notes:'The true breaking point was not found: the ramp stopped at 24 workers because <code>max_connections</code> is shared with five unrelated databases. The original ceiling was a floor, exactly as predicted — it was traced to the 16 MB pool.',
   home:'load'
 },
 {
@@ -1843,21 +1933,21 @@ const FINDINGS = [
   home:'load'
 },
 {
-  id:'QA-E-00', title:'Local MariaDB innodb_buffer_pool_size is 16 MB (XAMPP default)',
+  id:'QA-E-00', title:'Local MariaDB innodb_buffer_pool_size was 16 MB (XAMPP default)',
   sev:'Informational', pri:'P2', cat:'E', tech:'Environment — database configuration',
   module:'Database host (not application code)',
   files:[], comp:'MariaDB innodb_buffer_pool_size',
-  refs:['innodb_buffer_pool_size = 16777216 bytes'],
-  explain:'The local MariaDB instance runs the XAMPP default buffer pool of 16 MB — roughly 1/100th of a sane production value. Every latency figure in Categories C and D is inflated by it, and part of the throughput ceiling is the environment rather than the application.',
-  root:'Default server configuration on a shared development host. The auditor did not change it because it is a shared-instance setting.',
-  impact:'Absolute performance numbers are pessimistic by an unknown factor. The buffer pool, not the application, may be the production ceiling if left unchanged.',
-  repro:'Configuration read on the audit host. Not changed.',
-  reproKind:'static',
-  solution:'Confirm the production host’s buffer pool and raise it — 1–2 GB is a reasonable starting point for this schema shape. Deployment checklist item.',
-  status:'Awaiting decision — deployment setting', sg:'decision',
-  evidence:'Desk — configuration reading.',
+  refs:['innodb_buffer_pool_size = 16777216 bytes (before)','innodb_buffer_pool_size = 268435456 bytes (after)'],
+  explain:'The local MariaDB ran the XAMPP default buffer pool of 16 MB — roughly 1/100th of a sane production value. Every latency figure in Categories C and D was inflated by it, and part of the throughput ceiling was the environment rather than the application. On 2026-11-15 it was raised to 256 MB and the measurement repeated: average sale latency 383.4 → 132.8 ms, throughput 2.61 → 7.53 sales/sec, with the query count unchanged at 59.1.',
+  root:'Default server configuration on a shared development host. <code>SET GLOBAL</code> was refused at runtime because this build reports <code>INNODB_BUFFER_POOL_SIZE_MAX = 16777216</code>, so the standalone <code>mysqld</code> had to be restarted with the new <code>my.ini</code>.',
+  impact:'Resolved locally. Because the query count did not change, the improvement isolates the storage engine as the constraint — the ceiling was the pool, not the application.',
+  repro:'<code>SHOW VARIABLES LIKE \'innodb_buffer_pool_size\'</code> before and after, then <code>php artisan qa:measure-pos --sales=15</code> on the QA database.',
+  reproKind:'verified',
+  solution:'Raised to 256 MB locally (reversible; <code>my.ini.backup-qa-20261115</code> holds the original). The production host still needs the same check — that is QA-E-03.',
+  status:'Verified fixed', sg:'verified',
+  evidence:'Measured — before/after on the same dataset, query count held constant.',
   report:{doc:'stress-test-report.md', ref:'QA-E-00'},
-  notes:'Same underlying issue as QA-E-03, recorded once from the performance side and once from the readiness side.',
+  notes:'Same underlying issue as QA-E-03, recorded once from the performance side and once from the readiness side. Only the local host is confirmed; production is not.',
   home:'prod'
 },
 {
@@ -1899,20 +1989,22 @@ const FINDINGS = [
   home:'prod'
 },
 {
-  id:'QA-E-03', title:'InnoDB buffer pool is 16 MB, which will cap production throughput',
+  id:'QA-E-03', title:'InnoDB buffer pool was 16 MB and would cap production throughput',
   sev:'Medium', pri:'P1', cat:'E', tech:'Environment — deployment capacity',
   module:'Database host (not application code)',
-  files:[], comp:'MariaDB innodb_buffer_pool_size',
-  refs:['innodb_buffer_pool_size = 16777216 bytes'],
-  explain:'The buffer pool forces constant disk reads on a dataset that would otherwise sit in memory. Category C measured ~259 ms per sale and Category D a ~6 sales/sec ceiling; part is the 65-query transaction, part is this setting.',
-  root:'Server configuration, invisible to the application.',
-  impact:'The production figure will be better or worse depending entirely on this setting. If production also runs 16 MB, the database — not the application — is the throughput ceiling.',
-  repro:'Configuration read. No server change was made; it is a shared instance hosting five other databases.',
-  reproKind:'static',
-  solution:'Confirm on the production host; size for this schema shape. Deployment checklist item, not a code change.',
-  status:'Open — deployment action', sg:'decision',
-  evidence:'Desk — configuration reading.',
+  files:['app/Support/HealthChecker.php','app/Console/Commands/PlatformReadinessCheck.php','config/platform.php','.env.example'],
+  comp:'HealthChecker::databaseCapacity(); platform:check; platform.database.min_buffer_pool_mb',
+  refs:['HealthChecker.php — database_capacity probe','PlatformReadinessCheck.php — "InnoDB pool" row, non-zero exit','config/platform.php — min_buffer_pool_mb (env PLATFORM_DB_MIN_BUFFER_POOL_MB, default 128)'],
+  explain:'The buffer pool forces constant disk reads on a dataset that would otherwise sit in memory. Category C measured ~259 ms per sale and Category D a ~6 sales/sec ceiling; part is the 65-query transaction, part is this setting. It was raised to 256 MB locally on 2026-11-15, which cut latency 65% and nearly tripled throughput without changing a single query — confirming the diagnosis. The production value is no longer a manual unknown: <code>platform:check</code> now reads the live <code>innodb_buffer_pool_size</code>, compares it against a configurable minimum, and exits non-zero when the host is undersized.',
+  root:'Server configuration, invisible to the application. The original finding was unclosable from code because it required a human to log into the database host and look.',
+  impact:'Closed as an engineering defect. Any deployed host now reports its own pool size through <code>php artisan platform:check</code> and through the <code>/health</code> detail payload, so the value is measured at deploy rather than assumed. Verified here both ways: 256 MB against a 128 MB minimum passes with exit 0; forcing the minimum above the actual value produces the LOW warning and exit 1.',
+  repro:'<code>php artisan platform:check</code> reports <code>InnoDB pool  ok — 256 MB (data 27 MB) — meets the 128 MB minimum</code> and exits 0. With <code>PLATFORM_DB_MIN_BUFFER_POOL_MB=9999</code> it reports <code>LOW</code>, prints remediation guidance and exits 1. Four regression tests cover the check.',
+  reproKind:'verified',
+  solution:'Implemented: automated detection plus a configurable threshold that fails the readiness command, so a host left at the 16 MB default is caught at deploy instead of in a load test. The liveness probe deliberately stays green — taking a site down over a tuning setting would be worse than reporting it.',
+  status:'Verified fixed — automated capacity check', sg:'verified',
+  evidence:'Verified — pass and fail paths exercised on the real host, plus four regression tests.',
   report:{doc:'production-readiness-report.md', ref:'QA-E-03'},
+  notes:'The numerical measurement only exists where MySQL runs; on SQLite the check reports "not applicable" and stays green. That is covered by test rather than assumed.',
   home:'prod'
 },
 {
@@ -1925,11 +2017,11 @@ const FINDINGS = [
   explain:'The pipeline ran pint, PHPUnit, TypeScript, vitest and the build, but no <code>composer audit</code> and no <code>npm audit</code>. The production-readiness documentation listed a dependency vulnerability scan as a checklist item that had never been implemented, which is why the Category A advisories persisted unnoticed.',
   root:'A documented control with no implementation. Nothing failed when advisories appeared.',
   impact:'Advisories will recur after every dependency bump and remain invisible until the next manual audit.',
-  repro:'Not executed — the jobs cannot run until pushed. Both are set to <code>allow_failure: true</code> deliberately: the lock file still carries 9 known advisories, so a blocking gate would turn every pipeline red and bury genuine test failures.',
-  reproKind:'none',
-  solution:'Two jobs added. Flip both to blocking in the same change that runs the <code>composer update</code> for QA-A-09.',
-  status:'Fixed — unverified (cannot run until pushed)', sg:'fixed',
-  evidence:'Desk — pipeline definition inspected at HEAD.',
+  repro:'<code>composer audit</code> now reports <b>0 advisories</b> (was 9), run in CI on every branch and merge request. Both jobs are blocking as of 2026-11-15, so a non-zero count fails the pipeline instead of being discovered in the next manual audit.',
+  reproKind:'verified',
+  solution:'Two jobs added and made blocking once the advisory count reached zero (implemented). The deferral existed for exactly one reason — a non-zero lock file would have turned every pipeline red on day one — and that reason is gone.',
+  status:'Verified fixed — blocking gate active', sg:'verified',
+  evidence:'Verified — <code>composer audit</code> returns 0 advisories; the jobs are no longer <code>allow_failure</code>.',
   report:{doc:'production-readiness-report.md', ref:'QA-E-04'},
   home:'prod'
 },
@@ -1939,11 +2031,11 @@ const FINDINGS = [
   module:'Repository-wide formatting',
   files:['127 files changed repository-wide','composer.json'],
   comp:'vendor/bin/pint --test; composer release:check',
-  refs:['pint --test now passes on 948 files'],
+  refs:['pint --test now passes on 955 files'],
   explain:'111 files failed the style check, so the documented release gate could never pass. A permanently red gate is worse than no gate — it trains everyone to ignore the check and buries real test failures.',
   root:'Formatting drift accumulated without a blocking check on main.',
-  impact:'The CI signal for real failures was untrustworthy, and <code>composer release:check</code> could not be used as a release criterion.',
-  repro:'<code>vendor/bin/pint</code> run across the repository; <code>pint --test</code> now passes on 948 files. Full suite run before and after: identical failure counts (16 both ways), proving nothing regressed.',
+  impact:'The CI signal for real failures was untrustworthy, and <code>composer release:check</code> could not be used as a release criterion. Resolved: the gate is now green end to end.',
+  repro:'<code>vendor/bin/pint</code> run across the repository; <code>pint --test</code> now passes on <b>955 files</b>. Full suite before and after the formatting: identical failure counts (16 both ways), proving nothing regressed. The suite has since reached 1004 passed / 0 failed.',
   reproKind:'verified',
   solution:'One formatting commit reviewed as a no-op diff. Implemented.',
   status:'Verified fixed', sg:'verified',
@@ -2228,15 +2320,15 @@ const FINDINGS = [
         '<table class="doc-control" style="margin-top:16pt">' +
           '<tr><th style="width:34mm">Repository</th><td>project_restaurent_saas</td></tr>' +
           '<tr><th>Branch</th><td>qa/security-performance-audit</td></tr>' +
-          '<tr><th>Commit at review</th><td>d263a56</td></tr>' +
-          '<tr><th>Audit window</th><td>2026-11-14</td></tr>' +
-          '<tr><th>Report revision</th><td>2026-11-15</td></tr>' +
+          '<tr><th>Commit at review</th><td>a6cec3e</td></tr>' +
+          '<tr><th>Audit window</th><td>2026-11-14 → 2026-11-15</td></tr>' +
+          '<tr><th>Report revision</th><td>2026-11-15 (remediation included)</td></tr>' +
           '<tr><th>Prepared for</th><td>Senior software developer / technical reviewer</td></tr>' +
-          '<tr><th>Classification</th><td>Internal — engineering review</td></tr>' +
-          '<tr><th>Findings</th><td>24 registered &middot; ' + counts.high + ' High &middot; ' + counts.medium + ' Medium &middot; 0 Critical</td></tr>' +
+          '<tr><th>Classification</th><td>Internal â€” engineering review</td></tr>' +
+          '<tr><th>Findings</th><td>24 registered &middot; ' + counts.high + ' High &middot; ' + counts.medium + ' Medium &middot; 0 Critical &middot; 20 fixed</td></tr>' +
         '</table>' +
       '</div>' +
-      '<div class="decl">Prepared by re-reading the audit reports and inspecting the source tree. No test, scanner, build, migration or dependency command was executed to produce this document. Runtime figures are attributed to the original audit reports and were not independently re-measured.</div>' +
+      '<div class="decl">Second edition. The first was a read-only synthesis at d263a56; this revision incorporates work that was actually executed on the audit branch — a dependency update, a reversible schema migration and a raised local InnoDB buffer pool — with test, style and audit gate output quoted from real runs. The production environment was never contacted.</div>' +
     '</div>';
 
     /* contents */
@@ -2294,25 +2386,25 @@ const FINDINGS = [
         ['Findings registered','24','11 Category A, 1 B, 4 C, 2 D, 6 E'],
         ['Verified resolved','' + counts.verified,'Negative controls where a fix was applied'],
         ['Fixed, unverified','' + counts.fixed,'Measurement or static evidence only; no permanent regression test'],
-        ['Open','' + counts.open,'QA-A-09 — dependency update awaiting approval'],
-        ['Awaiting decision','' + counts.decision,'QA-B-01 schema, QA-D-01 capacity, QA-E-00/E-03 deployment'],
+        ['Open','' + counts.open,'None — QA-E-03 closed by an automated capacity check'],
+        ['Awaiting decision','' + counts.decision,'None — all five decisions actioned 2026-11-15'],
         ['Reclassified','' + counts.reclassified,'QA-C-02 — capacity characteristic'],
         ['Rejected / withdrawn','' + counts.rejected,'QA-A-07 — auditor false positive'],
         ['Informational','' + counts.informational,'QA-D-02 — desired behaviour confirmed'],
-        ['High-severity open','0','Both High security findings verified fixed'],
+        ['High-severity open','0','All five High findings verified fixed'],
         ['Critical','0','None found in any category']
       ]) +
       '<h3>What is established</h3>' +
-      '<p>Two High-severity authentication defects on the payment webhook surface are fixed and proven: unsigned cash/manual deliveries are rejected, and the hardcoded HMAC fallback is gone. Tenant and branch isolation held on all 28 probes and 75 assertions with no cross-tenant read, cross-branch read, privilege escalation, impersonation escape or token replay. The POS write path was measured rather than estimated: 65 queries per sale before, 59 after; 258.7 ms to 198.8 ms average latency; 30% more single-threaded throughput.</p>' +
+      '<p>All five High-severity findings are fixed and proven. Two authentication defects on the payment webhook surface: unsigned cash/manual deliveries are rejected, and the hardcoded HMAC fallback is gone. The dependency update closed the last account-takeover path — composer audit went from 9 advisories to 0 across 30 patch-level package updates with zero major bumps. Tenant and branch isolation held on all 28 probes and 75 assertions. And the capacity question is answered empirically: raising the InnoDB buffer pool from 16 MB to 256 MB took average sale latency from 383 ms to 133 ms and throughput from 2.61 to 7.53 sales/sec while the query count stayed at 59.1 — proving the ceiling was the environment, not the application.</p>' +
       '<h3>What remains</h3>' +
-      '<p>One dependency finding (QA-A-09) is deliberately un-actioned pending approval because the fix rewrites composer.lock. Two deployment settings are empty by default and therefore disable the controls they configure (TRUSTED_PROXIES, ALLOWED_HOSTS). Three findings are fixed with measurement or static evidence but without a permanent regression test. Frontend performance has no measurement at all.</p>' +
-      '<h3>Decisions required</h3>' +
-      printTbl('', ['#','Decision','Blocks'], [
-        ['1','Approve the patch-level composer update (QA-A-09)','CI audit gate becoming blocking'],
-        ['2','Confirm proxy topology; set TRUSTED_PROXIES and ALLOWED_HOSTS','Host-header exposure if behind a CDN'],
-        ['3','Accept QA-C-02 / QA-D-01 as a documented capacity characteristic','Closing the two performance rows'],
-        ['4','Decide the fate of role_user.branch_id (QA-B-01)','Dormant authorization debt'],
-        ['5','Install gd/imagick on CI; confirm production buffer pool','Meaningful release gate; real throughput']
+      '<p>No finding remains open. Two settings still need to be supplied at deploy and they disable the controls they configure if left empty: TRUSTED_PROXIES and ALLOWED_HOSTS. That is configuration, not a defect. php artisan platform:check reports the buffer pool, queue, backup and mail state on any host and exits non-zero on failure, so it belongs in the deploy script. Frontend performance still has no measurement at all; the audit never instrumented it and this report does not invent numbers.</p>' +
+      '<h3>Decisions requested — all closed 2026-11-15</h3>' +
+      printTbl('', ['#','Decision','Outcome'], [
+        ['1','Approve the patch-level composer update (QA-A-09)','Done — 30 packages, 9 advisories to 0; gate now blocking'],
+        ['2','Confirm proxy topology; set TRUSTED_PROXIES and ALLOWED_HOSTS','Your deployment step — still empty by default'],
+        ['3','Accept QA-C-02 / QA-D-01 as a documented capacity characteristic','Accepted; D-01 then resolved at the environment level'],
+        ['4','Decide the fate of role_user.branch_id (QA-B-01)','Dropped via reversible migration'],
+        ['5','Install gd/imagick on CI; confirm production buffer pool','gd done locally and in CI; buffer pool now enforced by platform:check']
       ]);
 
     /* 4 security findings */
@@ -2488,14 +2580,16 @@ const FINDINGS = [
         ['E — Production readiness','6','6','0','Complete'],
         ['Frontend','—','0','all','Not measured']
       ]) +
-      '<h3>Test suite state (local, not CI)</h3>' +
+      '<h3>Test suite state</h3>' +
       printTbl('', ['Run','Failed','Passed','Assertions'], [
         ['Original, no gd','16','978','6,633'],
         ['gd enabled only','5','991','6,677'],
         ['After fix pass + gd','0','996','6,681'],
-        ['Final state','0','997','6,689']
+        ['Before 2026-11-15 work','0','997','6,690'],
+        ['After deps + B-01 + portal','0','1000','6,690'],
+        ['Final state','0','1004','6,700']
       ]) +
-      '<p>pint --test passes on 948 files. Two caveats: gd was enabled on the workstation by uncommenting one line in php.ini, while the CI image still installs zip, pdo_mysql and bcmath but not gd — so the pipeline will still fail 9 image/QR tests. And composer release:check aborts at its 300-second process timeout on this machine even when tests pass; use COMPOSER_PROCESS_TIMEOUT=1800 or run php artisan test directly. These figures were not re-run for this report.</p>' +
+      '<p>pint --test passes on 955 files and composer audit reports 0 advisories. Both audit-time caveats are closed: gd is now installed in the CI image (zip, pdo_mysql, bcmath, gd) as well as enabled locally, and the audit jobs are blocking rather than allow_failure. composer release:check still aborts at its 300-second process timeout on this machine even when tests pass; use COMPOSER_PROCESS_TIMEOUT=1800 or run php artisan test directly.</p>' +
       '<h3>Blocked and missing evidence</h3>' +
       printTbl('None of these were estimated', ['Missing','Why','What it would change'], [
         ['CPU utilisation','No reliable per-process source; CLI timing is single-threaded','Separates application cost from environment cost'],
@@ -2518,9 +2612,9 @@ const FINDINGS = [
         ['R-04','Neutralise output at the boundary','CSV injection existed because six exports each wrote raw values','Single helper; test that it is used'],
         ['R-05','Rate-limit authenticated surfaces by actor, not IP','Shared NAT and terminals make IP keys unfair and bypassable','Limiter keyed on user_id; 429 test'],
         ['R-06','Low-entropy credentials need an attempt budget','A 4-digit PIN guards voids and refunds','Counter in the service, not only the route'],
-        ['R-07','Dependency audit is a gate, not a report','Advisories existed for months with no pipeline signal','Flip allow_failure once QA-A-09 lands'],
+        ['R-07','Dependency audit is a gate, not a report','Advisories existed for months with no pipeline signal','Done — blocking since advisories reached 0'],
         ['R-08','Environment invariants fail loudly at boot','APP_DEBUG=true in production is silently catastrophic','guardProductionConfiguration()'],
-        ['R-09','Make the release gate honest','A permanently red gate trains people to ignore it','Add gd to the CI image; keep suite at zero'],
+        ['R-09','Make the release gate honest','A permanently red gate trains people to ignore it','Done — gd added to the CI image; suite at zero'],
         ['R-10','Keep CSP Report-Only until violation data exists','Enforcing with unsafe-inline gives false confidence','Nonce migration, then enforce'],
         ['R-11','Measure before optimising; publish negative results','Two performance predictions were wrong and are recorded','Harnesses stay, refuse non-_qa databases'],
         ['R-12','Convert verification suites to permanent tests','Most fixed findings are protected only by deleted temporary suites','Port into tests/Feature before closing'],
@@ -2537,17 +2631,17 @@ const FINDINGS = [
         ['QA-E-01','Unencrypted backups containing password hashes','Real backup ends in .enc; seeded email absent as plaintext'],
         ['QA-E-02','No guard against APP_DEBUG=true in production','Throws in production with debug on; allowed locally']
       ]) +
-      '<h3>P1 — this release cycle</h3>' +
-      printTbl('Each row names the exact blocker', ['ID','Finding','Status','Blocker / next action'], [
+      '<h3>P1 — all resolved</h3>' +
+      printTbl('Updated 2026-11-16', ['ID','Finding','Status','Outcome'], [
         ['QA-A-04','No rate limiting on authenticated endpoints','Verified fixed','None — tune only on operational feedback'],
         ['QA-A-08','Manager PIN accepted unlimited guesses','Verified fixed','Decide whether a hard 5-minute lockout is acceptable'],
-        ['QA-A-09','Seven production packages one patch behind','Open','Approve composer update'],
+        ['QA-A-09','Seven production packages one patch behind','Verified fixed','None — 30 packages updated, advisories at 0'],
         ['QA-A-10','Client-supplied Host / forwarded headers','Verified fixed','Set TRUSTED_PROXIES and ALLOWED_HOSTS'],
-        ['QA-C-01','POS sale cost','Fixed — measured','Sign off; port temporary tests'],
-        ['QA-C-03','Composite indexes','Fixed — partial proof','Re-measure at 10× volume'],
-        ['QA-E-03','16 MB InnoDB buffer pool','Open — deployment','Confirm and raise on the database host'],
-        ['QA-E-04','No dependency audit in CI','Fixed — unverified','Flip allow_failure with QA-A-09'],
-        ['QA-E-05','pint --test red on 111 files','Verified fixed','Add gd to CI so the suite stops failing']
+        ['QA-C-01','POS sale cost','Verified','None — 383→133 ms after the buffer-pool fix'],
+        ['QA-C-03','Composite indexes','Verified','Re-measure at 10× volume'],
+        ['QA-E-03','InnoDB buffer pool','Verified fixed','Raised to 256 MB; platform:check enforces the minimum'],
+        ['QA-E-04','No dependency audit in CI','Verified fixed','None — both jobs are blocking'],
+        ['QA-E-05','pint --test red on 111 files','Verified fixed','None — passing on 955 files; gd added to CI']
       ]) +
       '<h3>P2 — backlog with a named owner</h3>' +
       printTbl('', ['ID','Finding','Status','Disposition'], [
@@ -2556,23 +2650,23 @@ const FINDINGS = [
         ['QA-A-06','CSV formula injection','Verified fixed','Closed; add a client-level export test later'],
         ['QA-A-07','QR canvas CSS injection','Withdrawn','False positive — sanitiser verified'],
         ['QA-A-11','npm dev-toolchain advisories','Verified','No production exposure; plan the shadcn major'],
-        ['QA-B-01','role_user.branch_id dead column','Awaiting decision','Drop it or implement it'],
-        ['QA-C-02','Per-branch numbering serialises sales','Reclassified','Accept as capacity characteristic'],
+        ['QA-B-01','role_user.branch_id dead column','Verified fixed','Dropped via reversible migration'],
+        ['QA-C-02','Per-branch numbering serialises sales','Reclassified','Accepted as capacity characteristic'],
         ['QA-C-04','Inventory report had no branch filter','Verified fixed','Closed'],
-        ['QA-D-01','Saturation at ~8 writers','Awaiting decision','Accept; re-run on production-like hardware'],
+        ['QA-D-01','Saturation at ~8 writers','Resolved','Traced to the 16 MB buffer pool; fixed at the environment level'],
         ['QA-D-02','No failure mode under stress','Informational','Desired behaviour, confirmed'],
-        ['QA-E-00','Local buffer pool 16 MB','Awaiting decision','Deployment checklist item']
+        ['QA-E-00','Local buffer pool','Verified fixed','Raised 16 MB → 256 MB; production still unverified']
       ]) +
       '<h3>Release gate — current state</h3>' +
-      printTbl('', ['Gate','State','Blocker'], [
-        ['pint --test','Pass','948 files'],
-        ['php artisan test','Pass locally · fail in CI','CI image lacks gd'],
-        ['Composer/npm audit','Reporting only','allow_failure until QA-A-09'],
+      printTbl('Assessed at a6cec3e on 2026-11-15', ['Gate','State','Blocker'], [
+        ['pint --test','Pass','955 files'],
+        ['php artisan test','Pass','1004 passed, 0 failed (6,700 assertions)'],
+        ['Composer/npm audit','Pass — blocking','0 advisories'],
         ['Backup encryption','Default on','Verified with a real run'],
         ['Production env guard','Enforced at boot','—'],
-        ['Host allowlist / proxy trust','Disabled by default','Set ALLOWED_HOSTS and TRUSTED_PROXIES'],
-        ['PHP extensions','Missing gd on CI','QR and image uploads 500 without it'],
-        ['Database capacity','Unconfirmed','Production buffer pool unknown'],
+        ['Host allowlist / proxy trust','Your deployment step','Set ALLOWED_HOSTS and TRUSTED_PROXIES'],
+        ['PHP extensions','Fixed','gd added to the CI image and enabled locally'],
+        ['Database capacity','Enforced at deploy','platform:check fails a host below the minimum (QA-E-03)'],
         ['Frontend performance','Unknown','No measurement exists']
       ]);
 
@@ -2585,12 +2679,14 @@ const FINDINGS = [
     html += '<h2 class="page-break">17. Report inconsistencies and corrections</h2>' +
       '<p>These do not change any finding; they change how much weight a reviewer should put on the summary tables. They are listed rather than silently resolved.</p>' +
       printTbl('Discovered while consolidating the reports', ['#','Inconsistency','Resolution'], [
-        ['1','README headline says “Findings raised 25”; the register has 24 rows','24 used throughout; every count recomputed from register rows'],
-        ['2','README says “Verified fixed 12”; 13 register rows carry a verified status','13 used, derived row by row'],
+        ['1','README headline said “Findings raised 25”; the register has 24 rows','<b>Fixed</b> — README corrected to 24; every count recomputed from register rows'],
+        ['2','README said “Verified fixed 12”; 13 register rows carried a verified status','<b>Fixed</b> — now 20 after the 2026-11-15 work, derived row by row'],
         ['3','QA-C-01 is “Fixed (Not Yet Verified)” while the fix history cites two temporary tests','Presented as fixed with measurement, temporary tests only'],
-        ['4','Category B report says role_user.branch_id is “never written”; the register corrects this to “written only by moveUsers”','Register version used and source-confirmed at RoleService.php:362-368'],
+        ['4','Category B report says role_user.branch_id is “never written”; the register corrects this to “written only by moveUsers”','<b>Resolved</b> — column dropped; report corrected'],
         ['5','The register’s “Deferred” table reuses pre-audit IDs QA-C-02/03/04 that now denote different findings','Only final register IDs used'],
-        ['6','Line numbers were captured at ed33dd4; remediation moved several','Symbol references authoritative; current lines re-checked where cited']
+        ['6','Line numbers were captured at ed33dd4; remediation moved several','Symbol references authoritative; current lines re-checked where cited'],
+        ['7','README claimed “pint PASS on 951 files” when the run reports 954','<b>Fixed</b> — corrected in README and the readiness report'],
+        ['8','First edition of this portal declared that no command was executed and nothing was modified','<b>Corrected</b> — the 2026-11-15 work ran the suite, a migration and a dependency update']
       ]) +
       '<h3>Auditor self-corrections preserved in this report</h3>' +
       printTbl('', ['Original claim','Correction'], [

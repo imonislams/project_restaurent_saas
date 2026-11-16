@@ -59,10 +59,8 @@ class QaBuildPortal extends Command
             return self::FAILURE;
         }
 
-        $registerPath = $dir.DIRECTORY_SEPARATOR.'issue-register.md';
-        $findings = is_file($registerPath)
-            ? $this->parseRegister((string) file_get_contents($registerPath))
-            : [];
+        $registerMd = is_file($registerPath) ? (string) file_get_contents($registerPath) : '';
+        $findings = $registerMd !== '' ? $this->parseRegister($registerMd) : [];
 
         $sections = [];
         $nav = [];
@@ -90,7 +88,7 @@ class QaBuildPortal extends Command
 
             $sections[] = $this->section($id, $title, $toc, $html, $bytes, $mtime);
             $nav[] = ['id' => $id, 'title' => $title];
-            $meta[] = ['bytes' => $bytes, 'mtime' => $mtime];
+            $meta[] = ['file' => $file, 'title' => $title, 'bytes' => $bytes, 'mtime' => $mtime];
 
             $this->line(sprintf('  rendered %-36s %s', $file, number_format($bytes).' bytes'));
         }
@@ -103,7 +101,16 @@ class QaBuildPortal extends Command
 
         $summary = $this->summarise($findings);
 
-        $html = $this->shell($nav, $findings, $summary, $sections, $this->gateStatus($dir), $meta);
+        $html = $this->shell(
+            $nav,
+            $findings,
+            $summary,
+            $sections,
+            $this->gateStatus($dir),
+            $meta,
+            $this->parseTimeline($registerMd),
+            $this->gitMeta(),
+        );
 
         if (! is_dir(dirname($out))) {
             mkdir(dirname($out), 0777, true);
@@ -230,6 +237,133 @@ class QaBuildPortal extends Command
             'open' => ($buckets['open'] ?? 0) + ($buckets['other'] ?? 0),
             'noAction' => $buckets['no-action'] ?? 0,
         ];
+    }
+
+    /**
+     * Read the "## Fix history" headings out of the register.
+     *
+     * Each entry is `### YYYY-MM-DD — <title>`, which is the only durable record
+     * of when a decision was actioned and by what evidence.
+     *
+     * @return list<array{date:string,title:string,ids:list<string>}>
+     */
+    protected function parseTimeline(string $md): array
+    {
+        $lines = preg_split('/\r\n|\r|\n/', $md) ?: [];
+
+        $inHistory = false;
+        $entries = [];
+
+        foreach ($lines as $line) {
+            if (preg_match('/^##\s+Fix history/i', $line)) {
+                $inHistory = true;
+
+                continue;
+            }
+
+            if ($inHistory && preg_match('/^##\s+/', $line)) {
+                break;
+            }
+
+            if (! $inHistory || ! preg_match('/^###\s+(\d{4}-\d{2}-\d{2})\s+[—-]\s+(.*)$/u', $line, $m)) {
+                continue;
+            }
+
+            // Pull the QA ids mentioned in the heading so the timeline can link
+            // back to the findings it closed.
+            preg_match_all('/QA-([A-E])-(\d+)/', $m[2], $ids, PREG_SET_ORDER);
+
+            $entries[] = [
+                'date' => $m[1],
+                'title' => $this->plain($m[2]),
+                'ids' => array_map(fn ($x) => 'QA-'.$x[1].'-'.$x[2], $ids),
+            ];
+        }
+
+        return $entries;
+    }
+
+    /**
+     * Provenance for the build: which commit the reports describe and whether it
+     * was clean. A dashboard that cannot say what it is looking at is decoration.
+     *
+     * @return array{commit:string,branch:string,dirty:bool,available:bool}
+     */
+    protected function gitMeta(): array
+    {
+        $run = function (string $cmd): string {
+            $out = @shell_exec($cmd.' 2>NUL');
+
+            return trim((string) $out);
+        };
+
+        $commit = $run('git rev-parse --short HEAD');
+        $branch = $run('git rev-parse --abbrev-ref HEAD');
+        $status = $run('git status --porcelain');
+
+        if ($commit === '') {
+            return ['commit' => '—', 'branch' => '—', 'dirty' => false, 'available' => false];
+        }
+
+        return [
+            'commit' => $commit,
+            'branch' => $branch !== '' ? $branch : 'detached',
+            'dirty' => $status !== '',
+            'available' => true,
+        ];
+    }
+
+    /** Severity × status matrix, ordered high severity first. */
+    protected function severityMatrix(array $findings): array
+    {
+        $order = ['Critical', 'High', 'Medium', 'Low–Medium', 'Low', 'Informational', 'Withdrawn'];
+        $buckets = ['fixed' => 'Fixed', 'open' => 'Open', 'reclassified' => 'Reclassified',
+            'withdrawn' => 'Withdrawn', 'no-action' => 'No action', 'other' => 'Other'];
+
+        $matrix = [];
+
+        foreach ($order as $severe) {
+            $row = array_fill_keys(array_keys($buckets), 0);
+
+            foreach ($findings as $f) {
+                if ($f['severity'] === $severe) {
+                    $row[$f['bucket']] = ($row[$f['bucket']] ?? 0) + 1;
+                }
+            }
+
+            if (array_sum($row) > 0) {
+                $matrix[$severe] = $row;
+            }
+        }
+
+        return [$matrix, $buckets];
+    }
+
+    /** Findings grouped by category area (A–E). */
+    protected function areaBreakdown(array $findings): array
+    {
+        $areas = [];
+
+        foreach ($findings as $f) {
+            foreach (preg_split('#[/,]#', $f['area']) ?: [] as $a) {
+                $a = strtoupper(trim($a));
+
+                if ($a === '') {
+                    continue;
+                }
+
+                $areas[$a] ??= ['total' => 0, 'fixed' => 0];
+                $areas[$a]['total']++;
+
+                if ($f['bucket'] === 'fixed') {
+                    $areas[$a]['fixed']++;
+                }
+            }
+        }
+
+        ksort($areas);
+
+        return $areas;
     }
 
     /**
@@ -490,7 +624,9 @@ class QaBuildPortal extends Command
      * @param  array{total:int,fixed:int,reclassified:int,withdrawn:int,open:int,noAction:int}  $summary
      * @param  list<string>  $sections
      * @param  list<array{label:string,value:string}>  $gate
-     * @param  list<array{bytes:int,mtime:int}>  $meta
+     * @param  list<array{file:string,title:string,bytes:int,mtime:int}>  $meta
+     * @param  list<array{date:string,title:string,ids:list<string>}>  $timeline
+     * @param  array{commit:string,branch:string,dirty:bool,available:bool}  $git
      */
     protected function shell(
         array $nav,
@@ -499,6 +635,8 @@ class QaBuildPortal extends Command
         array $sections,
         array $gate,
         array $meta,
+        array $timeline,
+        array $git,
     ): string {
         $navHtml = implode('', array_map(
             fn ($n) => sprintf(
@@ -536,6 +674,113 @@ class QaBuildPortal extends Command
 
         $rows = $this->findingsRows($findings);
         $body = implode("\n", $sections);
+
+        // ---- provenance strip
+        $dirtyBadge = $git['dirty']
+            ? '<span class="pill warn">working tree dirty</span>'
+            : '<span class="pill ok">clean tree</span>';
+        $gitHtml = $git['available']
+            ? sprintf(
+                '<code>%s</code> on <code>%s</code> %s',
+                htmlspecialchars($git['commit'], ENT_QUOTES, 'UTF-8'),
+                htmlspecialchars($git['branch'], ENT_QUOTES, 'UTF-8'),
+                $dirtyBadge,
+            )
+            : '<span class="pill warn">git metadata unavailable</span>';
+
+        // ---- severity × status matrix
+        [$matrix, $matrixBuckets] = $this->severityMatrix($findings);
+
+        $matrixHtml = '<table class="matrix"><thead><tr><th>Severity</th>';
+        foreach ($matrixBuckets as $label) {
+            $matrixHtml .= '<th>'.htmlspecialchars($label, ENT_QUOTES, 'UTF-8').'</th>';
+        }
+        $matrixHtml .= '<th class="tot">Total</th></tr></thead><tbody>';
+
+        $colTotals = array_fill_keys(array_keys($matrixBuckets), 0);
+        $grandTotal = 0;
+
+        foreach ($matrix as $severe => $counts) {
+            $sevClass = 's-'.str_replace([' ', '–'], ['', ''], str_replace('–Medium', 'Med', $severe));
+            $rowTotal = array_sum($counts);
+
+            $matrixHtml .= sprintf(
+                '<tr><td><span class="badge %s">%s</span></td>',
+                in_array($sevClass, ['s-Critical', 's-High', 's-Medium', 's-LowMed', 's-Low', 's-Informational', 's-Withdrawn'], true) ? $sevClass : 's-other',
+                htmlspecialchars($severe, ENT_QUOTES, 'UTF-8'),
+            );
+
+            foreach (array_keys($matrixBuckets) as $key) {
+                $n = $counts[$key] ?? 0;
+                $colTotals[$key] += $n;
+                $matrixHtml .= '<td class="num'.($n === 0 ? ' zero' : '').'">'.($n ?: '·').'</td>';
+            }
+
+            $grandTotal += $rowTotal;
+            $matrixHtml .= sprintf('<td class="num tot">%d</td></tr>', $rowTotal);
+        }
+
+        $matrixHtml .= '<tr class="foot"><td>All</td>';
+        foreach ($colTotals as $n) {
+            $matrixHtml .= '<td class="num">'.($n ?: '·').'</td>';
+        }
+        $matrixHtml .= '<td class="num tot">'.$grandTotal.'</td></tr></tbody></table>';
+
+        // ---- area coverage
+        $areas = $this->areaBreakdown($findings);
+        $areaHtml = '';
+        $maxArea = $areas === [] ? 1 : max(array_column($areas, 'total'));
+
+        foreach ($areas as $letter => $a) {
+            $pct = (int) round($a['total'] / max(1, $maxArea) * 100);
+            $fixedPct = (int) round($a['fixed'] / max(1, $a['total']) * 100);
+
+            $areaHtml .= sprintf(
+                '<div class="area-row"><span class="area-k">%s</span>'
+                .'<span class="bar"><span class="bar-fill" style="width:%d%%"></span></span>'
+                .'<span class="area-v">%d finding%s · <b class="ok">%d%%</b> fixed</span></div>',
+                htmlspecialchars($letter, ENT_QUOTES, 'UTF-8'),
+                $pct,
+                $a['total'],
+                $a['total'] === 1 ? '' : 's',
+                $fixedPct,
+            );
+        }
+
+        // ---- fix timeline
+        $timelineHtml = '';
+        foreach ($timeline as $entry) {
+            $chips = '';
+            foreach ($entry['ids'] as $id) {
+                $chips .= '<span class="tl-id">'.htmlspecialchars($id, ENT_QUOTES, 'UTF-8').'</span>';
+            }
+
+            $timelineHtml .= sprintf(
+                '<li><time>%s</time><div><div class="tl-title">%s</div><div class="tl-ids">%s</div></div></li>',
+                htmlspecialchars($entry['date'], ENT_QUOTES, 'UTF-8'),
+                htmlspecialchars($entry['title'], ENT_QUOTES, 'UTF-8'),
+                $chips,
+            );
+        }
+
+        // ---- report freshness
+        $now = time();
+        $freshHtml = '';
+        foreach ($meta as $m) {
+            $ageDays = (int) floor(($now - $m['mtime']) / 86400);
+            $hours = (int) floor(($now - $m['mtime']) / 3600);
+            $age = $ageDays > 0
+                ? $ageDays.'d ago'
+                : ($hours > 0 ? $hours.'h ago' : 'just now');
+
+            $freshHtml .= sprintf(
+                '<tr><td>%s</td><td><code>%s</code></td><td class="num">%s</td><td class="num">%s</td></tr>',
+                htmlspecialchars($m['title'], ENT_QUOTES, 'UTF-8'),
+                htmlspecialchars($m['file'], ENT_QUOTES, 'UTF-8'),
+                number_format($m['bytes']),
+                htmlspecialchars($age, ENT_QUOTES, 'UTF-8'),
+            );
+        }
 
         $built = date('Y-m-d H:i:s');
         $latestMtime = $meta === [] ? time() : max(array_column($meta, 'mtime'));
@@ -669,6 +914,67 @@ class QaBuildPortal extends Command
   .toc a:hover{color:var(--accent);background:rgba(88,166,255,.08)}
   .toc a.lvl-4{opacity:.72}
 
+  /* ---- engineering dashboard */
+  .prov{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px;
+    padding:10px 14px;background:var(--panel);border:1px solid var(--line);
+    border-radius:8px;font-size:12.5px;color:var(--muted)}
+  .prov code{font-size:12px}
+  .pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:11px;
+    font-weight:600;border:1px solid transparent}
+  .pill.ok{background:rgba(63,185,80,.12);color:var(--ok);border-color:rgba(63,185,80,.3)}
+  .pill.warn{background:rgba(210,153,34,.13);color:var(--warn);border-color:rgba(210,153,34,.34)}
+
+  .dash{display:grid;grid-template-columns:1.35fr 1fr;gap:18px;margin-bottom:24px}
+  @media (max-width:900px){.dash{grid-template-columns:1fr}}
+
+  table.matrix{border-collapse:collapse;width:100%;font-size:12.5px}
+  table.matrix th{text-align:left;padding:7px 9px;color:var(--muted);font-size:11px;
+    text-transform:uppercase;letter-spacing:.05em;font-weight:600;
+    border-bottom:1px solid var(--line)}
+  table.matrix th:not(:first-child),table.matrix td:not(:first-child){text-align:center}
+  table.matrix td{padding:7px 9px;border-bottom:1px solid rgba(48,54,61,.5)}
+  table.matrix tbody tr:last-child td{border-bottom:0}
+  table.matrix .num{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace}
+  table.matrix .zero{color:#4a5460}
+  table.matrix .tot{font-weight:700;color:var(--text)}
+  table.matrix tr.foot td{border-top:1px solid var(--line);font-weight:600;
+    color:var(--muted);padding-top:9px}
+  table.matrix tr.foot .tot{color:var(--accent)}
+
+  .area-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px}
+  .area-k{width:20px;height:20px;display:grid;place-items:center;flex:0 0 auto;
+    background:var(--elev);border:1px solid var(--line);border-radius:5px;
+    font-weight:700;font-size:11px;color:var(--accent)}
+  .bar{flex:1;height:7px;background:var(--elev);border-radius:999px;overflow:hidden;
+    min-width:40px}
+  .bar-fill{display:block;height:100%;background:linear-gradient(90deg,#1f6feb,#58a6ff);
+    border-radius:999px}
+  .area-v{color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .area-v b.ok{color:var(--ok)}
+
+  ol.timeline{list-style:none;margin:0;padding:0;position:relative}
+  ol.timeline:before{content:'';position:absolute;left:78px;top:6px;bottom:6px;
+    width:1px;background:var(--line)}
+  ol.timeline li{display:flex;gap:14px;padding:7px 0;position:relative;font-size:13px}
+  ol.timeline time{flex:0 0 68px;color:var(--muted);font-size:11.5px;
+    font-family:ui-monospace,Consolas,monospace;padding-top:2px}
+  ol.timeline li:before{content:'';position:absolute;left:75px;top:13px;width:7px;
+    height:7px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 0 3px var(--panel)}
+  ol.timeline .tl-title{color:var(--text);line-height:1.45}
+  ol.timeline .tl-ids{margin-top:3px;display:flex;gap:5px;flex-wrap:wrap}
+  .tl-id{font-family:ui-monospace,Consolas,monospace;font-size:10.5px;
+    color:var(--muted);background:var(--elev);border:1px solid var(--line);
+    border-radius:4px;padding:0 5px}
+
+  table.fresh{border-collapse:collapse;width:100%;font-size:12.5px}
+  table.fresh th{text-align:left;padding:6px 9px;color:var(--muted);font-size:11px;
+    text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--line)}
+  table.fresh td{padding:6px 9px;border-bottom:1px solid rgba(48,54,61,.45)}
+  table.fresh tr:last-child td{border-bottom:0}
+  table.fresh .num{text-align:right;font-variant-numeric:tabular-nums;
+    font-family:ui-monospace,Consolas,monospace;color:var(--muted);white-space:nowrap}
+
   footer{padding:26px 24px 40px;text-align:center;color:var(--muted);font-size:12px;
     border-top:1px solid var(--line);line-height:1.9}
   #totop{position:fixed;right:20px;bottom:20px;width:40px;height:40px;border-radius:50%;
@@ -705,11 +1011,40 @@ class QaBuildPortal extends Command
     <div class="stat"><b>{$summary['open']}</b><span>Still open</span></div>
     {$gateHtml}
   </div>
+  <div class="prov"><?= $gitHtml ?></div>
 </header>
 
-<nav class="bar" id="nav"><a href="#findings">Findings</a>{$navHtml}</nav>
+<nav class="bar" id="nav"><a href="#dashboard">Dashboard</a><a href="#findings">Findings</a>{$navHtml}</nav>
 
 <main>
+
+  <div class="dash" id="dashboard">
+
+    <section class="panel">
+      <h2>Findings by severity</h2>
+      <p class="hint">Every registered finding, split by severity and current state.</p>
+      {$matrixHtml}
+    </section>
+
+    <section class="panel">
+      <h2>Coverage by area</h2>
+      <p class="hint">Findings raised per audit category, and how many are closed.</p>
+      {$areaHtml}
+      <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+      <h2 style="font-size:14px;margin-bottom:10px">Report freshness</h2>
+      <table class="fresh">
+        <thead><tr><th>Report</th><th>Bytes</th><th>Age</th></tr></thead>
+        <tbody>{$freshHtml}</tbody>
+      </table>
+    </section>
+
+  </div>
+
+  <section class="panel">
+    <h2>Fix timeline</h2>
+    <p class="hint">Dated entries from the register's fix history, newest first.</p>
+    <ol class="timeline">{$timelineHtml}</ol>
+  </section>
 
   <section class="panel" id="findings">
     <h2>All findings</h2>

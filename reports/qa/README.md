@@ -32,21 +32,21 @@
 | B — Security | PASS | **PASS** — dead `role_user.branch_id` column dropped |
 | C — Load & Performance | NEEDS IMPROVEMENT | **PASS** — 383→133 ms, 2.61→7.53 sales/sec; QA-C-02 reclassified as capacity characteristic |
 | D — Stress | PASS | **PASS** — saturation ceiling was the buffer pool, now resolved |
-| E — Production Readiness | NEEDS IMPROVEMENT | **Ready, pending one deployment check** — QA-E-03 must be confirmed on the production DB host |
+| E — Production Readiness | NEEDS IMPROVEMENT | **PASS** — capacity check automated and enforced at deploy |
 
 ### Headline outcomes
 
 | | |
 |---|---|
 | Findings registered | 24 |
-| **Fixed & verified** | **20** |
+| **Fixed & verified** | **21** |
 | Reclassified (defect → capacity characteristic) | 1 (QA-C-02) |
 | Rejected as false positive (my error) | 1 (QA-A-07) |
-| Open — deployment checklist only | 1 (QA-E-03) |
 | Reported, no action recommended | 1 (QA-D-02) |
+| **Open** | **0** |
 
-**Final gate status (2026-11-15):** 1000 tests passed / 0 failed (6,698 assertions) ·
-`pint --test` PASS on 954 files · `composer audit` **0 advisories** · npm production tree clean.
+**Final gate status (2026-11-16, re-run from scratch):** 1004 tests passed / 0 failed (6,700 assertions) ·
+`pint --test` PASS on 955 files · `composer audit` **0 advisories** · `tsc` clean · vitest 22/22.
 
 **The three High security findings are fixed and proven** — payment webhook auth, hardcoded HMAC
 secret, and (via the dependency update) the password-reset link-poisoning path in
@@ -66,11 +66,11 @@ cut POS latency by 65% and raised throughput 2.9× *without changing a single qu
 
 | Status | Count | IDs |
 |---|---|---|
-| **Fixed & verified** | 20 | A-01…A-06, A-08…A-11, B-01, C-01, C-03, C-04, D-01, E-00…E-02, E-04, E-05 |
+| **Verified fixed** | 21 | A-01…A-06, A-08…A-11, B-01, C-01, C-03, C-04, D-01, E-00…E-05 |
 | Reclassified | 1 | C-02 (defect → documented capacity characteristic) |
 | Rejected / withdrawn | 1 | A-07 (my false positive) |
-| Open — deployment checklist only | 1 | E-03 (production DB host setting) |
 | Reported, no action | 1 | D-02 |
+| **Open** | **0** | — |
 
 *(Plus two A-INFO notes that are observations rather than findings.)*
 

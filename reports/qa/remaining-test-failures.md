@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-14 (updated 2026-11-15)
 **Context:** after enabling `gd`, the suite went from **16 failures to 5**.
-**Outcome:** all 5 resolved. The suite now stands at **1000 passed, 0 failed** (6,698 assertions) as of
+**Outcome:** all 5 resolved. The suite now stands at **1004 passed, 0 failed** (6,700 assertions) as of
 2026-11-15, after the QA-A-09 dependency update, the QA-B-01 column drop and the QA portal access tests.
 
 ---

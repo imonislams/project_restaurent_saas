@@ -34,9 +34,9 @@
 | QA-E-00 | Local MariaDB `innodb_buffer_pool_size` is 16 MB (XAMPP default) | Informational | D/E | **Verified** — raised to 256 MB; latency 2.9× better, throughput 2.9× better | [D](./stress-test-report.md#executive-summary) |
 | QA-E-01 | Backups are written unencrypted and contain password hashes | **High** | E | **Verified** | [E](./production-readiness-report.md#qa-e-01--backups-are-written-unencrypted-and-contain-password-hashes) |
 | QA-E-02 | No boot-time guard against `APP_DEBUG=true` in production | **High** | E | **Verified** | [E](./production-readiness-report.md#qa-e-02--working-env-is-a-development-profile-and-would-be-a-live-misconfiguration) |
-| QA-E-03 | InnoDB buffer pool 16 MB will cap production throughput | Medium | E | **Open — deployment checklist item.** Cannot be verified from this repo; confirm on the production DB host. | [E](./production-readiness-report.md#qa-e-03--innodb-buffer-pool-is-16-mb-which-will-cap-production-throughput) |
+| QA-E-03 | InnoDB buffer pool 16 MB will cap production throughput | Medium | E | **Verified fixed** — raised to 256 MB locally; `platform:check` now reads the live value and exits non-zero below the configured minimum | [E](./production-readiness-report.md#qa-e-03--innodb-buffer-pool-is-16-mb-which-will-cap-production-throughput) |
 | QA-E-04 | No dependency audit in CI (`composer audit` / `npm audit`) | Medium | E | **Verified** — pipeline jobs added; now **blocking** because advisories are 0 | [E](./production-readiness-report.md#qa-e-04--no-dependency-audit-in-ci) |
-| QA-E-05 | `pint --test` fails on 111 files, so `release:check` is permanently red | Medium | E | **Verified** — now passes on 954 files | [E](./production-readiness-report.md#qa-e-05--pint---test-fails-on-111-files-so-composer-releasecheck-is-red) |
+| QA-E-05 | `pint --test` fails on 111 files, so `release:check` is permanently red | Medium | E | **Verified** — now passes on 955 files | [E](./production-readiness-report.md#qa-e-05--pint---test-fails-on-111-files-so-composer-releasecheck-is-red) |
 
 ## Informational
 
@@ -67,8 +67,8 @@
 
 ### 2026-11-15 — QA-A-09, QA-B-01, QA-E-00 (approved, implemented, VERIFIED)
 
-All five decisions from the "open for decision" list were actioned. Final state: **1000 tests passed,
-0 failed** (6,698 assertions), `pint --test` PASS on 954 files, `composer audit` **0 advisories**.
+All five decisions from the "open for decision" list were actioned. Final state: **1004 tests passed,
+0 failed** (6,700 assertions), `pint --test` PASS on 955 files, `composer audit` **0 advisories**.
 
 | File | Change |
 |---|---|
